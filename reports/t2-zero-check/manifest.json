@@ -1,0 +1,62 @@
+{
+  "artifact_id": "score-t2-zero-check",
+  "version": 1,
+  "status": "draft",
+  "run_id": "t2-zero-check",
+  "baseline_run": null,
+  "created_at": "2026-09-16T11:31:55.862541+00:00",
+  "sources": [
+    {
+      "role": "truth",
+      "path": "open/dev_labels.csv",
+      "sha256": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35"
+    },
+    {
+      "role": "pred",
+      "path": "C:/Users/Public/Documents/ESTsoft/CreatorTemp/t2-zero-9wp80_w2/zero.csv",
+      "sha256": "7b1b5211ad885fddce5392b31bfb6bfac9f4bb06c2289c73f47854d1b1a485aa"
+    }
+  ],
+  "generator": {
+    "path": "tools/score.py",
+    "sha256": "4e8ef1a2284364fdb26cbab4dc53af8d9eac57d2d85f6651279ea3e1dc5f1c57",
+    "argv": [
+      "C:\\Users\\dasdk\\anaconda3\\python.exe",
+      "-X",
+      "utf8",
+      "tools/score.py",
+      "--truth",
+      "open\\dev_labels.csv",
+      "--pred",
+      "C:\\Users\\Public\\Documents\\ESTsoft\\CreatorTemp\\t2-zero-9wp80_w2\\zero.csv",
+      "--output-dir",
+      "reports/t2-zero-check"
+    ],
+    "command": "& 'C:\\Users\\dasdk\\anaconda3\\python.exe' '-X' 'utf8' 'tools/score.py' '--truth' 'open\\dev_labels.csv' '--pred' 'C:\\Users\\Public\\Documents\\ESTsoft\\CreatorTemp\\t2-zero-9wp80_w2\\zero.csv' '--output-dir' 'reports/t2-zero-check'",
+    "settings": {
+      "output_dir": "reports/t2-zero-check",
+      "zero_division": 0,
+      "items": 24
+    }
+  },
+  "environment": {
+    "python": "3.13.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cwd": "C:/Users/dasdk/orca/workspaces/ai-nara-shop/feat-experiment-t2-score"
+  },
+  "mode": "local_scoring",
+  "model": null,
+  "prompt_hash": null,
+  "seed": null,
+  "parents": [],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "execution_status": "complete",
+  "validation": {
+    "csv_contract": true,
+    "evidence_substring": false,
+    "evidence_quality": false
+  },
+  "elapsed_seconds_before_publish": 0.07317649998003617
+}

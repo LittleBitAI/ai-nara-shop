@@ -1,0 +1,23 @@
+{
+  "mode": "tokenizer_only",
+  "model_inference": false,
+  "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+  "rows": 200,
+  "prompt_tokens_min": 3307,
+  "prompt_tokens_median": 9494.0,
+  "prompt_tokens_max": 12280,
+  "shrunk_records": 0,
+  "output_reserve": 2048,
+  "all_zero_json_tokens": 424,
+  "seconds": 2.163,
+  "environment": {
+    "transformers": "4.57.6",
+    "tokenizers": "0.22.2"
+  },
+  "limitations": "Generic fast tokenizer with fixed revision files; not the server GemmaTokenizer class or vLLM runtime. No live inference.",
+  "files": {
+    "tokenizer.json": "cc8d3a0ce36466ccc1278bf987df5f71db1719b9ca6b4118264f45cb627bfe0f",
+    "tokenizer_config.json": "9f4fec4b1dc6ecddf8f4a92e9caea5971c0e67d81309f3f9066a2bee8c362633",
+    "chat_template.jinja": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4"
+  }
+}

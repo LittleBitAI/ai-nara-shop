@@ -1,0 +1,57 @@
+{
+  "artifact_id": "t1-baseline",
+  "version": 1,
+  "status": "draft",
+  "run_id": "t1-baseline",
+  "model": null,
+  "prompt_hash": null,
+  "parents": [
+    "T2:90228e3"
+  ],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "live_verified": false,
+  "server_submitted": false,
+  "model_success_count": 0,
+  "base_commit": "9019bad",
+  "originals_sha256": {
+    "[Baseline]_Gemma + 법령 RAG 법령위반 판정.ipynb": "4b968426a850ec45cc495bd489e89930eb72f79c243c9e4913eb861fbe6b27d2",
+    "[Baseline]_Gemma 제약 디코딩 법령위반 판정.ipynb": "de861fe18ced8e2772e39df52a2afd3d013ba4d336f261e6f744a103fca38136",
+    "open/baseline/script.py": "3f410ee6f7c24da25ba25e9bef2501b7715222cfb047363fbe8ab5b57fd17fbb",
+    "open/baseline/requirements.txt": "5740d52bbd587c05f02b72dfebf0059712ea68605f9e00092e5a058faf49de0f",
+    "open/dev.jsonl": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+    "open/dev_labels.csv": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
+    "open/data/test.jsonl.gz": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504"
+  },
+  "implementation_sha256": {
+    "script.py": "9abb9c4e53880a40701f14c724d1dfeff3604cea3f5e52ebfb593cdf993db5b7",
+    "requirements.txt": "5740d52bbd587c05f02b72dfebf0059712ea68605f9e00092e5a058faf49de0f",
+    "tools/package.py": "f37a48529e1c12219062ffc49abb95504aefd10631e84e7b882da988a3cf82a7",
+    "tests/test_baseline.py": "965a858ad88d764301965ae387af30a467d0024806083c50324811f85706190e"
+  },
+  "archive": {
+    "path": "artifacts/baseline/submit.zip",
+    "bytes": 10756,
+    "sha256": "d3d6622e5171cb368adc4f9e5618f9f20f90442a5d3dc64e362a6766c36a9b6a"
+  },
+  "checks": {
+    "baseline_tests": 7,
+    "score_tests": 4,
+    "setup_cli_tests": 2,
+    "sample_mock_rows": 10,
+    "dev_mock_rows": 200,
+    "columns": 49,
+    "zip_extracted_mock": true,
+    "zip_matches_sources": true,
+    "originals_unchanged": true,
+    "utf8_no_bom_lf": true,
+    "local_links": true
+  },
+  "limitations": [
+    "No vLLM/model inference or server submission.",
+    "Generic FastTokenizer measurement differs from server runtime.",
+    "Document coverage is not prediction accuracy.",
+    "unittest discover fails on setup tests; separate setup CLI with --wiki passes."
+  ]
+}

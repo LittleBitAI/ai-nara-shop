@@ -1,0 +1,141 @@
+# AI 작업서
+
+역할·AI 종류와 관계없이 같은 양식을 사용합니다. 모델은 맡은 작업의 허용 경로만 수정합니다.
+하위 작업을 만들 때 아래 4칸을 빠뜨리지 않습니다. 한 파일을 두 오너가 동시에 수정하지 않습니다.
+
+## 복사할 요청서
+
+```text
+작업 ID / 제목:
+담당 역할 / 담당자:
+상태: ready | in_progress | review | done | blocked
+목표와 가설:
+읽을 문서 / 보호할 규칙 ID:
+규칙 판단: 작업 단계 / 활용할 A-ID / 지킬 R-ID·조건 / 불명확한 부분만 Q-ID
+입력: 실제 파일·필드·버전
+출력: 실제 파일·필드·실패 처리
+수정 범위: 수정해도 되는 파일 경로 (관련 테스트·기록 경로 포함)
+통과 조건: 실행 명령과 확인할 결과
+선행 작업:
+현재 기준선:
+결과: 변경 / 실행한 검증 / 미실행·위험 / 다음 작업
+```
+
+새 작업 기록은 `docs/tasks/<id>-<topic>.md`에 생성합니다.
+여기 표는 작업 큐이고, 수치·세부 실행 기록은 해당 작업서나 `reports/<run-id>/`가 소유합니다.
+`blocked`에는 막힌 단계만 적고 독립된 작업은 진행합니다.
+
+## 첫 작업 큐
+
+`public-push`: 사용자 지시로 하위 작업 공간 정리 및 공개 GitHub push.
+입력·수정 범위·결과는 [공개 작업 기록](tasks/public-push.md)을 따른다.
+
+설치 작업 `team-setup` — 상태: review (구현·임시 환경 검증 완료, 독립 리뷰 미실행).
+- 2026-09-16 사용자 선택: 설치 도구까지 공용화. 공용 `tool/setup_agents.py`가 환경·버전·호스트를 검사하고
+  프로젝트 진입점은 위임만 한다. adapter는 각 checkout에서 직접 읽으며 허브에 복사하지 않는다.
+- 추가 수정 범위: 공용 위키 `tool/setup_agents.py`, adapter를 읽는 설치·주입·감사·그래프 코드와 관련 테스트,
+  공용 `README.md`, 프로젝트 설치 테스트·안내·작업 기록. 폴더명 변경·동명 checkout 격리를 통과 조건에 추가한다.
+- 입력: 양쪽 저장소의 규칙·설치 기록, 프로젝트 adapter, 공용 `tool/apply.py`, 설치된 Claude/Codex와 공식 지원 문서.
+- 출력: 프로젝트 설치 진입점, 고정 위키 버전, 임시 환경 검증, `docs/setup.md`의 팀 설치·신뢰·확인 안내.
+- 수정 범위: `tools/setup_agents.py`, `tests/test_setup_agents.py`, `.wiki/adapter.toml`, `.wiki/wiki-revision`,
+  `.gitignore`, `.codex/config.toml`, `docs/setup.md`, `docs/README.md`, 이 작업 기록.
+  공용 위키 수정 범위는 위 사용자 선택에 따라 설치 공용화와 checkout-local adapter의 호출자까지 포함한다.
+  리뷰 요청 기록은 `artifacts/review/team-setup-request.md`에 둔다.
+- 통과 조건: 임시 환경에서 Claude/Codex/둘 다 설치·재설치·사용자 설정 보존·공백/한글 경로·오류 종료·생성 명령 실행·프로젝트 포인터 주입 확인.
+  UTF-8 without BOM·LF·Git 제외를 검사한다. 자동 호스트 이벤트와 실제 질문 UI는 별도 증거 없으면 미검증으로 남긴다.
+- 기준선: 프로젝트 `4816cf66f93f7303061cf55be1d98ca02e9ac2b4` (clean),
+  위키 `481917b5560c9bc9f98e04052afaa295d954255b` (기존 `.wiki/corpus.json`, `graph.json`, 미추적 `adapters/ai-nara-shop.toml` 보존).
+  양쪽 remote 없음. 공유 URL·팀 접근 권한 미확정. T1~T8, 실제 모델, 유료 API, 배포·커밋·push 제외.
+- 결과 (2026-09-16): 환경·버전·호스트 검사와 복구를 공용 `tool/setup_agents.py`로 옮겼다.
+  프로젝트 진입점은 명시적 `--wiki`와 자기 checkout을 전달한다. `ADAPTER` 상수·형제 폴더 자동 탐색을 제거했다.
+  기존 `apply.py`가 설정을 병합하며 주입·슬롯 예산·배선 검사·감사·그래프는 로컬 adapter를 읽는다.
+  PC별 설치 호스트는 Git 제외 `.wiki/installed-agents.json`에 보존한다. 허브 adapter와 공유 슬롯은 쓰지 않는다.
+- 실패 재현: `python -X utf8 tool/test_local_adapter.py`가 수정 전
+  `TypeError: slots_for() takes 1 positional argument but 2 were given`으로 실패했고, 구현 후 통과했다.
+- 최종 검증: `python -X utf8 tests/test_setup_agents.py --wiki ../ai-coding-agent-wiki` — 2 tests, 62.667초, OK.
+  Claude/Codex/둘 다 설치·재설치·기존 설정/사용자 전역 설정 보존·읽기 전용 check·rollback·공백/한글 경로·
+  폴더 이동·동명 checkout 슬롯 격리·생성 명령 직접 실행·문서 포인터·Git 제외를 검사했다.
+  의존성 누락·잘못된 위키 경로·SHA 불일치·dirty 실행 코드·비활성 hooks·잘못된 adapter/JSON·지원 밖 경로는 실패했다.
+  환경: Windows, Python 3.13.9, Claude Code 2.1.273, Codex CLI 0.154.0. 실제 유료 세션은 열지 않았다.
+- 공용 검증: 선언된 위키 게이트와 새 로컬 adapter 검사 총 13개 명령 통과 (7.43초).
+  `python -X utf8 -m pytest -q tool/test_codex_hooks.py` — 13 passed (23.27초).
+  프로젝트 Ruff·diff 검사와 이번 수정 파일의 UTF-8 without BOM·LF 검사 통과.
+  위키 전체 `git diff --check`의 기존 `graph.json` CRLF 공백 오류는 보존했고, 이번 수정 파일 범위는 통과했다.
+  `lint --check`는 종료 코드 0이며 기존 슬롯 차이 4건은 의도된 보고다.
+- 증거 경계: 설치 검사는 임시 clone 위의 미커밋 도구 작업본에 `--allow-dirty-wiki`를 명시했다.
+  기본 설치가 dirty 코드를 거부하는 것도 확인했다. 이 최초 작업본 검사는 배포 버전 검증이 아니다.
+  실제 자동 호스트 이벤트 전달·다른 OS·팀원 PC·독립 리뷰는 미검증이다.
+  이번 Default 세션 첫 `functions.request_user_input` 호출은 두 선택지를 받아 “설치 도구까지 공용화” 응답을 반환했다.
+  이는 실제 동기 질문 호출의 증거이며 모든 호스트 UI·키 동작이나 hooks 자동 실행의 증거는 아니다.
+- 커밋 후속: 사용자가 로컬 커밋을 요청했다. 위키 `15fc1fd110ee646563ebb415dc00a5e88fd188fa`를 만들고
+  `.wiki/wiki-revision`에 고정했다. 테스트는 작업본 복사 없이 이 커밋의 임시 clone을 쓰도록 바꿨다.
+  프로젝트 변경은 `chore/team-agent-setup` 브랜치에 기록한다. 기존 미커밋 자료는 제외한다.
+- 고정 커밋 검증: 같은 설치 테스트 명령으로 2 tests OK (57.521초).
+  작업본 복사·`--allow-dirty-wiki` 없이 위키 `15fc1fd`의 깨끗한 임시 clone을 설치했다.
+  임시 실행 코드 변경을 심은 경우 기본 설치가 거부하는 것도 통과했다. Ruff·diff·UTF-8 without BOM·LF 검사 통과.
+- 다음 작업: 내부 공유 경로를 확정하고 팀원은 새 세션에서 직접 신뢰·자동 이벤트·질문 UI를 확인한다.
+  push·공개 배포·T1~T8 구현은 하지 않았다.
+
+저장 작업 `initial-commit`: 사용자 요청으로 저장소 전체 변경을 첫 커밋에 기록합니다.
+입력·범위는 기존 staged 자료와 미추적 작업 문서·설정 전체이며 `.gitignore` 제외 대상은 유지합니다.
+출력은 `master`의 초기 커밋입니다. 보관본 바이트 보존을 위해 `.gitattributes`에 해당 경로의 변환 제외를 적용합니다.
+통과 조건은 스테이징된 보관본 해시 일치, 신규 작업 문서 검사, 커밋 후 작업 트리 변경 없음입니다.
+실제 커밋 결과는 Git 이력으로 확인합니다.
+
+문서 작업 `contest-archive` — 상태: 완료.
+- 입력: 기존 `대회/`의 4개 파일, 배포 README, 현재 작업 문서.
+- 출력: 원문 없이 사용할 수 있는 주제별 작업 문서, 절별 통합 대응표, 별도 보관본.
+- 수정 범위: `docs/`, `README.md`, `AGENTS.md`, `.wiki/project.md`, `대회/` → `archive/contest/` 이동 및 보관 색인.
+- 통과 조건: 원문 각 절·FAQ의 작업 문서 대응 확인, 이동 전후 4개 파일 SHA-256 일치,
+  작업 읽기 경로의 보관본 의존 제거, 로컬 링크·UTF-8 without BOM·LF·위키 검사 통과.
+- 보관본은 원문 바이트를 보존하고, 새로 작성·수정하는 작업 문서는 UTF-8 without BOM·LF로 저장합니다.
+- 결과: `contest.md`에 평가·운영·배경을 통합하고 `data.md`의 파일·관측성·익명화·실행 안내를 보완했습니다.
+  규칙 원문 전체 절·데이터 명세 §1~§9와 FAQ 16개·배경 전체 절의 통합 위치를 `sources.md`에 기록했습니다.
+  원본 4개는 해시 일치, 작업 문서 17개·로컬 링크/앵커 188개·A/R/Q ID·정상 dev 112건 검사를 통과했습니다.
+  기본 읽기 경로에 보관본 의존이 없고, 위키 동기화 후 문서 15개·고립 문서 0개, `repo_lint` 새 발견 없음입니다.
+  `git diff --check` 통과. 문서 재구성 작업으로 실제 모델·유료 API·대회 제출은 실행하지 않았습니다.
+
+문서 작업 `rule-usage`: `대회/` 원문을 입력으로 규칙의 적용 시점·허용 활용법·조건·출처를 정리합니다.
+수정 범위는 `docs/rules.md`, `docs/workflow.md`, `docs/README.md`, `docs/design.md`, `docs/sources.md`,
+`.wiki/project.md`, 이 작업 기록입니다. 출력은 AI의 규칙 판단 절차와 작업서의 규칙 판단 칸입니다.
+통과 조건은 원문과 허용·금지 범위 대조, 기존 R-ID 보존, 좁혀진 Q2의 관련 문서 일치,
+로컬 링크·인코딩·위키 포인터 검사입니다. 상태: 완료.
+결과: 원문과 허용·금지 조건을 대조하고 A1~A10·R1~R22·Q1~Q3의 누락·중복,
+로컬 링크·앵커·UTF-8 without BOM·LF를 검사했습니다. `대회/`·`open/` 원본 변경 없음과 `git diff --check` 통과를 확인했습니다.
+
+별도 문서 작업 `items`: 제공 항목표를 입력으로 `docs/items.md`의 24항목 색인을 작성합니다.
+수정 범위는 `docs/items.md`, `AGENTS.md`, `README.md`, `docs/README.md`, `.wiki/project.md`, 이 작업 기록입니다.
+통과 조건은 v1~v24 누락·중복 없음, 공식 항목명·조문·비고·부재탐지 일치, 문서 링크·UTF-8 without BOM·LF 검사입니다.
+상태: 완료. Python 표준 라이브러리 검사로 24개 ID·공식 항목명·조문·비고·부재탐지를 원본과 대조했고,
+진입점·로컬 링크·UTF-8 without BOM·LF 검사와 `git diff --check`를 통과했습니다.
+상세 판정 명세와 실제 조문 위치를 검증한 매핑은 T3에서 별도로 작성합니다.
+
+T2는 done(구현·로컬 검증 완료)입니다. 사용자 지시에 따라 별도 독립 리뷰는 진행하지 않습니다([실행 기록](tasks/t2-score.md)).
+T1은 제출 후보 구현·로컬 검사·ZIP 준비 완료, 서버 결과 미확인입니다([작업서](tasks/t1-baseline.md)).
+T3~T8은 미착수입니다. live·비용·실제 제출은 해당 접근·예산·제출 권한 확보 후 수행합니다.
+
+| ID / 오너 | 입력 | 출력 | 수정 범위 | 통과 조건·선행 |
+| --- | --- | --- | --- | --- |
+| T1 / 통합 | `open/baseline/`, 두 노트북, `open/data/`, 서버 평가 명세 | 결함 보완 제출 후보·모델 조사·실행 기록 | `script.py`, `requirements.txt`, `tests/test_baseline.py`, `tools/package.py`, `docs/tasks/t1-baseline.md`, `docs/gemma4.md`, `reports/t1-baseline/`, `artifacts/baseline/`; 상태·출처 문서는 작업서 참조 | mock 10건·dev 형식 및 ZIP 검사, live 정상 호출·총시간 기록, 서버 점수. 제공 원본 보존 |
+| T2 / 실험 | `open/dev_labels.csv`, 같은 ID의 예측 CSV | 24항목 metrics·오답 목록 | `tools/score.py`, `tests/test_score.py`, `docs/tasks/t2-score.md`, `reports/` | 정답=예측이면 F1=1; 전부 0이면 F1=0; ID 누락·중복·추가·값 오류 거부; 행 순서가 달라도 ID로 대응 |
+| T3 / 명세 | 항목표·제공 법령, v05·v10·v24 | 일반·부재·메타 불일치 명세 3개와 매핑 | `specs/v05.md`, `specs/v10.md`, `specs/v24.md`, `rules/law_map.json`, `docs/tasks/t3-specs.md` | C3의 7칸, 조문 출처, v24 해당 없음, 사람 검토 기록. 외부 API는 Q1 확인 전 사용 안 함 |
+| T4 / 라벨 | dev 입력 200건·검토 기준, 생성 후 dev 정답 대조 | API 라벨 기준선·비용·검토 계획 | `tools/gen_label.py`, `tests/test_label.py`, `labels/`, `docs/tasks/t4-labels.md`, `reports/` | T2·예산 필요. 입력에서 정답 제외, 실패·중복·재개 검증, 항목별 결과·모델/프롬프트 기록; 2만 건 선실행 금지 |
+| T5 / 프롬프트 | T3 승인 명세 1개 | 버전 연결된 지시문 1개 | `tools/gen_prompt.py`, `prompts/v05.md`, `tests/test_prompt.py`, `docs/tasks/t5-prompt.md` | 승인되지 않은 명세 거부, 조건·예외·근거 규약 유지; 초기에는 템플릿 변환 |
+| T6 / 통합 | T1 검증본·D4 계약 | 공고별 독립 추론 모듈 경계 | `script.py`, `pipeline/run.py`, `pipeline/output.py`, `tests/test_output.py`, `docs/tasks/t6-runtime.md` | T1 후. 기존 입출력 보존, 호출 실패·CSV 오류가 성공 처리되지 않음, mock/live 구분 |
+| T7 / 프롬프트 | T2 채점기·T3 매핑·T5 지시문·T6 호출부 | 직접 매핑 후보와 문서 선택 후보를 각각 비교 | `pipeline/input.py`, `pipeline/retrieve.py`, `pipeline/prompt.py`, `prompts/queries.json`, `tests/test_input.py`, `tests/test_retrieve.py`, `docs/tasks/t7-retrieval.md`, `reports/` | 한 번에 하나씩 실험; 실제 토크나이저 예산, 관련 첨부·관측성 보존, 항목별 점수·총시간 기록 |
+| T8 / 통합·실험 | 채택 후보·승인 자산·생성 이력 | 검증된 ZIP·재현 안내·제출 기록 | `tools/package.py`, `tests/test_package.py`, `docs/tasks/t8-release.md`, `reports/release/`, `artifacts/release/` | R1~R22·D4 게이트, allowlist ZIP, 네트워크 없는 live 실행, hash·재현 명령 |
+
+테스트 파일은 의미 있는 동작을 구현할 때 생성합니다. 위 경로는 허용 범위이며 빈 파일 생성 지시가 아닙니다.
+명세를 24개로 확대하거나 라벨 20,000건을 실행할 때는 파일럿 결과를 근거로 별도 작업서를 만듭니다.
+
+## 지금 팀원에게 전달할 예
+
+```text
+T2 dev 채점기를 구현해 주세요.
+먼저 AGENTS.md, docs/workflow.md, docs/data.md의 D4·D5, docs/contracts.md의 C5를 읽으세요.
+입력은 정답 CSV와 예측 CSV이며 id로 대응하세요.
+출력은 Macro F1, 24항목별 TP/FP/FN·precision·recall·F1·support와 오답 목록입니다.
+수정은 T2 행에 적힌 파일만 허용합니다. open/ 원본은 수정하지 마세요.
+T2 통과 조건을 실패 테스트로 먼저 확인하고 최소 구현 후 결과를 기록하세요.
+모델이나 유료 API를 호출할 필요는 없습니다.
+```

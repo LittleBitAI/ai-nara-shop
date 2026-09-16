@@ -1,0 +1,69 @@
+# Dataset and generated artifacts
+/data/
+/datasets/
+/open/train_unlabeled.jsonl
+/artifacts/
+/runs/
+/experiments/
+/checkpoints/
+/weights/
+/predictions/
+/registry/
+/submissions/
+/final-models/
+
+# Model files
+*.pt
+*.pth
+*.ckpt
+*.onnx
+
+# TensorBoard and training logs
+events.out.tfevents.*
+/tensorboard/
+/logs/
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+.aws/
+**/.aws/
+.aws-sam/
+.aws-sso/
+.kaggle/
+credentials/
+*credentials*.json
+*service-account*.json
+*.pem
+*.key
+
+# Python environments and caches
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Machine-local agent hooks and generated wiki state
+/.claude/settings.json
+/.claude/settings.local.json
+/.codex/hooks.json
+/.wiki/*.json
+/.wiki/*.jsonl
+/.wiki/.sync
+
+# Competition run outputs (keep manifests and reports intentionally)
+/output/
+/open/output/

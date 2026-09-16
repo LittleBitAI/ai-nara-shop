@@ -1,0 +1,18 @@
+{
+  "source_commit": "01d21247c5ba911effe4423aa248f3509be34e53",
+  "source_baseline_commit": "62c8dec1f83b228151b0b6737a65ae29eb04519a",
+  "publication": "main source snapshot",
+  "repository": "https://github.com/LittleBitAI/ai-nara-shop",
+  "excluded": [
+    {
+      "path": "open/train_unlabeled.jsonl",
+      "bytes": 790790220,
+      "reason": "GitHub file size limit; obtain from contest distribution"
+    }
+  ],
+  "local_history_preserved": true,
+  "local_dataset_preserved": true,
+  "live_verified": false,
+  "server_submitted": false,
+  "expected_submission_zip_sha256": "d3d6622e5171cb368adc4f9e5618f9f20f90442a5d3dc64e362a6766c36a9b6a"
+}

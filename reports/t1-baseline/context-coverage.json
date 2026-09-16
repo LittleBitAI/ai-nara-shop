@@ -1,0 +1,16 @@
+{
+  "mode": "document_coverage_only",
+  "model_inference": false,
+  "records": 200,
+  "provided_4000": {
+    "records_with_all_document_text": 8,
+    "visible_reference_evidence": 47,
+    "total_reference_evidence": 54
+  },
+  "candidate_16000": {
+    "records_with_all_document_text": 115,
+    "visible_reference_evidence": 53,
+    "total_reference_evidence": 54
+  },
+  "limitation": "Reference evidence visibility only; not model accuracy. No per-ID rule or prompt examples were created."
+}

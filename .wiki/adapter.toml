@@ -1,0 +1,9 @@
+# Canonical checkout-local slots. Shared tools read this file directly.
+agents = ["claude", "codex"]
+
+[slots]
+review_dir = "artifacts/review"
+gate_cmd = "python -X utf8 tests/test_baseline.py"
+live_cmd = "python -X utf8 script.py --data-dir open/data --output-dir artifacts/live --limit 10"
+server_stop = "상주 서버 없음. 이 작업에서 시작한 추론 프로세스만 확인하고 종료한다."
+scratch_dirs = "artifacts/"
