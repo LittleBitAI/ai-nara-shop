@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,6 +29,82 @@ def valid():
 
 
 class BaselineTests(unittest.TestCase):
+    def test_diagnostics_preserve_initial_and_retry_metadata(self):
+        good = json.dumps(valid())
+        runner = object.__new__(baseline.VLLMRunner)
+        runner.sp = SimpleNamespace(max_tokens=2048)
+        calls = []
+        def chat(batch, **kwargs):
+            calls.append(len(batch))
+            texts = [good, good[:-2]] if len(calls) == 1 else [""]
+            return [SimpleNamespace(outputs=[SimpleNamespace(
+                text=text, token_ids=[1] * (2048 if text else 0),
+                finish_reason="length" if text else "stop", stop_reason=None)],
+                prompt_token_ids=[1, 2, 3]) for text in texts]
+        runner.llm = SimpleNamespace(chat=chat)
+        events = []
+        with self.assertRaisesRegex(RuntimeError, "global_index=129"):
+            baseline.run_chunk(runner, [[], []], start=128, ids=["first", "failed"],
+                               emit=lambda event, **fields: events.append({"event": event, **fields}))
+        responses = [e for e in events if e["event"] == "response"]
+        self.assertEqual(calls, [2, 1])
+        self.assertEqual([(e["global_index"], e["attempt"]) for e in responses],
+                         [(128, 1), (129, 1), (129, 2)])
+        self.assertEqual(responses[1]["finish_reason"], "length")
+        self.assertEqual(responses[1]["output_tokens"], 2048)
+        self.assertEqual(responses[2]["finish_reason"], "stop")
+        self.assertEqual(responses[2]["output_tokens"], 0)
+        self.assertEqual(responses[2]["id"], "failed")
+        self.assertNotIn("response_text", json.dumps(events))
+        self.assertNotIn(good, json.dumps(events))
+        events.clear()
+        runner.llm.chat = lambda batch, **kw: [SimpleNamespace(outputs=[SimpleNamespace(
+            text=good, token_ids=[1], finish_reason="stop", stop_reason=None)], prompt_token_ids=[1])]
+        baseline.run_chunk(runner, [[]], debug_responses=True,
+                           emit=lambda event, **kw: events.append(kw))
+        self.assertEqual(events[0]["response_text"], good)
+        # A call exception must not inherit completion metadata from the previous call.
+        def broken(*args, **kwargs):
+            raise ValueError("runtime failure")
+        runner.llm.chat = broken
+        events.clear()
+        with self.assertRaisesRegex(RuntimeError, "runtime failure"):
+            baseline.run_chunk(runner, [[]], emit=lambda event, **kw: events.append(kw))
+        self.assertTrue(all("finish_reason" not in e for e in events))
+
+    def test_failed_run_leaves_diagnostics_and_no_success(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "submission.csv"
+            class Broken(baseline.MockRunner):
+                def chat(self, batch):
+                    raise ValueError("test runtime cause")
+            with self.assertRaisesRegex(RuntimeError, "test runtime cause"):
+                baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Broken,
+                             limit=1, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
+            path = out.with_name("diagnostics.jsonl")
+            events = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(events[0]["event"], "run_started")
+            self.assertEqual(events[-1]["event"], "run_failed")
+            self.assertIn("test runtime cause", events[-1]["traceback"])
+            self.assertFalse(out.exists())
+            self.assertFalse(out.with_name("run_report.json").exists())
+            raw = path.read_bytes()
+            with self.assertRaises(ValueError):
+                baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Broken,
+                             limit=1, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
+            self.assertEqual(path.read_bytes(), raw)
+            command = [sys.executable, "-X", "utf8", str(ROOT / "script.py"),
+                       "--data-dir", str(ROOT / "open/data"), "--model-dir", str(Path(tmp) / "missing-model"),
+                       "--output-dir", str(Path(tmp) / "load-failed")]
+            failed = subprocess.run(command, capture_output=True, text=True, encoding="utf-8", timeout=30)
+            self.assertEqual(failed.returncode, 1)
+            self.assertIn("Traceback", failed.stderr)
+            load_events = [json.loads(line) for line in
+                           (Path(tmp) / "load-failed/diagnostics.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(load_events[-1]["event"], "run_failed")
+            self.assertIn("로컬 디렉터리", load_events[-1]["error_message"])
+            self.assertIn("items", load_events[1]["sha256"])
+
     def test_strict_output(self):
         obj = valid()
         for value in (True, "1", 0.5, 1.0, None):

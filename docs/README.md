@@ -39,6 +39,7 @@
 | 고정 모델·프롬프트 실행 특성 | [Gemma 4 조사](gemma4.md) | 고정 리비전 모델 카드·기술 보고서·thinking/채팅 규약, 검증 전 실험 후보 |
 | 채점·실험 | [data](data.md), [contracts](contracts.md), [roadmap](roadmap.md) | `open/dev_labels.csv` |
 | 패키징·제출 | [rules](rules.md), [design](design.md) | 베이스라인, 제출 직전 공식 평가 탭 |
+| Colab 사전 검증·오류 진단 | [Colab 실행 안내](colab.md), [T1 작업서](tasks/t1-baseline.md) | 실제 제출 ZIP·공개 샘플/dev·diagnostics.jsonl |
 | 리뷰 | [workflow](workflow.md), 변경한 계약 문서 | diff, 호출자, 실행 기록 |
 | 도구 설치 | [setup](setup.md) | `tools/setup_agents.py` → 공용 `tool/setup_agents.py` → `tool/apply.py`; checkout의 `.wiki/adapter.toml` |
 | 종료 전 위키 검진·공개 연결 | [유지보수 기록](tasks/wiki-maintenance.md) | `ai-coding-agent-wiki-public` 고정 SHA, 프로젝트 결정 기록·lint 결과 |
