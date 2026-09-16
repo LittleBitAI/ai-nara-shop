@@ -62,6 +62,21 @@
   패키지/추론 설정/실행 파일 변경을 심으면 성공 검사가 거부하는 것을 확인했다.
   Python 설치·모델 다운로드·Colab 실제 GPU 실행은 미검증이다. 기존 제출 후보·Colab 번들은 그대로 사용한다.
 
+### Colab clone 준비 보완 (2026-09-17)
+
+- 입력: 공개 `LittleBitAI/ai-nara-shop` main, 현재 노트북의 ZIP 검증 경로.
+- 출력: clone → 실제 커밋 기록 → 기존 package 도구로 ZIP/번들 생성 → 기존 ZIP 검증·실행.
+- 수정 범위: `notebooks/colab-baseline.ipynb`, `tests/test_package.py`, `docs/colab.md`,
+  이 작업서, `docs/tasks.md`, `.wiki/plan-active.md`, `README.md`, `reports/t1-baseline/diagnostics-colab.md`.
+- 통과 조건: 로컬 Git 저장소를 clone하는 노트북 셀 실제 실행, 커밋 기록·생성 ZIP/실행 코드 일치,
+  기존 수동 업로드 경로 회귀·노트북 문법/nbformat 검사. 실제 GPU 검증은 별도다.
+- 규칙 판단: 개발·로컬 검증 / A1·A9 / R1·R4·R7·R15·R17. clone은 Colab 준비 단계만 사용한다.
+  기존 리뷰 생략 지시를 유지한다.
+- 결과: clone 셀 부재를 신규 검사에서 `KeyError: clone`으로 재현한 뒤 구현했다.
+  `python -X utf8 tests/test_package.py` — 4 tests OK (12.564초).
+  로컬 main을 실제 clone한 뒤 package 도구로 생성한 ZIP의 코드·커밋 기록 일치를 확인했다.
+  Colab GPU 실행은 미검증이다. 이전 커밋·PR·머지 요청의 후속 보완으로 공개 main에 반영한다.
+
 제약 디코딩 베이스라인의 함수·흐름을 재사용한다. 전체 파이프라인 분리는 첫 제출 뒤 수행한다.
 1. 모델 호출/JSON 오류의 전항목 0 대체를 제거하고 실패한 공고만 1회 재시도한다.
 2. 실제 채팅 템플릿으로 토큰을 세고 출력 예산을 함께 예약한다. 초과 상태의 조기 성공을 제거한다.

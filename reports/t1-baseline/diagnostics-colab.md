@@ -57,3 +57,13 @@ Colab 통과 시 내려받는 제출 ZIP은 위 해시의 파일 그대로다. �
 다음: [Colab 실행 안내](../../docs/colab.md)에 따라 실행한 결과 ZIP을 확인한다.
 `finish_reason=length`인지, 호출/응답 건수/파싱 중 어느 단계인지 구분한 후 수정 대상을 결정한다.
 현재 출력 예산·프롬프트·재시도 횟수는 유지했다. 서버 실패의 근본 원인은 여전히 미확정이다.
+
+## clone 경로 보완
+
+기본 `SOURCE_MODE="clone"`에서 공개 main을 가져와 실제 커밋 SHA·요청 ref·URL을 기록하고,
+clone의 기존 package 도구로 제출 ZIP/번들을 생성한다. 이후 기존 ZIP 검증과 서버 진입점 검사를 그대로 사용한다.
+수동 업로드는 `SOURCE_MODE="upload"`에서만 실행한다. HF_TOKEN 필수 모델 다운로드는 유지한다.
+
+clone 셀 부재를 신규 검사에서 재현한 뒤 `tests/test_package.py` 4개를 통과했다 (12.564초).
+로컬 Git main을 실제 clone하여 생성 ZIP 코드와 기록 커밋 일치를 확인했다. GPU 모델 실행은 하지 않았다.
+이전 커밋·PR·머지 요청의 후속 보완으로 공개 main에 반영하며 독립 리뷰 생략 지시를 유지한다.

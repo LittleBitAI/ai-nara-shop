@@ -34,6 +34,24 @@ def notebook_functions():
 
 
 class PackageTests(unittest.TestCase):
+    def test_clone_prepares_bundle_from_recorded_commit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            results = work / "results"
+            results.mkdir()
+            namespace = dict(WORK=work, RESULTS=results, SOURCE_MODE="clone", REPO_URL=str(ROOT),
+                             REPO_REF="main", sys=sys, subprocess=subprocess, Path=Path,
+                             json=json, time=time)
+            exec(notebook_functions(), namespace)
+            with patch("builtins.print"):
+                exec(compile(CELLS["clone"], "colab-clone", "exec"), namespace)
+            source = json.loads((results / "source.json").read_text())
+            actual = subprocess.check_output(["git", "rev-parse", "main"], cwd=ROOT, text=True).strip()
+            self.assertEqual(source["commit"], actual)
+            with zipfile.ZipFile(namespace["BUNDLE_PATH"]) as bundle:
+                with zipfile.ZipFile(io.BytesIO(bundle.read("submit.zip"))) as submit:
+                    self.assertEqual(submit.read("script.py"), (ROOT / "script.py").read_bytes())
+
     def test_colab_requires_token_and_passes_it_only_to_download(self):
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp)
@@ -91,6 +109,7 @@ class PackageTests(unittest.TestCase):
             results = work / "results"
             results.mkdir(parents=True)
             namespace = dict(WORK=work, RESULTS=results, MODEL_ID="test", REVISION="test",
+                             SOURCE_MODE="upload",
                              Path=Path, io=io, json=json, zipfile=zipfile, hashlib=hashlib,
                              time=time, subprocess=subprocess, os=os, shutil=shutil, gzip=gzip,
                              PYTHON=sys.executable, MODEL_DIR=str(work / "models/test"),
