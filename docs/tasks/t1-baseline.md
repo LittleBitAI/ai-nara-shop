@@ -1,5 +1,18 @@
 # T1 / 오늘 제출할 베이스라인
 
+## 2026-09-17 Colab 실행 경로 보완
+
+- 입력: 사용자 제공 `colab-results-1789602422101717812.zip`, main `a631373` 실행 로그.
+- 원인: 설치된 ninja 1.13.2를 FlashInfer 자식 프로세스가 PATH에서 찾지 못해 모델 초기화 실패.
+- 출력·범위: `notebooks/colab-baseline.ipynb`의 공통 실행 환경·ninja 사전 검사,
+  `tests/test_package.py`의 실제 자식 프로세스 회귀 검사, Colab 안내·T1 보고서·작업 상태.
+- 통과 조건: 수정 전 실행 파일 탐색 실패 재현, 수정 후 기본/명시 환경 모두 탐색 성공,
+  기존 토큰 격리·로그·ZIP 검사 유지. 실제 GPU 재실행 성공은 별도 확인한다.
+- 규칙: 환경 진단 A1·A9, 고정 모델 R1·R4 및 실행·제출 제한 R7·R15·R17 유지.
+  이전 사용자 지시대로 독립 리뷰 없이 커밋·PR·병합한다.
+- 결과: 수정 전 실제 자식 프로세스 FileNotFoundError 재현 → 패키징·노트북 검사 5개 통과.
+  nbformat·Ruff·인코딩·diff 검사 통과. [증거·남은 검증](../../reports/t1-baseline/colab-ninja-failure.md).
+
 - 담당: 통합 / Codex. 상태: in_progress. 사용자 목표: 2026-09-16 첫 제출, 팀원 합류 전 기준점 확보.
 - 입력: 제공 `open/baseline/script.py`, 두 루트 베이스라인 노트북 전체 셀,
   `open/data/`, `open/dev.jsonl`, 공식 규칙·평가·일정.
