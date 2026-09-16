@@ -10,6 +10,10 @@
 같은 경로에 배치하세요. 첫 베이스라인 실행·패키징에는 이 파일을 읽지 않습니다.
 기존 개발 이력은 로컬 브랜치에 보존했습니다. [공개 작업 기록](docs/tasks/public-push.md)을 참조하세요.
 
+팀 공용 위키는 [ai-coding-agent-wiki-public](https://github.com/LittleBitAI/ai-coding-agent-wiki-public)에 연결합니다.
+[설치 안내](docs/setup.md)의 고정 SHA를 사용하세요. 작업 이력은 [결정 기록](.wiki/decisions/)
+및 [작업서](docs/tasks.md)에서 볼 수 있습니다.
+
 Claude와 Codex 모두 [공통 작업 규칙](docs/workflow.md)을 따릅니다.
 역할은 사용하는 AI가 아니라 맡은 작업으로 정합니다.
 

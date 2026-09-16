@@ -10,7 +10,8 @@ Claude와 Codex는 같은 권한·역할·작업 절차를 따릅니다. 작업 
 프로젝트의 작은 진입점은 현재 checkout과 옵션을 공용 도구에 전달합니다.
 submodule·패키지 배포·공용 hook 사본은 만들지 않습니다.
 
-- 위키 기준 커밋: `15fc1fd110ee646563ebb415dc00a5e88fd188fa`.
+- 위키 저장소: [ai-coding-agent-wiki-public](https://github.com/LittleBitAI/ai-coding-agent-wiki-public).
+- 위키 기준 커밋: `428a85d8e563f6d07e2a033b695474466f782b52`.
   기계가 읽는 기준은 [.wiki/wiki-revision](../.wiki/wiki-revision)입니다.
   설치 도구는 HEAD와 실행 코드·규칙의 미커밋 변경을 확인합니다.
   이 SHA는 공용 설치 도구와 checkout-local adapter 지원을 포함합니다.
@@ -22,24 +23,26 @@ submodule·패키지 배포·공용 hook 사본은 만들지 않습니다.
 - 2026-09-16 사용자가 프로젝트 공개 push를 지시했습니다. 공개 대상은
   `https://github.com/LittleBitAI/ai-nara-shop`의 `main` 소스 스냅샷입니다.
   대용량 무라벨 공고 파일은 대회 배포본에서 별도로 받습니다([공개 작업 기록](tasks/public-push.md)).
-- 공용 위키 저장소의 공유 URL·팀 접근 권한은 여전히 미확정입니다.
-  이 프로젝트를 공개하는 지시를 별도 위키의 `raw/`·전체 이력 공개로 확대하지 않습니다.
-  아래 `SHOP_REPO_URL`은 위 프로젝트 URL, `WIKI_REPO_URL`은 관리자가 확인한 위키 URL을 사용합니다.
+- 2026-09-16 종료 전 사용자 지시로 공개 위키에 연결했습니다. 아래 두 URL을 사용합니다.
+  공통 규칙은 공개 위키, 이 프로젝트의 작업·결정 이력은 프로젝트 `.wiki/decisions/`·`docs/tasks/`에 둡니다.
+  [위키 유지보수 기록](tasks/wiki-maintenance.md)을 참조하세요.
   기존 미커밋 변경은 보존합니다. 테스트는 고정 SHA의 깨끗한 임시 clone을 사용하며,
   기존 허브 adapter·사용자 설정·실제 프로젝트 hook 파일을 쓰지 않습니다.
 
 ## 처음 받기 → 환경 준비
 
-아래는 PowerShell 예입니다. 먼저 관리자가 확인한 URL을 `SHOP_REPO_URL`, `WIKI_REPO_URL` 환경변수에 지정합니다.
+아래는 PowerShell 예입니다. 두 공개 저장소의 URL을 지정합니다.
 이미 받은 저장소가 있으면 clone 단계를 건너뜁니다. 두 저장소의 폴더명은 자유이며 공백·한글도 지원합니다.
 아래 폴더명은 예시입니다. 설치 때 `--wiki`로 실제 위키 checkout을 지정합니다.
 
 ```powershell
+$env:SHOP_REPO_URL = 'https://github.com/LittleBitAI/ai-nara-shop.git'
+$env:WIKI_REPO_URL = 'https://github.com/LittleBitAI/ai-coding-agent-wiki-public.git'
 git clone -- "$env:SHOP_REPO_URL" ai-nara-shop
-git clone -- "$env:WIKI_REPO_URL" ai-coding-agent-wiki
+git clone -- "$env:WIKI_REPO_URL" ai-coding-agent-wiki-public
 cd ai-nara-shop
 $revision = (Get-Content -Raw -Encoding UTF8 .wiki/wiki-revision).Trim()
-git -C ../ai-coding-agent-wiki checkout --detach $revision
+git -C ../ai-coding-agent-wiki-public checkout --detach $revision
 ```
 
 checkout은 새로 받은 위키에서 수행합니다. 다른 작업에 쓰던 위키가 dirty이거나 버전이 다르면
@@ -79,19 +82,19 @@ macOS/Linux에서는 `python3 -m venv .venv`와 `.venv/bin/python`을 사용합�
 
 ```powershell
 # Claude 사용자
-.venv/Scripts/python.exe tools/setup_agents.py --wiki ../ai-coding-agent-wiki --agent claude
+.venv/Scripts/python.exe tools/setup_agents.py --wiki ../ai-coding-agent-wiki-public --agent claude
 
 # Codex 사용자
-.venv/Scripts/python.exe tools/setup_agents.py --wiki ../ai-coding-agent-wiki --agent codex
+.venv/Scripts/python.exe tools/setup_agents.py --wiki ../ai-coding-agent-wiki-public --agent codex
 
 # 두 도구를 모두 사용
-.venv/Scripts/python.exe tools/setup_agents.py --wiki ../ai-coding-agent-wiki --agent both
+.venv/Scripts/python.exe tools/setup_agents.py --wiki ../ai-coding-agent-wiki-public --agent both
 ```
 
 다른 위치의 위키는 `--wiki`로 지정합니다. 다음의 경로는 예시이며 자기 checkout으로 바꿉니다.
 
 ```powershell
-.venv/Scripts/python.exe tools/setup_agents.py --agent both --wiki "D:/팀 작업/ai-coding-agent-wiki"
+.venv/Scripts/python.exe tools/setup_agents.py --agent both --wiki "D:/팀 작업/ai-coding-agent-wiki-public"
 ```
 
 도구는 버전·의존성·CLI·셸을 확인하고 해당 checkout의 `.wiki/adapter.toml`을 직접 읽어,
@@ -127,8 +130,8 @@ python "D:/팀 도구/wiki/tool/setup_agents.py" --project "D:/팀 작업/프로
 팀 설치 성공이나 배포 버전 검증으로 기록하지 않습니다.
 
 ```powershell
-python tools/setup_agents.py --wiki ../ai-coding-agent-wiki --agent both --allow-dirty-wiki
-python tools/setup_agents.py --wiki ../ai-coding-agent-wiki --agent both --allow-dirty-wiki --check
+python tools/setup_agents.py --wiki ../ai-coding-agent-wiki-public --agent both --allow-dirty-wiki
+python tools/setup_agents.py --wiki ../ai-coding-agent-wiki-public --agent both --allow-dirty-wiki --check
 ```
 
 ## 새 세션과 신뢰
@@ -253,13 +256,16 @@ Codex는 `codex_pretool.py`의 지원 도구명·직접 명령 패턴을 검사�
 
 ## 재현 가능한 설치 검사
 
+현재 공개 위키 고정 SHA의 설치 검사는 [종료 전 위키 검진](tasks/wiki-maintenance.md)의 결과를 따른다.
+아래 2026-09-16 `15fc1fd` 수치는 공개본 전환 전 개인용 위키의 역사 기록이다.
+
 ```powershell
 # 표준 라이브러리 테스트 러너. 고정 SHA의 임시 clone과 격리한 사용자 설정을 사용한다.
-.venv/Scripts/python.exe tests/test_setup_agents.py --wiki ../ai-coding-agent-wiki
+.venv/Scripts/python.exe tests/test_setup_agents.py --wiki ../ai-coding-agent-wiki-public
 
 # 위키의 기존 검사를 그대로 재사용 (테스트 환경에 pytest가 있을 때)
-python -X utf8 ../ai-coding-agent-wiki/tool/test_apply.py
-python -X utf8 -m pytest -q ../ai-coding-agent-wiki/tool/test_codex_hooks.py
+python -X utf8 ../ai-coding-agent-wiki-public/tool/test_apply.py
+python -X utf8 -m pytest -q ../ai-coding-agent-wiki-public/tool/test_codex_hooks.py
 ```
 
 첫 검사는 `--allow-dirty-wiki` 없이 고정 커밋을 검사하며, 임시 실행 코드 변경을 심어 일반 설치가 거부하는지도 확인합니다.
@@ -294,3 +300,11 @@ Claude 명령은 Git Bash, Codex 명령은 PowerShell로 직접 실행하며 유
 선택형 질문은 위의 이번 세션 기록으로 구분하며, 과거 직접 hook 실행 검사의 성공으로 간주하지 않습니다.
 허브 lint는 설치 전 기존 프로젝트들 사이의 슬롯 값 차이 4건을 보고했습니다.
 서로 다른 게이트·live 명령·종료 방법·임시 경로를 같게 만들지 않았습니다.
+
+## 공개 위키 전환 검사 (2026-09-16 종료 전)
+
+현재 고정 SHA `428a85d`의 임시 clone 설치 검사 2 tests OK (76.565초).
+이 PC의 두 호스트 설치·읽기 전용 check도 통과했고 모든 훅 명령이 공개 checkout을 가리킨다.
+hub lint·프로젝트 repo_lint 발견 0건, 문서 목록 20개·고립 0개다.
+[세부 검사와 공유 기록](tasks/wiki-maintenance.md)을 따른다.
+이전 개인용 버전 `15fc1fd` 검사와 구분하며 변경된 훅의 새 세션 신뢰는 각 사용자가 수행한다.

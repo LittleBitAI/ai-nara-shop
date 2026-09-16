@@ -32,7 +32,7 @@
 | 작업 | 추가로 읽기 | 실제 작업 입력·구현 |
 | --- | --- | --- |
 | 대회 이해·평가 전략·운영 | [contest](contest.md), [roadmap](roadmap.md) | 제공 안내의 평가 비중·일정, 새 공식 공지가 있는 경우 변경 사항 |
-| 전처리·문서 선택 | [data](data.md), [design](design.md) | `open/baseline/script.py`의 입력·예산 처리 |
+| 전처리·문서 선택 | [data](data.md), [design](design.md) | 현재 `script.py`의 입력·예산 처리, 제공 원본 `open/baseline/script.py`와 비교 |
 | 명세·법령 매핑 | [items](items.md), [rules](rules.md), [contracts](contracts.md) | `open/data/항목표.json`, `open/data/법령패키지/` |
 | 라벨·사례 생성 | [rules](rules.md), [contracts](contracts.md) | `open/train_unlabeled.jsonl`, `open/dev.jsonl` |
 | 프롬프트·검색 | [design](design.md), [contracts](contracts.md) | 승인 명세, 항목표, RAG 노트북 |
@@ -41,6 +41,7 @@
 | 패키징·제출 | [rules](rules.md), [design](design.md) | 베이스라인, 제출 직전 공식 평가 탭 |
 | 리뷰 | [workflow](workflow.md), 변경한 계약 문서 | diff, 호출자, 실행 기록 |
 | 도구 설치 | [setup](setup.md) | `tools/setup_agents.py` → 공용 `tool/setup_agents.py` → `tool/apply.py`; checkout의 `.wiki/adapter.toml` |
+| 종료 전 위키 검진·공개 연결 | [유지보수 기록](tasks/wiki-maintenance.md) | `ai-coding-agent-wiki-public` 고정 SHA, 프로젝트 결정 기록·lint 결과 |
 
 ## 작업본과 보관본
 

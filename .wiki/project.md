@@ -8,6 +8,8 @@ reads: [docs/workflow.md, docs/contest.md, docs/rules.md, docs/data.md, docs/ite
 # 대회 작업 계약
 
 규칙. Claude/Codex 역할은 작업으로 정한다. 공통 절차는 `docs/workflow.md`를 따른다.
+공통 위키는 `ai-coding-agent-wiki-public`의 `.wiki/wiki-revision` 고정 버전에 연결한다.
+설치법은 `docs/setup.md`, 프로젝트 작업 이력은 `.wiki/decisions/`·`docs/tasks.md`가 소유한다.
 사용자의 혼합 도구 팀 지시에 따라, 허브의 특정 모델·Codex 셀 전용 배정은 이 프로젝트에 적용하지 않는다.
 구현과 독립 리뷰의 분리는 유지하되, 두 역할 모두 Claude 또는 Codex 세션이 맡을 수 있다.
 대회 제약은 `docs/rules.md`, 입력·출력은 `docs/data.md`, 공정 경계는 `docs/design.md`에서 읽는다.

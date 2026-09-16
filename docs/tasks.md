@@ -27,6 +27,9 @@
 
 ## 첫 작업 큐
 
+`wiki-maintenance`: done. 종료 전 위키 검진·공개본 연결과 결정 기록 보완.
+현재 연결·검사·공유 범위는 [위키 유지보수 기록](tasks/wiki-maintenance.md)을 따른다.
+
 `public-push`: 사용자 지시로 하위 작업 공간 정리 및 공개 GitHub push.
 입력·수정 범위·결과는 [공개 작업 기록](tasks/public-push.md)을 따른다.
 

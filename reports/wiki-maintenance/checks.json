@@ -1,0 +1,130 @@
+{
+  "artifact_id": "wiki-maintenance",
+  "version": 1,
+  "status": "draft",
+  "mode": "wiki_maintenance",
+  "model": null,
+  "live_verified": false,
+  "server_submitted": false,
+  "wiki": {
+    "url": "https://github.com/LittleBitAI/ai-coding-agent-wiki-public",
+    "revision": "428a85d8e563f6d07e2a033b695474466f782b52"
+  },
+  "before": {
+    "hub_findings": 0,
+    "project_hook_drift": 11
+  },
+  "after": {
+    "hub_findings": 0,
+    "project_findings": 0,
+    "hook_commands": {
+      "claude": 6,
+      "codex": 5
+    },
+    "graph_counts": {
+      "docs": 20,
+      "linked": 7,
+      "read": 13,
+      "orphans": 0,
+      "pages": 2,
+      "decisions": 5,
+      "injectable_decisions": 0
+    },
+    "manual_session_context": true,
+    "manual_prompt_context": true,
+    "utf8_no_bom_lf": true,
+    "local_links": true,
+    "baseline_sources_and_zip_unchanged": true,
+    "normalized_generated_crlf_records": 4
+  },
+  "setup_tests": {
+    "argv": [
+      "python",
+      "-X",
+      "utf8",
+      "tests/test_setup_agents.py",
+      "--wiki",
+      "../ai-coding-agent-wiki-public"
+    ],
+    "tests": 2,
+    "seconds": 76.565,
+    "result": "OK",
+    "scope": "clean temporary clone; fixed public revision"
+  },
+  "environment": {
+    "python": "3.13.9",
+    "claude": "2.1.273",
+    "codex": "0.154.0"
+  },
+  "commands": [
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        "../ai-coding-agent-wiki-public\\tool\\sync.py",
+        "--project",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "{\"systemMessage\": \"위키 자동 갱신\\n- 목록을 다시 만들었다 — 문서 2개가 목록보다 나중에 고쳐졌다 (문서 20개)\\n- 지식 그래프 — 문서 20개 중 아무도 안 가리키는 것 0개\"}"
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        "../ai-coding-agent-wiki-public\\tool\\repo_graph.py",
+        "--repo",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "# repo_graph — ai-nara-shop\n\n| | 수 |\n| --- | ---: |\n| 문서 | 20 |\n|   다른 문서가 가리킴 | 7 |\n|   페이지가 가리킴 | 13 |\n|   **아무도 안 가리킴** | 0 |\n| 프로젝트 페이지 | 2 |\n| 결정 기록 | 5 |\n|   주입 대상 | 0 |\n\n엣지 136개. `.wiki/graph.json` 에 썼다.\n"
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        "../ai-coding-agent-wiki-public\\tool\\lint.py",
+        "--repo",
+        ".",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "# lint — 페이지 21장\n\n새 발견 없음.\n"
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        "../ai-coding-agent-wiki-public\\tool\\repo_lint.py",
+        "--repo",
+        "."
+      ],
+      "exit_code": 0,
+      "stdout": "# repo_lint — ai-nara-shop\n\n새 발견 없음.\n"
+    },
+    {
+      "argv": [
+        "python",
+        "-X",
+        "utf8",
+        "tools/setup_agents.py",
+        "--wiki",
+        "../ai-coding-agent-wiki-public",
+        "--agent",
+        "both",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "2.1.273 (Claude Code)\ncodex-cli 0.154.0\ndefault_mode_request_user_input          under development  true\nhooks                                    stable             true\nCodex 프로젝트 신뢰와 /hooks 검토가 필요합니다. 질문 UI는 현재 호스트 도구 명세를 따르며, 미지원 시 Plan mode 또는 텍스트 선택지를 사용하세요.\nclaude: apply --check 통과\ncodex: apply --check 통과\n설치 배선 검사 완료: 위키 기준 428a85d8e563f6d07e2a033b695474466f782b52\n이 명령은 실제 자동 이벤트·선택형 질문 UI를 검증하지 않습니다. 새 세션에서 별도로 확인하세요.\n"
+    }
+  ],
+  "limitations": [
+    "Manual hooks and installation checks do not prove automatic host delivery or hook trust.",
+    "Project execution records are shared through ai-nara-shop; private chat/trajectory remain excluded.",
+    "Model inference and competition submission remain unverified."
+  ]
+}
