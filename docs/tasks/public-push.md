@@ -1,6 +1,7 @@
 # 공개 push와 하위 작업 공간 정리
 
 - 사용자 지시: 하위 에이전트 정리 후 공개 push. 2026-09-16.
+- 상태: done. 공개 저장소 생성·첫 push·원격 확인 완료.
 - 입력: T1/T2 병합 코드·문서, Git 이력, Orca 작업 공간, GitHub 로그인.
 - 출력: `LittleBitAI/ai-nara-shop` 공개 `main`, 로컬 원본/이력/검증 자산 보존.
 - 수정 범위: `.gitignore`, `README.md`, `docs/setup.md`, `docs/tasks.md`, 이 문서,
@@ -35,3 +36,14 @@ Orca CLI로 제거했다. 거기에 있던 터미널은 에이전트가 아닌 �
 제출 ZIP은 기존과 동일 SHA-256이어야 한다. 공개 push를 실제 모델 실행·대회 제출 완료로 기록하지 않는다.
 이전 개발 커밋을 가리키는 기록은 로컬 개발 이력의 출처이며 공개 저장소의 커밋이 아니다.
 후속 변경은 공개 `main`에서 분기한다. 이전 대용량 이력 브랜치를 공개 main에 merge/push하지 않는다.
+
+## 실행 증거
+
+- 공개 URL: https://github.com/LittleBitAI/ai-nara-shop, visibility `PUBLIC`, 기본 브랜치 `main`.
+- 첫 공개 커밋: `5506ca02c11b7a9a8be01f729623c92dd8921aab`; 로컬 출처 `01d2124`.
+- 공개 스냅샷의 추적 소스 94개는 제외 파일 외 원본 Git 바이트와 일치.
+- 공개 checkout 베이스라인 7 tests OK, 패키징·압축 해제 mock PASS.
+- 제출 ZIP SHA-256: `d3d6622e5171cb368adc4f9e5618f9f20f90442a5d3dc64e362a6766c36a9b6a`로 기존과 일치.
+- Git 이력 5개 커밋·107개 고유 blob의 주요 비밀키 패턴 검사: 발견 0개.
+- 로컬도 `main`으로 전환해 `origin/main`을 추적한다. 기존 개발 브랜치·대용량 데이터와
+  `.wiki/decisions/`의 기존 미추적 파일을 보존했다.
