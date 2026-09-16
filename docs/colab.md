@@ -8,6 +8,14 @@
 
 ## 준비할 파일
 
+기본 실행은 **Colab에서 git clone**으로 준비한다. 노트북만 열면 코드·공개 입력을 가져와
+기존 `tools/package.py`로 제출 ZIP/검증 번들을 자동 생성하므로 로컬 ZIP 업로드가 필요 없다.
+첫 셀의 `REPO_REF="main"`은 실제 받은 커밋 SHA를 `source.json`에 기록한다.
+이전 실행을 재현하려면 그 SHA를 `REPO_REF`에 지정한다. 실행 중 자동 pull은 하지 않는다.
+
+아래 파일 업로드는 이미 생성한 특정 로컬 ZIP을 검증할 때만 사용하는 대안이다.
+그때는 첫 셀의 `SOURCE_MODE="upload"`로 바꾼다.
+
 - [Colab 노트북](../notebooks/colab-baseline.ipynb)
 - `artifacts/baseline-diagnostics/colab-bundle.zip`: Colab에 업로드할 검증 자료
 - `artifacts/baseline-diagnostics/submit.zip`: 번들 안에도 같은 바이트로 들어 있는 제출 후보
@@ -20,12 +28,13 @@ python -X utf8 tools/package.py --output artifacts/baseline-diagnostics/submit.z
 
 Colab 번들은 제출 ZIP·공개 샘플 10건·dev 200건·정답 CSV·항목표·스키마·T2 채점기만 포함한다.
 모델·비밀키·위키·train 전체는 포함하지 않는다. 파일별 SHA-256을 업로드 후 확인한다.
-노트북에 추론 코드를 복제하거나 GitHub 최신 main으로 바꾸지 않고 **제출 ZIP의 script.py**를 실행한다.
+clone/업로드로 준비한 뒤에는 노트북에 추론 코드를 복제하거나 다른 코드로 바꾸지 않고 **제출 ZIP의 script.py**를 실행한다.
 
 ## 실행 순서
 
 1. [Colab](https://colab.research.google.com/)에서 **파일 → 노트북 업로드**로 `colab-baseline.ipynb`를 연다.
-2. GPU 런타임을 선택하고 첫 셀부터 실행한다. 업로드 셀에서 `colab-bundle.zip` 하나를 선택한다.
+2. GPU 런타임을 선택하고 첫 셀부터 실행한다. 기본 clone 셀이 저장소·공개 데이터·검증 ZIP을 준비한다.
+   수동 업로드 모드를 선택한 경우에만 `colab-bundle.zip` 하나를 선택한다.
 3. GPU·드라이버·RAM·디스크를 기록한다. 30GiB VRAM/80GiB 여유 디스크는 노트북의 보수적인 사전 거름 기준이다.
    24GB 이하 GPU를 피하고 큰 GPU를 사용한다. 이 기준을 넘겨도 적재·추론 성공은 실행으로 확인한다.
 4. uv로 Python **3.12.13**을 준비하고 별도 venv에 서버 명세 버전을 설치한다. uv는 Colab 준비 도구이며 제출물에 포함하지 않는다.
@@ -49,6 +58,7 @@ Colab 번들은 제출 ZIP·공개 샘플 10건·dev 200건·정답 CSV·항목�
 | 추론 | int8 weight-only·문맥 16,384·출력 2,048·청크 128·seed·temperature·thinking 등 실제 적용값 대조 |
 | 검증 모드 | mock·debug·limit 우회 사용 시 통과 거부 |
 | 파일 | 입력 gzip 해시, 실제 실행 파일과 ZIP 바이트, ZIP 전체 해시 대조 |
+| 코드 출처 | clone한 커밋 SHA와 요청 ref·URL을 `source.json`에 기록 |
 | 시간 | 제출 requirements 설치 600초, 각 샘플/dev 실행 7,200초 초과 시 거부 |
 | 전달 | 샘플·dev·설정 검사·채점 성공 후에만 `colab_pass` 기록과 검증 ZIP 다운로드 |
 

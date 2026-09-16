@@ -52,6 +52,7 @@ python -X utf8 tools/package.py
 
 서버 재시도 실패 후 원인 예외·생성 종료 사유·토큰 수를 `diagnostics.jsonl`에 남기도록 보강했습니다.
 [Colab 실행 안내](docs/colab.md)의 노트북은 동일한 제출 ZIP으로 샘플 10건 → dev 200건 → 채점을 실행합니다.
+기본은 Colab에서 공개 저장소를 `git clone`하고 제출 ZIP을 자동 생성합니다. 수동 번들 업로드도 선택할 수 있습니다.
 Colab 보안 비밀 `HF_TOKEN`은 필수입니다. 서버의 Python·패키지·무인자 진입점·기본 설정을 검사하고 통과한 ZIP을 그대로 다운로드합니다.
 실제 Colab GPU 검증은 아직 수행하지 않았습니다.
 
