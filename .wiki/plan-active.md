@@ -20,7 +20,10 @@ reads: [docs/roadmap.md, docs/tasks.md]
 ZIP·코드 해시는 제출 전 기록과 일치한다. 서로 다른 5개 실패가 같은 문구로 표시되는 것을 재현했다.
 실제 서버 응답·종료 사유가 없어 출력 잘림 등을 확정하지 않는다. 진단은 `reports/t1-baseline/server-failure.md`를 따른다.
 후속 요청의 진단 JSONL·원인 traceback과 같은 제출 ZIP을 실행하는 Colab 노트북·번들 준비 및 로컬 검사는 완료했다.
-검증 범위는 `reports/t1-baseline/diagnostics-colab.md`를 따른다. 실제 GPU·서버 재제출은 미실행이며 독립 리뷰는 사용자 지시로 생략한다.
+검증 범위는 `reports/t1-baseline/diagnostics-colab.md`를 따른다. 독립 리뷰는 사용자 지시로 생략한다.
+사용자 Colab A100 실행은 모델 다운로드 성공 후 ninja PATH 누락으로 초기화 실패했다.
+공통 실행 환경과 사전 검사를 보완했으며 수정 후 실제 GPU 성공·서버 재제출은 미확인이다.
+증거는 `reports/t1-baseline/colab-ninja-failure.md`를 따른다.
 Colab은 HF_TOKEN 필수 다운로드·고정 Python/패키지·서버 무인자 진입점·기본 설정을 검사하고 통과한 ZIP을 그대로 내려받는다.
 후속 clone 보완으로 Colab에서 공개 저장소의 실제 커밋을 기록하고 제출 ZIP을 자동 생성한다. 특정 로컬 ZIP 업로드도 선택할 수 있다.
 사용자는 Colab 실행 노트북부터 준비를 선택했다. 다음은 `docs/colab.md`의 샘플 10건·dev 200건 실제 GPU 검증과 로그 분석이다.

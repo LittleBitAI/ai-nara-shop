@@ -15,6 +15,7 @@ import tempfile
 import time
 from types import ModuleType, SimpleNamespace
 import unittest
+import venv
 from unittest.mock import patch
 import zipfile
 
@@ -41,7 +42,7 @@ class PackageTests(unittest.TestCase):
             results.mkdir()
             namespace = dict(WORK=work, RESULTS=results, SOURCE_MODE="clone", REPO_URL=str(ROOT),
                              REPO_REF="main", sys=sys, subprocess=subprocess, Path=Path,
-                             json=json, time=time)
+                             json=json, time=time, os=os, PYTHON=str(work / "venv/bin/python"))
             exec(notebook_functions(), namespace)
             with patch("builtins.print"):
                 exec(compile(CELLS["clone"], "colab-clone", "exec"), namespace)
@@ -185,7 +186,8 @@ class PackageTests(unittest.TestCase):
 
     def test_notebook_preserves_subprocess_failure_log_and_exit_code(self):
         with tempfile.TemporaryDirectory() as tmp:
-            namespace = dict(WORK=Path(tmp), RESULTS=Path(tmp), json=json, time=time, subprocess=subprocess)
+            namespace = dict(WORK=Path(tmp), RESULTS=Path(tmp), json=json, time=time, subprocess=subprocess,
+                             os=os, Path=Path, PYTHON=sys.executable)
             exec(notebook_functions(), namespace)
             command = [sys.executable, "-X", "utf8", "-c",
                        "import sys; print('원인 stdout'); print('원인 stderr', file=sys.stderr); sys.exit(7)"]
@@ -199,6 +201,33 @@ class PackageTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 namespace["run_logged"]("failed", command)
             self.assertEqual((Path(tmp) / "failed-command.json").read_bytes(), record)
+
+    def test_venv_children_find_installed_executables(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            builder = venv.EnvBuilder(with_pip=False)
+            builder.create(work / "venv")
+            context = builder.ensure_directories(work / "venv")
+            python = context.env_exec_cmd
+            # A real native executable stands in for pip's ninja console executable.
+            probe = "colab-path-probe.exe" if os.name == "nt" else "colab-path-probe"
+            shutil.copy2(shutil.which("cmd.exe" if os.name == "nt" else "echo"),
+                         Path(python).parent / probe)
+            namespace = dict(WORK=work, RESULTS=work, PYTHON=python, Path=Path,
+                             json=json, time=time, subprocess=subprocess, os=os)
+            exec(notebook_functions(), namespace)
+            args = [probe, "/c", "echo", "path-ok"] if os.name == "nt" else [probe, "path-ok"]
+            code = ("import os, subprocess, sys; "
+                    f"subprocess.run({args!r}, check=True); "
+                    "assert os.environ['VIRTUAL_ENV'] == sys.prefix")
+            custom_env = dict(os.environ, HF_TOKEN="test-only-token")
+            original_env = custom_env.copy()
+            namespace["run_logged"]("default-env", [python, "-c", code])
+            namespace["run_logged"]("explicit-env", [python, "-c", code], env=custom_env)
+            self.assertEqual(custom_env, original_env)
+            for name in ("default-env", "explicit-env"):
+                self.assertIn("path-ok", (work / (name + ".log")).read_text(encoding="utf-8"))
+                self.assertNotIn("test-only-token", (work / (name + "-command.json")).read_text())
 
 
 if __name__ == "__main__":
