@@ -14,6 +14,22 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ("script.py", "requirements.txt")
+COLAB_FILES = ("tools/score.py", "open/dev.jsonl", "open/dev_labels.csv",
+               "open/data/test.jsonl.gz", "open/data/항목표.json", "open/data/정답스키마_디코딩.json")
+
+
+def package_colab(output, submission):
+    """공개 샘플/dev와 실제 제출 ZIP만 Colab 검증용으로 묶는다. 대회 업로드용이 아니다."""
+    sources = {"submit.zip": submission.read_bytes(),
+               **{name: (ROOT / name).read_bytes() for name in COLAB_FILES}}
+    manifest = {"purpose": "colab_validation_only", "live_verified": False,
+                "sha256": {name: hashlib.sha256(raw).hexdigest() for name, raw in sources.items()}}
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(output, "x", zipfile.ZIP_DEFLATED) as archive:
+        for name, raw in sources.items():
+            archive.writestr(name, raw)
+        archive.writestr("bundle-manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+    return manifest
 
 
 def package(output):
@@ -99,13 +115,20 @@ def package(output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts/baseline/submit.zip")
+    parser.add_argument("--colab-output", type=Path, help="Colab 업로드용 별도 ZIP (제출물 아님)")
     args = parser.parse_args()
     try:
+        if args.colab_output and (args.colab_output.exists() or args.colab_output.resolve() == args.output.resolve()):
+            raise ValueError("Colab ZIP은 제출 ZIP과 다른 새 경로여야 한다")
         manifest = package(args.output)
+        if args.colab_output:
+            package_colab(args.colab_output, args.output)
     except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as exc:
         parser.exit(1, f"error: {exc}\n")
     print(json.dumps(manifest["archive"], ensure_ascii=False))
     print("ZIP 검증 PASS (압축 해제 mock 10건·49열). 실제 모델·서버 제출 미검증.")
+    if args.colab_output:
+        print(f"Colab 전용 번들: {args.colab_output} (대회 제출 금지)")
 
 
 if __name__ == "__main__":

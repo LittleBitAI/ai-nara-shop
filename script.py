@@ -23,6 +23,7 @@ import argparse
 import csv
 import gzip
 import hashlib
+from importlib.metadata import PackageNotFoundError, version
 import io
 import json
 import os
@@ -32,6 +33,7 @@ import re
 import sys
 import tempfile
 import time
+import traceback
 import unicodedata
 from collections import Counter
 from typing import Any, Dict, Iterator, List, Optional, Tuple
@@ -65,6 +67,11 @@ QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
 
 def log(msg: str) -> None:
     print(f"[baseline] {msg}", file=sys.stderr, flush=True)
+
+
+def file_sha256(path) -> str:
+    with open(path, "rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
 # ===== 2. 데이터 로더 =====
@@ -184,7 +191,8 @@ def item_table(data_dir: str = DATA_DIR) -> Dict[str, Dict[str, Any]]:
     p = os.path.join(data_dir, "항목표.json")
     if not os.path.exists(p):
         raise FileNotFoundError(f"{p} 가 없습니다 — data/ 를 그대로 둔 채 실행하세요.")
-    return json.load(io.open(p, encoding="utf-8"))["항목"]
+    with io.open(p, encoding="utf-8") as stream:
+        return json.load(stream)["항목"]
 
 
 def decode_schema(data_dir: str = DATA_DIR) -> Dict[str, Any]:
@@ -292,6 +300,14 @@ class VLLMRunner:
             temperature=0.0, max_tokens=max_tokens, seed=seed,
             structured_outputs=StructuredOutputsParams(json=schema, disable_any_whitespace=True),
         )
+        import torch
+        self.environment.update(
+            cuda=torch.version.cuda,
+            gpus=[{"name": torch.cuda.get_device_name(i),
+                   "total_memory": torch.cuda.get_device_properties(i).total_memory}
+                  for i in range(torch.cuda.device_count())],
+            sampling_params=str(self.sp),
+        )
         self.load_seconds = time.time() - t0
 
     def count_tokens(self, messages: List[Dict[str, str]]) -> int:
@@ -302,8 +318,18 @@ class VLLMRunner:
         return len(ids)
 
     def chat(self, batch: List[List[Dict[str, str]]]) -> List[str]:
+        self.last_response_info = []  # A failed call must not reuse an earlier call's metadata.
         outs = self.llm.chat(batch, sampling_params=self.sp, use_tqdm=False,
                              chat_template_kwargs={"enable_thinking": False})
+        for output in outs:
+            completion = output.outputs[0] if output.outputs else None
+            self.last_response_info.append({
+                "prompt_tokens": len(output.prompt_token_ids) if output.prompt_token_ids is not None else None,
+                "output_tokens": len(completion.token_ids) if completion else 0,
+                "finish_reason": completion.finish_reason if completion else None,
+                "stop_reason": completion.stop_reason if completion else None,
+                "max_tokens": self.sp.max_tokens,
+            })
         return [o.outputs[0].text if o.outputs else "" for o in outs]
 
 
@@ -338,29 +364,70 @@ def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: in
         max_chars = max(128, int(max_chars * min(0.85, budget / n * 0.95)))
 
 
-def run_chunk(runner, batch: List[List[Dict[str, str]]]) -> List[str]:
+def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
+              emit=None, debug_responses=False) -> List[str]:
     """호출·JSON 실패 건만 한 번 재시도하며 정상 응답 없는 공고는 실행 실패로 처리합니다."""
+    def record(event, **fields):
+        if emit:
+            emit(event, chunk_start=start, **fields)
+        if fields.get("error_type"):
+            log(json.dumps({"event": event, "chunk_start": start, **fields}, ensure_ascii=False))
+
+    def response(i, attempt, text, info):
+        fields = {"chunk_index": i, "global_index": start + i,
+                  "id": ids[i] if ids is not None else None, "attempt": attempt,
+                  "response_chars": len(text), **info}
+        if debug_responses:
+            fields["response_text"] = text
+        try:
+            parse_judgment(text)
+        except ValueError as error:
+            record("response", status="invalid", error_type=type(error).__name__,
+                   error_message=str(error), **fields)
+            raise
+        record("response", status="valid", **fields)
+
+    stage = "call"
+    batch_failed = False
     try:
         outs = runner.chat(batch)
+        stage = "response_count"
         if len(outs) != len(batch):
-            raise ValueError("모델 응답 건수 불일치")
+            raise ValueError(f"모델 응답 건수 불일치: expected={len(batch)}, actual={len(outs)}")
     except Exception as e:
-        log(f"청크 호출 실패 → 건별 재시도 ({type(e).__name__})")
+        record("batch_failed", attempt=1, stage=stage, error_type=type(e).__name__, error_message=str(e))
+        batch_failed = True
         outs = [""] * len(batch)
+    # Retries replace runner metadata; preserve the original batch's metadata first.
+    initial_info = list(getattr(runner, "last_response_info", [])) if not batch_failed else []
     for i, m in enumerate(batch):
-        try:
-            parse_judgment(outs[i])
-            continue
-        except ValueError:
-            pass
+        if not batch_failed:
+            try:
+                response(i, 1, outs[i], initial_info[i] if i < len(initial_info) else {})
+                continue
+            except ValueError:
+                pass
+        stage = "call"
+        retry_info = {}
         try:
             retried = runner.chat([m])
+            stage = "response_count"
             if len(retried) != 1:
-                raise ValueError("재시도 응답 건수 불일치")
-            parse_judgment(retried[0])
+                raise ValueError(f"재시도 응답 건수 불일치: expected=1, actual={len(retried)}")
+            infos = getattr(runner, "last_response_info", [])
+            retry_info = infos[0] if infos else {}
+            stage = "parse"
+            response(i, 2, retried[0], retry_info)
             outs[i] = retried[0]
         except Exception as e:
-            raise RuntimeError(f"청크 내 {i}번 공고: 정상 모델 응답 재시도 실패 ({type(e).__name__})") from e
+            record("retry_failed", chunk_index=i, global_index=start + i,
+                   id=ids[i] if ids is not None else None, attempt=2, stage=stage,
+                   error_type=type(e).__name__, error_message=str(e), **retry_info)
+            raise RuntimeError(
+                f"청크 내 {i}번 공고 (global_index={start + i}, id={ids[i] if ids is not None else None}): "
+                f"정상 모델 응답 재시도 실패 [{stage}] {type(e).__name__}: {e}; "
+                f"generation={retry_info}"
+            ) from e
     return outs
 
 
@@ -394,6 +461,8 @@ def extract_json(text: str) -> Optional[Any]:
 def parse_judgment(text: str) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
     """24항목·정수 0/1·근거 타입을 검증합니다. 결손을 기본값으로 메우지 않습니다."""
     obj = extract_json(text)
+    if obj is None:
+        raise ValueError("빈 모델 응답" if not (text or "").strip() else "JSON 파싱 실패 또는 최종 답변 없음")
     if isinstance(obj, dict) and isinstance(obj.get("판정"), dict):
         obj = obj["판정"]
     if not isinstance(obj, dict) or set(obj) != set(ITEMS):
@@ -502,7 +571,57 @@ def validate_csv(path: str, expected_ids: List[str]) -> List[str]:
 
 # ===== 8. 실행 =====
 def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk: int,
-        max_chars: int, data_dir: str, **runner_kw) -> Dict[str, Any]:
+        max_chars: int, data_dir: str, debug_responses: bool = False, **runner_kw) -> Dict[str, Any]:
+    """성공 산출물과 별도로 실행 시작부터 실패까지 진단을 즉시 기록합니다."""
+    output = Path(out_path)
+    diagnostic_path = output.with_name("diagnostics.jsonl")
+    if any(p.exists() for p in (output, output.with_name("run_report.json"), diagnostic_path)):
+        raise ValueError("이전 결과/진단이 있다. 새로운 output 디렉터리를 사용하세요")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    settings = dict(model_dir=MODEL_DIR, quant=QUANT, max_tokens=MAX_TOKENS,
+                    seed=SEED, gpu_mem=0.92, tp=1)
+    settings.update(runner_kw)
+    with diagnostic_path.open("x", encoding="utf-8", newline="\n") as stream:
+        def emit(event, **fields):
+            stream.write(json.dumps({"event": event, "time_unix": time.time(), **fields},
+                                    ensure_ascii=False) + "\n")
+            stream.flush()
+        try:
+            metadata = {
+                "mode": "live" if runner_cls is VLLMRunner else "mock",
+                "argv": sys.argv, "python": platform.python_version(), "platform": platform.platform(),
+                "settings": {"input": input_path, "output": out_path, "data_dir": data_dir,
+                             "limit": limit, "chunk": chunk, "max_chars": max_chars,
+                             "debug_responses": debug_responses, "max_model_len": MAX_MODEL_LEN,
+                             "temperature": 0, "thinking": False, **settings},
+                "code_sha256": file_sha256(__file__),
+                "expected_model": {"id": MODEL_ID, "revision": MODEL_REVISION},
+            }
+            emit("run_started", **metadata)
+            packages = {}
+            for name in ("vllm", "torch", "transformers", "xgrammar", "tokenizers"):
+                try:
+                    packages[name] = version(name)
+                except PackageNotFoundError:
+                    packages[name] = None
+            assets = {"input": input_path, "items": str(Path(data_dir) / "항목표.json"),
+                      "decode_schema": str(Path(data_dir) / "정답스키마_디코딩.json")}
+            metadata["packages"] = packages
+            metadata["asset_sha256"] = {name: file_sha256(path) if Path(path).is_file() else None
+                                        for name, path in assets.items()}
+            emit("assets", packages=packages, sha256=metadata["asset_sha256"])
+            result = _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
+                          emit=emit, debug_responses=debug_responses, metadata=metadata, **settings)
+            emit("run_succeeded", count=result["건수"], model_success_count=result["model_success_count"])
+            return result
+        except Exception as error:
+            emit("run_failed", error_type=type(error).__name__, error_message=str(error),
+                 traceback=traceback.format_exc())
+            raise
+
+
+def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
+         *, emit, debug_responses, metadata, **runner_kw):
     t_all = time.time()
     output = Path(out_path)
     report_path = output.with_name("run_report.json")
@@ -521,7 +640,11 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
 
     tbl, schema = item_table(data_dir), decode_schema(data_dir)
     system_prompt = build_system_prompt(tbl)
+    emit("model_loading", schema_sha256=hashlib.sha256(
+        json.dumps(schema, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest(),
+         system_prompt_sha256=hashlib.sha256(system_prompt.encode("utf-8")).hexdigest())
     runner = runner_cls(schema, **runner_kw)
+    emit("model_loaded", environment=getattr(runner, "environment", {}), load_seconds=runner.load_seconds)
     log(f"모델 로드 {runner.load_seconds:.1f}s")
 
     # 전건 메시지 구성(길이 예산 맞춤)
@@ -537,7 +660,10 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
     t_inf = time.time()
     texts: List[str] = []
     for s in range(0, len(msgs_all), chunk):
-        texts.extend(run_chunk(runner, msgs_all[s:s + chunk]))
+        emit("chunk_started", chunk_start=s, count=len(msgs_all[s:s + chunk]))
+        texts.extend(run_chunk(runner, msgs_all[s:s + chunk], start=s,
+                               ids=[r["id"] for r in recs[s:s + chunk]], emit=emit,
+                               debug_responses=debug_responses))
         log(f"  {min(s + chunk, len(msgs_all))}/{len(msgs_all)}건 … {time.time() - t_inf:.0f}s")
     inf_seconds = time.time() - t_inf
 
@@ -560,7 +686,8 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
         "environment": getattr(runner, "environment", {"python": platform.python_version()}),
         "code_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "input_sha256": hashlib.sha256(Path(input_path).read_bytes()).hexdigest(),
-        "seed": SEED, "temperature": 0, "thinking": False,
+        "reproduction": metadata,
+        "seed": runner_kw["seed"], "temperature": 0, "thinking": False,
         "prompt_budget": budget, "max_tokens": output_tokens, "max_chars": max_chars,
         "prompt_tokens_max": max(ntok), "token_count_kind": "actual" if live else "mock_estimate",
         "건수": len(recs), "모델로드_s": round(runner.load_seconds, 1), "추론_s": round(inf_seconds, 1),
@@ -601,6 +728,8 @@ def main() -> int:
     ap.add_argument("--max-tokens", type=int, default=MAX_TOKENS)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--mock", action="store_true", help="모델 없이 흐름만 확인")
+    ap.add_argument("--debug-responses", action="store_true",
+                    help="공개 dev 로컬 진단용: 원응답을 diagnostics.jsonl에 저장. 제출 실행에서는 사용하지 않음")
     a = ap.parse_args()
 
     input_path = a.input or os.path.join(a.data_dir, "test.jsonl.gz")
@@ -610,8 +739,10 @@ def main() -> int:
                      seed=SEED, gpu_mem=a.gpu_mem, tp=a.tp)
     try:
         run(input_path, out_path, MockRunner if a.mock else VLLMRunner,
-            limit=a.limit, chunk=a.chunk, max_chars=a.max_chars, data_dir=a.data_dir, **runner_kw)
+            limit=a.limit, chunk=a.chunk, max_chars=a.max_chars, data_dir=a.data_dir,
+            debug_responses=a.debug_responses, **runner_kw)
     except Exception as e:
+        traceback.print_exc()
         log(f"실행 실패: {type(e).__name__}: {e}")
         return 1
     return 0

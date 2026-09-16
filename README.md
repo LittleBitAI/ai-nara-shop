@@ -50,6 +50,11 @@ python -X utf8 tools/package.py
 기존 출력은 덮어쓰지 않으므로 재실행에는 새 `--output-dir`/`--output` 경로를 사용합니다.
 [T1 실행 기록·팀원 합류 기준](docs/tasks/t1-baseline.md), [고정 모델 조사](docs/gemma4.md)를 확인하세요.
 
+서버 재시도 실패 후 원인 예외·생성 종료 사유·토큰 수를 `diagnostics.jsonl`에 남기도록 보강했습니다.
+[Colab 실행 안내](docs/colab.md)의 노트북은 동일한 제출 ZIP으로 샘플 10건 → dev 200건 → 채점을 실행합니다.
+Colab 보안 비밀 `HF_TOKEN`은 필수입니다. 서버의 Python·패키지·무인자 진입점·기본 설정을 검사하고 통과한 ZIP을 그대로 다운로드합니다.
+실제 Colab GPU 검증은 아직 수행하지 않았습니다.
+
 ## 현재 상태
 
 - 작업 문서: `docs/`에 대회 안내·규칙·데이터·24항목을 주제별로 통합했습니다.
