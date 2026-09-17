@@ -660,24 +660,27 @@ def extract_json(text: str) -> Optional[Any]:
 
 
 def parse_judgment(text: str, expected_items=None, *, sme=False) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
-    """요청 항목·정수 0/1·근거와 별도 단계의 facts를 검증한다. 결손을 기본값으로 메우지 않는다."""
+    """동등한 이진값을 정규화하고 추가 필드는 버린다. 필수 판정 결손은 복구 대상으로 남긴다."""
     obj = extract_json(text)
     if obj is None:
         raise ValueError("빈 모델 응답" if not (text or "").strip() else "JSON 파싱 실패 또는 최종 답변 없음")
     if isinstance(obj, dict) and isinstance(obj.get("판정"), dict):
         obj = obj["판정"]
     expected = ITEMS if expected_items is None else expected_items
-    if not isinstance(obj, dict) or set(obj) != set(expected):
+    if not isinstance(obj, dict) or not set(expected) <= set(obj):
         raise ValueError(f"정상 {len(expected)}항목 JSON이 아니다")
     out = {}
     for v in expected:
         raw = obj.get(v) if isinstance(obj, dict) else None
         fields = {"위반여부", "근거문구", "facts"} if sme else {"위반여부", "근거문구"}
-        if not isinstance(raw, dict) or set(raw) != fields:
-            raise ValueError(f"{v}: 판정 필드 결손/초과")
+        if not isinstance(raw, dict) or not fields <= set(raw):
+            raise ValueError(f"{v}: 판정 필드 결손")
         hit = raw["위반여부"]
-        if type(hit) is not int or hit not in (0, 1):
-            raise ValueError(f"{v}: 위반여부는 정수 0 또는 1이어야 한다")
+        if isinstance(hit, str):
+            hit = {"0": 0, "1": 1, "false": 0, "true": 1}.get(hit.strip().lower())
+        if not isinstance(hit, (int, float)) or hit not in (0, 1):
+            raise ValueError(f"{v}: 위반여부는 명확한 이진값이어야 한다")
+        hit = int(hit)
         ev = raw["근거문구"]
         if ev is not None and not isinstance(ev, str):
             raise ValueError(f"{v}: 근거문구는 문자열 또는 null이어야 한다")
@@ -685,8 +688,8 @@ def parse_judgment(text: str, expected_items=None, *, sme=False) -> Tuple[Dict[s
         if sme:
             facts = raw["facts"]
             properties = sme_facts_schema(v)["properties"]
-            if not isinstance(facts, dict) or set(facts) != set(properties):
-                raise ValueError(f"{v}: facts 필드 결손/초과")
+            if not isinstance(facts, dict) or not set(properties) <= set(facts):
+                raise ValueError(f"{v}: facts 필드 결손")
             for key, spec in properties.items():
                 value = facts[key]
                 nullable = isinstance(spec["type"], list)
@@ -696,7 +699,7 @@ def parse_judgment(text: str, expected_items=None, *, sme=False) -> Tuple[Dict[s
                     "maxLength" in spec and len(value) > spec["maxLength"]) or (
                     "pattern" in spec and not re.fullmatch(spec["pattern"], value)):
                     raise ValueError(f"{v}: facts.{key} 형식 오류")
-            out[v]["facts"] = facts
+            out[v]["facts"] = {key: facts[key] for key in properties}
     return out, []
 
 
