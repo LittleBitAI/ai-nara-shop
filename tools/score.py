@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 import hashlib
 import io
 import json
-import os
 from pathlib import Path
 import platform
 import sys
@@ -82,6 +81,23 @@ def calculate(truth, pred):
     }, errors
 
 
+REPO = Path(__file__).resolve().parent.parent
+
+
+def portable(path):
+    """기록에 남길 경로. 저장소 밖 절대 경로는 기계·사용자 이름을 드러내므로 남기지 않는다."""
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(REPO).as_posix() or "."
+    except ValueError:
+        return "<외부>/" + resolved.name
+
+
+def portable_argv(argv):
+    """인터프리터는 이름만, 절대 경로 인자는 portable 형태로 남긴다."""
+    return ["python"] + [portable(a) if Path(a).is_absolute() else a for a in argv[1:]]
+
+
 def powershell_command(argv):
     return "& " + " ".join("'" + arg.replace("'", "''") + "'" for arg in argv)
 
@@ -95,22 +111,23 @@ def run(args, argv):
     truth, truth_hash = load_csv(args.truth)
     pred, pred_hash = load_csv(args.pred)
     metrics, errors = calculate(truth, pred)
+    argv = portable_argv(argv)
     command = powershell_command(argv)
     manifest = {
         "artifact_id": f"score-{args.output_dir.name}", "version": 1, "status": "draft",
         "run_id": args.output_dir.name, "baseline_run": None,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "sources": [
-            {"role": "truth", "path": args.truth.as_posix(), "sha256": truth_hash},
-            {"role": "pred", "path": args.pred.as_posix(), "sha256": pred_hash},
+            {"role": "truth", "path": portable(args.truth), "sha256": truth_hash},
+            {"role": "pred", "path": portable(args.pred), "sha256": pred_hash},
         ],
         "generator": {
-            "path": os.path.relpath(code_path).replace(os.sep, "/"), "sha256": code_hash,
+            "path": portable(code_path), "sha256": code_hash,
             "argv": argv, "command": command,
-            "settings": {"output_dir": args.output_dir.as_posix(), "zero_division": 0, "items": 24},
+            "settings": {"output_dir": portable(args.output_dir), "zero_division": 0, "items": 24},
         },
         "environment": {"python": platform.python_version(), "platform": platform.platform(),
-                        "cwd": Path.cwd().as_posix()},
+                        "cwd": portable(Path.cwd())},
         "mode": "local_scoring", "model": None, "prompt_hash": None, "seed": None,
         "parents": [], "reviewer": None, "reviewed_at": None, "decision": None,
         "execution_status": "complete",

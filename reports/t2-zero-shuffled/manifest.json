@@ -13,7 +13,7 @@
     },
     {
       "role": "pred",
-      "path": "C:/Users/Public/Documents/ESTsoft/CreatorTemp/t2-zero-9wp80_w2/zero.csv",
+      "path": "<외부>/zero.csv",
       "sha256": "e93cd5e3d984e1468401a9b98277bd28a39dc3255e6936ce73a05e791365ac2c"
     }
   ],
@@ -21,18 +21,18 @@
     "path": "tools/score.py",
     "sha256": "4e8ef1a2284364fdb26cbab4dc53af8d9eac57d2d85f6651279ea3e1dc5f1c57",
     "argv": [
-      "C:\\Users\\dasdk\\anaconda3\\python.exe",
+      "python",
       "-X",
       "utf8",
       "tools/score.py",
       "--truth",
       "open\\dev_labels.csv",
       "--pred",
-      "C:\\Users\\Public\\Documents\\ESTsoft\\CreatorTemp\\t2-zero-9wp80_w2\\zero.csv",
+      "<외부>/zero.csv",
       "--output-dir",
       "reports/t2-zero-shuffled"
     ],
-    "command": "& 'C:\\Users\\dasdk\\anaconda3\\python.exe' '-X' 'utf8' 'tools/score.py' '--truth' 'open\\dev_labels.csv' '--pred' 'C:\\Users\\Public\\Documents\\ESTsoft\\CreatorTemp\\t2-zero-9wp80_w2\\zero.csv' '--output-dir' 'reports/t2-zero-shuffled'",
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open\\dev_labels.csv' '--pred' '<외부>/zero.csv' '--output-dir' 'reports/t2-zero-shuffled'",
     "settings": {
       "output_dir": "reports/t2-zero-shuffled",
       "zero_division": 0,
@@ -42,7 +42,7 @@
   "environment": {
     "python": "3.13.9",
     "platform": "Windows-11-10.0.26200-SP0",
-    "cwd": "C:/Users/dasdk/orca/workspaces/ai-nara-shop/feat-experiment-t2-score"
+    "cwd": "."
   },
   "mode": "local_scoring",
   "model": null,

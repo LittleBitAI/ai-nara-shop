@@ -19,5 +19,5 @@ e는 점수에서 제외했다. 근거 원문 부분문자열·의미 품질은 
 입력 경로·SHA-256과 채점 코드 SHA-256은 manifest.json에 기록했다.
 
 ```powershell
-& 'C:\Users\dasdk\anaconda3\python.exe' '-X' 'utf8' 'tools/score.py' '--truth' 'open\dev_labels.csv' '--pred' 'C:\Users\Public\Documents\ESTsoft\CreatorTemp\t2-zero-9wp80_w2\zero.csv' '--output-dir' 'reports/t2-zero-check'
+& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open\dev_labels.csv' '--pred' '<외부>/zero.csv' '--output-dir' 'reports/t2-zero-check'
 ```

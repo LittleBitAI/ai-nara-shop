@@ -26,6 +26,9 @@ ZIP을 사람마다 따로 전달하지 않습니다. 팀원은 `git pull` 하�
   GitHub 한도로 제외한 전례는 [publication.json](../reports/publication.json)에 있습니다.
 - 등록 전에 `HF_TOKEN`·`hf_`·`api_key`·`Bearer`·개인 절대 경로 패턴을 검사합니다.
   값이 붙은 것만 위반입니다. 환경변수 이름, `hf_xet` 같은 패키지 이름, 이 규칙 문장 자체는 오탐입니다.
+- 실행 환경이 만든 컨테이너 경로(Colab의 `/content/...`)는 로그 원본이므로 그대로 둡니다.
+  사용자 이름·기계 이름이 드러나는 경로(`C:\Users\<이름>\...`, `/home/<이름>/...`)는 등록하지 않습니다.
+  저장소가 만드는 기록은 [공통 규칙 W3](workflow.md#w3-파일편집)대로 애초에 상대 경로로 적습니다.
 - 로그의 줄 끝 공백도 실행이 만든 바이트이므로 지우지 않습니다. 대신 `.gitattributes`에서
   이 폴더의 `whitespace=-trailing-space`를 켜 `git diff --check`가 그 줄을 보지 않게 합니다.
 - 요약은 `.wiki/decisions/`에 한 장만 남기고 전문은 이 폴더가 소유합니다.
