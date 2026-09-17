@@ -152,7 +152,7 @@ class PackageTests(unittest.TestCase):
             report_path = results / "dev/run_report.json"
             report = json.loads(report_path.read_text(encoding="utf-8"))
             # Synthetic success metadata exercises the gate only, never a live-model result.
-            report.update(mode="live", model_success_count=200, sme_model_success_count=200,
+            report.update(mode="live", model_success_count=200, sme_model_success_count=0,
                           model={"id": "test", "expected_revision": "test"})
             report["environment"]["cuda"] = "13.0"
             report["reproduction"].update(python="3.12.13", packages=namespace["EXPECTED_PACKAGES"].copy())
@@ -160,8 +160,25 @@ class PackageTests(unittest.TestCase):
                 report_path.write_text(json.dumps(report), encoding="utf-8")
             write()
             namespace["check_live"]("dev", 200)
+            baseline_path = results / "dev/baseline_submission.csv"
+            original_baseline = baseline_path.read_bytes()
+            with baseline_path.open(encoding="utf-8") as stream:
+                rows = list(csv.DictReader(stream))
+            rows[0]["v13"] = "1"
+            def write_baseline():
+                with baseline_path.open("w", encoding="utf-8", newline="") as stream:
+                    writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+                    writer.writeheader()
+                    writer.writerows(rows)
+            write_baseline()
+            with self.assertRaisesRegex(RuntimeError, "선택 건수"):
+                namespace["check_live"]("dev", 200)
             # An optional failure is accepted only with full baseline success and exact counts.
-            report.update(sme_model_success_count=199, sme_verified_count=199, sme_fallback_count=1)
+            report.update(sme_selected_count=1, sme_skipped_count=199,
+                          sme_model_success_count=0, sme_verified_count=0, sme_fallback_count=1)
+            final_path = results / "dev/submission.csv"
+            original_final = final_path.read_bytes()
+            final_path.write_bytes(baseline_path.read_bytes())
             write()
             namespace["check_live"]("dev", 200)
             report["model_success_count"] = 199
@@ -172,10 +189,20 @@ class PackageTests(unittest.TestCase):
             write()
             with self.assertRaisesRegex(RuntimeError, "실제 모델 성공"):
                 namespace["check_live"]("dev", 200)
-            report.update(sme_model_success_count=200, sme_verified_count=200)
+            report.update(sme_selected_count=0, sme_skipped_count=200,
+                          sme_model_success_count=0, sme_verified_count=0)
             write()
-            baseline_path = results / "dev/baseline_submission.csv"
-            original_baseline = baseline_path.read_bytes()
+            baseline_path.write_bytes(original_baseline)
+            final_path.write_bytes(original_final)
+            with final_path.open(encoding="utf-8") as stream:
+                rows = list(csv.DictReader(stream))
+            rows[0]["v13"] = "1"
+            write_baseline()
+            final_path.write_bytes(baseline_path.read_bytes())
+            baseline_path.write_bytes(original_baseline)
+            with self.assertRaisesRegex(RuntimeError, "생략한 공고"):
+                namespace["check_live"]("dev", 200)
+            final_path.write_bytes(original_final)
             with baseline_path.open(encoding="utf-8") as stream:
                 rows = list(csv.DictReader(stream))
             rows[0]["e1"] = "unexpected change"
@@ -183,7 +210,7 @@ class PackageTests(unittest.TestCase):
                 writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
                 writer.writeheader()
                 writer.writerows(rows)
-            with self.assertRaisesRegex(RuntimeError, "다른 21항목"):
+            with self.assertRaisesRegex(RuntimeError, "다른 23항목"):
                 namespace["check_live"]("dev", 200)
             baseline_path.write_bytes(original_baseline)
             downloaded = []
