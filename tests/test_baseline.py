@@ -29,10 +29,81 @@ def valid():
 
 
 class BaselineTests(unittest.TestCase):
+    def test_split_retry_validates_every_group_without_changing_defaults(self):
+        runner = object.__new__(baseline.VLLMRunner)
+        runner.sp = SimpleNamespace(max_tokens=2048, structured_outputs=SimpleNamespace(
+            json=baseline.decode_schema(str(ROOT / "open/data"))))
+        runner.count_tokens = lambda messages: 14000
+        good = valid()
+        good["v10"]["위반여부"] = 1
+        calls = []
+        def chat(batch, sampling_params, **kwargs):
+            keys = sampling_params.structured_outputs.json["required"]
+            if len(keys) <= 6:
+                for k in keys:
+                    if k not in baseline.ABSENCE:
+                        self.assertEqual(sampling_params.structured_outputs.json["properties"][k]
+                                         ["properties"]["근거문구"]["maxLength"], 100)
+            calls.append(list(keys))
+            # A deterministic all-item completion always truncates; smaller schemas succeed.
+            text = json.dumps({k: good[k] for k in keys}) if len(keys) <= 6 else '{"v1":'
+            return [SimpleNamespace(outputs=[SimpleNamespace(text=text, token_ids=[1],
+                    finish_reason="stop" if len(keys) <= 6 else "length", stop_reason=None)],
+                    prompt_token_ids=[1])]
+        runner.llm = SimpleNamespace(chat=chat)
+        messages = [{"role": "system", "content": "판정 지시"}, {"role": "user", "content": "공고 원문"}]
+        original = copy.deepcopy(messages)
+        result = baseline.run_chunk(runner, [messages])
+        self.assertEqual(baseline.parse_judgment(result[0])[0], good)
+        self.assertEqual([len(keys) for keys in calls], [24, 6, 6, 6, 6])
+        self.assertEqual(sum(calls[1:], []), baseline.ITEMS)
+        self.assertEqual(messages, original)
+        self.assertEqual(runner.sp.max_tokens, 2048)
+        self.assertEqual(runner.sp.structured_outputs.json["required"], baseline.ITEMS)
+        self.assertEqual(runner.sp.structured_outputs.json["properties"]["v1"]
+                         ["properties"]["근거문구"]["maxLength"], 500)
+        runner.llm.chat = lambda *a, **kw: [SimpleNamespace(outputs=[], prompt_token_ids=[1])]
+        with self.assertRaises(RuntimeError):
+            baseline.run_chunk(runner, [messages])
+        def bad_second_group(batch, sampling_params, **kwargs):
+            outputs = chat(batch, sampling_params, **kwargs)
+            if sampling_params.structured_outputs.json["required"][0] == "v7":
+                outputs[0].outputs[0].text = "{}"
+            return outputs
+        runner.llm.chat = bad_second_group
+        calls.clear()
+        with self.assertRaisesRegex(RuntimeError, "정상 6항목"):
+            baseline.run_chunk(runner, [messages])
+        self.assertEqual([len(keys) for keys in calls], [24, 6, 6])
+        self.assertEqual([g["status"] for g in runner.last_response_info[0]["groups"]], ["valid", "failed"])
+        runner.count_tokens = lambda messages: baseline.MAX_MODEL_LEN - 64
+        with self.assertRaisesRegex(RuntimeError, "토큰 예산 없음"):
+            baseline.run_chunk(runner, [messages])
+
+    def test_provided_law_and_product_context(self):
+        laws, products = baseline.load_sme_reference(str(ROOT / "open/data"))
+        self.assertIn("제7조(중소기업자간 경쟁입찰의 예외 등)", laws)
+        self.assertIn("제9조(직접생산의 확인 등)", laws)
+        rec = record()
+        rec["meta"]["세부품명번호목록"] = None
+        rec["docs"][0]["text"] = "세부품명번호 1110152201 활성탄 구매"
+        before = copy.deepcopy(rec)
+        prompt = baseline.build_user_prompt(rec, 16000, products=products)
+        self.assertIn("석탄계 입상활성탄 및 석유화학계 활성탄 제외", prompt)
+        self.assertIn("1110152201", prompt)
+        self.assertEqual(rec, before)
+        # A different notice must not inherit a preceding notice's product lookup.
+        other = baseline.build_user_prompt(record(), 16000, products=products)
+        self.assertNotIn("1110152201", other)
+        with tempfile.TemporaryDirectory() as tmp, self.assertRaises(FileNotFoundError):
+            baseline.load_sme_reference(tmp)
+
     def test_diagnostics_preserve_initial_and_retry_metadata(self):
         good = json.dumps(valid())
         runner = object.__new__(baseline.VLLMRunner)
         runner.sp = SimpleNamespace(max_tokens=2048)
+        # Exercise logging independently of the split-retry strategy tested above.
+        runner.retry_chat = runner.chat
         calls = []
         def chat(batch, **kwargs):
             calls.append(len(batch))

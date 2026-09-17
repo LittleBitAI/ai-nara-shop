@@ -20,6 +20,7 @@ from __future__ import annotations
 
 # ===== 1. 상수·경로 =====
 import argparse
+import copy
 import csv
 import gzip
 import hashlib
@@ -63,6 +64,11 @@ MAX_TOKENS = 2048                       # 24항목 JSON과 짧은 인용을 위�
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
+SME_FILES = (
+    "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt",
+    "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt",
+    "법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv",
+)
 
 
 def log(msg: str) -> None:
@@ -245,29 +251,77 @@ SYSTEM_TAIL = """
 설명이나 머리말을 덧붙이지 않는다."""
 
 
-def build_system_prompt(tbl: Dict[str, Dict[str, Any]]) -> str:
+def load_sme_reference(data_dir):
+    """제공 스냅샷의 조문·예외와 품목 원문만 사용한다. 정답/외부 지식은 읽지 않는다."""
+    excerpts = []
+    selections = ((SME_FILES[0], "제7조", ("①",)), (SME_FILES[0], "제9조", ("①", "④")),
+                  (SME_FILES[1], "제7조", ("①", "②")))
+    for name, article, paragraphs in selections:
+        text = (Path(data_dir) / name).read_text(encoding="utf-8-sig")
+        match = re.search(r"^" + article + r"\(.*?(?=^제\d+조|\Z)", text, re.M | re.S)
+        if not match:
+            raise ValueError(f"제공 법령의 조문을 찾을 수 없다: {name} {article}")
+        parts = []
+        for paragraph in paragraphs:
+            part = re.search(r"^  " + paragraph + r".*?(?=^  [①-⑳]|\Z)", match[0], re.M | re.S)
+            if not part:
+                raise ValueError(f"제공 법령의 항을 찾을 수 없다: {name} {article} {paragraph}")
+            parts.append(part[0].strip())
+        excerpts.append(f"[{Path(name).stem}]\n{match[0].splitlines()[0]}\n" + "\n".join(parts))
+    with (Path(data_dir) / SME_FILES[2]).open(encoding="utf-8-sig", newline="") as stream:
+        products = list(csv.DictReader(stream))
+    if not products or any("세부품명" not in p or "특이사항" not in p or
+                           not re.fullmatch(r"(?:\d{10})?", p.get("세부품명번호", "")) for p in products):
+        raise ValueError("제공 경쟁제품 CSV의 세부품명번호 형식 오류")
+    return "\n\n".join(excerpts), products
+
+
+def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="") -> str:
     lines = []
     for v in ITEMS:
         it = tbl[v]
         tag = "  [근거 없음 — null]" if it["부재탐지"] else ""
         note = f" ({it['비고']})" if it.get("비고") else ""
         lines.append(f"- {v}: {it['항목명']}{note}{tag}")
-    return SYSTEM_HEAD + "\n" + "\n".join(lines) + "\n" + SYSTEM_TAIL
+    reference = ""
+    if sme_laws:
+        reference = """
+[v10·v11·v13 검토용 제공 법령]
+아래는 판정 기준이며 공고문 인용 근거가 아니다. 다른 항목의 적용 범위를 바꾸지 않는다.
+먼저 해당 품목이 경쟁제품인지, 고시의 제외 조건과 계약 예외에 해당하는지 확인한다.
+v10·v11은 적용 대상인데 요구 자격이 빠진 경우를 각각 확인한다. 부재탐지는 인용할 문장이
+없다는 이유만으로 0으로 내지 않는다. 다만 문서 미관측을 자격 부재의 증거로 쓰지 않는다.
+v13은 '중소기업'과 '소기업·소상공인만'의 제한 범위를 구분한다.
+단어의 등장만으로 위반을 정하지 말고 대상·제한 내용·예외를 함께 확인한다.
+""" + sme_laws
+    return SYSTEM_HEAD + "\n" + "\n".join(lines) + reference + "\n" + SYSTEM_TAIL
 
 
-def build_user_prompt(rec: Dict[str, Any], max_chars: int) -> str:
+def build_user_prompt(rec: Dict[str, Any], max_chars: int, products=()) -> str:
+    context = build_context(rec, max_chars=max_chars)
+    product_context = ""
+    if products:
+        source = str(rec.get("meta", {}).get("세부품명번호목록") or "") + "\n" + context
+        codes = set(re.findall(r"(?<!\d)\d{10}(?!\d)", source))
+        matches = [p for p in products if p["세부품명번호"] in codes
+                   or (len(p.get("세부품명", "")) >= 4 and p["세부품명"] in source)]
+        product_context = ("\n[제공 고시 제2025-96호 품목 조회: 코드 또는 세부품명 문자열 일치]\n"
+            "조회 결과는 적용 여부의 참고이며 위반 판정이 아니다. 특이사항의 제외 범위를 확인한다.\n"
+            "조회 없음은 일반제품 확정이 아니며, 문서·메타의 품목과 실제 대상이 같은지 확인한다.\n"
+            + json.dumps(matches[:12], ensure_ascii=False)
+            + f"\n조회 생략 행 수: {max(0, len(matches) - 12)}\n")
     return (
         f"[공고 ID] {rec['id']}\n\n"
         f"[나라장터 입력 메타]\n{format_meta(rec)}\n\n"
         f"[입력 관측성]\n{json.dumps(rec.get('input_completeness', {}), ensure_ascii=False)}\n\n"
-        f"[문서]\n{build_context(rec, max_chars=max_chars)}\n"
+        f"[문서]\n{context}\n{product_context}"
     )
 
 
-def build_messages(rec: Dict[str, Any], system_prompt: str, max_chars: int) -> List[Dict[str, str]]:
+def build_messages(rec: Dict[str, Any], system_prompt: str, max_chars: int, products=()) -> List[Dict[str, str]]:
     return [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": build_user_prompt(rec, max_chars)},
+        {"role": "user", "content": build_user_prompt(rec, max_chars, products)},
     ]
 
 
@@ -317,9 +371,10 @@ class VLLMRunner:
             ids = ids["input_ids"]
         return len(ids)
 
-    def chat(self, batch: List[List[Dict[str, str]]]) -> List[str]:
+    def chat(self, batch: List[List[Dict[str, str]]], sampling_params=None) -> List[str]:
         self.last_response_info = []  # A failed call must not reuse an earlier call's metadata.
-        outs = self.llm.chat(batch, sampling_params=self.sp, use_tqdm=False,
+        sp = self.sp if sampling_params is None else sampling_params
+        outs = self.llm.chat(batch, sampling_params=sp, use_tqdm=False,
                              chat_template_kwargs={"enable_thinking": False})
         for output in outs:
             completion = output.outputs[0] if output.outputs else None
@@ -328,9 +383,49 @@ class VLLMRunner:
                 "output_tokens": len(completion.token_ids) if completion else 0,
                 "finish_reason": completion.finish_reason if completion else None,
                 "stop_reason": completion.stop_reason if completion else None,
-                "max_tokens": self.sp.max_tokens,
+                "max_tokens": sp.max_tokens,
             })
         return [o.outputs[0].text if o.outputs else "" for o in outs]
+
+    def retry_chat(self, batch):
+        """같은 공고만 6항목씩 재생성한다. 완전한 24항목을 검증하기 전에는 성공으로 쓰지 않는다."""
+        if len(batch) != 1:
+            raise ValueError("분할 재시도는 공고 1건만 허용한다")
+        self.last_response_info = []
+        merged, groups = {}, []
+        for offset in range(0, len(ITEMS), 6):
+            keys = ITEMS[offset:offset + 6]
+            messages = copy.deepcopy(batch[0])
+            messages[0]["content"] += (
+                "\n[이번 호출의 출력 범위] 앞의 24항목 출력 지시 대신 다음 키만 판정한다: "
+                + ", ".join(keys) + ". 다른 키는 출력하지 않는다. 각 근거는 원문에서 100자 이내로 인용한다.")
+            sp = copy.deepcopy(self.sp)
+            schema = sp.structured_outputs.json
+            schema["required"] = keys
+            schema["properties"] = {key: schema["properties"][key] for key in keys}
+            for key in keys:
+                if key not in ABSENCE:
+                    schema["properties"][key]["properties"]["근거문구"]["maxLength"] = 100
+            group = {"items": keys, "status": "failed", "stage": "call"}
+            try:
+                sp.max_tokens = min(sp.max_tokens, MAX_MODEL_LEN - self.count_tokens(messages) - 64)
+                if sp.max_tokens < 1:
+                    raise ValueError("분할 재시도 출력 토큰 예산 없음")
+                texts = self.chat([messages], sampling_params=sp)
+                group.update(self.last_response_info[0] if self.last_response_info else {})
+                group["stage"] = "response_count"
+                if len(texts) != 1:
+                    raise ValueError(f"분할 응답 건수 불일치: {len(texts)}")
+                group["stage"] = "parse"
+                parsed, _ = parse_judgment(texts[0], expected_items=keys)
+                merged.update(parsed)
+                group["status"] = "valid"
+            finally:
+                groups.append(group)
+                self.last_response_info = [{"retry_strategy": "split_items", "groups": groups}]
+        text = json.dumps(merged, ensure_ascii=False)
+        parse_judgment(text)
+        return [text]
 
 
 class MockRunner:
@@ -352,10 +447,10 @@ class MockRunner:
 
 
 def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: int,
-                  budget: int = PROMPT_BUDGET) -> Tuple[List[Dict[str, str]], int, int]:
+                  budget: int = PROMPT_BUDGET, products=()) -> Tuple[List[Dict[str, str]], int, int]:
     """설정된 토큰 예산에 맞게 문서 글자 수를 조정합니다."""
     while True:
-        msgs = build_messages(rec, system_prompt, max_chars)
+        msgs = build_messages(rec, system_prompt, max_chars, products)
         n = runner.count_tokens(msgs)
         if n <= budget:
             return msgs, n, max_chars
@@ -366,7 +461,7 @@ def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: in
 
 def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
               emit=None, debug_responses=False) -> List[str]:
-    """호출·JSON 실패 건만 한 번 재시도하며 정상 응답 없는 공고는 실행 실패로 처리합니다."""
+    """실패 공고만 재시도한다. 실제 러너는 출력 항목을 분할하며 결손은 허용하지 않는다."""
     def record(event, **fields):
         if emit:
             emit(event, chunk_start=start, **fields)
@@ -410,7 +505,7 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
         stage = "call"
         retry_info = {}
         try:
-            retried = runner.chat([m])
+            retried = getattr(runner, "retry_chat", runner.chat)([m])
             stage = "response_count"
             if len(retried) != 1:
                 raise ValueError(f"재시도 응답 건수 불일치: expected=1, actual={len(retried)}")
@@ -420,6 +515,8 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
             response(i, 2, retried[0], retry_info)
             outs[i] = retried[0]
         except Exception as e:
+            infos = getattr(runner, "last_response_info", [])
+            retry_info = infos[0] if infos else retry_info
             record("retry_failed", chunk_index=i, global_index=start + i,
                    id=ids[i] if ids is not None else None, attempt=2, stage=stage,
                    error_type=type(e).__name__, error_message=str(e), **retry_info)
@@ -458,17 +555,18 @@ def extract_json(text: str) -> Optional[Any]:
     return None
 
 
-def parse_judgment(text: str) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+def parse_judgment(text: str, expected_items=None) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
     """24항목·정수 0/1·근거 타입을 검증합니다. 결손을 기본값으로 메우지 않습니다."""
     obj = extract_json(text)
     if obj is None:
         raise ValueError("빈 모델 응답" if not (text or "").strip() else "JSON 파싱 실패 또는 최종 답변 없음")
     if isinstance(obj, dict) and isinstance(obj.get("판정"), dict):
         obj = obj["판정"]
-    if not isinstance(obj, dict) or set(obj) != set(ITEMS):
-        raise ValueError("정상 24항목 JSON이 아니다")
+    expected = ITEMS if expected_items is None else expected_items
+    if not isinstance(obj, dict) or set(obj) != set(expected):
+        raise ValueError(f"정상 {len(expected)}항목 JSON이 아니다")
     out = {}
-    for v in ITEMS:
+    for v in expected:
         raw = obj.get(v) if isinstance(obj, dict) else None
         if not isinstance(raw, dict) or set(raw) != {"위반여부", "근거문구"}:
             raise ValueError(f"{v}: 판정 필드 결손/초과")
@@ -606,6 +704,7 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                     packages[name] = None
             assets = {"input": input_path, "items": str(Path(data_dir) / "항목표.json"),
                       "decode_schema": str(Path(data_dir) / "정답스키마_디코딩.json")}
+            assets.update({name: str(Path(data_dir) / name) for name in SME_FILES})
             metadata["packages"] = packages
             metadata["asset_sha256"] = {name: file_sha256(path) if Path(path).is_file() else None
                                         for name, path in assets.items()}
@@ -639,7 +738,8 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         raise ValueError("입력 공고가 0건이다")
 
     tbl, schema = item_table(data_dir), decode_schema(data_dir)
-    system_prompt = build_system_prompt(tbl)
+    sme_laws, products = load_sme_reference(data_dir)
+    system_prompt = build_system_prompt(tbl, sme_laws)
     emit("model_loading", schema_sha256=hashlib.sha256(
         json.dumps(schema, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest(),
          system_prompt_sha256=hashlib.sha256(system_prompt.encode("utf-8")).hexdigest())
@@ -650,7 +750,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     # 전건 메시지 구성(길이 예산 맞춤)
     msgs_all, shrunk, ntok = [], 0, []
     for rec in recs:
-        m, n, mc = fit_to_budget(rec, system_prompt, runner, max_chars, budget=budget)
+        m, n, mc = fit_to_budget(rec, system_prompt, runner, max_chars, budget=budget, products=products)
         msgs_all.append(m)
         ntok.append(n)
         shrunk += int(mc < max_chars)
