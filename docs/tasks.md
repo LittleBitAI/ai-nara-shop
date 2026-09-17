@@ -73,6 +73,14 @@
   공용 위키 `tool/sync.py`를 돌려 색인을 갱신한 뒤 `runs.md — 실행 기록`으로 표시되는 것을 확인했다.
   corpus 도구 자체는 고치지 않았다.
 
+`label-compare`: T4의 첫 실행. 무라벨에 붙일 라벨의 **생성기를 고르기 위해** 외부 LLM 두 개를
+dev 200건에 블라인드로 돌려 비교한다. 입력·출력·실행 절차·판단 기준은
+[라벨 비교 작업서](tasks/label-compare.md)가 소유한다.
+- 계획했던 `tools/gen_label.py`·`labels/`는 만들지 않았다. 같은 일을 `tools/label_bundle.py` 하나가
+  하며, 정답 누출을 막는 격리 번들 생성까지 같은 도구가 갖는다. 복제 구현을 만들지 않는다.
+- 상태: 도구·번들·테스트는 완료, **외부 모델 실행은 미실행**이다. 두 CLI의 헤드리스 호출 형태와
+  웹 검색 차단 플래그는 아직 확인하지 않았다.
+
 `run-registrar`: 손으로 하던 결과 ZIP 언팩·대조·파일 작성을 한 명령으로 바꾼다. 검증 실패는 실패로 끝낸다.
 - 입력: `artifacts/inbox/`의 `colab-results-<숫자>.zip`·`submit.zip` 한 쌍과 `--code-commit`.
   선택적으로 전달받은 해시 `--expect-results`·`--expect-submit`.
@@ -391,7 +399,7 @@ T3~T8은 미착수입니다. live·비용·실제 제출은 해당 접근·예�
 | T1 / 통합 | `open/baseline/`, 두 노트북, `open/data/`, 서버 평가 명세 | 결함 보완 제출 후보·모델 조사·실행 기록 | `script.py`, `requirements.txt`, `tests/test_baseline.py`, `tools/package.py`, `docs/tasks/t1-baseline.md`, `docs/gemma4.md`, `reports/t1-baseline/`, `artifacts/baseline/`; 상태·출처 문서는 작업서 참조 | mock 10건·dev 형식 및 ZIP 검사, live 정상 호출·총시간 기록, 서버 점수. 제공 원본 보존 |
 | T2 / 실험 | `open/dev_labels.csv`, 같은 ID의 예측 CSV | 24항목 metrics·오답 목록 | `tools/score.py`, `tests/test_score.py`, `docs/tasks/t2-score.md`, `reports/` | 정답=예측이면 F1=1; 전부 0이면 F1=0; ID 누락·중복·추가·값 오류 거부; 행 순서가 달라도 ID로 대응 |
 | T3 / 명세 | 항목표·제공 법령, v05·v10·v24 | 일반·부재·메타 불일치 명세 3개와 매핑 | `specs/v05.md`, `specs/v10.md`, `specs/v24.md`, `rules/law_map.json`, `docs/tasks/t3-specs.md` | C3의 7칸, 조문 출처, v24 해당 없음, 사람 검토 기록. 외부 API는 Q1 확인 전 사용 안 함 |
-| T4 / 라벨 | dev 입력 200건·검토 기준, 생성 후 dev 정답 대조 | API 라벨 기준선·비용·검토 계획 | `tools/gen_label.py`, `tests/test_label.py`, `labels/`, `docs/tasks/t4-labels.md`, `reports/` | T2·예산 필요. 입력에서 정답 제외, 실패·중복·재개 검증, 항목별 결과·모델/프롬프트 기록; 2만 건 선실행 금지 |
+| T4 / 라벨 | dev 입력 200건·검토 기준, 생성 후 dev 정답 대조 | 외부 모델별 라벨 기준선·비용·검토 계획 | `tools/label_bundle.py`, `tests/test_label_bundle.py`, `reports/label-compare/`, `docs/tasks/label-compare.md` | T2 필요. 입력에서 정답 제외, 실패·중복·재개 검증, 항목별 결과·모델/프롬프트 기록; 2만 건 선실행 금지 |
 | T5 / 프롬프트 | T3 승인 명세 1개 | 버전 연결된 지시문 1개 | `tools/gen_prompt.py`, `prompts/v05.md`, `tests/test_prompt.py`, `docs/tasks/t5-prompt.md` | 승인되지 않은 명세 거부, 조건·예외·근거 규약 유지; 초기에는 템플릿 변환 |
 | T6 / 통합 | T1 검증본·D4 계약 | 공고별 독립 추론 모듈 경계 | `script.py`, `pipeline/run.py`, `pipeline/output.py`, `tests/test_output.py`, `docs/tasks/t6-runtime.md` | T1 후. 기존 입출력 보존, 호출 실패·CSV 오류가 성공 처리되지 않음, mock/live 구분 |
 | T7 / 프롬프트 | T2 채점기·T3 매핑·T5 지시문·T6 호출부 | 직접 매핑 후보와 문서 선택 후보를 각각 비교 | `pipeline/input.py`, `pipeline/retrieve.py`, `pipeline/prompt.py`, `prompts/queries.json`, `tests/test_input.py`, `tests/test_retrieve.py`, `docs/tasks/t7-retrieval.md`, `reports/` | 한 번에 하나씩 실험; 실제 토크나이저 예산, 관련 첨부·관측성 보존, 항목별 점수·총시간 기록 |
