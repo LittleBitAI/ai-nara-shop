@@ -160,6 +160,20 @@ class PackageTests(unittest.TestCase):
                 report_path.write_text(json.dumps(report), encoding="utf-8")
             write()
             namespace["check_live"]("dev", 200)
+            # An optional failure is accepted only with full baseline success and exact counts.
+            report.update(sme_model_success_count=199, sme_verified_count=199, sme_fallback_count=1)
+            write()
+            namespace["check_live"]("dev", 200)
+            report["model_success_count"] = 199
+            write()
+            with self.assertRaisesRegex(RuntimeError, "실제 모델 성공"):
+                namespace["check_live"]("dev", 200)
+            report.update(model_success_count=200, sme_fallback_count=0)
+            write()
+            with self.assertRaisesRegex(RuntimeError, "실제 모델 성공"):
+                namespace["check_live"]("dev", 200)
+            report.update(sme_model_success_count=200, sme_verified_count=200)
+            write()
             baseline_path = results / "dev/baseline_submission.csv"
             original_baseline = baseline_path.read_bytes()
             with baseline_path.open(encoding="utf-8") as stream:

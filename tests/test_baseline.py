@@ -149,12 +149,17 @@ class BaselineTests(unittest.TestCase):
                 return ["{}"] * len(batch) if items is not None else super().chat(batch)
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "submission.csv"
-            with self.assertRaisesRegex(RuntimeError, "정상 3항목"):
-                baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), BrokenSubset,
-                             limit=1, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
-            self.assertFalse(out.exists())
-            self.assertFalse(out.with_name("baseline_submission.csv").exists())
-            self.assertFalse(out.with_name("run_report.json").exists())
+            report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), BrokenSubset,
+                                  limit=1, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
+            self.assertEqual(out.read_bytes(), out.with_name("baseline_submission.csv").read_bytes())
+            self.assertEqual(report["sme_fallback_count"], 1)
+            self.assertEqual(report["sme_verified_count"], 0)
+            self.assertEqual(report["sme_model_success_count"], 0)
+            events = [json.loads(line) for line in out.with_name("diagnostics.jsonl").read_text(
+                encoding="utf-8").splitlines()]
+            fallback = next(e for e in events if e["event"] == "sme_fallback")
+            self.assertIn("정상 3항목", fallback["error_message"])
+            self.assertEqual(fallback["id"], "PPS-S-0001")
 
     def test_split_retry_validates_every_group_without_changing_defaults(self):
         runner = object.__new__(baseline.VLLMRunner)
@@ -174,7 +179,7 @@ class BaselineTests(unittest.TestCase):
             calls.append(list(keys))
             # A deterministic all-item completion always truncates; smaller schemas succeed.
             cells = {k: dict(good[k]) for k in keys}
-            if set(keys) <= set(baseline.SME_ITEMS):
+            if "facts" in sampling_params.structured_outputs.json["properties"][keys[0]]["properties"]:
                 for cell in cells.values():
                     cell["facts"] = baseline.empty_sme_facts()
             text = json.dumps(cells) if len(keys) <= 6 else '{"v1":'
@@ -198,15 +203,15 @@ class BaselineTests(unittest.TestCase):
             baseline.run_chunk(runner, [messages])
         def bad_second_group(batch, sampling_params, **kwargs):
             outputs = chat(batch, sampling_params, **kwargs)
-            if sampling_params.structured_outputs.json["required"][0] == "v7":
+            if sampling_params.structured_outputs.json["required"] == baseline.ITEMS[6:12]:
                 outputs[0].outputs[0].text = "{}"
             return outputs
         runner.llm.chat = bad_second_group
         calls.clear()
-        with self.assertRaisesRegex(RuntimeError, "정상 6항목"):
-            baseline.run_chunk(runner, [messages])
-        self.assertEqual([len(keys) for keys in calls], [24, 6, 6])
-        self.assertEqual([g["status"] for g in runner.last_response_info[0]["groups"]], ["valid", "failed"])
+        result = baseline.run_chunk(runner, [messages])
+        self.assertEqual(baseline.parse_judgment(result[0])[0], good)
+        self.assertEqual([len(keys) for keys in calls], [24, 6, 6, 1, 1, 1, 1, 1, 1, 6, 6])
+        self.assertEqual(calls[3:9], [[k] for k in baseline.ITEMS[6:12]])
         runner.count_tokens = lambda messages: baseline.MAX_MODEL_LEN - 64
         with self.assertRaisesRegex(RuntimeError, "토큰 예산 없음"):
             baseline.run_chunk(runner, [messages])
@@ -222,6 +227,36 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual([len(keys) for keys in calls], [3, 1, 1, 1])
         self.assertEqual(baseline.parse_judgment(result[0], expected_items=baseline.SME_ITEMS, sme=True)[0],
                          {k: {**good[k], "facts": baseline.empty_sme_facts()} for k in baseline.SME_ITEMS})
+
+    def test_chunk_62_fallback_requires_valid_baseline_and_preserves_neighbors(self):
+        good = json.dumps(valid())
+        focused = json.dumps({k: {"facts": baseline.empty_sme_facts(), "위반여부": 1,
+                                  "근거문구": None} for k in baseline.SME_ITEMS})
+        class Broken:
+            def chat(self, batch, items=None):
+                return [focused] * 62 + ["{}"] + [focused] * 65
+            def retry_chat(self, batch, items=None):
+                raise ValueError("injected retry failure")
+        events = []
+        kwargs = dict(start=128, ids=[f"notice-{i}" for i in range(128)], items=baseline.SME_ITEMS,
+                      phase="sme", emit=lambda event, **fields: events.append({"event": event, **fields}))
+        batch = [[] for _ in range(128)]
+        result = baseline.run_chunk(Broken(), batch, baseline_texts=[good] * 128, **kwargs)
+        self.assertIsNone(result[62])
+        self.assertTrue(all(text == focused for i, text in enumerate(result) if i != 62))
+        fallback = next(e for e in events if e["event"] == "sme_fallback")
+        self.assertEqual((fallback["chunk_index"], fallback["global_index"], fallback["id"]),
+                         (62, 190, "notice-62"))
+        with self.assertRaisesRegex(RuntimeError, "global_index=190"):
+            baseline.run_chunk(Broken(), batch, **kwargs)
+        invalid = [good] * 128
+        invalid[62] = "{}"
+        with self.assertRaises(ValueError):
+            baseline.run_chunk(Broken(), batch, baseline_texts=invalid, **kwargs)
+        with self.assertRaises(ValueError):
+            baseline.run_chunk(Broken(), batch, baseline_texts=[good] * 127, **kwargs)
+        with self.assertRaises(ValueError):
+            baseline.run_chunk(Broken(), batch, baseline_texts=[good] * 128)
 
     def test_provided_law_and_product_context(self):
         laws, products = baseline.load_sme_reference(str(ROOT / "open/data"))
