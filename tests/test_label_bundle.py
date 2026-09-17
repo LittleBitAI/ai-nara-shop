@@ -82,6 +82,39 @@ class ExportTest(unittest.TestCase):
             self.assertIn("없는ID", str(caught.exception))
 
 
+class CoverTest(unittest.TestCase):
+    TRUTH = label_bundle.read_truth(ROOT / "open/dev_labels.csv")
+
+    def test_covers_every_item_with_far_fewer_notices(self):
+        picked, short = label_bundle.cover_ids(self.TRUTH, 3)
+        self.assertEqual(short, [])
+        self.assertLess(len(picked), 60)  # 200건 전량을 돌릴 이유가 없다
+        counts = {item: 0 for item in label_bundle.ITEMS}
+        for identifier in picked:
+            for item in label_bundle.ITEMS:
+                counts[item] += self.TRUTH[identifier][item] == "1"
+        self.assertTrue(all(counts[item] >= 3 for item in label_bundle.ITEMS), counts)
+
+    def test_is_deterministic_and_adds_negative_notices(self):
+        first, _ = label_bundle.cover_ids(self.TRUTH, 2, negatives=5)
+        second, _ = label_bundle.cover_ids(self.TRUTH, 2, negatives=5)
+        self.assertEqual(first, second)  # 같은 입력이 같은 목록을 내야 재현된다
+        empty = [i for i in first if not any(self.TRUTH[i][item] == "1" for item in label_bundle.ITEMS)]
+        self.assertEqual(len(empty), 5)
+
+    def test_reports_items_it_could_not_reach(self):
+        _, short = label_bundle.cover_ids(self.TRUTH, 99)
+        self.assertEqual(short, label_bundle.ITEMS)  # dev의 항목별 양성은 5~8건뿐이다
+
+    def test_export_rejects_cover_without_truth(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaises(ValueError) as caught:
+                label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl",
+                                    data_dir=ROOT / "open/data",
+                                    bundle=Path(temporary) / "b", cover=2)
+            self.assertIn("--truth가 있어야 한다", str(caught.exception))
+
+
 class ParseTest(unittest.TestCase):
     def test_marks_a_quotation_that_is_not_in_the_notice(self):
         """틀린 인용으로 공고 전체를 버리지 않는다. 근거 정확성은 모델 비교 축이라 표시만 한다."""
@@ -147,10 +180,20 @@ class RunAndCollectTest(unittest.TestCase):
             self.assertTrue(out.with_name(out.name + ".manifest.json").is_file())
 
             predictions = workspace / "stub.csv"
-            self.assertEqual(label_bundle.collect(labels=out, out=predictions)["rows"], len(IDS))
+            truth_subset = workspace / "truth.csv"
+            collected = label_bundle.collect(labels=out, out=predictions,
+                                             truth_path=ROOT / "open/dev_labels.csv",
+                                             truth_out=truth_subset)
+            self.assertEqual(collected["rows"], len(IDS))
             loaded, _ = score.load_csv(predictions)  # 채점기의 49열 계약을 그대로 통과해야 한다
             self.assertEqual(sorted(loaded), sorted(IDS))
             self.assertEqual(loaded[IDS[0]], tuple([0] * 24))
+
+            # 부분 집합이라도 채점기가 그대로 돈다. 채점기의 ID 일치 검사는 손대지 않는다.
+            truth, _ = score.load_csv(truth_subset)
+            metrics, _ = score.calculate(truth, loaded)
+            self.assertEqual(sorted(truth), sorted(IDS))
+            self.assertEqual(metrics["macro_f1"], 0.0)  # 전량 0 예측
 
     def test_a_failing_command_is_recorded_and_does_not_stop_the_run(self):
         with tempfile.TemporaryDirectory() as temporary:
