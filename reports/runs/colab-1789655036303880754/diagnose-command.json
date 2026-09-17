@@ -1,0 +1,26 @@
+{
+  "argv": [
+    "/content/t1-colab-53tal6sb/venv/bin/python",
+    "-X",
+    "utf8",
+    "/content/t1-colab-53tal6sb/tools/diagnose_items.py",
+    "--items",
+    "v16,v18,v20",
+    "--ids",
+    "",
+    "--input",
+    "/content/t1-colab-53tal6sb/open/dev.jsonl",
+    "--data-dir",
+    "/content/t1-colab-53tal6sb/open/data",
+    "--labels",
+    "/content/t1-colab-53tal6sb/open/dev_labels.csv",
+    "--model-dir",
+    "/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "--output-dir",
+    "/content/t1-colab-53tal6sb/results/diagnose"
+  ],
+  "cwd": "/content/t1-colab-53tal6sb",
+  "started": 1789655026.7187655,
+  "returncode": 2,
+  "elapsed_seconds": 0.06793928146362305
+}

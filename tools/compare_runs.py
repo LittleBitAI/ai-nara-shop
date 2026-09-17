@@ -8,9 +8,12 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-# 같은 조건 두 회차에서 실측한 흔들림. reports/runs/reproducibility.md가 소유한다.
-DRIFT = 0.002532366279
-DRIFT_CELLS = 25
+# 회차 간 churn의 실측 범위. 다섯 쌍에서 관측했고 reports/runs/reproducibility.md가 소유한다.
+# 셀 수로는 같은 코드와 다른 코드가 구분되지 않았고 점수 영향만 300배 벌어졌다.
+DRIFT_MIN = 0.000007917373
+DRIFT_MAX = 0.002576269954
+DRIFT_CELLS = (25, 41)
+DRIFT_PAIRS = 5
 
 
 def load_score():
@@ -53,10 +56,11 @@ def compare(score, truth_path, before_path, after_path, focus=()):
                      "delta": delta},
         "changed_cells": changed,
         "changed_cells_off_focus": sum(len(r["flipped"]) for r in items if not r["focus"]),
-        # 흔들림은 한 쌍의 관측이라 임계값이 아니다. 배수만 적고 판정은 사람이 한다.
-        "drift_reference": {"macro_f1": DRIFT, "cells": DRIFT_CELLS,
-                            "ratio": abs(delta) / DRIFT,
-                            "source": "reports/runs/reproducibility.md"},
+        # churn은 임계값이 아니다. 관측 범위만 적고 판정은 사람이 한다.
+        "drift_reference": {
+            "macro_f1_min": DRIFT_MIN, "macro_f1_max": DRIFT_MAX, "cells": list(DRIFT_CELLS),
+            "pairs": DRIFT_PAIRS, "below_observed_max": abs(delta) <= DRIFT_MAX,
+            "source": "reports/runs/reproducibility.md"},
         "items": items,
     }
 
@@ -74,12 +78,16 @@ def render(result, show_all=False):
         f"   (대상 밖 {result['changed_cells_off_focus']})",
         "",
     ]
-    ratio = result["drift_reference"]["ratio"]
     lines += [
-        f"흔들림   같은 조건 두 회차의 실측 {DRIFT:.12f} (셀 {DRIFT_CELLS}개)의 {ratio:.2f}배",
-        "         한 쌍의 관측이라 임계값이 아니다. 이 배수가 1 근처면 회차 하나로는 말할 수 없다.",
-        f"         근거 {result['drift_reference']['source']}", "",
+        f"churn    회차 간 실측 {DRIFT_CELLS[0]}~{DRIFT_CELLS[1]}셀, 그 Macro F1 영향"
+        f" {DRIFT_MIN:.6f}~{DRIFT_MAX:.6f} ({DRIFT_PAIRS}쌍)",
     ]
+    if result["drift_reference"]["below_observed_max"]:
+        lines += ["         이번 차이는 그 범위 안이다. Macro F1만으로는 아무것도 말할 수 없다.",
+                  "         대상 항목의 TP/FP/FN이 가설대로 움직였는지로 판단한다."]
+    else:
+        lines += ["         이번 차이는 관측 범위를 넘는다. 그래도 항목별 변화를 함께 확인한다."]
+    lines += [f"         근거 {result['drift_reference']['source']}", ""]
     lines.append(f"{'항목':<5} {'TP':>9} {'FP':>9} {'FN':>9} {'F1':>21}  바뀐 공고")
     for row in result["items"]:
         if not (show_all or row["flipped"] or row["focus"]):

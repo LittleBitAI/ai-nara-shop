@@ -1,0 +1,11 @@
+{
+  "case": "dev-debug",
+  "purpose": "item_diagnosis_only",
+  "colab_pass": false,
+  "debug_responses": true,
+  "responses": 307,
+  "sme_items": [
+    "v13"
+  ],
+  "note": "검증 통과가 아닙니다. 제출 후보 판단에 쓰지 않습니다."
+}

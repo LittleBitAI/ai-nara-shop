@@ -14,7 +14,8 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 FILES = ("script.py", "requirements.txt")
-COLAB_FILES = ("tools/score.py", "open/dev.jsonl", "open/dev_labels.csv",
+COLAB_FILES = ("tools/score.py", "tools/diagnose_items.py",
+               "open/dev.jsonl", "open/dev_labels.csv",
                "open/data/test.jsonl.gz", "open/data/항목표.json", "open/data/정답스키마_디코딩.json",
                "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt",
                "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt",

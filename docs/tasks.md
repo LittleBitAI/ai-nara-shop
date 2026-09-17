@@ -120,6 +120,28 @@
   회차를 `reports/runs/`에 남길지는 사람이 정할 문제다. 대역 `submit.zip`을 쓴 형태 시험이며 실제 등록이 아니다.
 - 남은 미확인: D0의 새 Colab 회차와 대회 서버 제출로는 확인하지 않았다.
 
+`run-b113425`: 원응답 회차 등록, 재현성 결론 정정, Colab 배선 버그 수정.
+- 사용자가 노트북 전체를 `RUN_DIAGNOSTIC=True`·`DIAGNOSE_ITEMS="v16,v18,v20"`으로 돌렸다.
+  검증 회차 통과(dev 0.21821144133644133), **원응답 307건 확보**, 진단 도구는 실패했다.
+- **정정:** 앞서 `reports/runs/reproducibility.md`에 "회차 간 Macro F1이 0.0025 흔들린다"고
+  적은 것은 한 번의 뽑기였다. 같은 `script.py` 세 쌍에서 셀은 33~41개 바뀌는데 Macro F1은
+  0.000008~0.000044만 움직였다. `654c556`과의 0.0025도 코드 효과가 아니다 — run1과의 두 차이가
+  26%만 겹치고 방향이 7:6으로 균형이다. 결론: **churn의 점수 영향이 0.000008~0.002576으로
+  300배 벌어지고 셀 수로는 구분되지 않는다.** 한 쌍의 Macro F1 차이는 신호가 아니다.
+  `reproducibility.md`를 다시 쓰고 `docs/workflow.md` W5·`tools/compare_runs.py`·
+  `.wiki/plan-active.md`·인수인계 §0을 함께 고쳤다.
+- **Colab 배선 버그 두 개.** ① `tools/diagnose_items.py`가 Colab 번들에 없었다 — clone은
+  `WORK/repo`로 가고 `WORK`에는 번들만 푼다. ② `script.py`는 `WORK/submission/`에 있는데
+  도구가 `ROOT/script.py`를 봤다. `COLAB_FILES`·`upload` 셀 허용 목록·`--script` 인자를 고쳤다.
+- **왜 테스트가 못 잡았나:** `run_logged`를 스텁해 인자만 확인했고 경로 존재를 확인하지 않았다.
+  이제 `tests/test_package.py`가 번들이 만든 배치에서 `--mock`으로 도구를 실제 실행한다.
+  그 검사가 즉시 `upload` 셀 허용 목록 결합도 잡았다.
+- 수정 범위: `tools/package.py`, `tools/diagnose_items.py`, `tools/compare_runs.py`,
+  `tests/test_package.py`, `tests/test_compare_runs.py`, `notebooks/colab-baseline.ipynb`,
+  `reports/runs/reproducibility.md`, `reports/runs/colab-1789655036303880754/`, `docs/workflow.md`,
+  `docs/tasks/team-handoff.md`, `.wiki/plan-active.md`, `.wiki/decisions/…-019-…`, 이 작업 큐.
+- 미실행: `diagnose_items.py`의 실제 GPU 질의는 여전히 없다. 다음 회차에서 확인한다.
+
 `bench-ready`: 내일 팀원이 점수 기법을 붙일 기판의 구멍을 메운다. 점수 개선 자체는 담당자 몫이다.
 - 확인한 구멍 세 개. ① 팀원이 여는 [인수인계 문서](tasks/team-handoff.md) 359줄에 오늘 발견이
   **0줄** 반영돼 있었다(서버 점수·시간 86%·흔들림 0.0025·새 도구 3개·새 테스트 3개).

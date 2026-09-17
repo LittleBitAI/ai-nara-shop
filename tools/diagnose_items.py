@@ -34,11 +34,19 @@ TAIL = """For each item return four fields:
 Return only the JSON object. No preamble and no extra explanation."""
 
 
-def load_submission_script():
-    """제출물 `script.py`를 그대로 불러온다. 사본을 만들지 않는다."""
-    spec = importlib.util.spec_from_file_location("submission_script", ROOT / "script.py")
+def load_submission_script(path=None):
+    """제출물 `script.py`를 그대로 불러온다. 사본을 만들지 않는다.
+
+    Colab에서는 제출 ZIP을 푼 `submission/script.py`가 실제로 돈 코드이므로 그 경로를 받는다.
+    저장소 루트의 사본과 바이트가 다를 수 있으니 기본값에 기대지 않는다.
+    """
+    path = Path(path) if path else ROOT / "script.py"
+    if not path.is_file():
+        raise ValueError(f"제출 코드를 찾지 못했다: {path}. --script로 경로를 준다")
+    spec = importlib.util.spec_from_file_location("submission_script", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    module.__diagnose_path__ = path
     return module
 
 
@@ -152,7 +160,9 @@ def diagnose(module, items, identifiers, *, input_path, data_dir, output_dir, ru
         "created_at": datetime.now(timezone.utc).isoformat(),
         "items": list(items), "notice_count": len(rows),
         "input": module.record_path(input_path), "labels": bool(labels),
-        "script_sha256": hashlib.sha256((ROOT / "script.py").read_bytes()).hexdigest(),
+        "script": module.record_path(str(getattr(module, "__diagnose_path__", ROOT / "script.py"))),
+        "script_sha256": hashlib.sha256(
+            Path(getattr(module, "__diagnose_path__", ROOT / "script.py")).read_bytes()).hexdigest(),
         "runner": runner_cls.__name__, "environment": getattr(runner, "environment", None),
         "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
         "stages": stages, "elapsed_seconds": time.perf_counter() - started,
@@ -175,13 +185,14 @@ def main(argv=None):
     parser.add_argument("--labels", help="정답 CSV. 주면 각 행에 실제 값을 붙인다")
     parser.add_argument("--output-dir", required=True, help="새 디렉터리. 기존 경로는 거부한다")
     parser.add_argument("--model-dir", help="없으면 PPS_MODEL_DIR을 쓴다")
+    parser.add_argument("--script", help="실제로 돈 제출 코드. Colab은 submission/script.py를 준다")
     parser.add_argument("--chunk", type=int, default=32)
     parser.add_argument("--max-chars", type=int, default=16000)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--mock", action="store_true", help="모델 없이 흐름만 확인. 진단 결과가 아니다")
     args = parser.parse_args(argv)
     try:
-        module = load_submission_script()
+        module = load_submission_script(args.script)
         manifest = diagnose(
             module, [x.strip() for x in args.items.split(",") if x.strip()],
             [x.strip() for x in args.ids.split(",") if x.strip()],
