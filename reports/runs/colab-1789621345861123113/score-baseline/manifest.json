@@ -1,0 +1,62 @@
+{
+  "artifact_id": "score-score-baseline",
+  "version": 1,
+  "status": "draft",
+  "run_id": "score-baseline",
+  "baseline_run": null,
+  "created_at": "2026-09-17T05:02:25.786402+00:00",
+  "sources": [
+    {
+      "role": "truth",
+      "path": "/content/t1-colab-7jprh479/open/dev_labels.csv",
+      "sha256": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35"
+    },
+    {
+      "role": "pred",
+      "path": "/content/t1-colab-7jprh479/results/dev/baseline_submission.csv",
+      "sha256": "e77d7af309cc222d9e7d4fcfba178787615e9508e2c4496f6b76754a19077a28"
+    }
+  ],
+  "generator": {
+    "path": "tools/score.py",
+    "sha256": "4e8ef1a2284364fdb26cbab4dc53af8d9eac57d2d85f6651279ea3e1dc5f1c57",
+    "argv": [
+      "/content/t1-colab-7jprh479/venv/bin/python",
+      "-X",
+      "utf8",
+      "/content/t1-colab-7jprh479/tools/score.py",
+      "--truth",
+      "/content/t1-colab-7jprh479/open/dev_labels.csv",
+      "--pred",
+      "/content/t1-colab-7jprh479/results/dev/baseline_submission.csv",
+      "--output-dir",
+      "/content/t1-colab-7jprh479/results/score-baseline"
+    ],
+    "command": "& '/content/t1-colab-7jprh479/venv/bin/python' '-X' 'utf8' '/content/t1-colab-7jprh479/tools/score.py' '--truth' '/content/t1-colab-7jprh479/open/dev_labels.csv' '--pred' '/content/t1-colab-7jprh479/results/dev/baseline_submission.csv' '--output-dir' '/content/t1-colab-7jprh479/results/score-baseline'",
+    "settings": {
+      "output_dir": "/content/t1-colab-7jprh479/results/score-baseline",
+      "zero_division": 0,
+      "items": 24
+    }
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "cwd": "/content/t1-colab-7jprh479"
+  },
+  "mode": "local_scoring",
+  "model": null,
+  "prompt_hash": null,
+  "seed": null,
+  "parents": [],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "execution_status": "complete",
+  "validation": {
+    "csv_contract": true,
+    "evidence_substring": false,
+    "evidence_quality": false
+  },
+  "elapsed_seconds_before_publish": 0.013630523000301764
+}

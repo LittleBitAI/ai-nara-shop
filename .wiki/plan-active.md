@@ -2,7 +2,7 @@
 scope: project
 severity: contract
 triggers: ["계획", "현재", "할 일", "팀원", "업무", "0.6", "48시간", "다음", "이어서", "로드맵", "작업", "진행", "plan", "next", "resume"]
-reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tasks.md]
+reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tasks.md, docs/runs.md]
 ---
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
@@ -36,6 +36,7 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
   0점 11항목·양성 사례 70개, 후보는 아직 not_run이다.
 - [실행·제출 작업 기록](../docs/tasks/t1-baseline.md): 최초 실패부터 최신 최적화까지의 이력.
 - [Colab 실행](../docs/colab.md): HF_TOKEN 다운로드·동일 ZIP·서버 무인자 실행 검증.
+- [실행 기록 색인](../docs/runs.md): 보관 규약과 실행별 커밋·점수·환경. ZIP은 `reports/runs/`에서 푼다.
 
 ## 보호할 결정과 미확인 사항
 

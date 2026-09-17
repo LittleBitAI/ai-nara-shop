@@ -56,6 +56,23 @@
 `public-push`: 사용자 지시로 하위 작업 공간 정리 및 공개 GitHub push.
 입력·수정 범위·결과는 [공개 작업 기록](tasks/public-push.md)을 따른다.
 
+`run-archive`: 결과 ZIP을 사람마다 전달하는 경로를 없애고 `git pull` 하나로 실행 기록을 받게 한다.
+- 입력: 사용자가 전달한 `colab-results-1789621345861123113.zip`
+  (SHA-256 `335796bce22ccdae6cf90e2da550a5c3575ed23feb1189b5f40e157b6c2feec8`, 기준 코드 `654c556`),
+  `reports/team-score-audit/history.json`의 6회 기록.
+- 출력: [실행 기록 색인과 보관 규약](runs.md), `reports/runs/colab-1789621345861123113/`,
+  `.wiki/decisions/2026-09-17-013-docs-run-archive.md`.
+- 수정 범위: `reports/runs/`, `docs/runs.md`, `docs/README.md`, 이 작업 큐,
+  `.wiki/plan-active.md`, `.wiki/decisions/`. `script.py`·`tests`·`open/` 원본은 제외한다.
+- 통과 조건: ZIP 해시·코드 커밋 일치, 추가 파일의 비밀정보 패턴·50MB 검사,
+  `python -X utf8 -m unittest tests.test_baseline tests.test_package tests.test_score`,
+  `git diff --check`, UTF-8 without BOM·LF·로컬 링크, 새 세션 문서 목록의 `docs/runs.md` 노출.
+- 결과: 문서·기록 작업이며 모델 추론·재채점·서버 제출은 수행하지 않았다.
+  수치는 실행이 남긴 파일과 `history.json`에서 옮겼고 다시 계산하지 않았다.
+  세션 시작 문서 목록은 생성 색인 `.wiki/corpus.json`에서 나오므로 파일을 만든 직후에는 뜨지 않았다.
+  공용 위키 `tool/sync.py`를 돌려 색인을 갱신한 뒤 `runs.md — 실행 기록`으로 표시되는 것을 확인했다.
+  corpus 도구 자체는 고치지 않았다.
+
 설치 작업 `team-setup` — 상태: review (구현·임시 환경 검증 완료, 독립 리뷰 미실행).
 - 2026-09-16 사용자 선택: 설치 도구까지 공용화. 공용 `tool/setup_agents.py`가 환경·버전·호스트를 검사하고
   프로젝트 진입점은 위임만 한다. adapter는 각 checkout에서 직접 읽으며 허브에 복사하지 않는다.
