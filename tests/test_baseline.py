@@ -29,6 +29,59 @@ def valid():
 
 
 class BaselineTests(unittest.TestCase):
+    def test_isolated_sme_preserves_other_items_and_publishes_paired_results(self):
+        calls, instances = [], []
+        expected_system = baseline.build_system_prompt(baseline.item_table(str(ROOT / "open/data")))
+        class Isolated(baseline.MockRunner):
+            def __init__(self, schema, **kwargs):
+                instances.append(self)
+            def chat(self, batch, items=None):
+                calls.append(items)
+                outputs = []
+                for messages in batch:
+                    if items is None:
+                        self_test.assertEqual(messages[0]["content"], expected_system)
+                        self_test.assertNotIn("[제공 고시", messages[1]["content"])
+                    else:
+                        self_test.assertEqual(items, ["v10", "v11", "v13"])
+                        self_test.assertNotIn("- v24:", messages[0]["content"])
+                        self_test.assertIn("[제공 고시", messages[1]["content"])
+                    obj = {k: {"위반여부": 1, "근거문구": None} for k in (items or baseline.ITEMS)}
+                    if items is not None:
+                        obj["v11"]["위반여부"] = 0
+                    outputs.append(json.dumps(obj))
+                return outputs
+        self_test = self
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "submission.csv"
+            report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Isolated,
+                                  limit=2, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
+            self.assertEqual(len(instances), 1)
+            self.assertEqual(calls, [None, ["v10", "v11", "v13"]])
+            with out.open(encoding="utf-8") as f:
+                final = list(csv.DictReader(f))
+            with out.with_name("baseline_submission.csv").open(encoding="utf-8") as f:
+                original = list(csv.DictReader(f))
+            for before, after in zip(original, final):
+                self.assertEqual(before["v11"], "1")
+                self.assertEqual(after["v11"], "0")
+                for col in baseline.COLUMNS:
+                    if col not in ["v10", "v11", "v13", "e10", "e11", "e13"]:
+                        self.assertEqual(before[col], after[col])
+            self.assertIn("sme_inference_seconds", report)
+            self.assertEqual(report["sme_model_success_count"], 0)  # Test double is not live evidence.
+        class BrokenSubset(Isolated):
+            def chat(self, batch, items=None):
+                return ["{}"] * len(batch) if items is not None else super().chat(batch)
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "submission.csv"
+            with self.assertRaisesRegex(RuntimeError, "정상 3항목"):
+                baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), BrokenSubset,
+                             limit=1, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
+            self.assertFalse(out.exists())
+            self.assertFalse(out.with_name("baseline_submission.csv").exists())
+            self.assertFalse(out.with_name("run_report.json").exists())
+
     def test_split_retry_validates_every_group_without_changing_defaults(self):
         runner = object.__new__(baseline.VLLMRunner)
         runner.sp = SimpleNamespace(max_tokens=2048, structured_outputs=SimpleNamespace(
@@ -39,7 +92,7 @@ class BaselineTests(unittest.TestCase):
         calls = []
         def chat(batch, sampling_params, **kwargs):
             keys = sampling_params.structured_outputs.json["required"]
-            if len(keys) <= 6:
+            if len(keys) in (1, 6):
                 for k in keys:
                     if k not in baseline.ABSENCE:
                         self.assertEqual(sampling_params.structured_outputs.json["properties"][k]
@@ -79,6 +132,18 @@ class BaselineTests(unittest.TestCase):
         runner.count_tokens = lambda messages: baseline.MAX_MODEL_LEN - 64
         with self.assertRaisesRegex(RuntimeError, "토큰 예산 없음"):
             baseline.run_chunk(runner, [messages])
+        runner.count_tokens = lambda messages: 14000
+        def broken_three(batch, sampling_params, **kwargs):
+            outputs = chat(batch, sampling_params, **kwargs)
+            if len(sampling_params.structured_outputs.json["required"]) == 3:
+                outputs[0].outputs[0].text = "{}"
+            return outputs
+        runner.llm.chat = broken_three
+        calls.clear()
+        result = baseline.run_chunk(runner, [messages], items=baseline.SME_ITEMS, phase="sme")
+        self.assertEqual([len(keys) for keys in calls], [3, 1, 1, 1])
+        self.assertEqual(baseline.parse_judgment(result[0], expected_items=baseline.SME_ITEMS)[0],
+                         {k: good[k] for k in baseline.SME_ITEMS})
 
     def test_provided_law_and_product_context(self):
         laws, products = baseline.load_sme_reference(str(ROOT / "open/data"))
