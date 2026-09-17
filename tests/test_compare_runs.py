@@ -61,7 +61,7 @@ class CompareRunsTests(unittest.TestCase):
         report = compare_runs.render(result)
         self.assertIn("*v8", report)
         self.assertIn("PPS-DEV-010", report)
-        self.assertIn("흔들림", report)
+        self.assertIn("churn", report)
         self.assertIn("reproducibility.md", report)
 
     def test_identical_runs_report_no_change(self):
@@ -69,20 +69,27 @@ class CompareRunsTests(unittest.TestCase):
         result = compare_runs.compare(SCORE, self.truth, same, same)
         self.assertEqual(result["changed_cells"], 0)
         self.assertEqual(result["macro_f1"]["delta"], 0.0)
-        self.assertEqual(result["drift_reference"]["ratio"], 0.0)
+        self.assertIs(result["drift_reference"]["below_observed_max"], True)
         self.assertNotIn("v8 ", compare_runs.render(result), "변화 없는 항목까지 찍었다")
         self.assertIn("v8", compare_runs.render(result, show_all=True))
 
-    def test_drift_ratio_is_reported_not_thresholded(self):
-        """흔들림은 한 쌍의 관측이다. 배수만 적고 통과/실패로 판정하지 않는다."""
+    def test_drift_is_reported_as_an_observed_range_not_a_threshold(self):
+        """churn의 점수 영향은 다섯 쌍에서 300배 벌어졌다. 범위만 적고 판정하지 않는다."""
         before = write_csv(self.dir / "b2.csv", {i: {} for i in ids(10)})
         after = write_csv(self.dir / "a2.csv",
                           {i: ({8: 1} if n < 1 else {}) for n, i in enumerate(ids(10))})
         result = compare_runs.compare(SCORE, self.truth, before, after)
-        self.assertNotIn("within_measured_drift", result)
-        self.assertAlmostEqual(result["drift_reference"]["ratio"],
-                               abs(result["macro_f1"]["delta"]) / compare_runs.DRIFT)
-        self.assertIn("배", compare_runs.render(result))
+        reference = result["drift_reference"]
+        self.assertLess(reference["macro_f1_min"], reference["macro_f1_max"])
+        self.assertEqual(reference["pairs"], 5)
+        # 한 셀만 맞혀도 지지 4건 항목의 F1이 0.4 올라 관측 범위를 넘는다.
+        self.assertFalse(reference["below_observed_max"])
+        self.assertIn("관측 범위를 넘는다", compare_runs.render(result))
+        # 차이가 범위 안이면 Macro F1만으로 말하지 말라고 찍는다.
+        same = write_csv(self.dir / "s2.csv", {i: {} for i in ids(10)})
+        inside = compare_runs.compare(SCORE, self.truth, before, same)
+        self.assertTrue(inside["drift_reference"]["below_observed_max"])
+        self.assertIn("TP/FP/FN", compare_runs.render(inside))
 
     def test_rejects_mismatched_ids_and_unknown_items(self):
         before = write_csv(self.dir / "b3.csv", {i: {} for i in ids(10)})

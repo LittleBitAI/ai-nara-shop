@@ -155,6 +155,24 @@ class PackageTests(unittest.TestCase):
             self.assertEqual((work / "cases/dev/data/test.jsonl.gz").read_bytes(),
                              (work / "cases/dev-again/data/test.jsonl.gz").read_bytes())
             self.assertEqual(namespace["case_inputs"]["dev"], namespace["case_inputs"]["dev-again"])
+            # 진단 도구가 번들이 만든 배치에서 실제로 실행되는지 본다.
+            # 스텁으로 인자만 확인하면 경로가 없다는 것을 못 잡는다 — 실제로 한 번 잡혔다.
+            tool = work / "tools/diagnose_items.py"
+            self.assertTrue(tool.is_file(), "번들에 tools/diagnose_items.py가 없다")
+            with (work / "open/dev.jsonl").open(encoding="utf-8") as stream:
+                sample_ids = [json.loads(line)["id"] for line in stream][:2]
+            diagnose = subprocess.run(
+                [sys.executable, "-X", "utf8", str(tool), "--items", "v16,v18", "--mock",
+                 "--ids", ",".join(sample_ids), "--script", str(namespace["SUBMISSION"] / "script.py"),
+                 "--input", str(work / "open/dev.jsonl"), "--data-dir", str(work / "open/data"),
+                 "--labels", str(work / "open/dev_labels.csv"),
+                 "--output-dir", str(results / "diagnose-smoke")],
+                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+            self.assertEqual(diagnose.returncode, 0, diagnose.stderr)
+            record = json.loads((results / "diagnose-smoke/manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(record["notice_count"], 2)
+            self.assertEqual(record["script_sha256"],
+                             hashlib.sha256((ROOT / "script.py").read_bytes()).hexdigest())
             report_path = results / "dev/run_report.json"
             report = json.loads(report_path.read_text(encoding="utf-8"))
             # Synthetic success metadata exercises the gate only, never a live-model result.
@@ -316,6 +334,7 @@ class PackageTests(unittest.TestCase):
             calls = []
             namespace = dict(WORK=work, RESULTS=results, json=json, os=os, Path=Path,
                              PYTHON=sys.executable, MODEL_DIR="/models/revision",
+                             SUBMISSION=work / "submission",
                              run_logged=lambda name, command, env=None, cwd=None:
                                  calls.append((name, [str(x) for x in command], env)))
             with patch.dict(os.environ, {"HF_TOKEN": "test-token", "PPS_QUANT": "wrong"}), \
@@ -326,6 +345,9 @@ class PackageTests(unittest.TestCase):
             self.assertTrue(any(Path(part).name == "diagnose_items.py" for part in command), command)
             self.assertEqual(command[command.index("--items") + 1], "v16,v18,v20")
             self.assertEqual(command[command.index("--model-dir") + 1], "/models/revision")
+            # 저장소 루트 사본이 아니라 실제로 푼 제출 코드를 가리켜야 한다.
+            self.assertEqual(Path(command[command.index("--script") + 1]),
+                             work / "submission/script.py")
             self.assertNotIn("HF_TOKEN", env)
             self.assertNotIn("PPS_QUANT", env)
             self.assertEqual(env["HF_HUB_OFFLINE"], "1")
