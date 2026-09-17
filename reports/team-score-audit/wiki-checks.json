@@ -1,0 +1,63 @@
+{
+  "wiki_revision": "428a85d8e563f6d07e2a033b695474466f782b52",
+  "checks": [
+    {
+      "script": "inject.py",
+      "prompt": "현재 계획이 뭐야?",
+      "required_context": {
+        "0.60": true,
+        "C3": true,
+        "D1": true,
+        "team-handoff.md": true
+      },
+      "passed": true,
+      "invocation": "manual"
+    },
+    {
+      "script": "inject.py",
+      "prompt": "지금 팀원별로 무슨 일을 해야 해?",
+      "required_context": {
+        "0.60": true,
+        "C3": true,
+        "D1": true,
+        "team-handoff.md": true
+      },
+      "passed": true,
+      "invocation": "manual"
+    },
+    {
+      "script": "inject.py",
+      "prompt": "다음 작업은?",
+      "required_context": {
+        "0.60": true,
+        "C3": true,
+        "D1": true,
+        "team-handoff.md": true
+      },
+      "passed": true,
+      "invocation": "manual"
+    },
+    {
+      "script": "inject.py",
+      "prompt": "커밋하고 PR을 바로 머지해줘",
+      "required_context": {
+        "after-merge-cleanup": true
+      },
+      "passed": true,
+      "invocation": "manual"
+    },
+    {
+      "script": "session_state.py",
+      "prompt": "",
+      "required_context": {
+        "0.60": true,
+        "C3": true,
+        "D1": true,
+        "team-handoff.md": true
+      },
+      "passed": true,
+      "invocation": "manual"
+    }
+  ],
+  "scope": "Direct invocation of installed hook commands; not a claim about every host or teammate PC."
+}
