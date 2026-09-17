@@ -163,6 +163,45 @@ class BaselineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp, self.assertRaises(FileNotFoundError):
             baseline.load_sme_reference(tmp)
 
+    def test_product_lookup_distinguishes_codes_names_and_service_candidates(self):
+        _, products = baseline.load_sme_reference(str(ROOT / "open/data"))
+        rec = record()
+        rec["meta"].update(세부품명번호목록="채혈세트[4214269901]", 업무구분="물품(내자)")
+        rec["docs"][0]["text"] = "의료용 원심분리기 규격."
+        before = copy.deepcopy(rec)
+        found = baseline.sme_product_lookup(rec, rec["docs"][0]["text"], products)
+        self.assertEqual(found["메타코드_고시미등재"], ["4214269901"])
+        self.assertEqual(found["일치후보"][0]["일치출처"], "품명문자열")
+        self.assertIn("수처리용", found["일치후보"][0]["특이사항"])
+        self.assertEqual(found["서비스보조목록"], [])
+        self.assertEqual(rec, before)
+        rec["meta"].update(세부품명번호목록="컴퓨터서버[4321150102]", 업무구분="물품(내자)")
+        found = baseline.sme_product_lookup(rec, "Arm 서버", products)
+        self.assertEqual(found["일치후보"][0]["일치출처"], "메타코드")
+        self.assertIn("x86", found["일치후보"][0]["특이사항"])
+        self.assertEqual(found["메타코드_고시미등재"], [])
+        # An exact metadata match must survive the cap even after many name-only hits.
+        names = " ".join([p["세부품명"] for p in products if len(p["세부품명"]) >= 4][:20])
+        found = baseline.sme_product_lookup(rec, names, products)
+        self.assertEqual(found["일치후보"][0]["세부품명번호"], "4321150102")
+        self.assertEqual(len(found["일치후보"]), 12)
+        self.assertGreater(found["조회생략행수"], 0)
+        rec["meta"].update(세부품명번호목록=None, 업무구분="일반용역")
+        found = baseline.sme_product_lookup(rec, "거리문화공연 대행 용역", products)
+        self.assertEqual(found["일치후보"], [])
+        self.assertTrue(any(p[1] == "기타행사기획및대행서비스"
+                            and "10억원 미만" in p[2] for p in found["서비스보조목록"]))
+        self.assertFalse(any(p[1] == "상업용오븐" for p in found["서비스보조목록"]))
+        found = baseline.sme_product_lookup(rec, "기타행사기획 및 대행서비스 8014199001", products)
+        self.assertEqual(found["일치후보"][0]["일치출처"], "문서코드")
+        self.assertEqual(found["서비스보조목록"], [])
+        found = baseline.sme_product_lookup(rec, "기타행사기획 및 대행서비스", products)
+        self.assertTrue(any(p["세부품명번호"] == "8014199001" for p in found["일치후보"]))
+        # A match beyond the visible document budget must not leak into the lookup.
+        prompt = baseline.build_user_prompt({**record(), "docs": [{"doc_id": "a", "type": "공고문",
+                    "text": "가" * 300 + " 1110152201"}]}, 128, products)
+        self.assertNotIn("1110152201", prompt)
+
     def test_diagnostics_preserve_initial_and_retry_metadata(self):
         good = json.dumps(valid())
         runner = object.__new__(baseline.VLLMRunner)
