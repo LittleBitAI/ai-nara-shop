@@ -108,6 +108,16 @@
     "included": false,
     "reason": "debug_responses=false. diagnostics.jsonl은 응답 길이·토큰 수·종료 사유만 남기고 응답 본문은 남기지 않는다."
   },
+  "server": {
+    "submitted_on": "2026-09-17",
+    "leaderboard_macro_f1": 0.2197036943,
+    "elapsed_seconds": 6192,
+    "elapsed_reported": "103분 12초",
+    "limit_seconds": 7200,
+    "submit_zip_sha256": "f4ee163406ab79960fc27daff956b76f9bbd39c2a8c3c861b50e7aeb6b181cc0",
+    "source": "사용자 보고. 전문은 reports/submissions.json이 소유한다",
+    "note": "이 실행이 검증한 ZIP을 그대로 제출해 채점된 결과다. dev 200건과 다른 입력 집합이다."
+  },
   "status": {
     "validation": "colab_pass",
     "quality_pass": false,

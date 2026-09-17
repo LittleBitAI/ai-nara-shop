@@ -1,0 +1,58 @@
+{
+  "note": "대회 서버 제출 장부. 실행 기록(reports/runs/)과 별개 사건이며 tools/register_run.py가 덮어쓰지 않는다. 점수는 사용자가 대회 화면에서 옮긴 값이고 서버 원응답·제출 ID는 받지 못했다.",
+  "leaderboard_metric": "24항목 양성 F1의 단순 평균 (docs/rules.md R22). 근거 e1~e24는 점수에서 제외된다.",
+  "daily_limit": "하루 최대 1회 (docs/rules.md R16). 남은 횟수는 대회 제출 이력에서 확인한다.",
+  "submissions": [
+    {
+      "submitted_on": "2026-09-17",
+      "code_commit": "5506ca02c",
+      "script_sha256": "9abb9c4e53880a40701f14c724d1dfeff3604cea3f5e52ebfb593cdf993db5b7",
+      "submit_zip_sha256": "d3d6622e5171cb368adc4f9e5618f9f20f90442a5d3dc64e362a6766c36a9b6a",
+      "run_id": null,
+      "outcome": "run_error",
+      "leaderboard_macro_f1": null,
+      "error": "InstallError : 청크 내 62번 공고: 정상 모델 응답 재시도 실패 (ValueError)",
+      "source": "reports/t1-baseline/server-failure.md",
+      "note": "채점되지 않았다. 실제 최초 원인은 확정하지 못했고 서버 전체 로그·제출 ID·모델 원응답은 받지 못했다."
+    },
+    {
+      "submitted_on": "2026-09-17",
+      "code_commit": "654c556c33144cfa180239872a9ee125b73a5fde",
+      "script_sha256": "79a56041153d6a125bd12d9f59780ee092fe48e9a2837fb5e38c50c821d5c04c",
+      "submit_zip_sha256": "f4ee163406ab79960fc27daff956b76f9bbd39c2a8c3c861b50e7aeb6b181cc0",
+      "run_id": "colab-1789621345861123113",
+      "outcome": "scored",
+      "leaderboard_macro_f1": 0.2197036943,
+      "elapsed_seconds": 6192,
+      "elapsed_reported": "103분 12초",
+      "error": null,
+      "source": "사용자 보고 (대회 화면). 제출 ID·정확한 시각·public/private 구분은 받지 못했다.",
+      "note": "첫 채점된 제출이다. 같은 ZIP을 Colab에서 검증한 실행이 reports/runs/colab-1789621345861123113/이다."
+    }
+  ],
+  "time_budget": {
+    "limit_seconds": 7200,
+    "limit_source": "제공 명세 실행 최대 2시간 (docs/rules.md R21, Q3). 서버 GPU는 L40S 1장",
+    "measured": {
+      "code_commit": "654c556c33144cfa180239872a9ee125b73a5fde",
+      "elapsed_seconds": 6192,
+      "notices": 1853,
+      "used_fraction_of_limit": 0.86,
+      "headroom_seconds": 1008,
+      "seconds_per_notice": 3.3416082029141934,
+      "limit_seconds_per_notice": 3.8855909336211547
+    },
+    "caveat": "모델 로드·입출력을 포함한 총시간이며 사용자가 대회 화면에서 옮긴 값이다. 서버 단계별 시간은 받을 수 없다. 여유 1,008초는 이 코드·이 평가 입력 한 회차의 값이며 다음 회차를 보장하지 않는다."
+  },
+  "dev_versus_leaderboard": [
+    {
+      "code_commit": "654c556c33144cfa180239872a9ee125b73a5fde",
+      "dev_macro_f1": 0.22078771129016228,
+      "dev_source": "reports/runs/colab-1789621345861123113/score/metrics.json (공개 dev 200건)",
+      "leaderboard_macro_f1": 0.2197036943,
+      "leaderboard_source": "사용자 보고 (비공개 평가 1,853건)",
+      "dev_minus_leaderboard": 0.0010840169901622787,
+      "caveat": "두 수는 다른 입력 집합의 측정이다. 오차가 아니라 서로 다른 모집단의 값이며, 표본 1개로 dev가 서버를 얼마나 잘 대표하는지 일반화하지 않는다."
+    }
+  ]
+}
