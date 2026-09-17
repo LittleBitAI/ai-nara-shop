@@ -5,10 +5,32 @@
 이 문서는 이전의 일회성 점검 배분을 대체한다. 각 담당은 첫 과제 이후 아래 후속 과제를 순서대로 진행한다.
 팀원 세션 실행·업무 전송·유료 실행은 아직 하지 않았다.
 
+## 0. 시작 전에 읽을 것 — 2026-09-17 저녁 갱신
+
+아래 네 가지는 이 문서 본문보다 나중에 확인한 **실측**이다. 본문과 어긋나면 이쪽이 맞다.
+
+| 확인한 것 | 수치 | 이 작업에 뜻하는 것 |
+| --- | --- | --- |
+| **서버 첫 채점** | `654c556` 리더보드 **0.2197036943** (dev 0.2207877113) | dev와 서버가 0.0011 차이. 다른 입력 집합이라 오차가 아니다. [장부](../../reports/submissions.json) |
+| **시간 여유 14%** | 6,192초 / 한도 7,200초 = **86.0%**, 여유 1,008초 | 모델 호출을 늘리는 변경은 전부 이 안이다. 서버는 L40S 1장 |
+| **회차 간 흔들림** | 같은 조건 두 회차에서 Macro F1 **0.0025**, v 셀 25/4,800 | 이보다 작은 차이는 회차 하나로 증명 못 한다. [근거](../../reports/runs/reproducibility.md) |
+| **`36b6cc1` 실측** | dev 0.2182553450, 추가 추론 330.8초→110.7초 | 점수 하락은 전부 흔들림. 속도는 실제로 줄었다. 미제출 |
+
+**흔들림 0.0025가 이 배정의 규칙을 하나 바꾼다.** 전체 Macro F1 하나로 개선을 주장할 수 없다.
+대상 항목의 TP/FP/FN이 가설대로 움직였는지, 대상 밖 항목이 얼마나 흔들렸는지를 같이 낸다.
+`tools/compare_runs.py`가 그것을 낸다 — §12의 명령을 쓴다. 한 쌍의 관측이므로 0.0025는
+임계값이 아니라 참고 배수다.
+
+지금 저장소에 있는 것(전달받을 필요 없다): 실행 기록 2회차가
+[`reports/runs/`](../../reports/runs/)에 풀려 있고, 새 결과 ZIP은 `tools/register_run.py`로 등록한다.
+0점 항목이 어느 단계에서 막혔는지는 `tools/diagnose_items.py`로 묻는다 —
+**부재탐지 5항목(v10·v11·v16·v18·v20)은 제출 스키마가 `근거문구`를 null로 고정하므로
+원응답을 켜도 안 보인다.** 절차는 [Colab 진단 회차](../colab.md#항목-진단-전용-회차-선택).
+
 ## 1. 점수로 확인한 문제와 목표
 
-최신 **실제 측정 점수는 `654c556`의 dev Macro F1 0.2207877113**이다.
-최적화한 `693c695`의 실제 점수·시간은 아직 없다. 서버 결과는 마지막 확인 시 채점 중이었다.
+최신 **실제 측정 점수는 `654c556`의 dev Macro F1 0.2207877113**이고 같은 코드의 서버 리더보드는
+**0.2197036943**이다(§0). `693c695` 계열은 `36b6cc1`에서 dev 0.2182553450으로 측정했고 미제출이다.
 [점수 진단 보고서](../../reports/team-score-audit/result.md),
 [24항목 수치](../../reports/team-score-audit/metrics.csv),
 [6회 실행 이력](../../reports/team-score-audit/history.json),
@@ -251,11 +273,13 @@ dev는 이미 반복 분석한 개발셋이다. 뒤늦게 나눈 일부를 완�
 [rules](../rules.md), 이 문서와 [점수 진단](../../reports/team-score-audit/result.md)이다.
 항목 작업 전에 [items](../items.md)와 해당 제공 조문을 읽는다. 전체 대화·위키 전체를 반복해서 읽지 않는다.
 
-A는 최신 `colab-results-1789621345861123113.zip`과 필요한 과거 ZIP을 팀 내부로 전달한다.
-개인 `Downloads/123` 경로는 팀원 PC에 없으므로 같은 경로가 있다고 가정하지 않는다.
-이번 저장소의 집계·사례 파일로 먼저 시작하고, 원본 ZIP이 필요한 단계만 자료 도착을 기다린다.
+**ZIP 전달은 더 이상 필요 없다.** 실행 기록은 `git pull` 하나로 받는다 —
+[`reports/runs/colab-1789621345861123113/`](../../reports/runs/colab-1789621345861123113/)(`654c556`)와
+[`colab-1789650911655581500/`](../../reports/runs/colab-1789650911655581500/)(`36b6cc1`)에
+CSV·로그·`diagnostics.jsonl`이 풀려 있다. 새 회차는 본인이 `tools/register_run.py`로 등록한다.
+개인 `Downloads` 경로는 팀원 PC에 없으므로 같은 경로가 있다고 가정하지 않는다.
 HF_TOKEN은 개인 런타임 secret으로 넣고 저장소·보고서에 기록하지 않는다.
-현재 대회 제출물의 hash·서버 상태는 A가 별도로 갱신한다.
+서버 제출 이력·점수·소요 시간은 [제출 장부](../../reports/submissions.json)가 소유하며 A가 갱신한다.
 
 ## 11. Opus 5 medium에 붙여 넣을 지시문
 
@@ -285,6 +309,12 @@ Dev ID나 정답을 실제 추론 분기에 넣지 마라. 사례의 예상 판�
 외부 법령·웹 해설로 제공 스냅샷을 대체하지 마라.
 외부 API 명세·프롬프트·오답 분류 자동화 공정은 기존 Q1 경계를 따른다.
 유료 API·대량 라벨링·서브에이전트를 자동 실행하지 마라.
+
+같은 조건 두 회차에서 Macro F1이 0.0025 흔들린 실측이 있다(docs/tasks/team-handoff.md §0).
+전체 Macro F1 하나로 개선을 주장하지 마라. tools/compare_runs.py로 대상 항목의 TP/FP/FN과
+대상 밖 회귀를 함께 내고, 출력의 흔들림 배수를 보고에 그대로 옮겨라.
+새 회차는 tools/register_run.py로 등록하라. 색인·manifest·결정 초안을 손으로 쓰지 마라.
+서버 실행은 2시간 한도의 86%를 이미 쓰고 있다. 모델 호출을 늘리면 그 여유 1,008초 안인지 따져라.
 
 최종 보고에 대상/비대상 항목 변화, 점수, 실행 시간, hash, 실행 명령, 남은 실패를 적어라.
 CPU 검사·저장 응답 재사용·실제 모델·대회 서버 성공을 구분하라.
@@ -349,11 +379,31 @@ Colab 실행만 담당하고 멈추지 마라. 자신의 항목 후보 구현과
 기존 검사·패키징은 다음을 재사용한다. 새 결과 디렉터리를 사용하고 기존 ZIP을 덮어쓰지 않는다.
 
 ```powershell
-python -X utf8 -m unittest tests.test_baseline tests.test_package tests.test_score
-python -m ruff check script.py tests/test_baseline.py tests/test_package.py
+python -X utf8 -m unittest tests.test_baseline tests.test_package tests.test_score `
+  tests.test_register_run tests.test_diagnose_items tests.test_compare_runs
+python -m ruff check script.py tools tests
 git diff --check
 python -X utf8 tools/package.py --output artifacts/team-candidate/submit.zip --colab-output artifacts/team-candidate/colab-bundle.zip
 ```
+
+회차가 끝나면 세 가지를 순서대로 한다. 손으로 세거나 손으로 표를 고치지 않는다.
+
+```powershell
+# 1. 결과 ZIP 한 쌍을 artifacts/inbox/에 두고 등록한다 (색인·manifest·결정 초안까지)
+python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커밋>
+
+# 2. 기준 회차와 대조한다. 대상 항목과 대상 밖 회귀를 함께 낸다
+python -X utf8 tools/compare_runs.py --items v8,v16 `
+  --before reports/runs/<기준>/dev/submission.csv `
+  --after  reports/runs/<후보>/dev/submission.csv `
+  --output-dir reports/<담당>/<티켓>-compare
+
+# 3. 0점 항목이 어느 단계에서 막혔는지 묻는다 (Colab 노트북 9절, GPU 필요)
+python -X utf8 tools/diagnose_items.py --items v16,v18 --ids <양성 ID> `
+  --labels open/dev_labels.csv --output-dir reports/<담당>/<티켓>-diagnose
+```
+
+2번의 출력에 나오는 **흔들림 배수**를 보고에 그대로 옮긴다. 배수가 1 근처면 개선이라 쓰지 않는다.
 
 패키징 통과는 mock 검사다. 실험 코드를 추가하면 해당 검사도 실행하고 실제 통합 ZIP으로 Colab을 확인한다.
 대량 라벨링·벡터 DB·새 임베딩·전체 모듈 분리는 현재 점수 병목의 증거 없이 착수하지 않는다.
