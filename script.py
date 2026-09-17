@@ -435,12 +435,12 @@ class VLLMRunner:
             ids = ids["input_ids"]
         return len(ids)
 
-    def parameters_for_items(self, items):
+    def parameters_for_items(self, items, *, sme=True):
         sp = copy.deepcopy(self.sp)
         schema = sp.structured_outputs.json
         schema["required"] = list(items)
         schema["properties"] = {key: schema["properties"][key] for key in items}
-        if set(items) <= set(SME_ITEMS):
+        if sme:
             for key in items:
                 cell = schema["properties"][key]
                 cell["properties"] = {"facts": sme_facts_schema(key), **cell["properties"]}
@@ -466,25 +466,25 @@ class VLLMRunner:
         return [o.outputs[0].text if o.outputs else "" for o in outs]
 
     def retry_chat(self, batch, items=None):
-        """같은 공고를 기본 6항목/사실 추출 1항목씩 복구한다. 모든 그룹 검증 후 성공 처리한다."""
+        """실패한 6항목 그룹만 1항목으로 더 나눈다. 모든 항목 검증 후 성공 처리한다."""
         if len(batch) != 1:
             raise ValueError("분할 재시도는 공고 1건만 허용한다")
         self.last_response_info = []
         merged, groups = {}, []
         expected = ITEMS if items is None else items
         group_size = 6 if items is None else 1
-        for offset in range(0, len(expected), group_size):
-            keys = expected[offset:offset + group_size]
+        def recover(keys):
             messages = copy.deepcopy(batch[0])
             messages[0]["content"] += (
                 "\n[Output scope for this call] Evaluate only these keys, overriding the earlier key list: "
                 + ", ".join(keys) + ". Return no other keys. Keep evidence quotations under 100 characters.")
-            sp = self.parameters_for_items(keys)
+            sp = self.parameters_for_items(keys, sme=items is not None)
             schema = sp.structured_outputs.json
             for key in keys:
                 if key not in ABSENCE:
                     schema["properties"][key]["properties"]["근거문구"]["maxLength"] = 100
             group = {"items": keys, "status": "failed", "stage": "call"}
+            groups.append(group)
             try:
                 sp.max_tokens = min(sp.max_tokens, MAX_MODEL_LEN - self.count_tokens(messages) - 64)
                 if sp.max_tokens < 1:
@@ -498,9 +498,18 @@ class VLLMRunner:
                 parsed, _ = parse_judgment(texts[0], expected_items=keys, sme=items is not None)
                 merged.update(parsed)
                 group["status"] = "valid"
+            except ValueError as error:
+                group.update(error_type=type(error).__name__, error_message=str(error))
+                # Only a malformed returned response benefits from a smaller output schema.
+                if len(keys) == 1 or group["stage"] == "call":
+                    raise
+                group["status"] = "split"
+                for key in keys:
+                    recover([key])
             finally:
-                groups.append(group)
                 self.last_response_info = [{"retry_strategy": "split_items", "groups": groups}]
+        for offset in range(0, len(expected), group_size):
+            recover(expected[offset:offset + group_size])
         text = json.dumps(merged, ensure_ascii=False)
         parse_judgment(text, expected_items=expected, sme=items is not None)
         return [text]
@@ -542,8 +551,14 @@ def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: in
 
 
 def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
-              emit=None, debug_responses=False, items=None, phase="baseline") -> List[str]:
+              emit=None, debug_responses=False, items=None, phase="baseline",
+              baseline_texts=None) -> List[Optional[str]]:
     """실패 공고만 재시도한다. 실제 러너는 출력 항목을 분할하며 결손은 허용하지 않는다."""
+    if baseline_texts is not None:
+        if phase != "sme" or items != SME_ITEMS or len(baseline_texts) != len(batch):
+            raise ValueError("기본 응답 보존은 동일 공고의 추가 3항목 단계에만 허용한다")
+        for text in baseline_texts:
+            parse_judgment(text)  # No fallback without an already valid full model response.
     def record(event, **fields):
         if emit:
             emit(event, chunk_start=start, phase=phase, **fields)
@@ -603,6 +618,12 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
             record("retry_failed", chunk_index=i, global_index=start + i,
                    id=ids[i] if ids is not None else None, attempt=2, stage=stage,
                    error_type=type(e).__name__, error_message=str(e), **retry_info)
+            if baseline_texts is not None:
+                record("sme_fallback", chunk_index=i, global_index=start + i,
+                       id=ids[i] if ids is not None else None, source="validated_baseline",
+                       error_type=type(e).__name__, error_message=str(e))
+                outs[i] = None
+                continue
             raise RuntimeError(
                 f"청크 내 {i}번 공고 (global_index={start + i}, id={ids[i] if ids is not None else None}): "
                 f"정상 모델 응답 재시도 실패 [{stage}] {type(e).__name__}: {e}; "
@@ -923,7 +944,8 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             sme_chars.append(mc)
         emit("chunk_started", phase="sme", chunk_start=s, count=len(batch))
         sme_texts.extend(run_chunk(runner, batch, start=s, ids=[r["id"] for r in recs[s:s + chunk]],
-                                  emit=emit, debug_responses=debug_responses, items=SME_ITEMS, phase="sme"))
+                                  emit=emit, debug_responses=debug_responses, items=SME_ITEMS, phase="sme",
+                                  baseline_texts=texts[s:s + chunk]))
     sme_seconds = time.time() - t_sme
     inf_seconds += sme_seconds
 
@@ -934,13 +956,13 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     for rec, text, sme_text, mc in zip(recs, texts, sme_texts, sme_chars):
         parsed, _ = parse_judgment(text)
         baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
-        focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS, sme=True)
-        verified, reasons = verify_sme(focused, rec, products, mc)
-        rejected_positives += sum(focused[k]["위반여부"] == 1 and verified[k]["위반여부"] == 0 for k in SME_ITEMS)
-        focused = verified
-        emit("sme_verified", id=rec["id"], rejected_conditions=reasons,
-             flags={k: focused[k]["위반여부"] for k in SME_ITEMS})
-        parsed.update(focused)  # Strict subset validation above protects the other 21 judgments.
+        if sme_text is not None:
+            focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS, sme=True)
+            verified, reasons = verify_sme(focused, rec, products, mc)
+            rejected_positives += sum(focused[k]["위반여부"] == 1 and verified[k]["위반여부"] == 0 for k in SME_ITEMS)
+            emit("sme_verified", id=rec["id"], rejected_conditions=reasons,
+                 flags={k: verified[k]["위반여부"] for k in SME_ITEMS})
+            parsed.update(verified)  # A failed optional call preserves this notice's full baseline.
         before = sum(1 for v in ITEMS if parsed[v]["근거문구"] and parsed[v]["위반여부"] == 1 and v not in ABSENCE)
         final = postprocess(parsed, rec)
         kept = sum(1 for v in ITEMS if final[v]["근거문구"])
@@ -948,10 +970,12 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         ev_dropped += before - kept
         rows.append(to_row(rec["id"], final))
     live = runner_cls is VLLMRunner
+    sme_success_count = sum(text is not None for text in sme_texts)
     report = {
         "mode": "live" if live else "mock", "model_success_count": len(recs) if live else 0,
-        "sme_model_success_count": len(recs) if live else 0,
-        "sme_verified_count": len(recs), "sme_rejected_positive_count": rejected_positives,
+        "sme_model_success_count": sme_success_count if live else 0,
+        "sme_verified_count": sme_success_count, "sme_rejected_positive_count": rejected_positives,
+        "sme_fallback_count": len(recs) - sme_success_count,
         "baseline_inference_seconds": round(baseline_seconds, 1), "sme_inference_seconds": round(sme_seconds, 1),
         "sme_prompt_tokens_max": max(sme_ntok),
         "sme_documents_shrunk": sum(mc < max_chars for mc in sme_chars),
