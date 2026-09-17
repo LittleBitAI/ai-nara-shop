@@ -51,7 +51,8 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(source["commit"], actual)
             with zipfile.ZipFile(namespace["BUNDLE_PATH"]) as bundle:
                 with zipfile.ZipFile(io.BytesIO(bundle.read("submit.zip"))) as submit:
-                    self.assertEqual(submit.read("script.py"), (ROOT / "script.py").read_bytes())
+                    expected = subprocess.check_output(["git", "show", actual + ":script.py"], cwd=ROOT)
+                    self.assertEqual(submit.read("script.py"), expected)
 
     def test_colab_requires_token_and_passes_it_only_to_download(self):
         with tempfile.TemporaryDirectory() as tmp:

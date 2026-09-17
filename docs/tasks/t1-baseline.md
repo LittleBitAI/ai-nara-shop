@@ -1,5 +1,23 @@
 # T1 / 오늘 제출할 베이스라인
 
+## 2026-09-17 응답 복구와 성능 파일럿
+
+- 사용자 선택: 서버 실행 오류와 판정 성능 둘 다 개선한다. 독립 리뷰 생략 지시 유지.
+- 입력: Colab `colab-results-1789604529719466871.zip` (커밋 1c64604), 제공 법령·경쟁제품 CSV.
+  A100 40GB에서 샘플 10건/dev 200건 성공, Macro F1 0.2208013652894021을 비교 기준으로 보존한다.
+- 출력: 실패 공고의 항목 분할 재시도, v10·v11·v13 제공 법령·품목 조회 파일럿, 새 제출/Colab 번들.
+- 수정 범위: `script.py`, `tests/test_baseline.py`, `tools/package.py`, `tests/test_package.py`,
+  `notebooks/colab-baseline.ipynb`, `docs/colab.md`, 이 작업서·`docs/tasks.md`·`.wiki/plan-active.md`,
+  `reports/t1-baseline/`, `artifacts/recovery-sme/`. 제공 자료·기존 ZIP은 보존한다.
+- 통과 조건: 잘림·빈 응답·부분 응답의 실패 재현과 분할 복구, 복구 실패 시 성공 CSV 금지,
+  제공 원문·품목 코드/예외 보존·공고별 독립 조회·입출력/패키징 회귀.
+  같은 Colab dev 재실행에서 F1·대상 3항목 FP/FN·시간 비교 후 채택 여부를 판단한다.
+- 규칙 판단: 개발/로컬 검증, A1·A5·A6·A9·A10, R1·R3·R4·R7~R9·R11·R15·R17~R21.
+  외부 법령·ID별 정답 하드코딩 없음. 서버 원인 확정·실제 성능 개선은 별도 실행 증거가 필요하다.
+- 결과: 응답 복구/파일럿 구현, 로컬 검사 20개·고정 토크나이저 dev 200건 검사 통과.
+  새 후보 ZIP/Colab 번들 생성 완료. [세부 결과](../../reports/t1-baseline/recovery-sme.md).
+  새 후보의 실제 GPU·서버 성공과 F1 개선은 아직 미검증이며 T1 전체는 진행 중이다.
+
 ## 2026-09-17 Colab 실행 경로 보완
 
 - 입력: 사용자 제공 `colab-results-1789602422101717812.zip`, main `a631373` 실행 로그.
