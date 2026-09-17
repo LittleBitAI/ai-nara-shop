@@ -29,6 +29,78 @@ def valid():
 
 
 class BaselineTests(unittest.TestCase):
+    def test_sme_facts_require_real_scope_and_qualification(self):
+        rec = record()
+        rec["input_completeness"] = {"완전관측": True}
+        rec["dropped_doc_counts"] = {}
+        rec["docs"][0]["text"] = "활성탄 1110152201 구매. 「중소기업기본법」에 따른 소기업·소상공인 확인서를 소지한 업체."
+        _, products = baseline.load_sme_reference(str(ROOT / "open/data"))
+        facts = dict(product_code="1110152201", scope_quote="활성탄 1110152201 구매.", scope_matches="yes",
+                     qualification_quote=None, qualification="missing", exception_applies="no")
+        obj = {k: {"facts": dict(facts), "위반여부": 1, "근거문구": None} for k in baseline.SME_ITEMS}
+        obj["v13"]["facts"].update(qualification="small_only",
+                                  qualification_quote="「중소기업기본법」에 따른 소기업·소상공인 확인서를 소지한 업체.")
+        obj["v11"]["facts"].update(qualification="required",
+                                  qualification_quote=obj["v13"]["facts"]["qualification_quote"])
+        parsed, _ = baseline.parse_judgment(json.dumps(obj), baseline.SME_ITEMS, sme=True)
+        result, _ = baseline.verify_sme(parsed, rec, products, 16000)
+        self.assertEqual([result[k]["위반여부"] for k in baseline.SME_ITEMS], [1, 0, 1])
+        self.assertEqual(result["v13"]["근거문구"], obj["v13"]["facts"]["qualification_quote"])
+        for field, value in [("product_code", "9999999999"), ("scope_quote", "원문에 없는 문구"),
+                             ("scope_matches", "unknown"), ("exception_applies", "yes")]:
+            bad = copy.deepcopy(parsed)
+            for cell in bad.values():
+                cell["facts"][field] = value
+            result, _ = baseline.verify_sme(bad, rec, products, 16000)
+            self.assertTrue(all(cell["위반여부"] == 0 for cell in result.values()))
+        rec["docs"][0]["text"] += " 중 · 소기업·소상공인 확인서를 소지한 업체."
+        parsed["v13"]["facts"]["qualification_quote"] = "중 · 소기업·소상공인 확인서를 소지한 업체."
+        result, reasons = baseline.verify_sme(parsed, rec, products, 16000)
+        self.assertEqual(result["v13"]["위반여부"], 0)
+        self.assertIn("clause_includes_medium_enterprises", reasons["v13"])
+        rec["docs"][0]["text"] += " 「중소기업확인서」를 소지한 업체."
+        parsed["v13"]["facts"]["qualification_quote"] = "「중소기업확인서」를 소지한 업체."
+        result, _ = baseline.verify_sme(parsed, rec, products, 16000)
+        self.assertEqual(result["v13"]["위반여부"], 0)
+        rec["input_completeness"]["완전관측"] = False
+        result, _ = baseline.verify_sme(parsed, rec, products, 16000)
+        self.assertEqual(result["v10"]["위반여부"], 0)
+        rec["input_completeness"]["완전관측"] = True
+        rec["docs"][0]["text"] += "끝" * 200
+        result, _ = baseline.verify_sme(parsed, rec, products, 128)
+        self.assertEqual(result["v11"]["위반여부"], 0)
+        for bad_value in [True, "maybe", None]:
+            bad = copy.deepcopy(obj)
+            bad["v10"]["facts"]["scope_matches"] = bad_value
+            with self.assertRaises(ValueError):
+                baseline.parse_judgment(json.dumps(bad), baseline.SME_ITEMS, sme=True)
+        del obj["v10"]["facts"]
+        with self.assertRaises(ValueError):
+            baseline.parse_judgment(json.dumps(obj), baseline.SME_ITEMS, sme=True)
+
+    def test_english_instructions_preserve_korean_source_and_fact_schema(self):
+        laws, products = baseline.load_sme_reference(str(ROOT / "open/data"))
+        table = baseline.item_table(str(ROOT / "open/data"))
+        system = baseline.build_system_prompt(table)
+        focused = baseline.build_system_prompt(table, laws, baseline.SME_ITEMS)
+        self.assertTrue(system.startswith("Audit this Korean"))
+        self.assertIn("extract facts BEFORE deciding", focused)
+        self.assertIn(laws, focused)
+        for item in baseline.ITEMS:
+            self.assertIn(table[item]["항목명"], system)
+        rec = record()
+        self.assertIn(rec["docs"][0]["text"], baseline.build_user_prompt(rec, 16000, products))
+        runner = object.__new__(baseline.VLLMRunner)
+        runner.sp = SimpleNamespace(structured_outputs=SimpleNamespace(
+            json=baseline.decode_schema(str(ROOT / "open/data"))))
+        schema = runner.parameters_for_items(baseline.SME_ITEMS).structured_outputs.json
+        self.assertEqual(set(schema["properties"]), set(baseline.SME_ITEMS))
+        self.assertIn("facts", schema["properties"]["v13"]["required"])
+        output = {k: {"facts": baseline.empty_sme_facts(), "위반여부": 0, "근거문구": None}
+                  for k in baseline.SME_ITEMS}
+        self.assertEqual(baseline.parse_judgment(json.dumps(output), baseline.SME_ITEMS, sme=True)[0], output)
+        self.assertNotIn("facts", runner.sp.structured_outputs.json["properties"]["v13"]["properties"])
+
     def test_isolated_sme_preserves_other_items_and_publishes_paired_results(self):
         calls, instances = [], []
         expected_system = baseline.build_system_prompt(baseline.item_table(str(ROOT / "open/data")))
@@ -41,14 +113,16 @@ class BaselineTests(unittest.TestCase):
                 for messages in batch:
                     if items is None:
                         self_test.assertEqual(messages[0]["content"], expected_system)
-                        self_test.assertNotIn("[제공 고시", messages[1]["content"])
+                        self_test.assertNotIn("[Provided 고시", messages[1]["content"])
                     else:
                         self_test.assertEqual(items, ["v10", "v11", "v13"])
                         self_test.assertNotIn("- v24:", messages[0]["content"])
-                        self_test.assertIn("[제공 고시", messages[1]["content"])
+                        self_test.assertIn("[Provided 고시", messages[1]["content"])
                     obj = {k: {"위반여부": 1, "근거문구": None} for k in (items or baseline.ITEMS)}
                     if items is not None:
                         obj["v11"]["위반여부"] = 0
+                        for cell in obj.values():
+                            cell["facts"] = baseline.empty_sme_facts()
                     outputs.append(json.dumps(obj))
                 return outputs
         self_test = self
@@ -99,7 +173,11 @@ class BaselineTests(unittest.TestCase):
                                          ["properties"]["근거문구"]["maxLength"], 100)
             calls.append(list(keys))
             # A deterministic all-item completion always truncates; smaller schemas succeed.
-            text = json.dumps({k: good[k] for k in keys}) if len(keys) <= 6 else '{"v1":'
+            cells = {k: dict(good[k]) for k in keys}
+            if set(keys) <= set(baseline.SME_ITEMS):
+                for cell in cells.values():
+                    cell["facts"] = baseline.empty_sme_facts()
+            text = json.dumps(cells) if len(keys) <= 6 else '{"v1":'
             return [SimpleNamespace(outputs=[SimpleNamespace(text=text, token_ids=[1],
                     finish_reason="stop" if len(keys) <= 6 else "length", stop_reason=None)],
                     prompt_token_ids=[1])]
@@ -142,8 +220,8 @@ class BaselineTests(unittest.TestCase):
         calls.clear()
         result = baseline.run_chunk(runner, [messages], items=baseline.SME_ITEMS, phase="sme")
         self.assertEqual([len(keys) for keys in calls], [3, 1, 1, 1])
-        self.assertEqual(baseline.parse_judgment(result[0], expected_items=baseline.SME_ITEMS)[0],
-                         {k: good[k] for k in baseline.SME_ITEMS})
+        self.assertEqual(baseline.parse_judgment(result[0], expected_items=baseline.SME_ITEMS, sme=True)[0],
+                         {k: {**good[k], "facts": baseline.empty_sme_facts()} for k in baseline.SME_ITEMS})
 
     def test_provided_law_and_product_context(self):
         laws, products = baseline.load_sme_reference(str(ROOT / "open/data"))
@@ -332,7 +410,7 @@ class BaselineTests(unittest.TestCase):
         rec["docs"].append({"doc_id": "b", "type": "과업지시서", "text": "첨부의중요조건" * 1000})
         context = baseline.build_context(rec, 1000)
         self.assertIn("첨부의중요조건", context)
-        self.assertIn("절단", context)
+        self.assertIn("Truncated", context)
         prompt = baseline.build_user_prompt(rec, 1000)
         self.assertIn("완전관측", prompt)
         self.assertIn("false", prompt)
