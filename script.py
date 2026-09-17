@@ -288,13 +288,25 @@ def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="", items=None)
     if sme_laws:
         reference = """
 [v10·v11·v13 검토용 제공 법령]
-아래는 판정 기준이며 공고문 인용 근거가 아니다. 다른 항목의 적용 범위를 바꾸지 않는다.
-먼저 해당 품목이 경쟁제품인지, 고시의 제외 조건과 계약 예외에 해당하는지 확인한다.
-v10·v11은 적용 대상인데 요구 자격이 빠진 경우를 각각 확인한다. 부재탐지는 인용할 문장이
-없다는 이유만으로 0으로 내지 않는다. 다만 문서 미관측을 자격 부재의 증거로 쓰지 않는다.
-v13은 '중소기업'과 '소기업·소상공인만'의 제한 범위를 구분한다.
-단어의 등장만으로 위반을 정하지 말고 대상·제한 내용·예외를 함께 확인한다.
-""" + sme_laws
+법령·고시 조회는 판정 기준이며 공고의 자격 요구나 인용 근거가 아니다. 다음 순서로 판정한다.
+1. 실제 구매 대상과 고시 품목을 대조한다. 코드 일치도 특이사항의 용도·성능·금액 조건을
+   충족해야 적용된다. 금액은 추정가격이며 '미만' 경계를 지킨다. 부품·장비의 단순 언급과
+   실제 구매 대상을 구분한다. 품명 문자열과 서비스보조목록은 후보이지 적용 확정이 아니다.
+   메타코드_고시미등재는 그 코드가 목록에 없다는 뜻이다. 다른 품목에 해당한다는 근거 없이
+   경쟁제품으로 추정하지 않는다. 조회 없음·메타 null만으로 일반제품을 확정하지도 않는다.
+   서비스 정식 품명이 없으면 보조목록의 과업·특이사항과 대조한다. 대상 확인 불가이면 0이다.
+2. 제공 조문의 예외와 공고의 예외 사유를 확인한다. 협상계약만으로 면제하지 않는다.
+   경쟁제품에 해당하지 않으면 세 항목 모두 0이다.
+3. v10은 직접생산 확인, v11은 중소기업 제한을 참가자격으로 요구하는지 각각 확인한다.
+   법령 인용·공공구매론·계약 후 제재·일반 서류 안내의 단어만으로 자격 요구를 인정하지 않는다.
+   전산 확인으로 확인서 제출을 생략하는 것은 자격 요구 생략이 아니다. 적용 대상에서
+   자격 요구의 부재를 확인한 항목만 1이다. 미관측을 부재로 단정하지 않고 근거는 null이다.
+4. v13은 경쟁제품 적용 + 소기업·소상공인으로 축소한 명시적 참가자격 + 예외 없음이 모두
+   확인될 때만 1이다. '중소기업', '중·소기업', '중기업·소기업·소상공인'은 중기업을 포함한다.
+   법령·확인요령 명칭이나 안내의 '소기업' 단어는 제한이 아니다. 본문에 중소기업이라고
+   써 있어도 필수 자격으로 '소기업·소상공인 확인서'만 요구하면 그 좁은 조건을 검토한다.
+   위반 근거는 제한을 보여주는 공고 원문만 짧게 인용한다.
+""" + sme_laws + "\n[검토용 제공 법령 끝]\n"
     head, tail = SYSTEM_HEAD, SYSTEM_TAIL
     if items is not None:
         head = head.replace("24개 항목", f"{len(items)}개 항목")
@@ -303,19 +315,41 @@ v13은 '중소기업'과 '소기업·소상공인만'의 제한 범위를 구분
     return head + "\n" + "\n".join(lines) + reference + "\n" + tail
 
 
+def sme_product_lookup(rec, context, products):
+    """관측된 코드/품명과 고시 후보를 분리한다. 조회 결과로 판정을 덮어쓰지 않는다."""
+    meta = rec.get("meta", {})
+    meta_source = str(meta.get("세부품명번호목록") or "")
+    pattern = r"(?<!\d)\d{10}(?!\d)"
+    meta_codes = set(re.findall(pattern, meta_source))
+    doc_codes = set(re.findall(pattern, context))
+    names_source = re.sub(r"\s+", "", meta_source + "\n" + context)
+    matches = []
+    for p in products:
+        code, name = p["세부품명번호"], re.sub(r"\s+", "", p["세부품명"])
+        source = ("메타코드" if code in meta_codes else "문서코드" if code in doc_codes else
+                  "품명문자열" if len(name) >= 4 and name in names_source else None)
+        if source:
+            matches.append({**{k: p[k] for k in ("세부품명번호", "세부품명", "특이사항")}, "일치출처": source})
+    priority = {"메타코드": 0, "문서코드": 1, "품명문자열": 2}
+    matches.sort(key=lambda p: priority[p["일치출처"]])
+    # ponytail: 제공 서비스 목록은 현재 29행. 규모가 커지면 토큰 실측 후 검색으로 좁힌다.
+    services = []
+    if "용역" in str(meta.get("업무구분") or "") and not any(p["일치출처"] != "품명문자열" for p in matches):
+        services = [[p[k] for k in ("세부품명번호", "세부품명", "특이사항")]
+                    for p in products if p.get("대분류", "").endswith("서비스")]
+    return {"메타코드_고시미등재": sorted(meta_codes - {p["세부품명번호"] for p in products}),
+            "일치후보": matches[:12], "조회생략행수": max(0, len(matches) - 12), "서비스보조목록": services}
+
+
 def build_user_prompt(rec: Dict[str, Any], max_chars: int, products=()) -> str:
     context = build_context(rec, max_chars=max_chars)
     product_context = ""
     if products:
-        source = str(rec.get("meta", {}).get("세부품명번호목록") or "") + "\n" + context
-        codes = set(re.findall(r"(?<!\d)\d{10}(?!\d)", source))
-        matches = [p for p in products if p["세부품명번호"] in codes
-                   or (len(p.get("세부품명", "")) >= 4 and p["세부품명"] in source)]
-        product_context = ("\n[제공 고시 제2025-96호 품목 조회: 코드 또는 세부품명 문자열 일치]\n"
-            "조회 결과는 적용 여부의 참고이며 위반 판정이 아니다. 특이사항의 제외 범위를 확인한다.\n"
-            "조회 없음은 일반제품 확정이 아니며, 문서·메타의 품목과 실제 대상이 같은지 확인한다.\n"
-            + json.dumps(matches[:12], ensure_ascii=False)
-            + f"\n조회 생략 행 수: {max(0, len(matches) - 12)}\n")
+        product_context = ("\n[제공 고시 제2025-96호 품목 조회 — 공고 원문 아님]\n"
+            "일치출처와 특이사항을 확인한다. 문자열 일치·서비스 후보는 적용 확정이 아니다.\n"
+            "서비스보조목록 각 행의 순서: 세부품명번호, 세부품명, 특이사항.\n"
+            + json.dumps(sme_product_lookup(rec, context, products), ensure_ascii=False, separators=(",", ":"))
+            + "\n[제공 고시 품목 조회 끝]\n")
     return (
         f"[공고 ID] {rec['id']}\n\n"
         f"[나라장터 입력 메타]\n{format_meta(rec)}\n\n"
