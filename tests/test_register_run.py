@@ -190,8 +190,28 @@ class RegisterRunTests(unittest.TestCase):
                 register_run.register(inbox, COMMIT, root=root)
             self.assert_no_trace(root)
         with tempfile.TemporaryDirectory() as tmp:
-            root, inbox, _ = make_root(tmp, results_files(), None)
+            # submit.zip도 없고 실행이 적어 둔 해시도 없으면 무엇을 제출했는지 알 길이 없다.
+            scoreless = results_files(**{"validation.json": dump({"status": "colab_pass"})})
+            root, inbox, _ = make_root(tmp, scoreless, None)
             with self.assertRaisesRegex(ValueError, r"submit\.zip"):
+                register_run.register(inbox, COMMIT, root=root)
+            self.assert_no_trace(root)
+
+    def test_submit_zip_hash_comes_from_the_run_when_the_file_is_withheld(self):
+        """품질 게이트 미달이면 노트북이 submit.zip을 안 준다. 그래도 등록은 돼야 한다."""
+        recorded = "b" * 64
+        withheld = results_files(**{"candidate.json": dump({"submit_sha256": recorded})})
+        with tempfile.TemporaryDirectory() as tmp:
+            root, inbox, _ = make_root(tmp, withheld, None)
+            register_run.register(inbox, COMMIT, root=root, expect_submit=recorded)
+            manifest = json.loads(
+                (root / "reports/runs/colab-123/manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["zip_sha256"]["submit"], recorded)
+            self.assertEqual(manifest["zip_sha256_source"]["submit"], "candidate.json")
+        with tempfile.TemporaryDirectory() as tmp:
+            # 파일이 있으면 실행이 적어 둔 해시와 대조한다. 다른 회차의 ZIP을 붙이면 실패한다.
+            root, inbox, _ = make_root(tmp, withheld, SUBMIT_FILES)
+            with self.assertRaisesRegex(ValueError, "이 실행이 검증한 ZIP이 아니다"):
                 register_run.register(inbox, COMMIT, root=root)
             self.assert_no_trace(root)
 

@@ -267,10 +267,10 @@ def decision_draft(manifest, files, largest):
         f'title: "{title}"\n'
         "---\n"
         f"\n# {title}\n\n"
-        f"무엇. `artifacts/inbox`의 `{manifest['archive']}`와 `submit.zip`을 `tools/register_run.py`로\n"
-        f"등록했습니다. 결과 ZIP의 파일 {files}개를 `reports/runs/{run_id}/`에 텍스트로 풀었고 ZIP\n"
-        "바이너리는 커밋하지 않았습니다. 두 ZIP 해시·코드 커밋·실행 환경·시간·건수·원응답 여부는\n"
-        "같은 폴더의 `manifest.json`에 있습니다.\n\n"
+        f"무엇. `artifacts/inbox`의 `{manifest['archive']}`를 `tools/register_run.py`로 등록했습니다.\n"
+        f"결과 ZIP의 파일 {files}개를 `reports/runs/{run_id}/`에 텍스트로 풀었고 ZIP 바이너리는\n"
+        "커밋하지 않았습니다. 두 ZIP 해시·코드 커밋·실행 환경·시간·건수·원응답 여부는 같은 폴더의\n"
+        f"`manifest.json`에 있습니다. 제출 ZIP 해시의 출처는 `{manifest['zip_sha256_source']['submit']}`입니다.\n\n"
         f"왜. 이 등록은 `{(manifest['code']['commit'] or '')[:7]}` 코드가 "
         f"{environment_summary(manifest['environment'])}에서 {cases}을 완주하고 "
         f"{'점수 기록 없이 끝났다' if score is None else f'Macro F1 {score!r}을 남겼다'}는 것만 "
@@ -306,29 +306,42 @@ def register(inbox, code_commit, *, root=ROOT, expect_results=None, expect_submi
         raise ValueError(f"{inbox}: colab-results-<숫자>.zip 후보가 {len(candidates)}개다. "
                          "한 개만 두고 다시 실행한다")
     results_zip = candidates[0]
-    submit_zip = inbox / "submit.zip"
-    if not submit_zip.is_file():
-        raise ValueError(f"{inbox}: submit.zip 이 없다")
-
     run_id = "colab-" + RESULTS_NAME.match(results_zip.name).group(1)
     target = root / "reports/runs" / run_id
     if target.exists():
         raise ValueError(f"reports/runs/{run_id} 가 이미 있다. 덮어쓰지 않는다")
 
+    entries = read_zip(results_zip, RESULTS_REQUIRED)
+    # 품질 게이트 미달이면 노트북이 submit.zip을 안 내려준다. 그때는 실행이 적어 둔 해시를 쓴다.
+    submit_zip = inbox / "submit.zip"
+    recorded = (load_json(entries, "candidate.json").get("submit_sha256")
+                or load_json(entries, "validation.json").get("submit_sha256"))
+    if submit_zip.is_file():
+        submit_digest = hashlib.sha256(submit_zip.read_bytes()).hexdigest()
+        submit_source = "artifacts/inbox/submit.zip"
+        if recorded and recorded.lower() != submit_digest:
+            raise ValueError(f"submit.zip 이 이 실행이 검증한 ZIP이 아니다: "
+                             f"실행 기록 {recorded.lower()}, 실제 {submit_digest}")
+        read_zip(submit_zip, SUBMIT_REQUIRED)
+    elif recorded:
+        submit_digest, submit_source = recorded.lower(), "candidate.json"
+    else:
+        raise ValueError(f"{inbox}: submit.zip 이 없고 결과 ZIP에도 submit_sha256 기록이 없다")
+
     digests = {"results": hashlib.sha256(results_zip.read_bytes()).hexdigest(),
-               "submit": hashlib.sha256(submit_zip.read_bytes()).hexdigest()}
+               "submit": submit_digest}
     for role, expected in (("results", expect_results), ("submit", expect_submit)):
         if expected and expected.lower() != digests[role]:
             raise ValueError(f"{role} ZIP의 SHA-256이 기대값과 다르다: "
                              f"기대 {expected.lower()}, 실제 {digests[role]}")
 
-    entries = read_zip(results_zip, RESULTS_REQUIRED)
-    read_zip(submit_zip, SUBMIT_REQUIRED)
     if "manifest.json" in entries:
         raise ValueError(f"{results_zip.name}: manifest.json 이 이미 있다. 등록 기록을 덮어쓰지 않는다")
     scan(entries, results_zip.name)
 
     manifest = build_manifest(run_id, results_zip.name, digests, code_commit, entries)
+    manifest["zip_sha256_source"] = {"results": "artifacts/inbox/" + results_zip.name,
+                                     "submit": submit_source}
     index_path = root / "docs/runs.md"
     index = upsert_row(index_path.read_text(encoding="utf-8"), run_id, index_row(manifest))
     decisions = root / ".wiki/decisions"

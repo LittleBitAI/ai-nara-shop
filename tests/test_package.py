@@ -149,6 +149,12 @@ class PackageTests(unittest.TestCase):
                 namespace["run_case"]("dev", work / "open/dev.jsonl")
             with gzip.open(work / "cases/dev/data/test.jsonl.gz", "rb") as compressed:
                 self.assertEqual(compressed.read(), (work / "open/dev.jsonl").read_bytes())
+            # 같은 입력은 회차마다 같은 .gz 바이트여야 input_sha256으로 두 회차를 대조할 수 있다.
+            with patch("subprocess.Popen", side_effect=mock_model_only), patch("builtins.print"):
+                namespace["run_case"]("dev-again", work / "open/dev.jsonl")
+            self.assertEqual((work / "cases/dev/data/test.jsonl.gz").read_bytes(),
+                             (work / "cases/dev-again/data/test.jsonl.gz").read_bytes())
+            self.assertEqual(namespace["case_inputs"]["dev"], namespace["case_inputs"]["dev-again"])
             report_path = results / "dev/run_report.json"
             report = json.loads(report_path.read_text(encoding="utf-8"))
             # Synthetic success metadata exercises the gate only, never a live-model result.

@@ -62,6 +62,7 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `colab-1789613533157944500` | `57c78cf` | 0.21100769349007198 | 미보관 | 미보관 | — |
 | `colab-1789616952134769089` | `e9e4022` | 0.2199212207545541 | 미보관 | 미보관 | — |
 | `colab-1789621345861123113` | `654c556` | 0.22078771129016228 | Colab A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1789621345861123113/](../reports/runs/colab-1789621345861123113/) |
+| `colab-1789650911655581500` | `36b6cc1` | 0.21825534501066987 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1789650911655581500/](../reports/runs/colab-1789650911655581500/) |
 
 `미보관`은 그 실행의 ZIP을 이 규약으로 등록하기 전이라는 뜻입니다. 없었다는 뜻이 아닙니다.
 점수만 [history.json](../reports/team-score-audit/history.json)에 남아 있고 실행 환경·원응답 여부는
@@ -69,6 +70,11 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 
 `원응답 없음`은 `debug_responses=false`로 실행해 모델 응답 본문이 로그에 없다는 뜻입니다.
 `diagnostics.jsonl`에는 응답 길이·토큰 수·종료 사유만 있습니다.
+
+**이 표의 점수를 회차끼리 빼서 개선이라고 읽지 마십시오.** 프롬프트·스키마·모델·seed·입력
+토큰이 전부 같은 두 회차에서도 24항목 1차 판정이 4,800셀 중 25셀 달라져 Macro F1이 0.0025
+움직였습니다. 근거와 그 여파는 [회차 간 비결정성](../reports/runs/reproducibility.md)이 소유합니다.
+같은 회차 안의 `paired_macro_f1_delta`가 근거이고 회차 간 `macro_f1_delta`는 흔들림을 함께 잽니다.
 
 ## 대회 서버 제출
 

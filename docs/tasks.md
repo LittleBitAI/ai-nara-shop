@@ -120,6 +120,28 @@
   회차를 `reports/runs/`에 남길지는 사람이 정할 문제다. 대역 `submit.zip`을 쓴 형태 시험이며 실제 등록이 아니다.
 - 남은 미확인: D0의 새 Colab 회차와 대회 서버 제출로는 확인하지 않았다.
 
+`run-36b6cc1`: D0 회차 등록과 회차 간 재현성 확인. 모델 추론은 사용자가 Colab에서 돌렸다.
+- 실측: `36b6cc1` dev Macro F1 0.21825534501066987, 같은 회차 기본 0.21499821620044368.
+  `654c556`보다 0.0025 낮다. 추가 호출 200→107건, 추가 추론 330.8→110.7초(-66.5%),
+  dev 전체 896.9→694.8초(-22.5%). `quality_pass=false`로 `submit.zip`은 안 내려왔다.
+- 재현성: 두 회차의 기본 단계 입력이 해시로 동일한데(프롬프트·스키마·채팅템플릿·
+  sampling_params·청크·공고순서·입력 토큰 200건 전부) 출력 토큰이 33/200건 달랐고 v 셀이
+  25/4,800개 바뀌었다. **점수 하락 -0.0025는 전부 기본 단계의 흔들림이다** — v13 재검증
+  기여는 두 회차가 정확히 +0.0032571288102262로 같았다. 근거는
+  [reproducibility.md](../reports/runs/reproducibility.md). 한 쌍의 관측이므로 일반화하지 않는다.
+- 등록기가 처음 실전에서 막힌 자리(⑦의 게이트): 품질 게이트 미달이면 노트북이 `submit.zip`을
+  안 준다. `candidate.json`의 기록 해시를 쓰도록 고쳤고 파일이 있으면 대조한다.
+  **손으로 고친 파일 2개** — `tools/register_run.py`, `tests/test_register_run.py`.
+  교차 플랫폼 재현으로 때우려던 시도는 실패했다: `zipfile.ZipInfo.create_system`이
+  Windows 0 / Linux 3이라 같은 소스도 ZIP 바이트가 다르다(`2744d943` 대 `a5e038ea`).
+- 기록 결함: `input_sha256`이 회차마다 달랐던 것은 `gzip.open`이 헤더에 현재 시각을 넣기
+  때문이었다. 노트북을 `gzip.GzipFile(..., mtime=0)`으로 고쳤고 `tests/test_package.py`가
+  두 번 압축해 바이트 동일을 검사한다. **이 수정 이전 회차의 `input_sha256`은 대조 불가다.**
+- 수정 범위: `tools/register_run.py`, `tests/test_register_run.py`, `tests/test_package.py`,
+  `notebooks/colab-baseline.ipynb`, `reports/runs/reproducibility.md`, `reports/runs/colab-…581500/`,
+  `docs/runs.md`, `docs/workflow.md` W5, `.wiki/plan-active.md`, `.wiki/decisions/…-018-…`, 이 작업 큐.
+- 미실행: 이 회차는 제출하지 않았다. 서버 시간·점수는 모른다.
+
 `submission-ledger`: 채점된 서버 제출을 적을 자리가 없어 점수가 기록되지 않았다. 장부를 만든다.
 - 사실: `654c556`을 2026-09-17에 제출해 리더보드 0.2197036943을 받았다. 사용자 보고이며 제출 ID·
   정확한 시각·public/private 구분은 받지 못했다. 저장소에는 `server_submitted: false`만 있었다.

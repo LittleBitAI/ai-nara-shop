@@ -1,0 +1,102 @@
+{
+  "run_id": "colab-1789650911655581500",
+  "archive": "colab-results-1789650911655581500.zip",
+  "zip_sha256": {
+    "results": "dd54050e4e2183b8b87fc160b2b760de51f2f522c084267ae553d89c1970760e",
+    "submit": "a5e038ea0113286877f84bf9eeef319b547f996951fa5736bcd40bb49c08b669"
+  },
+  "registered_at": "2026-09-17T13:19:22.745484+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "main",
+    "commit": "36b6cc13790275f9fe8ab852c58d91f14bcefbc2",
+    "given_commit": "36b6cc13790275f9fe8ab852c58d91f14bcefbc2"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "dev": {
+      "count": 200,
+      "input_sha256": "58827398d4e10c851ff7a5f79be98b9fb54a95faf9bddac54644235fdfbacd45",
+      "mode": "live",
+      "seconds": {
+        "model_load": 218.6,
+        "baseline_inference": 362.5,
+        "extra_inference": 110.7,
+        "inference_total": 473.1,
+        "run_total": 694.817,
+        "wall_clock": 699.6248769760132
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 107,
+        "extra_selected": 107,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 29,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 188,
+        "evidence_dropped_not_verbatim": 39,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.21825534501066987
+    },
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 488.3,
+        "baseline_inference": 35.2,
+        "extra_inference": 10.5,
+        "inference_total": 45.7,
+        "run_total": 534.297,
+        "wall_clock": 539.2669215202332
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 6,
+        "extra_selected": 6,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 11,
+        "evidence_dropped_not_verbatim": 5,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.21825534501066987,
+    "baseline_macro_f1_same_run": 0.21499821620044368,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": false,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1789650911655581500.zip",
+    "submit": "candidate.json"
+  }
+}
