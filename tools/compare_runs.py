@@ -8,12 +8,13 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-# 회차 간 churn의 실측 범위. 다섯 쌍에서 관측했고 reports/runs/reproducibility.md가 소유한다.
-# 셀 수로는 같은 코드와 다른 코드가 구분되지 않았고 점수 영향만 300배 벌어졌다.
+# 회차 간 churn의 실측 범위. 여덟 쌍에서 관측했고 reports/runs/reproducibility.md가 소유한다.
+# 셀 수로는 구분되지 않는다 — 30셀이 0.0026을 내고 41셀이 0.000008을 냈다.
+# 같은 코드가 dev Macro F1 0.2182를 세 번, 0.2208을 한 번 냈다.
 DRIFT_MIN = 0.000007917373
-DRIFT_MAX = 0.002576269954
-DRIFT_CELLS = (25, 41)
-DRIFT_PAIRS = 5
+DRIFT_MAX = 0.003128882280
+DRIFT_CELLS = (25, 43)
+DRIFT_PAIRS = 8
 
 
 def load_score():

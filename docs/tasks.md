@@ -120,6 +120,25 @@
   회차를 `reports/runs/`에 남길지는 사람이 정할 문제다. 대역 `submit.zip`을 쓴 형태 시험이며 실제 등록이 아니다.
 - 남은 미확인: D0의 새 Colab 회차와 대회 서버 제출로는 확인하지 않았다.
 
+`run-89a6a11`: 진단 도구 첫 GPU 회차. 부재탐지가 풀릴 수 있다는 실측과 재현성 재정정.
+- **부재탐지 3항목을 별도 스키마 3항목 질의로 물었다.** v16 TP 0→**6/6**, v18 0→4/7, v20 0→3/5.
+  대신 FP가 139/109/109로 정밀도가 무너져 F1은 0.079/0.067/0.051이다. 파이프라인은 전부 0.000.
+  **문제는 미탐이 아니라 정밀도였다.** 전문·한계는
+  [부재탐지 진단](../reports/team-score-audit/absence-detection.md). C3의 출발점을 바꿨다.
+- 세 변수(항목 수 24→3, 근거 null 고정 해제, 출력 형식) 중 무엇이 원인인지는 이 회차로 못 가른다.
+- **도구 결함:** `판정`과 `막힌_단계`를 별도 칸으로 두어 `판정=1` 370건 중 286건이 어긋났다.
+  단계 히스토그램을 못 쓴다. 두 칸을 하나로 합치고 위반 여부는 프로그램이 정하게 고쳤다.
+- **재현성 재정정:** 같은 `script.py`(`2ad9ea8f`)의 네 번째 측정이 dev 0.2208061356으로,
+  앞선 세 번의 0.2182에서 0.0026 벌어졌다. 코드 변경 0. churn 범위를 여덟 쌍 기준
+  0.000008~0.003129로 넓히고 `reproducibility.md`·`compare_runs.py`·W5·plan-active·인수인계를 고쳤다.
+- **노트북 `quality_pass`가 잡음으로 통과했다.** 과거 기준선을 0.00000477 넘겼는데 이는 관측된
+  가장 작은 churn 0.0000079보다도 작다. 게이트는 바꾸지 않고 문서에 적었다.
+- 수정 범위: `tools/diagnose_items.py`, `tests/test_diagnose_items.py`, `tools/compare_runs.py`,
+  `reports/team-score-audit/absence-detection.md`, `reports/runs/reproducibility.md`,
+  `reports/runs/colab-1789658250172468461/`, `docs/workflow.md`, `docs/tasks/team-handoff.md`,
+  `.wiki/plan-active.md`, `.wiki/decisions/…-020-…`, 이 작업 큐.
+- 미실행: 고친 스키마(단계 한 칸)로는 아직 GPU 질의를 안 했다. 이 회차는 아직 제출하지 않았다.
+
 `run-b113425`: 원응답 회차 등록, 재현성 결론 정정, Colab 배선 버그 수정.
 - 사용자가 노트북 전체를 `RUN_DIAGNOSTIC=True`·`DIAGNOSE_ITEMS="v16,v18,v20"`으로 돌렸다.
   검증 회차 통과(dev 0.21821144133644133), **원응답 307건 확보**, 진단 도구는 실패했다.

@@ -16,8 +16,8 @@ ITEMS = ["v16", "v18", "v20"]
 IDS = ["PPS-DEV-20", "PPS-DEV-22"]
 
 
-def cell(stage, quote="공고 원문 한 줄", hit=0):
-    return {"요구사항": "소기업 제한 없음 확인", "공고_인용": quote, "판정": hit, "막힌_단계": stage}
+def cell(stage, quote="공고 원문 한 줄"):
+    return {"요구사항": "소기업 제한 없음 확인", "공고_인용": quote, "막힌_단계": stage}
 
 
 class StubRunner:
@@ -65,6 +65,8 @@ class DiagnoseItemsTests(unittest.TestCase):
             self.assertEqual([row["id"] for row in rows], IDS)
             self.assertEqual(sorted(rows[0]["items"]), sorted(ITEMS))
             self.assertEqual(rows[0]["items"]["v16"]["막힌_단계"], "condition_not_met")
+            # 위반 여부는 모델이 아니라 프로그램이 단계에서 정한다. 둘이 어긋날 수 없다.
+            self.assertEqual(rows[0]["items"]["v16"]["판정"], 0)
             self.assertEqual(rows[1]["items"]["v16"]["공고_인용"], None)
             # 실제 양성을 함께 실어야 "0이라 한 이유"와 정답을 한 줄에서 본다.
             self.assertEqual(rows[0]["truth"]["v16"], 1)
@@ -76,6 +78,18 @@ class DiagnoseItemsTests(unittest.TestCase):
             self.assertEqual(manifest["notice_count"], 2)
             self.assertEqual(sorted(p.name for p in out.iterdir()), ["items.jsonl", "manifest.json"])
         self.assertEqual((ROOT / "script.py").read_bytes(), script_before, "제출물을 건드렸다")
+
+    def test_verdict_is_derived_from_the_stage_never_from_a_separate_field(self):
+        """판정을 별도 칸으로 두었더니 370건 중 286건이 단계와 어긋났다. 이제 한 칸이다."""
+        self.assertNotIn("판정", diagnose_items.CELL)
+        self.assertNotIn("판정", diagnose_items.build_schema(ITEMS)["properties"]["v16"]["properties"])
+        StubRunner.answers = [{item: cell(diagnose_items.VIOLATION) for item in ITEMS}]
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "run"
+            run(out)
+            rows = [json.loads(line) for line
+                    in (out / "items.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertTrue(all(r["items"][i]["판정"] == 1 for r in rows for i in ITEMS))
 
     def test_absence_items_are_asked_for_a_quotation(self):
         """부재탐지 항목은 제출 스키마가 근거를 null로 막는다. 진단 스키마는 막지 않아야 한다."""
