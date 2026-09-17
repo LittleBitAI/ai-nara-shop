@@ -77,7 +77,7 @@
 - 입력: `artifacts/inbox/`의 `colab-results-<숫자>.zip`·`submit.zip` 한 쌍과 `--code-commit`.
   선택적으로 전달받은 해시 `--expect-results`·`--expect-submit`.
 - 출력: `tools/register_run.py`, `reports/runs/<run-id>/`와 `manifest.json`, [색인](runs.md) 한 행,
-  `.wiki/decisions/<날짜>-NNN-run-<run-id>.md` 초안. 커밋은 하지 않는다.
+  `.wiki/decisions/<날짜>-run-<run-id>.md` 초안. 커밋은 하지 않는다.
 - 수정 범위: `tools/register_run.py`, `tests/test_register_run.py`, `docs/runs.md`, `docs/README.md`,
   `.wiki/adapter.toml`, 이 작업 큐. `script.py`·`open/` 원본은 제외한다.
 - 통과 조건: 실패 조건마다 테스트 하나 — ZIP 후보 0개/2개, 해시 불일치, 예상 경로 없음,
@@ -119,6 +119,41 @@
   `colab-results-1789602422101717812.zip`으로 `run_report.json`이 없어 거부됐다 — 추론이 돌지 않은
   회차를 `reports/runs/`에 남길지는 사람이 정할 문제다. 대역 `submit.zip`을 쓴 형태 시험이며 실제 등록이 아니다.
 - 남은 미확인: D0의 새 Colab 회차와 대회 서버 제출로는 확인하지 않았다.
+
+`decision-collision`: 공용 위키 훅이 손으로 쓴 결정 기록 3개를 덮어썼다. 원인을 찾아 가드를 단다.
+- 사고: `2026-09-17` 013·015·016의 한국어 전문과 `triggers`·`domain`이 PR 제목 기반 영문 스텁으로
+  바뀌었다. 작업 트리 변경이라 `git restore`로 복구했고 커밋되지 않았다.
+- 원인: 공용 위키 `tool/sync.py`가 Stop 이벤트에서 `harvest.record()`로 머지된 PR을 캔다.
+  중복 가드 `recorded()`가 **frontmatter의 `pr:` 줄만** 보는데 손으로 쓴 기록에는 그 줄이 없다.
+  그래서 미기록으로 판정되고 `write_text`가 **같은 이름을 덮었다.** 파일명 규칙이 같은 것
+  (`<날짜>-<번호>-<슬러그>`)이 충돌의 조건이었다.
+- 판단: 훅은 쓸모가 있다. `012`처럼 `triggers`·`domain`이 채워진 기록을 만들고 세션 시작 요약과
+  주입에 쓰인다. 지우지 않고 가드를 달았다.
+- 허브 수정(`ai-coding-agent-wiki-public`): ① `recorded()`가 파일명 앞의 번호도 읽는다.
+  ② **있는 파일은 절대 안 덮는다** — 번호 판정이 또 틀려도 여기서 멈춘다. ③ 쓸 때 `newline="\n"`.
+  `tool/test_harvest.py`에 두 가드 검사를 넣었다(11건 통과).
+- 이 저장소 수정: `register_run.py`가 일련번호를 쓰지 않는다. `<날짜>-run-<run-id>.md`는
+  PR 번호와 부딪힐 수 없다. 이미 만든 기록 3개를 그 이름으로 옮기고, 제출 장부 기록은 실제
+  PR 번호 019로 맞췄다. 훅 생성본 6개는 LF로 바꿔 보존하고 중복 014는 지웠다.
+- 같이 발견: 내 PR 본문에 `## 변경 요약`·`## 변경 이유` 절이 없어 훅이 본문을 뭉갰다.
+  `docs/workflow.md` W4에 규약으로 적었다.
+- 미확인: 훅이 실제 Stop 이벤트에서 다시 돌 때 가드가 먹는지는 다음 머지에서 확인한다.
+
+`cpu-replay`: "후처리 후보는 CPU에서 잰다"고 두 번 적었는데 그걸 하는 도구가 없었다. 만든다.
+- `tools/replay_run.py`는 보관된 원응답으로 `parse_judgment`→`verify_sme`→`postprocess`를 다시
+  돌린다. 모델을 부르지 않는다. `--candidate`로 그 두 단계 중 정의한 것만 갈아 끼운다.
+- **합격 기준은 회차 자신의 CSV를 바이트 단위로 재현하는 것이다.** `--verify`가 그것이고
+  `tests/test_replay_run.py`가 최종·기본 CSV 양쪽을 검사한다. 재현이 깨지면 재생 결과를 근거로
+  쓸 수 없다는 뜻이므로 검사가 먼저 빨개져야 한다.
+- 실측: dev 200건 재생 **0.64초** + 채점 0.20초. 재생 점수가 회차 기록 0.218203523963과 일치했다.
+  Colab 회차 12~16분이 0.84초가 된다.
+- **회차 churn이 없다.** 같은 모델 출력을 쓰므로 후보와 기준의 차이가 곧 후보의 효과다.
+  `compare_runs.py`의 churn 경고가 필요 없는 유일한 비교 경로다.
+- 거부 조건: 원응답이 없는 회차, `sme_documents_shrunk > 0`인 회차(줄어든 공고의 건별 예산이
+  로그에 없다), 후보를 넣은 채 `--verify`(그 경우 "회차와 같다"는 말이 뜻을 잃는다).
+- 못 재는 것: 프롬프트·스키마를 바꾸는 후보. 저장된 응답 자체가 달라지므로 Colab 회차가 필요하다.
+- 수정 범위: `tools/replay_run.py`, `tests/test_replay_run.py`, `docs/workflow.md` W5,
+  `docs/README.md`, `docs/tasks/team-handoff.md`, `.wiki/plan-active.md`, 이 작업 큐.
 
 `run-89a6a11`: 진단 도구 첫 GPU 회차. 부재탐지가 풀릴 수 있다는 실측과 재현성 재정정.
 - **부재탐지 3항목을 별도 스키마 3항목 질의로 물었다.** v16 TP 0→**6/6**, v18 0→4/7, v20 0→3/5.

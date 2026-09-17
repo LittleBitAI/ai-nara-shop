@@ -29,8 +29,9 @@ SECRETS = (
     ("개인 절대 경로", re.compile(r"""[A-Za-z]:[\\/]{1,2}Users[\\/]{1,2}[^\\/\s"']+|/home/[^/\s"']+""")),
 )
 
-SEQUENCE = re.compile(r"^\d{4}-\d{2}-\d{2}-(\d{3})-")
-GENERATED = re.compile(r"^\d{4}-\d{2}-\d{2}-\d{3}-[0-9a-f]{9}$")
+# 결정 기록 이름에 일련번호를 쓰지 않는다. 공용 위키의 `sync`가 머지된 PR을
+# `<날짜>-<PR번호>-<브랜치>`로 캐 넣으므로 번호를 쓰면 PR 번호와 부딪힌다.
+# run-id는 그 자체로 유일하므로 번호가 필요 없다.
 
 
 def safe_parts(name):
@@ -244,13 +245,6 @@ def upsert_row(text, run_id, row):
     return "".join(lines[:existing] + [row] + lines[existing + 1:])
 
 
-def next_number(decisions):
-    """사람이 붙인 일련번호만 센다. 커밋 해시로 생성된 기록의 번호는 제외한다."""
-    numbers = [int(found.group(1)) for path in decisions.glob("*.md")
-               if (found := SEQUENCE.match(path.stem)) and not GENERATED.match(path.stem)]
-    return max(numbers, default=0) + 1
-
-
 def decision_draft(manifest, files, largest):
     """훅이 제목과 '왜.' 첫 문장을 요약으로 싣는다. 로그 본문은 넣지 않는다."""
     run_id = manifest["run_id"]
@@ -347,7 +341,9 @@ def register(inbox, code_commit, *, root=ROOT, expect_results=None, expect_submi
     decisions = root / ".wiki/decisions"
     if not decisions.is_dir():
         raise ValueError(f"{decisions} 가 없다. 결정 초안을 쓸 자리를 먼저 확인한다")
-    decision = decisions / f"{datetime.now().strftime('%Y-%m-%d')}-{next_number(decisions):03d}-run-{run_id}.md"
+    decision = decisions / f"{datetime.now().strftime('%Y-%m-%d')}-run-{run_id}.md"
+    if decision.exists():
+        raise ValueError(f"{decision} 가 이미 있다. 덮어쓰지 않는다")
     draft = decision_draft(manifest, len(entries), max(len(data) for data in entries.values()))
 
     write_run_directory(target, entries, manifest)

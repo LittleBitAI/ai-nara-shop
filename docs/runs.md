@@ -14,7 +14,9 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 
 전달받은 해시가 있으면 `--expect-results`·`--expect-submit`으로 대조합니다.
 도구는 `reports/runs/<run-id>/`와 `manifest.json`, 아래 색인 한 행,
-`.wiki/decisions/<날짜>-NNN-run-<run-id>.md` 초안까지 씁니다. 커밋은 하지 않습니다.
+`.wiki/decisions/<날짜>-run-<run-id>.md` 초안까지 씁니다. 커밋은 하지 않습니다.
+이름에 일련번호를 쓰지 않습니다 — 공용 위키의 `sync`가 머지된 PR을
+`<날짜>-<PR번호>-<브랜치>`로 캐 넣으므로 번호를 쓰면 PR 번호와 부딪힙니다.
 아래 규약의 검사 중 하나라도 걸리면 종료 코드가 0이 아니고 부분 결과를 남기지 않습니다.
 초안의 문장과 색인 행은 사람이 읽고 고친 뒤 커밋합니다.
 

@@ -166,7 +166,9 @@ class RegisterRunTests(unittest.TestCase):
 
             decisions = sorted(p.name for p in (root / ".wiki/decisions").glob("*run-colab-123*"))
             self.assertEqual(len(decisions), 1, decisions)
-            self.assertTrue(decisions[0].endswith("-017-run-colab-123.md"), decisions[0])
+            # 이름에 일련번호를 안 쓴다. 공용 위키가 PR 번호로 캐 넣으므로 부딪힌다.
+            self.assertTrue(decisions[0].endswith("-run-colab-123.md"), decisions[0])
+            self.assertNotRegex(decisions[0], r"-\d{3}-run-")
             draft = (root / ".wiki/decisions" / decisions[0]).read_text(encoding="utf-8")
             self.assertTrue(draft.startswith("---\nscope: project\nseverity: preference\n"))
             for key in ("triggers:", "domain:", "title:"):
