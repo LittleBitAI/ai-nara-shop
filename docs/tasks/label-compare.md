@@ -48,9 +48,31 @@ CLI 에이전트를 이 저장소 안에서 돌리면 블라인드가 자동으�
 **저장소 안 경로를 거부한다.** 번들에는 공고 본문·항목표·제공 법령 스냅샷만 들어가고 정답은 없다.
 실행 시 CLI의 작업 폴더는 번들이며, 저장소 밖에 두어 `..` 탐색으로도 정답에 닿지 않게 한다.
 
+## 전량 200건을 돌리지 않는 이유 — 실측
+
+첫 실제 라벨링(`PPS-DEV-01`, Opus 5)이 **303초** 걸렸다. 200건×2모델이면 **33.7시간**이다.
+
+dev 200건 중 양성이 하나라도 있는 공고는 **88건뿐이고 112건은 24항목 전부 0**이다. Macro F1은
+양성 클래스 지표라 그 112건은 오탐 정보만 준다. 그래서 `export --cover N`이 **항목마다 양성 N건을
+덮는 공고만** 고른다. 실측 선택 결과:
+
+| 선택 | 공고 수 | 1모델 | 2모델 |
+| --- | ---: | ---: | ---: |
+| 항목당 양성 ≥1 | 11건 | 0.9h | 1.9h |
+| 항목당 양성 ≥3 + 무양성 15건 | **50건** | 4.2h | **8.4h** |
+| 전량 | 200건 | 16.8h | 33.7h |
+
+무양성 15건은 오탐 측정의 편향을 줄이려고 넣는다. 양성 있는 공고만 쓰면 "전부 1"이라고 답하는
+라벨러가 잘해 보인다. 선택은 탐욕이며 최소성은 보장하지 않고, 동점을 ID 사전순으로 깨서
+같은 입력이 같은 목록을 낸다(R15).
+
+**이 부분집합의 F1은 `654c556`의 dev 0.2208과 같은 축이 아니다.** 양성이 과대표집된 공고 집합이라
+절대값이 부풀어 있다. 두 모델이 같은 50건을 보므로 **둘 사이의 비교만** 유효하다.
+
 ## 입력
 
 - `open/dev.jsonl` 200건 (SHA-256 `5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534`)
+  중 `--cover`가 고른 50건. 정답 CSV는 **선택에만** 쓰고 번들에 넣지 않는다
 - `open/data/항목표.json` (SHA-256 `368cb41f376d8ad7edbbdf181542e6e959de356f7f70d86e72943325ecad61d9`)
 - `open/data/법령패키지/` 파일 25개 — 번들로 복사한다(R11 스냅샷 고정)
 - 채점 정답 `open/dev_labels.csv` — **라벨 생성이 끝난 뒤에만** 쓴다
@@ -78,8 +100,8 @@ CLI 에이전트를 이 저장소 안에서 돌리면 블라인드가 자동으�
 
 1. `python -X utf8 -m unittest tests.test_label_bundle` 통과. — **통과함(8건)**
 2. `export`가 저장소 안 경로를 거부하고, 만든 번들에 정답 파일이 없다. — **통과함**
-3. 두 모델 모두 200건 라벨이 실패 없이 모인다. — **미실행**
-4. `collect`가 낸 CSV가 `tools/score.py`의 49열 계약을 통과한다. — 테스트에서 통과, 실제 라벨로는 미실행
+3. 두 모델 모두 선택된 50건 라벨이 실패 없이 모인다. — **미실행** (Opus 5 파일럿 1건만 성공)
+4. `collect`가 낸 CSV가 `tools/score.py`의 49열 계약을 통과한다. — **통과함**
 5. 두 모델의 항목별 TP/FP/FN 표와 0점 11항목 비교가 나온다. — **미실행**
 
 ## 실행 절차
@@ -87,40 +109,49 @@ CLI 에이전트를 이 저장소 안에서 돌리면 블라인드가 자동으�
 ### 1. 번들 만들기 (저장소 밖)
 
 ```powershell
-python -X utf8 tools/label_bundle.py export --bundle "$env:TEMP/label-compare-dev"
+python -X utf8 tools/label_bundle.py export --bundle "$env:TEMP/label-compare-50" `
+  --truth open/dev_labels.csv --cover 3 --negatives 15
 ```
 
-200건 기준 약 13MB, 공고 1건당 프롬프트+본문 약 28,500자다.
+50건 기준 약 8MB, 공고 1건당 프롬프트+본문 약 28,500자다.
 
-### 2. 명령 확인 — 먼저 1건만
+### 2. 두 모델 돌리기
 
-`--cmd`는 **프롬프트를 stdin으로 받아 모델 응답을 stdout으로 내는** 명령이다. 두 CLI의 정확한
-헤드리스 호출 형태와 웹 검색 차단 플래그는 이 1건 실행으로 확인한다. 아래는 확인 대상이지 검증된
-명령이 아니다.
+`--cmd`는 **프롬프트를 stdin으로 받아 모델 응답을 stdout으로 내는** 명령이다. 아래 두 줄은
+파일럿 1건으로 실제 확인했다(Opus 5: 종료 코드 0, JSON 한 덩어리, 인용 9개 전부 원문 일치).
 
 ```powershell
-python -X utf8 tools/label_bundle.py run --bundle "$env:TEMP/label-compare-dev" `
-  --model opus5 --limit 1 `
-  --cmd "claude -p --model claude-opus-5 --disallowedTools WebSearch WebFetch" `
-  --out reports/label-compare/opus5.jsonl
+python -X utf8 tools/label_bundle.py run --bundle "$env:TEMP/label-compare-50" `
+  --model opus5 --out reports/label-compare/opus5-cover3.jsonl `
+  --cmd "claude -p --model claude-opus-5 --allowedTools Read,Glob,Grep --disallowedTools WebSearch,WebFetch"
+
+python -X utf8 tools/label_bundle.py run --bundle "$env:TEMP/label-compare-50" `
+  --model astra --out reports/label-compare/astra-cover3.jsonl `
+  --cmd "del reply.json 2>nul & codex exec -m gpt-6-astra -s read-only --skip-git-repo-check --ephemeral -o reply.json >nul && type reply.json"
 ```
 
-확인할 것: 종료 코드 0, 응답이 JSON 한 덩어리, 웹 검색이 실제로 꺼졌는지. Astra 쪽도 같은 방식으로
-자기 CLI의 헤드리스 플래그를 확인한 뒤 `--model astra`로 돌린다. **두 모델에 같은 `prompt.md`가
-가는 것은 도구가 hash로 검사한다.**
+`codex exec`는 진행 로그를 stdout에 섞으므로 `-o`로 최종 메시지만 받아 `type`으로 낸다. 앞의 `del`이
+없으면 codex가 중간에 죽었을 때 직전 공고의 답을 이번 공고 라벨로 조용히 쓴다. 자식 셸은 cmd.exe다.
+웹 검색은 claude는 `--disallowedTools`로 막고, codex는 `--search`를 주지 않으면 기본 off다(설정에도 없음).
+**두 모델에 같은 `prompt.md`가 가는 것은 도구가 hash로 검사한다.**
 
-### 3. 200건 돌리기
+끊기면 같은 명령을 다시 친다. 끝난 ID는 건너뛴다. 진행은 stderr에 한 줄씩 나온다.
 
-`--limit`을 빼고 같은 명령을 다시 돌린다. 끝난 ID는 건너뛴다. 진행은 stderr에 한 줄씩 나온다.
+### 3. 채점
 
-### 4. 채점
+`tools/score.py`는 정답과 예측의 ID 집합이 정확히 같아야 채점한다. 그 검사는 부분 제출을 막는
+제출 계약이라 그대로 두고, `--truth-out`이 라벨 있는 ID만 남긴 정답 부분집합을 만든다.
 
 ```powershell
-python -X utf8 tools/label_bundle.py collect --labels reports/label-compare/opus5.jsonl --out reports/label-compare/opus5.csv
-python -X utf8 tools/score.py --truth open/dev_labels.csv --pred reports/label-compare/opus5.csv --output-dir reports/label-compare/score-opus5
+python -X utf8 tools/label_bundle.py collect --labels reports/label-compare/opus5-cover3.jsonl `
+  --out reports/label-compare/opus5-cover3.csv `
+  --truth open/dev_labels.csv --truth-out reports/label-compare/truth-cover3.csv
+
+python -X utf8 tools/score.py --truth reports/label-compare/truth-cover3.csv `
+  --pred reports/label-compare/opus5-cover3.csv --output-dir reports/label-compare/score-opus5
 ```
 
-두 모델의 예측 CSV가 나오면 `tools/compare_runs.py`로 항목별 차이를 본다.
+astra도 같게 한다. 두 예측 CSV가 나오면 `tools/compare_runs.py`로 항목별 차이를 본다.
 
 ## 판단 기준과 중단선
 
@@ -159,7 +190,12 @@ v24·v17·v21의 오탐 117개이며, 둘 다 라벨이 아니라 프롬프트·
   법령 25개). stub 명령으로 `run`→`collect`→`score.load_csv` 경로 통과.
   전체 스위트 73건 중 실패 1건은 `tests/test_setup_agents.py`이며 `--wiki` 인자 없이는 항상 실패하는
   기존 환경 의존이다. 이 변경과 무관하다.
-- 미실행·위험: **외부 모델을 한 번도 부르지 않았다.** 두 CLI의 헤드리스 호출 형태와 웹 검색 차단
-  플래그는 확인하지 않았다. 웹 검색이 실제로 꺼졌는지는 이 도구가 강제하지 못하고 명령 문자열만
-  기록한다. 라벨 품질·비교 결과·처리량은 전부 미측정이다.
-- 다음: 위 2단계의 1건 실행으로 두 명령을 확정한다.
+- **Opus 5 파일럿 1건 실측(`PPS-DEV-01`, 303초, 종료 코드 0).** 24항목 스키마 통과, 인용 9개가
+  전부 원문 부분문자열, `정보부족` 전부 false. 정답 대조로 **TP=1(v1)·FN=0·FP=2(v4·v24)**.
+  이 공고의 정답 양성은 1건이다. **1건은 통계가 아니다** — 확인한 것은 기계가 돈다는 것뿐이다.
+  이 라벨은 `reports/label-compare/opus5.jsonl`에 있고, 50건 부분집합에는 뽑히지 않아 채점에 안 쓴다.
+- 미실행·위험: **Astra는 한 번도 부르지 않았다.** 50건 본 실행은 두 모델 모두 미실행이다.
+  웹 검색이 실제로 꺼졌는지는 이 도구가 강제하지 못하고 명령 문자열만 기록한다.
+  CLI가 사용자 전역 설정·훅을 읽으므로 세션이 완전히 격리된 것은 아니다 — 정답은 안 닿지만
+  이 저장소 밖 문맥이 섞일 수 있다.
+- 다음: 50건 × 2모델을 돌린다. 실측 303초/건 기준 모델당 4.2시간이다.

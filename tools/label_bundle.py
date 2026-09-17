@@ -109,7 +109,43 @@ def build_notice(module, rec):
     )
 
 
-def export(module, *, input_path, data_dir, bundle, ids=(), limit=None):
+def read_truth(path):
+    with Path(path).open(encoding="utf-8", newline="") as stream:
+        return {row["id"]: row for row in csv.DictReader(stream)}
+
+
+def cover_ids(truth, per_item, negatives=0):
+    """항목마다 양성 `per_item`건을 덮는 최소에 가까운 공고를 고른다. 정답은 선택에만 쓰고 번들에 넣지 않는다.
+
+    F1은 양성 클래스 지표라 양성 없는 공고는 오탐 정보만 준다. dev 200건 중 88건에만 양성이 있어
+    전량을 돌리는 것은 라벨러 비교에 5.7배를 더 쓰는 일이다. 탐욕 선택이며 최소성은 보장하지 않는다.
+    동점은 ID 사전순으로 깨서 같은 입력이 같은 목록을 내게 한다(R15).
+    """
+    positives = {i: [item for item in ITEMS if row[item] == "1"] for i, row in truth.items()}
+    remaining = dict.fromkeys(ITEMS, per_item)
+    picked = []
+    while True:
+        best, gain = None, 0
+        for identifier in sorted(positives):
+            if identifier in picked:
+                continue
+            value = sum(1 for item in positives[identifier] if remaining[item] > 0)
+            if value > gain:
+                best, gain = identifier, value
+        if best is None:
+            break
+        picked.append(best)
+        for item in positives[best]:
+            remaining[item] = max(0, remaining[item] - 1)
+    short = [item for item in ITEMS if remaining[item] > 0]
+    empty = [i for i in sorted(positives) if not positives[i]][:negatives]
+    if negatives and len(empty) < negatives:
+        raise ValueError(f"양성 없는 공고가 {len(empty)}건뿐이라 {negatives}건을 못 뽑는다")
+    return picked + empty, short
+
+
+def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
+           truth_path=None, cover=None, negatives=0):
     bundle = Path(bundle).resolve()
     if bundle == ROOT or ROOT in bundle.parents:
         raise ValueError(f"번들을 저장소 안에 만들 수 없다: {bundle}. "
@@ -117,6 +153,19 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None):
     if bundle.exists():
         raise ValueError(f"{bundle} 가 이미 있다. 새 경로를 쓴다")
     table = module.item_table(str(data_dir))
+    selection = {"method": "all" if not (ids or limit) else "ids" if ids else "limit"}
+    if cover is not None:
+        if ids or limit:
+            raise ValueError("--cover는 --ids·--limit과 같이 쓰지 않는다")
+        if not truth_path:
+            raise ValueError("--cover는 --truth가 있어야 한다. 정답은 선택에만 쓰고 번들에 넣지 않는다")
+        ids, short = cover_ids(read_truth(truth_path), cover, negatives)
+        selection = {"method": "cover", "positives_per_item": cover, "negative_notices": negatives,
+                     "truth": module.record_path(str(truth_path)),
+                     "truth_sha256": module.file_sha256(truth_path),
+                     "items_short_of_target": short}
+        if short:
+            print(f"경고: 양성이 모자라 목표 미달인 항목 {short}", file=sys.stderr)
     wanted = set(ids or ())
     records = [rec for rec in module.iter_records(str(input_path), None if wanted else limit)
                if not wanted or rec["id"] in wanted]
@@ -150,6 +199,7 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None):
         "item_table_sha256": module.file_sha256(Path(data_dir) / "항목표.json"),
         "prompt_sha256": digest(prompt),
         "law_file_count": sum(1 for p in laws.rglob("*") if p.is_file()),
+        "selection": selection,
         "notice_count": len(notices), "notices": notices,
     }
     (staged / "manifest.json").write_text(
@@ -269,8 +319,13 @@ def label(module, *, bundle, cmd, out, model_label, ids=(), limit=None, timeout=
     return summary
 
 
-def collect(*, labels, out):
-    """라벨 JSONL을 49열 CSV로 옮긴다. e열은 전부 빈칸이다 - 점수에서 제외되고 인용은 JSONL이 갖는다."""
+def collect(*, labels, out, truth_path=None, truth_out=None):
+    """라벨 JSONL을 49열 CSV로 옮긴다. e열은 전부 빈칸이다 - 점수에서 제외되고 인용은 JSONL이 갖는다.
+
+    `--truth-out`은 라벨이 있는 ID만 남긴 정답 CSV를 같이 낸다. `tools/score.py`는 두 파일의 ID
+    집합이 정확히 같아야 채점하는데, 그 검사는 부분 제출을 막는 제출 계약이라 그대로 둔다.
+    라벨러 비교는 부분 집합이 정상이므로 채점기를 고치는 대신 맞는 정답 부분집합을 만든다.
+    """
     rows = []
     seen = set()
     with Path(labels).open(encoding="utf-8") as stream:
@@ -285,13 +340,29 @@ def collect(*, labels, out):
                         + [""] * 24)
     if not rows:
         raise ValueError(f"{labels}: 라벨이 없다")
+    header = ["id"] + ITEMS + [f"e{i}" for i in range(1, 25)]
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream, lineterminator="\n")
-        writer.writerow(["id"] + ITEMS + [f"e{i}" for i in range(1, 25)])
+        writer.writerow(header)
         writer.writerows(rows)
-    return {"rows": len(rows), "out": str(out)}
+    result = {"rows": len(rows), "out": str(out)}
+    if truth_out:
+        if not truth_path:
+            raise ValueError("--truth-out은 --truth가 있어야 한다")
+        truth = read_truth(truth_path)
+        unknown = [r[0] for r in rows if r[0] not in truth]
+        if unknown:
+            raise ValueError(f"정답에 없는 공고 ID: {unknown}")
+        truth_out = Path(truth_out)
+        truth_out.parent.mkdir(parents=True, exist_ok=True)
+        with truth_out.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.writer(stream, lineterminator="\n")
+            writer.writerow(header)
+            writer.writerows([truth[r[0]][column] for column in header] for r in rows)
+        result["truth_out"] = str(truth_out)
+    return result
 
 
 def main(argv=None):
@@ -309,6 +380,11 @@ def main(argv=None):
     ex.add_argument("--bundle", required=True, help="새 디렉터리. 저장소 안 경로는 거부한다")
     ex.add_argument("--ids", default="", help="쉼표로 구분한 공고 ID. 비우면 입력 전체")
     ex.add_argument("--limit", type=int)
+    ex.add_argument("--truth", dest="truth_path", help="--cover가 쓸 정답 CSV. 번들에는 넣지 않는다")
+    ex.add_argument("--cover", type=int,
+                    help="항목마다 양성 N건을 덮는 공고만 고른다. 전량보다 훨씬 적은 시간에 24항목을 덮는다")
+    ex.add_argument("--negatives", type=int, default=0,
+                    help="양성이 하나도 없는 공고를 몇 건 더 넣을지. 오탐 측정의 편향을 줄인다")
 
     ru = sub.add_parser("run", help="번들의 공고를 외부 CLI에 하나씩 물어 라벨을 모은다")
     ru.add_argument("--bundle", required=True)
@@ -323,17 +399,22 @@ def main(argv=None):
     co = sub.add_parser("collect", help="라벨 JSONL을 tools/score.py가 읽는 49열 CSV로 바꾼다")
     co.add_argument("--labels", required=True)
     co.add_argument("--out", required=True)
+    co.add_argument("--truth", dest="truth_path", help="정답 CSV. --truth-out과 함께 쓴다")
+    co.add_argument("--truth-out", help="라벨이 있는 ID만 남긴 정답 CSV. 부분 집합 채점에 쓴다")
 
     args = parser.parse_args(argv)
     ids = [x.strip() for x in getattr(args, "ids", "").split(",") if x.strip()]
     try:
         if args.command == "collect":
-            result = collect(labels=args.labels, out=args.out)
+            result = collect(labels=args.labels, out=args.out,
+                             truth_path=args.truth_path, truth_out=args.truth_out)
         else:
             module = load_submission_script(args.script)
             if args.command == "export":
                 result = export(module, input_path=args.input, data_dir=args.data_dir,
-                                bundle=args.bundle, ids=ids, limit=args.limit)
+                                bundle=args.bundle, ids=ids, limit=args.limit,
+                                truth_path=args.truth_path, cover=args.cover,
+                                negatives=args.negatives)
             else:
                 result = label(module, bundle=args.bundle, cmd=args.cmd, out=args.out,
                                model_label=args.model_label, ids=ids, limit=args.limit,
