@@ -22,9 +22,27 @@
 **쓸 수 있는 신호는 대상 항목의 TP/FP/FN이다.** v8이 TP 0→3이면 그것은 churn 밖이다.
 `tools/compare_runs.py`가 항목별 전→후·대상 밖 회귀·바뀐 공고 ID를 낸다 — §12의 명령을 쓴다.
 
-**원응답 307건이 보관돼 있다** (`reports/runs/colab-1789655036303880754/dev-debug/diagnostics.jsonl`).
-`postprocess`·`verify_sme`는 입력이 모델 응답·공고 원문·고시 CSV뿐이므로, 후처리·재검증을 바꾸는
-후보는 **GPU 없이 CPU에서 잰다.** 프롬프트를 바꾸는 후보만 Colab 회차가 필요하다.
+**원응답 307건이 보관돼 있고 재생 도구가 있다.** 모델 뒤 단계(`postprocess`·`verify_sme`)만
+바꾸는 후보는 **GPU 없이 0.6초에 잰다.** 재생이 회차 자신의 CSV를 바이트 단위로 재현하는 것을
+검사가 지킨다. **같은 모델 출력을 쓰므로 회차 churn이 없고, 후보와 기준의 차이가 곧 효과다.**
+
+```powershell
+# 1) 후보 없이 재현되는지 먼저 확인한다
+python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug --verify
+
+# 2) 후보를 끼운다. postprocess·verify_sme 중 정의한 것만 갈아 끼운다
+python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug `
+  --candidate experiments/<담당>_candidate.py --output-dir reports/<담당>/<티켓>-replay
+
+# 3) 채점하고 기준과 대조한다
+python -X utf8 tools/score.py --truth open/dev_labels.csv `
+  --pred reports/<담당>/<티켓>-replay/submission.csv --output-dir reports/<담당>/<티켓>-score
+python -X utf8 tools/compare_runs.py --items <대상> `
+  --before reports/runs/colab-1789655036303880754/dev-debug/submission.csv `
+  --after  reports/<담당>/<티켓>-replay/submission.csv
+```
+
+프롬프트·스키마를 바꾸는 후보는 저장된 응답이 달라지므로 이 경로로 못 재고 Colab 회차가 필요하다.
 
 지금 저장소에 있는 것(전달받을 필요 없다): 실행 기록 2회차가
 [`reports/runs/`](../../reports/runs/)에 풀려 있고, 새 결과 ZIP은 `tools/register_run.py`로 등록한다.
@@ -392,7 +410,7 @@ Colab 실행만 담당하고 멈추지 마라. 자신의 항목 후보 구현과
 
 ```powershell
 python -X utf8 -m unittest tests.test_baseline tests.test_package tests.test_score `
-  tests.test_register_run tests.test_diagnose_items tests.test_compare_runs
+  tests.test_register_run tests.test_diagnose_items tests.test_compare_runs tests.test_replay_run
 python -m ruff check script.py tools tests
 git diff --check
 python -X utf8 tools/package.py --output artifacts/team-candidate/submit.zip --colab-output artifacts/team-candidate/colab-bundle.zip
