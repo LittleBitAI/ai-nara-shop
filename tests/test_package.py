@@ -261,6 +261,69 @@ class PackageTests(unittest.TestCase):
                 exec(compile(CELLS["upload"], "colab-upload", "exec"), namespace)
             self.assertFalse((tmp / "escape.txt").exists())
 
+    def test_diagnostic_run_is_opt_in_and_refuses_a_silent_no_op(self):
+        """진단 회차는 기본으로 꺼져 있고, 원응답이 안 켜지면 통과하면 안 된다."""
+        self.assertIn("RUN_DIAGNOSTIC = False", CELLS["diagnose"])
+        self.assertNotIn("check_live", CELLS["diagnose"])  # 진단 회차는 검증 통과로 세지 않는다.
+        source = CELLS["diagnose"].replace("RUN_DIAGNOSTIC = False", "RUN_DIAGNOSTIC = True")
+        with tempfile.TemporaryDirectory() as tmp:
+            results = Path(tmp) / "results"
+            (results / "dev-debug").mkdir(parents=True)
+            calls, settings, events = [], {}, []
+            def fake_run_case(name, source_path, args=()):
+                calls.append((name, list(args)))
+                (results / name / "run_report.json").write_text(
+                    json.dumps({"mode": "live", "reproduction": {"settings": settings}}), encoding="utf-8")
+                (results / name / "diagnostics.jsonl").write_text(
+                    "".join(json.dumps(event) + "\n" for event in events), encoding="utf-8")
+            namespace = dict(WORK=Path(tmp), RESULTS=results, json=json, run_case=fake_run_case,
+                             write_json=lambda path, value: path.write_text(
+                                 json.dumps(value, ensure_ascii=False), encoding="utf-8"))
+            settings.update(debug_responses=True, sme_items=["v13"])
+            events[:] = [{"event": "response", "response_text": "{}"},
+                         {"event": "run_succeeded"}]
+            with patch("builtins.print"):
+                exec(compile(source, "colab-diagnose", "exec"), namespace)
+            self.assertEqual(calls, [("dev-debug", ["--debug-responses"])])
+            record = json.loads((results / "diagnostic.json").read_text(encoding="utf-8"))
+            self.assertIs(record["colab_pass"], False)
+            self.assertEqual(record["responses"], 1)
+
+            settings["debug_responses"] = False  # 플래그가 안 먹은 회차
+            with patch("builtins.print"), self.assertRaisesRegex(RuntimeError, "원응답을 켜지"):
+                exec(compile(source, "colab-diagnose", "exec"), dict(namespace))
+            settings["debug_responses"] = True  # 플래그는 켰는데 본문이 안 남은 회차
+            events[:] = [{"event": "response"}]
+            with patch("builtins.print"), self.assertRaisesRegex(RuntimeError, "기록되지 않았"):
+                exec(compile(source, "colab-diagnose", "exec"), dict(namespace))
+
+    def test_item_diagnosis_calls_the_separate_tool_without_a_token(self):
+        """항목 진단은 제출물이 아닌 tools/diagnose_items.py를 부르고 기본으로 꺼져 있다."""
+        self.assertIn('DIAGNOSE_ITEMS = ""', CELLS["diagnose"])
+        source = CELLS["diagnose"].replace('DIAGNOSE_ITEMS = ""', 'DIAGNOSE_ITEMS = "v16,v18,v20"')
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            results = work / "results"
+            (results / "diagnose").mkdir(parents=True)
+            (results / "diagnose/manifest.json").write_text(
+                json.dumps({"stages": {"v16": {"condition_not_met": 3}}}), encoding="utf-8")
+            calls = []
+            namespace = dict(WORK=work, RESULTS=results, json=json, os=os, Path=Path,
+                             PYTHON=sys.executable, MODEL_DIR="/models/revision",
+                             run_logged=lambda name, command, env=None, cwd=None:
+                                 calls.append((name, [str(x) for x in command], env)))
+            with patch.dict(os.environ, {"HF_TOKEN": "test-token", "PPS_QUANT": "wrong"}), \
+                    patch("builtins.print"):
+                exec(compile(source, "colab-diagnose", "exec"), namespace)
+            self.assertEqual([name for name, _, _ in calls], ["diagnose"])
+            _, command, env = calls[0]
+            self.assertTrue(any(Path(part).name == "diagnose_items.py" for part in command), command)
+            self.assertEqual(command[command.index("--items") + 1], "v16,v18,v20")
+            self.assertEqual(command[command.index("--model-dir") + 1], "/models/revision")
+            self.assertNotIn("HF_TOKEN", env)
+            self.assertNotIn("PPS_QUANT", env)
+            self.assertEqual(env["HF_HUB_OFFLINE"], "1")
+
     def test_notebook_preserves_subprocess_failure_log_and_exit_code(self):
         with tempfile.TemporaryDirectory() as tmp:
             namespace = dict(WORK=Path(tmp), RESULTS=Path(tmp), json=json, time=time, subprocess=subprocess,

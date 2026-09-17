@@ -120,6 +120,36 @@
   회차를 `reports/runs/`에 남길지는 사람이 정할 문제다. 대역 `submit.zip`을 쓴 형태 시험이며 실제 등록이 아니다.
 - 남은 미확인: D0의 새 Colab 회차와 대회 서버 제출로는 확인하지 않았다.
 
+`item-diagnosis`: 내일 C3·D1이 "막힌 단계"를 찾을 수 있게 계기를 놓는다. 점수 개선 자체는 담당자 몫이다.
+- 왜: 등록된 유일한 실행은 `debug_responses=false`이고 `diagnostics.jsonl`에 응답 길이·토큰 수·종료
+  사유만 있다. 실측으로 확인했다 — 610개 이벤트 중 `response_text`를 가진 것 0개.
+- 확인한 사실 세 가지. ① `--debug-responses`는 `script.py`에 **이미 있다**(`:594`, `:1064`).
+  막은 것은 노트북으로, `check_live`가 `argv == [PYTHON, "script.py"]`와 `debug_responses: False`를
+  단언한다. ② 부재탐지 5항목은 스키마가 `근거문구`를 `{"type": "null"}`로 고정하므로(`:238`)
+  **원응답을 켜도 v16/v18에서 새로 보이는 것이 없다.** ③ `postprocess`의 `if hit and v not in ABSENCE:`
+  (`:781`)가 위반=0 판정의 인용을 버리므로, v8처럼 부재탐지가 아닌 0점 항목은 원응답이 유일한 기록이다.
+  400개 응답 전부 `finish_reason: stop`·`status: valid`로 잘림·파싱 실패는 0건이다.
+- 정정: 이전 권고였던 "`SME_ITEMS`에 v16/v18/v20 추가"는 현재 코드에서 틀렸다. `SME_ITEMS = ["v13"]`이고
+  `verify_sme`는 v13 전용 로직이며 추가 호출은 baseline v13 양성 공고에만 돈다. 전건 확장은 693c695가
+  줄인 330.8초 패스를 되살리는 것으로 `.wiki/plan-active.md`의 보호된 결정 반전이다. 사용자 선택에 따라
+  제출물을 건드리지 않는 `tools/diagnose_items.py`로 갔다.
+- 출력: `tools/diagnose_items.py`(신규, 제출물 아님), `tests/test_diagnose_items.py`,
+  노트북 9절 `diagnose` 셀, `tests/test_package.py`의 진단 셀 검사 2건, [Colab 절차](colab.md#항목-진단-전용-회차-선택).
+- 수정 범위: 위 파일과 `docs/README.md`, 이 작업 큐. `script.py`·`SME_ITEMS`·`submission.csv`는 안 바꾼다.
+- 설계: `diagnose_items.py`는 제출물 `script.py`를 import만 해 `iter_records`·`item_table`·
+  `build_messages`·`fit_to_budget`·`VLLMRunner`를 재사용한다. 별도 스키마로 항목마다
+  `요구사항`·`공고_인용`·`판정`·`막힌_단계`를 받는다. `막힌_단계`는 plan-active의 네 단계와 같은 이름이다.
+  부재탐지 항목에도 `공고_인용`을 문자열로 허용해 제출 스키마의 null 고정을 우회한다.
+  `--labels`로 실제 정답을 같은 줄에 붙여 "0이라 한 이유"와 양성을 나란히 본다.
+- 통과 조건: `python -X utf8 -m unittest tests.test_diagnose_items tests.test_package`,
+  `python -m ruff check tools/diagnose_items.py tests/test_diagnose_items.py`, `git diff --check`.
+- 결과: mock·스텁 러너로만 검증했다. 실제 GPU 질의·새 Colab 회차는 미실행이며 진단 결과는 아직 없다.
+  노트북 두 스위치(`RUN_DIAGNOSTIC`, `DIAGNOSE_ITEMS`)는 기본이 꺼짐이고 `check_live`를 부르지 않는다.
+  회차가 원응답을 안 켜거나 본문을 안 남기면 셀이 실패하도록 두 갈래를 테스트로 잡았다.
+- 다음 담당자에게: C3의 양성 ID는 v16 `PPS-DEV-20|037|058|065|066|067`, v18 `PPS-DEV-22|038|039|040|041|043|044`,
+  D1의 v8은 `PPS-DEV-05|11|042|048|054|071`([recall-check.csv](../reports/team-score-audit/recall-check.csv)).
+  `metrics.csv`의 `positive_records_truncated`는 v16 1건·v18 2건뿐이라 문맥 관측이 주 원인은 아니다.
+
 설치 작업 `team-setup` — 상태: review (구현·임시 환경 검증 완료, 독립 리뷰 미실행).
 - 2026-09-16 사용자 선택: 설치 도구까지 공용화. 공용 `tool/setup_agents.py`가 환경·버전·호스트를 검사하고
   프로젝트 진입점은 위임만 한다. adapter는 각 checkout에서 직접 읽으며 허브에 복사하지 않는다.
