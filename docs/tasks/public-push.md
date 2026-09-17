@@ -47,3 +47,23 @@ Orca CLI로 제거했다. 거기에 있던 터미널은 에이전트가 아닌 �
 - Git 이력 5개 커밋·107개 고유 blob의 주요 비밀키 패턴 검사: 발견 0개.
 - 로컬도 `main`으로 전환해 `origin/main`을 추적한다. 기존 개발 브랜치·대용량 데이터와
   `.wiki/decisions/`의 기존 미추적 파일을 보존했다.
+
+## 2026-09-17 후속 — 공개 전 이력을 대용량 파일만 빼고 공개한다
+
+사용자 판단으로 위 "이 파일과 이를 포함한 기존 커밋 이력은 공개 push하지 않는다"를 갱신한다.
+막던 것은 이력이 아니라 이력 안의 790MB blob이므로, 그 blob만 제거한 사본 이력을 공개한다.
+`main`은 그대로 두고 별도 브랜치로만 올린다. 대용량 이력 브랜치를 `main`에 merge하지 않는다는
+위 결정은 유지한다.
+
+- 새 브랜치: `chore/pre-public-history`, tip `2d5afad`. 6커밋.
+  `git filter-branch --index-filter`로 `open/train_unlabeled.jsonl`만 이력에서 제거했다.
+- 원본 `chore/team-agent-setup`(`01d2124`)과 `master`(`4816cf6`)는 로컬에 그대로 둔다.
+  790MB blob의 유일한 Git 사본이며 push하지 않는다.
+- 확인: `2d5afad`와 원본 `01d2124`의 차이는 제거한 그 파일 하나뿐이다.
+  `2d5afad`와 공개 첫 커밋 `5506ca02`의 차이는 `reports/publication.json` 하나뿐이다.
+  남은 최대 blob은 `open/dev.jsonl` 8.3MB로 GitHub 한도 아래다.
+- 공개 전 검사: 이력 6커밋·고유 blob 111개 중 텍스트 107개를 비밀키·개인 절대경로 패턴으로
+  검사했다. 새로 노출되는 것은 없다. 적중한 blob 7개는 모두 현재 공개 `main`에 있는 것과
+  같은 OID다. `docs/sources.md`의 `sk-` 적중은 `ask-with-arrow-key-options`의 부분문자열이다.
+- 남은 문제: `reports/t2-*/manifest.json`의 개인 절대경로는 이 push 이전부터 공개 `main`에
+  있다. 이번 작업으로 생긴 것이 아니며 별도로 판단한다.
