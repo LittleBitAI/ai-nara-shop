@@ -228,6 +228,39 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(baseline.parse_judgment(result[0], expected_items=baseline.SME_ITEMS, sme=True)[0],
                          {k: {**good[k], "facts": baseline.empty_sme_facts()} for k in baseline.SME_ITEMS})
 
+    def test_equivalent_responses_do_not_retry_chunk_62(self):
+        for items in (None, baseline.SME_ITEMS):
+            keys = items or baseline.ITEMS
+            canonical = {k: {"위반여부": 0, "근거문구": None} for k in keys}
+            if items:
+                for cell in canonical.values():
+                    cell["facts"] = baseline.empty_sme_facts()
+            for value, expected in [(True, 1), (False, 0), (1.0, 1), (0.0, 0),
+                                    (" 1 ", 1), ("0", 0), ("true", 1), ("FALSE", 0)]:
+                obj = copy.deepcopy(canonical)
+                obj[keys[0]].update(위반여부=value, explanation="ignored")
+                obj["comment"] = "ignored"
+                if items:
+                    obj[keys[0]]["facts"]["comment"] = "ignored"
+                good, variant = json.dumps(canonical), json.dumps(obj)
+                calls = []
+                class Runner:
+                    def chat(self, batch, **kwargs):
+                        calls.append(len(batch))
+                        return [good] * 62 + [variant] + [good] * 65
+                    def retry_chat(self, *args, **kwargs):
+                        raise AssertionError("equivalent response must not be retried")
+                with self.subTest(items=items, value=value):
+                    outputs = baseline.run_chunk(Runner(), [[] for _ in range(128)],
+                                                 items=items, phase="sme" if items else "baseline")
+                    self.assertEqual(calls, [128])
+                    parsed, missing = baseline.parse_judgment(outputs[62], keys, sme=bool(items))
+                    expected_cells = copy.deepcopy(canonical)
+                    expected_cells[keys[0]]["위반여부"] = expected
+                    self.assertEqual(parsed, expected_cells)
+                    self.assertIs(type(parsed[keys[0]]["위반여부"]), int)
+                    self.assertEqual(missing, [])
+
     def test_chunk_62_fallback_requires_valid_baseline_and_preserves_neighbors(self):
         good = json.dumps(valid())
         focused = json.dumps({k: {"facts": baseline.empty_sme_facts(), "위반여부": 1,
@@ -393,15 +426,15 @@ class BaselineTests(unittest.TestCase):
             self.assertIn("로컬 디렉터리", load_events[-1]["error_message"])
             self.assertIn("items", load_events[1]["sha256"])
 
-    def test_strict_output(self):
+    def test_missing_or_ambiguous_output_is_rejected(self):
         obj = valid()
-        for value in (True, "1", 0.5, 1.0, None):
+        for value in (0.5, 2, -1, "unknown", "2", "", [], {}, None):
             with self.subTest(value=value):
                 bad = copy.deepcopy(obj)
                 bad["v1"]["위반여부"] = value
                 with self.assertRaises(ValueError):
                     baseline.parse_judgment(json.dumps(bad))
-        for text in ("", "{}", "[]", '{"v1":', json.dumps({**obj, "v25": {}})):
+        for text in ("", "{}", "[]", '{"v1":', json.dumps({k: v for k, v in obj.items() if k != "v24"})):
             with self.subTest(text=text[:30]), self.assertRaises(ValueError):
                 baseline.parse_judgment(text)
         self.assertEqual(baseline.parse_judgment(json.dumps(obj))[0], obj)
