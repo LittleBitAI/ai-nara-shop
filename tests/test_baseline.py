@@ -6,6 +6,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -555,6 +556,16 @@ class BaselineTests(unittest.TestCase):
             self.assertEqual(report["mode"], "mock")
             self.assertEqual(report["model_success_count"], 0)
             self.assertIsNone(report["model"])
+            # 기록에 사용자·기계 이름이 드러나는 절대 경로를 남기지 않는다. 실제 입출력은 그대로다.
+            self.assertEqual(report["출력"], "<외부>/submission.csv")
+            self.assertEqual(report["reproduction"]["settings"]["data_dir"], "open/data")
+            self.assertEqual(report["reproduction"]["settings"]["output"], "<외부>/submission.csv")
+            self.assertEqual(report["reproduction"]["argv"][0], "script.py")
+            for name in ("run_report.json", "diagnostics.jsonl"):
+                text = (tmp / "output" / name).read_text(encoding="utf-8")
+                found = re.search(r"[A-Za-z]:[\\/](?!/)|/(?:Users|home)/", text)
+                self.assertIsNone(found, f"{name}: {found.group(0) if found else ''}")
+                self.assertNotIn(tmp.as_posix(), text)
             # Reject reusing old success, including after a failing run.
             repeated = subprocess.run(command, env=env, cwd=tmp, capture_output=True, timeout=30)
             self.assertNotEqual(repeated.returncode, 0)
