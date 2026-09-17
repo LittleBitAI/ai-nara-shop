@@ -21,7 +21,7 @@
     "path": "tools/score.py",
     "sha256": "4e8ef1a2284364fdb26cbab4dc53af8d9eac57d2d85f6651279ea3e1dc5f1c57",
     "argv": [
-      "C:\\Users\\dasdk\\anaconda3\\python.exe",
+      "python",
       "-X",
       "utf8",
       "tools/score.py",
@@ -32,7 +32,7 @@
       "--output-dir",
       "reports/t2-self-check"
     ],
-    "command": "& 'C:\\Users\\dasdk\\anaconda3\\python.exe' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'open/dev_labels.csv' '--output-dir' 'reports/t2-self-check'",
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'open/dev_labels.csv' '--output-dir' 'reports/t2-self-check'",
     "settings": {
       "output_dir": "reports/t2-self-check",
       "zero_division": 0,
@@ -42,7 +42,7 @@
   "environment": {
     "python": "3.13.9",
     "platform": "Windows-11-10.0.26200-SP0",
-    "cwd": "C:/Users/dasdk/orca/workspaces/ai-nara-shop/feat-experiment-t2-score"
+    "cwd": "."
   },
   "mode": "local_scoring",
   "model": null,

@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -60,7 +61,11 @@ class ScoreTests(unittest.TestCase):
             self.assertIsNone(manifest[key])
         self.assertEqual(manifest["generator"]["sha256"], hashlib.sha256(SCRIPT.read_bytes()).hexdigest())
         for source in manifest["sources"]:
-            self.assertEqual(source["sha256"], hashlib.sha256(Path(source["path"]).read_bytes()).hexdigest())
+            recorded = source["path"]
+            self.assertFalse(Path(recorded).is_absolute(), recorded)
+            name = recorded.rsplit("/", 1)[-1]
+            actual = self.root / name if recorded.startswith("<외부>/") else ROOT / recorded
+            self.assertEqual(source["sha256"], hashlib.sha256(actual.read_bytes()).hexdigest())
         with (output / "errors.csv").open(encoding="utf-8", newline="") as f:
             errors = list(csv.DictReader(f))
         return metrics, errors
@@ -157,6 +162,24 @@ class ScoreTests(unittest.TestCase):
         self.pred.unlink()
         self.assertNotEqual(self.run_cli(self.root / "missing").returncode, 0)
         self.assertFalse((self.root / "missing").exists())
+
+    def test_records_keep_no_absolute_path(self):
+        """산출물에 기계·사용자 이름이 드러나는 절대 경로를 남기지 않는다."""
+        self.write_pair([row("a", (1,))], [row("a", (1,))])
+        self.assertEqual(self.run_cli().returncode, 0)
+        self.read_result()
+        for name in ("manifest.json", "result.md"):
+            text = (self.output / name).read_text(encoding="utf-8")
+            found = re.search(r"[A-Za-z]:[\\/](?!/)|/(?:Users|home|content)/", text)
+            self.assertIsNone(found, f"{name}: {found.group(0) if found else ''}")
+            self.assertNotIn(self.root.as_posix(), text)
+            self.assertNotIn(Path(sys.executable).as_posix(), text)
+        manifest = json.loads((self.output / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["environment"]["cwd"], ".")
+        self.assertEqual(manifest["generator"]["path"], "tools/score.py")
+        self.assertEqual(manifest["generator"]["argv"][0], "python")
+        self.assertEqual([s["path"] for s in manifest["sources"]],
+                         ["<외부>/truth.csv", "<외부>/pred.csv"])
 
     def test_official_dev(self):
         self.truth = ROOT / "open/dev_labels.csv"
