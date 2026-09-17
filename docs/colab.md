@@ -147,6 +147,36 @@ v10·v11용 지시와 직접생산확인 조문은 제거했다. 자격 인용�
 현재 Colab 통과 검사는 대회 기본 명령과 같게 실행하므로 이 옵션을 켜지 않으며, 켜진 결과를 검증 통과로 인정하지 않는다.
 원응답은 `response_text`에 들어가며 로그를 외부 공유하기 전에 내용을 확인한다.
 
+## 항목 진단 전용 회차 (선택)
+
+0점 항목이 어느 단계에서 막혔는지 볼 때만 쓴다. **검증 통과가 아니며 제출 후보를 만들지 않는다.**
+노트북 9절의 `diagnose` 셀이 두 가지를 따로 켠다. 둘 다 기본값은 꺼짐이고 결과는 `results/`에 들어가
+마지막 로그 셀의 ZIP에 함께 담긴다. `check_live`는 이 회차에 적용하지 않는다.
+
+| 스위치 | 무엇을 하나 | 무엇을 보나 |
+| --- | --- | --- |
+| `RUN_DIAGNOSTIC = True` | dev를 `--debug-responses`로 다시 실행 | `dev-debug/diagnostics.jsonl`의 `response_text` |
+| `DIAGNOSE_ITEMS = "v16,v18"` | `tools/diagnose_items.py`로 별도 질의 | `diagnose/items.jsonl`의 항목별 `막힌_단계` |
+
+**원응답이 답하지 못하는 자리가 있다.** 부재탐지 5항목(v10·v11·v16·v18·v20)은 제출 스키마가
+`근거문구`를 `{"type": "null"}`로 고정하므로(`script.py`의 `ABSENCE`) 원응답에도 `{"위반여부": 0,
+"근거문구": null}`뿐이다. 이 항목은 `tools/diagnose_items.py`의 별도 스키마 질의로 본다.
+반대로 위반이 아닌 판정의 인용은 `postprocess`가 버리므로(`if hit and v not in ABSENCE`)
+원응답만이 그 인용을 남기는 기록이다. v8처럼 부재탐지가 아닌 0점 항목은 이쪽이 맞다.
+
+`tools/diagnose_items.py`는 제출물이 아니다. `script.py`를 읽기만 하고 `SME_ITEMS`·`submission.csv`를
+바꾸지 않는다. 항목별로 `요구사항`·`공고_인용`·`판정`·`막힌_단계`를 받아 `items.jsonl`에 한 공고 한 줄로 적고,
+`--labels`를 주면 실제 정답을 같은 줄에 붙인다. `막힌_단계`는 네 가지다 —
+`context_not_observed`(공고에서 관련 부분을 못 찾음), `fact_not_extracted`(문구는 봤으나 사실을 못 뽑음),
+`condition_not_met`(사실은 뽑았고 위반 조건 미충족), `violation_found`(위반으로 판단).
+
+```powershell
+python -X utf8 tools/diagnose_items.py --items v16,v18,v20 --ids PPS-DEV-20,PPS-DEV-037 `
+  --labels open/dev_labels.csv --output-dir reports/diagnose/20260917-c3 --mock
+```
+
+`--mock`은 모델 없이 흐름만 확인한다. 진단 결과가 아니다. 실제 판정에는 GPU와 `--model-dir`이 필요하다.
+
 샘플/dev가 통과해도 서버에서 실패한 비공개 공고가 재현된 것은 아니다.
 결과 ZIP을 분석한 후 수정이 필요하면 코드 변경 → 새 제출/Colab 번들 생성 → 같은 검증을 반복한다.
 검증 뒤 소스가 바뀌면 이전 ZIP의 성공을 새 코드의 검증으로 사용하지 않는다.
