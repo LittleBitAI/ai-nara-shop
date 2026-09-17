@@ -74,14 +74,16 @@ class CompareRunsTests(unittest.TestCase):
         self.assertIn("v8", compare_runs.render(result, show_all=True))
 
     def test_drift_is_reported_as_an_observed_range_not_a_threshold(self):
-        """churn의 점수 영향은 다섯 쌍에서 300배 벌어졌다. 범위만 적고 판정하지 않는다."""
+        """churn의 점수 영향은 관측 쌍마다 수백 배 벌어진다. 범위만 적고 판정하지 않는다."""
         before = write_csv(self.dir / "b2.csv", {i: {} for i in ids(10)})
         after = write_csv(self.dir / "a2.csv",
                           {i: ({8: 1} if n < 1 else {}) for n, i in enumerate(ids(10))})
         result = compare_runs.compare(SCORE, self.truth, before, after)
         reference = result["drift_reference"]
         self.assertLess(reference["macro_f1_min"], reference["macro_f1_max"])
-        self.assertEqual(reference["pairs"], 5)
+        # 측정을 더할 때마다 상수만 고치면 되도록 여기서 값을 복제하지 않는다.
+        self.assertEqual(reference["pairs"], compare_runs.DRIFT_PAIRS)
+        self.assertGreaterEqual(reference["pairs"], 5)
         # 한 셀만 맞혀도 지지 4건 항목의 F1이 0.4 올라 관측 범위를 넘는다.
         self.assertFalse(reference["below_observed_max"])
         self.assertIn("관측 범위를 넘는다", compare_runs.render(result))

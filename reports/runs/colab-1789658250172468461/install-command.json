@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/content/t1-colab-z3p1l6q4/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "--extra-index-url",
+    "https://download.pytorch.org/whl/cu130",
+    "vllm==0.26.0",
+    "torch==2.11.0+cu130",
+    "transformers==5.14.1",
+    "xgrammar==0.2.3"
+  ],
+  "cwd": "/content/t1-colab-z3p1l6q4",
+  "started": 1789656251.752592,
+  "returncode": 0,
+  "elapsed_seconds": 238.78851771354675
+}
