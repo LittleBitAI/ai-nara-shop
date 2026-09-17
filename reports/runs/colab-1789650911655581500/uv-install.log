@@ -1,0 +1,5 @@
+Collecting uv
+  Using cached uv-0.12.15-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)
+Using cached uv-0.12.15-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (20.1 MB)
+Installing collected packages: uv
+Successfully installed uv-0.12.15
