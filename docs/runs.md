@@ -3,6 +3,21 @@
 Colab·GPU 실행 결과를 저장소에 보관하는 규약과, 지금까지의 실행 한 줄 요약입니다.
 ZIP을 사람마다 따로 전달하지 않습니다. 팀원은 `git pull` 하나로 같은 기록을 받습니다.
 
+## 등록 절차
+
+결과 ZIP 한 쌍(`colab-results-<숫자>.zip`, `submit.zip`)을 `artifacts/inbox/`에 두고 한 명령으로 등록합니다.
+손으로 풀거나 색인 표를 고치지 않습니다.
+
+```powershell
+python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커밋>
+```
+
+전달받은 해시가 있으면 `--expect-results`·`--expect-submit`으로 대조합니다.
+도구는 `reports/runs/<run-id>/`와 `manifest.json`, 아래 색인 한 행,
+`.wiki/decisions/<날짜>-NNN-run-<run-id>.md` 초안까지 씁니다. 커밋은 하지 않습니다.
+아래 규약의 검사 중 하나라도 걸리면 종료 코드가 0이 아니고 부분 결과를 남기지 않습니다.
+초안의 문장과 색인 행은 사람이 읽고 고친 뒤 커밋합니다.
+
 ## 보관 규약
 
 - 폴더는 `reports/runs/<run-id>/`입니다. run-id는 결과 ZIP 이름의 숫자를 그대로 씁니다.
