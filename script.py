@@ -42,6 +42,7 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 DATA_DIR = os.environ.get("PPS_DATA_DIR", "./data")
 OUTPUT_DIR = os.environ.get("PPS_OUTPUT_DIR", "./output")
 MODEL_DIR = os.environ.get("PPS_MODEL_DIR", "")
+SUBMISSION_ROOT = Path(__file__).resolve().parent
 MODEL_ID = "google/gemma-4-26B-A4B-it"
 MODEL_REVISION = "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
 
@@ -79,6 +80,19 @@ def log(msg: str) -> None:
 def file_sha256(path) -> str:
     with open(path, "rb") as stream:
         return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def record_path(value) -> str:
+    """기록에만 쓰는 경로. 제출 폴더 기준 상대 경로로 적어 사용자·기계 이름을 남기지 않는다.
+
+    실제 입출력은 원래 값으로 한다. 이 함수는 어떤 입력에도 예외를 올리지 않는다.
+    """
+    if not value:
+        return value
+    try:
+        return Path(value).resolve().relative_to(SUBMISSION_ROOT).as_posix() or "."
+    except (ValueError, OSError):
+        return "<외부>/" + (os.path.basename(str(value).rstrip("/\\")) or "?")
 
 
 # ===== 2. 데이터 로더 =====
@@ -409,7 +423,7 @@ class VLLMRunner:
         from vllm import LLM, SamplingParams
         from vllm.sampling_params import StructuredOutputsParams
 
-        log(f"vllm {vllm.__version__} · 모델 {model_dir} · quant={quant} · max_model_len={MAX_MODEL_LEN}")
+        log(f"vllm {vllm.__version__} · 모델 {record_path(model_dir)} · quant={quant} · max_model_len={MAX_MODEL_LEN}")
         kw = dict(model=model_dir, tokenizer=model_dir, max_model_len=MAX_MODEL_LEN,
                   gpu_memory_utilization=gpu_mem, seed=seed, tensor_parallel_size=tp, dtype="auto")
         if quant:
@@ -853,13 +867,16 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
         try:
             metadata = {
                 "mode": "live" if runner_cls is VLLMRunner else "mock",
-                "argv": sys.argv, "python": platform.python_version(), "platform": platform.platform(),
-                "settings": {"input": input_path, "output": out_path, "data_dir": data_dir,
+                "argv": [record_path(a) if os.path.isabs(a) else a for a in sys.argv],
+                "python": platform.python_version(), "platform": platform.platform(),
+                "settings": {"input": record_path(input_path), "output": record_path(out_path),
+                             "data_dir": record_path(data_dir),
                              "limit": limit, "chunk": chunk, "max_chars": max_chars,
                              "debug_responses": debug_responses, "max_model_len": MAX_MODEL_LEN,
                              "temperature": 0, "thinking": False, "sme_items": SME_ITEMS,
                              "sme_selection": "baseline_v13_positive",
-                             "prompt_language": "en_with_ko_legal_terms", "sme_facts": True, **settings},
+                             "prompt_language": "en_with_ko_legal_terms", "sme_facts": True, **settings,
+                             "model_dir": record_path(settings["model_dir"])},
                 "code_sha256": file_sha256(__file__),
                 "expected_model": {"id": MODEL_ID, "revision": MODEL_REVISION},
             }
@@ -901,7 +918,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         raise ValueError("max-tokens는 모델 문맥보다 작고 양수여야 한다")
     budget = MAX_MODEL_LEN - output_tokens - 64
     recs = list(iter_records(input_path, limit=limit))
-    log(f"입력 {len(recs)}건 ← {input_path}")
+    log(f"입력 {len(recs)}건 ← {record_path(input_path)}")
     if not recs:
         raise ValueError("입력 공고가 0건이다")
 
@@ -1004,7 +1021,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         "건당_s": round(inf_seconds / len(recs), 2), "전체_s": round(time.time() - t_all, 1),
         "유효JSON": len(recs), "메운_항목수": 0,
         "근거_유지": ev_kept, "근거_원문불일치_폐기": ev_dropped,
-        "출력": out_path, "자가검증": "PASS",
+        "출력": record_path(out_path), "자가검증": "PASS",
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".baseline-", dir=output.parent) as temporary:
