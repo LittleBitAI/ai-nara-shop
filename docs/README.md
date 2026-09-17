@@ -29,6 +29,10 @@
 
 ## 작업별 읽기
 
+4명 팀의 현재 배정안과 Opus 5 medium에 전달할 지시문은
+[업무 분배·인수인계](tasks/team-handoff.md)를 사용합니다. 실제 6회 dev 결과를 바탕으로
+24항목의 책임자와 연속 개선 과제를 정한 배정안이며 [점수 진단](../reports/team-score-audit/result.md)을 함께 봅니다.
+
 | 작업 | 추가로 읽기 | 실제 작업 입력·구현 |
 | --- | --- | --- |
 | 대회 이해·평가 전략·운영 | [contest](contest.md), [roadmap](roadmap.md) | 제공 안내의 평가 비중·일정, 새 공식 공지가 있는 경우 변경 사항 |

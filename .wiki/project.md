@@ -7,6 +7,10 @@ reads: [docs/workflow.md, docs/contest.md, docs/rules.md, docs/data.md, docs/ite
 
 # 대회 작업 계약
 
+현재 계획·팀원 업무를 물으면 [활성 계획](plan-active.md)과
+[4인 업무 분배](../docs/tasks/team-handoff.md)를 먼저 확인한다.
+목표·담당·첫 48시간 기준의 최신 원본은 이 두 문서이며 과거 T1 작업 기록과 구분한다.
+
 규칙. Claude/Codex 역할은 작업으로 정한다. 공통 절차는 `docs/workflow.md`를 따른다.
 공통 위키는 `ai-coding-agent-wiki-public`의 `.wiki/wiki-revision` 고정 버전에 연결한다.
 설치법은 `docs/setup.md`, 프로젝트 작업 이력은 `.wiki/decisions/`·`docs/tasks.md`가 소유한다.
