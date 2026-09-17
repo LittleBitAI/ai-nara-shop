@@ -46,6 +46,7 @@
 | Colab 사전 검증·오류 진단 | [Colab 실행 안내](colab.md), [T1 작업서](tasks/t1-baseline.md) | 실제 제출 ZIP·공개 샘플/dev·diagnostics.jsonl |
 | 실행 관측·팀 공유 화면 | [Langfuse 실행 관측](langfuse.md) | 로컬 스택(3002), `tools/langfuse_tail.py`, 같은 diagnostics.jsonl |
 | 과거 실행 대조·결과 공유 | [실행 기록](runs.md) | `reports/runs/<run-id>/`의 manifest·CSV·로그, `reports/team-score-audit/history.json` |
+| 새 결과 ZIP 등록 | [실행 기록의 등록 절차](runs.md#등록-절차) | `artifacts/inbox/`의 결과·제출 ZIP 한 쌍, `tools/register_run.py` |
 | 리뷰 | [workflow](workflow.md), 변경한 계약 문서 | diff, 호출자, 실행 기록 |
 | 도구 설치 | [setup](setup.md) | `tools/setup_agents.py` → 공용 `tool/setup_agents.py` → `tool/apply.py`; checkout의 `.wiki/adapter.toml` |
 | 종료 전 위키 검진·공개 연결 | [유지보수 기록](tasks/wiki-maintenance.md) | `ai-coding-agent-wiki-public` 고정 SHA, 프로젝트 결정 기록·lint 결과 |

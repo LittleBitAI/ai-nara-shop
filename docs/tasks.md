@@ -73,6 +73,53 @@
   공용 위키 `tool/sync.py`를 돌려 색인을 갱신한 뒤 `runs.md — 실행 기록`으로 표시되는 것을 확인했다.
   corpus 도구 자체는 고치지 않았다.
 
+`run-registrar`: 손으로 하던 결과 ZIP 언팩·대조·파일 작성을 한 명령으로 바꾼다. 검증 실패는 실패로 끝낸다.
+- 입력: `artifacts/inbox/`의 `colab-results-<숫자>.zip`·`submit.zip` 한 쌍과 `--code-commit`.
+  선택적으로 전달받은 해시 `--expect-results`·`--expect-submit`.
+- 출력: `tools/register_run.py`, `reports/runs/<run-id>/`와 `manifest.json`, [색인](runs.md) 한 행,
+  `.wiki/decisions/<날짜>-NNN-run-<run-id>.md` 초안. 커밋은 하지 않는다.
+- 수정 범위: `tools/register_run.py`, `tests/test_register_run.py`, `docs/runs.md`, `docs/README.md`,
+  `.wiki/adapter.toml`, 이 작업 큐. `script.py`·`open/` 원본은 제외한다.
+- 통과 조건: 실패 조건마다 테스트 하나 — ZIP 후보 0개/2개, 해시 불일치, 예상 경로 없음,
+  비밀정보 패턴, 단일 파일 50MB 초과, zip slip, 대상 폴더 선점. 정상 경로는 작은 가짜 ZIP으로 확인한다.
+  `python -X utf8 -m unittest tests.test_register_run tests.test_baseline tests.test_package tests.test_score`,
+  `python -m ruff check`, `git diff --check`.
+- 결과: 도구·테스트 작업이며 모델 추론·재채점·서버 제출은 하지 않았다. 점수는 `score/metrics.json`에서
+  옮기고 재계산하지 않으며, 로그에 없는 값은 null로 둔다. 실패는 부분 결과를 남기지 않는다 —
+  모든 검사를 통과한 뒤 완성한 폴더를 rename으로 올리고 그다음에 색인·초안을 쓴다.
+- 실패 재현: 구현 전 `tests.test_register_run`이 `tools/register_run.py` 없음으로 12건 모두 실패했다.
+- 골든 대조: 원본 `colab-results-1789621345861123113.zip`(SHA-256 `335796bc…feec8`)과 `submit.zip`
+  (`f4ee1634…81cc0`)을 그대로 넣어 임시 루트에 등록하고 손 등록본과 비교했다. 파일 56개로 같고
+  **바이트 불일치 0개**다. `manifest.json`에서 다른 칸과 이유는 아래가 전부다.
+
+  | 다른 칸 | 이유 |
+  | --- | --- |
+  | `registered_at`, `archived_at` | 등록 시각. 손 등록본은 날짜만 적었다 |
+  | `zip_sha256` | 손: 결과 ZIP 하나 / 도구: `{results, submit}` 두 개 |
+  | `code`, `environment` | 손이 덧붙인 `script_sha256`·`submit_zip_sha256`·`host: "Google Colab"` |
+  | `inputs`, `status` | 손이 `bundle-manifest.json`·`validation.json`에서 옮겨 적은 칸. 도구는 안 만든다 |
+  | `score`, `raw_responses` | 수치는 같고 손이 덧붙인 산문(`baseline_description`, `reason`)만 다르다 |
+  | `cases.*.mode` | 도구가 더 남긴다. mock 회차를 실제 회차로 세지 않기 위한 칸 |
+  | `cases.*.seconds.wall_clock` | 손은 3자리 반올림, 도구는 `*-command.json` 값을 그대로 옮긴다. 반올림하면 일치 |
+
+  `cases`의 `count`·`counts`·`macro_f1`·나머지 `seconds`와 `score.final_macro_f1`
+  `0.22078771129016228`, `baseline_macro_f1_same_run`, 코드 커밋, 원응답 여부는 손 등록본과 같다.
+  대조 중 `extra_selected`(= 검증 + 폴백, `colab.md`의 항등식)와 `cases.*.macro_f1`
+  (`score-command.json`의 `--pred` 인자로 채점 대상 case를 찾는다)이 빠져 있어 채웠다.
+- 경로 정책: 등록기가 만든 `manifest.json`·색인 행·결정 초안과 푼 파일 55개 모두 개인 절대 경로 0건.
+  Colab 컨테이너 경로는 살아 있다 — `/content/` 30개 파일, `/root/.cache` 7개 파일.
+  `docs/runs.md`의 적중 2건은 규약 문장(45행) 자체이며 등록기가 쓴 줄이 아니다.
+- 바이트 보존: `dev.log`·`sample.log`에 줄 끝 공백이 각각 7줄 있고 그대로 보존됐다.
+  `git check-attr`로 `reports/runs/**`에 `whitespace: -trailing-space`가, 등록기가 만든
+  `docs/runs.md`·`tools/*.py`에는 `unspecified`가 적용됨을 확인했다. `git diff --check` 통과.
+- 본 적 없는 ZIP 6건: `Downloads/123/`의 과거 회차를 대역 `submit.zip`과 짝지어 임시 루트에 돌렸다.
+  5건이 **손 수정 0**으로 등록됐고 점수·커밋이 기존 색인 기록과 모두 일치했다
+  (`1c64604` 0.2208013652894021, `9363f21` 0.1847…, `40e2cc6` 0.2195…, `57c78cf` 0.2110…, `e9e4022` 0.2199…).
+  색인은 행 수 6을 유지한 채 해당 `미보관` 행만 채웠다. 남은 1건은 설치 실패 로그
+  `colab-results-1789602422101717812.zip`으로 `run_report.json`이 없어 거부됐다 — 추론이 돌지 않은
+  회차를 `reports/runs/`에 남길지는 사람이 정할 문제다. 대역 `submit.zip`을 쓴 형태 시험이며 실제 등록이 아니다.
+- 남은 미확인: D0의 새 Colab 회차와 대회 서버 제출로는 확인하지 않았다.
+
 설치 작업 `team-setup` — 상태: review (구현·임시 환경 검증 완료, 독립 리뷰 미실행).
 - 2026-09-16 사용자 선택: 설치 도구까지 공용화. 공용 `tool/setup_agents.py`가 환경·버전·호스트를 검사하고
   프로젝트 진입점은 위임만 한다. adapter는 각 checkout에서 직접 읽으며 허브에 복사하지 않는다.
