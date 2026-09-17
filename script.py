@@ -64,6 +64,7 @@ MAX_TOKENS = 2048                       # 24항목 JSON과 짧은 인용을 위�
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
+SME_ITEMS = ["v10", "v11", "v13"]
 SME_FILES = (
     "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt",
     "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt",
@@ -276,9 +277,9 @@ def load_sme_reference(data_dir):
     return "\n\n".join(excerpts), products
 
 
-def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="") -> str:
+def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="", items=None) -> str:
     lines = []
-    for v in ITEMS:
+    for v in ITEMS if items is None else items:
         it = tbl[v]
         tag = "  [근거 없음 — null]" if it["부재탐지"] else ""
         note = f" ({it['비고']})" if it.get("비고") else ""
@@ -294,7 +295,12 @@ v10·v11은 적용 대상인데 요구 자격이 빠진 경우를 각각 확인�
 v13은 '중소기업'과 '소기업·소상공인만'의 제한 범위를 구분한다.
 단어의 등장만으로 위반을 정하지 말고 대상·제한 내용·예외를 함께 확인한다.
 """ + sme_laws
-    return SYSTEM_HEAD + "\n" + "\n".join(lines) + reference + "\n" + SYSTEM_TAIL
+    head, tail = SYSTEM_HEAD, SYSTEM_TAIL
+    if items is not None:
+        head = head.replace("24개 항목", f"{len(items)}개 항목")
+        head = "\n".join(line for line in head.splitlines() if not line.startswith("7. v24"))
+        tail = tail.replace("v1~v24", ", ".join(items))
+    return head + "\n" + "\n".join(lines) + reference + "\n" + tail
 
 
 def build_user_prompt(rec: Dict[str, Any], max_chars: int, products=()) -> str:
@@ -371,9 +377,18 @@ class VLLMRunner:
             ids = ids["input_ids"]
         return len(ids)
 
-    def chat(self, batch: List[List[Dict[str, str]]], sampling_params=None) -> List[str]:
+    def parameters_for_items(self, items):
+        sp = copy.deepcopy(self.sp)
+        schema = sp.structured_outputs.json
+        schema["required"] = list(items)
+        schema["properties"] = {key: schema["properties"][key] for key in items}
+        return sp
+
+    def chat(self, batch: List[List[Dict[str, str]]], sampling_params=None, items=None) -> List[str]:
         self.last_response_info = []  # A failed call must not reuse an earlier call's metadata.
         sp = self.sp if sampling_params is None else sampling_params
+        if items is not None:
+            sp = self.parameters_for_items(items)
         outs = self.llm.chat(batch, sampling_params=sp, use_tqdm=False,
                              chat_template_kwargs={"enable_thinking": False})
         for output in outs:
@@ -387,22 +402,22 @@ class VLLMRunner:
             })
         return [o.outputs[0].text if o.outputs else "" for o in outs]
 
-    def retry_chat(self, batch):
+    def retry_chat(self, batch, items=None):
         """같은 공고만 6항목씩 재생성한다. 완전한 24항목을 검증하기 전에는 성공으로 쓰지 않는다."""
         if len(batch) != 1:
             raise ValueError("분할 재시도는 공고 1건만 허용한다")
         self.last_response_info = []
         merged, groups = {}, []
-        for offset in range(0, len(ITEMS), 6):
-            keys = ITEMS[offset:offset + 6]
+        expected = ITEMS if items is None else items
+        group_size = 6 if items is None else 1
+        for offset in range(0, len(expected), group_size):
+            keys = expected[offset:offset + group_size]
             messages = copy.deepcopy(batch[0])
             messages[0]["content"] += (
-                "\n[이번 호출의 출력 범위] 앞의 24항목 출력 지시 대신 다음 키만 판정한다: "
+                "\n[이번 호출의 출력 범위] 앞의 출력 범위 대신 다음 키만 판정한다: "
                 + ", ".join(keys) + ". 다른 키는 출력하지 않는다. 각 근거는 원문에서 100자 이내로 인용한다.")
-            sp = copy.deepcopy(self.sp)
+            sp = self.parameters_for_items(keys)
             schema = sp.structured_outputs.json
-            schema["required"] = keys
-            schema["properties"] = {key: schema["properties"][key] for key in keys}
             for key in keys:
                 if key not in ABSENCE:
                     schema["properties"][key]["properties"]["근거문구"]["maxLength"] = 100
@@ -424,7 +439,7 @@ class VLLMRunner:
                 groups.append(group)
                 self.last_response_info = [{"retry_strategy": "split_items", "groups": groups}]
         text = json.dumps(merged, ensure_ascii=False)
-        parse_judgment(text)
+        parse_judgment(text, expected_items=expected)
         return [text]
 
 
@@ -442,8 +457,12 @@ class MockRunner:
         out = {v: {"위반여부": 0, "근거문구": None} for v in ITEMS}
         return json.dumps(out, ensure_ascii=False)
 
-    def chat(self, batch: List[List[Dict[str, str]]]) -> List[str]:
-        return [self._one(m) for m in batch]
+    def chat(self, batch: List[List[Dict[str, str]]], items=None) -> List[str]:
+        texts = [self._one(m) for m in batch]
+        if items is not None:
+            texts = [json.dumps({key: json.loads(text)[key] for key in items}, ensure_ascii=False)
+                     for text in texts]
+        return texts
 
 
 def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: int,
@@ -460,11 +479,11 @@ def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: in
 
 
 def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
-              emit=None, debug_responses=False) -> List[str]:
+              emit=None, debug_responses=False, items=None, phase="baseline") -> List[str]:
     """실패 공고만 재시도한다. 실제 러너는 출력 항목을 분할하며 결손은 허용하지 않는다."""
     def record(event, **fields):
         if emit:
-            emit(event, chunk_start=start, **fields)
+            emit(event, chunk_start=start, phase=phase, **fields)
         if fields.get("error_type"):
             log(json.dumps({"event": event, "chunk_start": start, **fields}, ensure_ascii=False))
 
@@ -475,7 +494,7 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
         if debug_responses:
             fields["response_text"] = text
         try:
-            parse_judgment(text)
+            parse_judgment(text, expected_items=items)
         except ValueError as error:
             record("response", status="invalid", error_type=type(error).__name__,
                    error_message=str(error), **fields)
@@ -485,7 +504,7 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
     stage = "call"
     batch_failed = False
     try:
-        outs = runner.chat(batch)
+        outs = runner.chat(batch, **({"items": items} if items is not None else {}))
         stage = "response_count"
         if len(outs) != len(batch):
             raise ValueError(f"모델 응답 건수 불일치: expected={len(batch)}, actual={len(outs)}")
@@ -505,7 +524,8 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
         stage = "call"
         retry_info = {}
         try:
-            retried = getattr(runner, "retry_chat", runner.chat)([m])
+            retried = getattr(runner, "retry_chat", runner.chat)(
+                [m], **({"items": items} if items is not None else {}))
             stage = "response_count"
             if len(retried) != 1:
                 raise ValueError(f"재시도 응답 건수 불일치: expected=1, actual={len(retried)}")
@@ -673,7 +693,8 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
     """성공 산출물과 별도로 실행 시작부터 실패까지 진단을 즉시 기록합니다."""
     output = Path(out_path)
     diagnostic_path = output.with_name("diagnostics.jsonl")
-    if any(p.exists() for p in (output, output.with_name("run_report.json"), diagnostic_path)):
+    if any(p.exists() for p in (output, output.with_name("baseline_submission.csv"),
+                                output.with_name("run_report.json"), diagnostic_path)):
         raise ValueError("이전 결과/진단이 있다. 새로운 output 디렉터리를 사용하세요")
     output.parent.mkdir(parents=True, exist_ok=True)
     settings = dict(model_dir=MODEL_DIR, quant=QUANT, max_tokens=MAX_TOKENS,
@@ -691,7 +712,7 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                 "settings": {"input": input_path, "output": out_path, "data_dir": data_dir,
                              "limit": limit, "chunk": chunk, "max_chars": max_chars,
                              "debug_responses": debug_responses, "max_model_len": MAX_MODEL_LEN,
-                             "temperature": 0, "thinking": False, **settings},
+                             "temperature": 0, "thinking": False, "sme_items": SME_ITEMS, **settings},
                 "code_sha256": file_sha256(__file__),
                 "expected_model": {"id": MODEL_ID, "revision": MODEL_REVISION},
             }
@@ -739,7 +760,8 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
 
     tbl, schema = item_table(data_dir), decode_schema(data_dir)
     sme_laws, products = load_sme_reference(data_dir)
-    system_prompt = build_system_prompt(tbl, sme_laws)
+    system_prompt = build_system_prompt(tbl)
+    sme_prompt = build_system_prompt(tbl, sme_laws, items=SME_ITEMS)
     emit("model_loading", schema_sha256=hashlib.sha256(
         json.dumps(schema, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest(),
          system_prompt_sha256=hashlib.sha256(system_prompt.encode("utf-8")).hexdigest())
@@ -750,7 +772,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     # 전건 메시지 구성(길이 예산 맞춤)
     msgs_all, shrunk, ntok = [], 0, []
     for rec in recs:
-        m, n, mc = fit_to_budget(rec, system_prompt, runner, max_chars, budget=budget, products=products)
+        m, n, mc = fit_to_budget(rec, system_prompt, runner, max_chars, budget=budget)
         msgs_all.append(m)
         ntok.append(n)
         shrunk += int(mc < max_chars)
@@ -767,12 +789,33 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         log(f"  {min(s + chunk, len(msgs_all))}/{len(msgs_all)}건 … {time.time() - t_inf:.0f}s")
     inf_seconds = time.time() - t_inf
 
+    # First finish every baseline batch. Reuse the same engine, but no previous predictions in prompts.
+    baseline_seconds = inf_seconds
+    sme_texts, sme_ntok = [], []
+    emit("phase_started", phase="sme", items=SME_ITEMS,
+         system_prompt_sha256=hashlib.sha256(sme_prompt.encode("utf-8")).hexdigest())
+    t_sme = time.time()
+    for s in range(0, len(recs), chunk):
+        batch = []
+        for rec in recs[s:s + chunk]:
+            messages, n, _ = fit_to_budget(rec, sme_prompt, runner, max_chars, budget=budget, products=products)
+            batch.append(messages)
+            sme_ntok.append(n)
+        emit("chunk_started", phase="sme", chunk_start=s, count=len(batch))
+        sme_texts.extend(run_chunk(runner, batch, start=s, ids=[r["id"] for r in recs[s:s + chunk]],
+                                  emit=emit, debug_responses=debug_responses, items=SME_ITEMS, phase="sme"))
+    sme_seconds = time.time() - t_sme
+    inf_seconds += sme_seconds
+
     # 파싱·후처리 → 행
-    if len(texts) != len(recs):
+    if len(texts) != len(recs) or len(sme_texts) != len(recs):
         raise ValueError("입력과 모델 응답 건수 불일치")
-    rows, ev_kept, ev_dropped = [], 0, 0
-    for rec, text in zip(recs, texts):
+    rows, baseline_rows, ev_kept, ev_dropped = [], [], 0, 0
+    for rec, text, sme_text in zip(recs, texts, sme_texts):
         parsed, _ = parse_judgment(text)
+        baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
+        focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS)
+        parsed.update(focused)  # Strict subset validation above protects the other 21 judgments.
         before = sum(1 for v in ITEMS if parsed[v]["근거문구"] and parsed[v]["위반여부"] == 1 and v not in ABSENCE)
         final = postprocess(parsed, rec)
         kept = sum(1 for v in ITEMS if final[v]["근거문구"])
@@ -782,6 +825,9 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     live = runner_cls is VLLMRunner
     report = {
         "mode": "live" if live else "mock", "model_success_count": len(recs) if live else 0,
+        "sme_model_success_count": len(recs) if live else 0,
+        "baseline_inference_seconds": round(baseline_seconds, 1), "sme_inference_seconds": round(sme_seconds, 1),
+        "sme_prompt_tokens_max": max(sme_ntok),
         "model": {"id": MODEL_ID, "expected_revision": MODEL_REVISION} if live else None,
         "environment": getattr(runner, "environment", {"python": platform.python_version()}),
         "code_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
@@ -803,11 +849,17 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         errs = validate_csv(str(staged), [r["id"] for r in recs])
         if errs:
             raise ValueError(f"CSV 검증 실패: {errs}")
+        staged_baseline = Path(temporary) / "baseline_submission.csv"
+        write_csv(baseline_rows, str(staged_baseline))
+        baseline_errors = validate_csv(str(staged_baseline), [r["id"] for r in recs])
+        if baseline_errors:
+            raise ValueError(f"기준선 CSV 검증 실패: {baseline_errors}")
         report["전체_s"] = round(time.time() - t_all, 3)
         staged_report = Path(temporary) / "run_report.json"
         staged_report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n",
                                  encoding="utf-8", newline="\n")
         staged_report.replace(report_path)
+        staged_baseline.replace(output.with_name("baseline_submission.csv"))
         staged.replace(output)
     log(json.dumps(report, ensure_ascii=False))
     return report

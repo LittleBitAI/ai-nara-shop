@@ -1,6 +1,7 @@
 """제출 ZIP과 Colab 실행 경로를 모델 없이 검증한다."""
 
 import ast
+import csv
 import gzip
 import hashlib
 import importlib.util
@@ -113,7 +114,7 @@ class PackageTests(unittest.TestCase):
             namespace = dict(WORK=work, RESULTS=results, MODEL_ID="test", REVISION="test",
                              SOURCE_MODE="upload",
                              Path=Path, io=io, json=json, zipfile=zipfile, hashlib=hashlib,
-                             time=time, subprocess=subprocess, os=os, shutil=shutil, gzip=gzip,
+                             time=time, subprocess=subprocess, os=os, shutil=shutil, gzip=gzip, csv=csv,
                              PYTHON=sys.executable, MODEL_DIR=str(work / "models/test"),
                              SERVER_PYTHON="3.12.13", case_inputs={},
                              EXPECTED_PACKAGES={"vllm": "0.26.0", "torch": "2.11.0+cu130",
@@ -151,13 +152,47 @@ class PackageTests(unittest.TestCase):
             report_path = results / "dev/run_report.json"
             report = json.loads(report_path.read_text(encoding="utf-8"))
             # Synthetic success metadata exercises the gate only, never a live-model result.
-            report.update(mode="live", model_success_count=200, model={"id": "test", "expected_revision": "test"})
+            report.update(mode="live", model_success_count=200, sme_model_success_count=200,
+                          model={"id": "test", "expected_revision": "test"})
             report["environment"]["cuda"] = "13.0"
             report["reproduction"].update(python="3.12.13", packages=namespace["EXPECTED_PACKAGES"].copy())
             def write():
                 report_path.write_text(json.dumps(report), encoding="utf-8")
             write()
             namespace["check_live"]("dev", 200)
+            baseline_path = results / "dev/baseline_submission.csv"
+            original_baseline = baseline_path.read_bytes()
+            with baseline_path.open(encoding="utf-8") as stream:
+                rows = list(csv.DictReader(stream))
+            rows[0]["e1"] = "unexpected change"
+            with baseline_path.open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows(rows)
+            with self.assertRaisesRegex(RuntimeError, "다른 21항목"):
+                namespace["check_live"]("dev", 200)
+            baseline_path.write_bytes(original_baseline)
+            downloaded = []
+            colab.files.download = downloaded.append
+            # Real scoring of mock CSVs must not export a non-improving ZIP.
+            check_live = namespace["check_live"]
+            namespace["check_live"] = lambda *args: report
+            try:
+                with patch.dict(sys.modules, {"google.colab": colab}), patch("builtins.print"):
+                    exec(compile(CELLS["score"], "colab-score", "exec"), namespace)
+            finally:
+                namespace["check_live"] = check_live
+            self.assertEqual(downloaded, [])
+            self.assertFalse(namespace["quality_pass"])
+            # Exercise export thresholds with synthetic metrics, never a GPU result.
+            tail = CELLS["score"][CELLS["score"].index("baseline_f1 ="):]
+            for candidate, paired, allowed in [(0.21, 0.2, False), (0.3, 0.3, False), (0.3, 0.2, True)]:
+                namespace["metrics"]["macro_f1"] = candidate
+                namespace["paired_metrics"]["macro_f1"] = paired
+                downloaded.clear()
+                with patch.dict(sys.modules, {"google.colab": colab}), patch("builtins.print"):
+                    exec(compile(tail, "colab-quality-gate", "exec"), namespace)
+                self.assertEqual(bool(downloaded), allowed)
             report["reproduction"]["settings"]["max_tokens"] = 4096
             write()
             with self.assertRaisesRegex(RuntimeError, "기본 추론 설정"):
