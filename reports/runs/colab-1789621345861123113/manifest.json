@@ -1,0 +1,122 @@
+{
+  "run_id": "colab-1789621345861123113",
+  "archive": "colab-results-1789621345861123113.zip",
+  "zip_sha256": "335796bce22ccdae6cf90e2da550a5c3575ed23feb1189b5f40e157b6c2feec8",
+  "archived_at": "2026-09-17",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "main",
+    "commit": "654c556c33144cfa180239872a9ee125b73a5fde",
+    "script_sha256": "79a56041153d6a125bd12d9f59780ee092fe48e9a2837fb5e38c50c821d5c04c",
+    "submit_zip_sha256": "f4ee163406ab79960fc27daff956b76f9bbd39c2a8c3c861b50e7aeb6b181cc0"
+  },
+  "environment": {
+    "host": "Google Colab",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "inputs": {
+    "sha256": {
+      "submit.zip": "f4ee163406ab79960fc27daff956b76f9bbd39c2a8c3c861b50e7aeb6b181cc0",
+      "tools/score.py": "4e8ef1a2284364fdb26cbab4dc53af8d9eac57d2d85f6651279ea3e1dc5f1c57",
+      "open/dev.jsonl": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+      "open/dev_labels.csv": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
+      "open/data/test.jsonl.gz": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "open/data/항목표.json": "368cb41f376d8ad7edbbdf181542e6e959de356f7f70d86e72943325ecad61d9",
+      "open/data/정답스키마_디코딩.json": "149580162261b446090bec075eb4c13f765a771c827b6bbe06660eb833a3c2ac",
+      "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt": "a4390e91cb991ce75bde7389c9297c6e4f6a947afd1a26cb9397e34aa4e9a445",
+      "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt": "1070092cca07468b755fa1e0fb13658d4c9ea72c48b555109c8fc4f87046cabb",
+      "open/data/법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv": "445257e4821c9d533f0c4b481e0ead89e85244ed6a6bf13d838510eb60fdbecd"
+    },
+    "note": "sample은 open/data/test.jsonl.gz, dev는 cases/dev로 만든 입력이다. 각 case의 input_sha256을 본다."
+  },
+  "cases": {
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "seconds": {
+        "model_load": 454.0,
+        "baseline_inference": 32.0,
+        "extra_inference": 23.1,
+        "inference_total": 55.1,
+        "run_total": 509.387,
+        "wall_clock": 514.324
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 10,
+        "extra_selected": 10,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 1,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 10,
+        "evidence_dropped_not_verbatim": 4,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "dev": {
+      "count": 200,
+      "input_sha256": "d790cadd8704677621791843382cac33d22ae2ea551dc7bac49ba63a515c4ff3",
+      "seconds": {
+        "model_load": 199.6,
+        "baseline_inference": 363.0,
+        "extra_inference": 330.8,
+        "inference_total": 693.7,
+        "run_total": 896.931,
+        "wall_clock": 901.672
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 200,
+        "extra_selected": 200,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 54,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 188,
+        "evidence_dropped_not_verbatim": 39,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.22078771129016228
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.22078771129016228,
+    "baseline_macro_f1_same_run": 0.2175305824799361,
+    "baseline_description": "English instructions, Korean legal terms, 24-item first pass",
+    "source": "score/metrics.json, score-baseline/metrics.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": false,
+    "reason": "debug_responses=false. diagnostics.jsonl은 응답 길이·토큰 수·종료 사유만 남기고 응답 본문은 남기지 않는다."
+  },
+  "status": {
+    "validation": "colab_pass",
+    "quality_pass": false,
+    "server_success_guaranteed": false,
+    "remaining_differences": [
+      "비공개 평가 입력 1853건",
+      "GPU/가용 메모리/CPU/RAM/OS",
+      "서버 전체 실행 시간",
+      "컨테이너 digest와 OS 수준 네트워크 차단"
+    ]
+  }
+}

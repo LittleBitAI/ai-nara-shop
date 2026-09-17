@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/content/t1-colab-7jprh479/venv/bin/python",
+    "/content/t1-colab-7jprh479/tools/score.py",
+    "--truth",
+    "/content/t1-colab-7jprh479/open/dev_labels.csv",
+    "--pred",
+    "/content/t1-colab-7jprh479/results/dev/submission.csv",
+    "--output-dir",
+    "/content/t1-colab-7jprh479/results/score"
+  ],
+  "cwd": "/content/t1-colab-7jprh479",
+  "started": 1789621345.666497,
+  "returncode": 0,
+  "elapsed_seconds": 0.06782126426696777
+}
