@@ -29,6 +29,45 @@ def valid():
 
 
 class BaselineTests(unittest.TestCase):
+    def test_selective_v13_preserves_sparse_rows_and_skips_empty_selection(self):
+        for positives in (set(), {1, 3}):
+            calls = []
+            class Selective(baseline.MockRunner):
+                def chat(self, batch, items=None):
+                    calls.append((items, len(batch)))
+                    if items is not None:
+                        return [json.dumps({"v13": {"facts": baseline.empty_sme_facts(),
+                                                   "위반여부": 0, "근거문구": None}})] * len(batch)
+                    outputs = []
+                    for i in range(len(batch)):
+                        obj = valid()
+                        obj["v13"]["위반여부"] = int(i in positives)
+                        obj["v10"]["위반여부"] = 1
+                        outputs.append(json.dumps(obj))
+                    return outputs
+            with tempfile.TemporaryDirectory() as tmp:
+                out = Path(tmp) / "submission.csv"
+                report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Selective,
+                                      limit=4, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
+                self.assertEqual(calls, [(None, 4)] + [(["v13"], 2)] * bool(positives))
+                self.assertEqual(report["sme_selected_count"], len(positives))
+                self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
+                self.assertEqual(report["sme_fallback_count"], 0)
+                with out.open(encoding="utf-8") as stream:
+                    final = list(csv.DictReader(stream))
+                with out.with_name("baseline_submission.csv").open(encoding="utf-8") as stream:
+                    original = list(csv.DictReader(stream))
+                for i, (before, after) in enumerate(zip(original, final)):
+                    self.assertEqual(after["v13"], "0")
+                    for col in baseline.COLUMNS:
+                        if col not in ("v13", "e13") or i not in positives:
+                            self.assertEqual(before[col], after[col])
+                events = [json.loads(line) for line in out.with_name("diagnostics.jsonl").read_text(
+                    encoding="utf-8").splitlines()]
+                responses = [e for e in events if e["event"] == "response" and e["phase"] == "sme"]
+                self.assertEqual([e["global_index"] for e in responses], sorted(positives))
+                self.assertEqual([e["id"] for e in responses], [original[i]["id"] for i in sorted(positives)])
+
     def test_sme_facts_require_real_scope_and_qualification(self):
         rec = record()
         rec["input_completeness"] = {"완전관측": True}
@@ -40,11 +79,9 @@ class BaselineTests(unittest.TestCase):
         obj = {k: {"facts": dict(facts), "위반여부": 1, "근거문구": None} for k in baseline.SME_ITEMS}
         obj["v13"]["facts"].update(qualification="small_only",
                                   qualification_quote="「중소기업기본법」에 따른 소기업·소상공인 확인서를 소지한 업체.")
-        obj["v11"]["facts"].update(qualification="required",
-                                  qualification_quote=obj["v13"]["facts"]["qualification_quote"])
         parsed, _ = baseline.parse_judgment(json.dumps(obj), baseline.SME_ITEMS, sme=True)
         result, _ = baseline.verify_sme(parsed, rec, products, 16000)
-        self.assertEqual([result[k]["위반여부"] for k in baseline.SME_ITEMS], [1, 0, 1])
+        self.assertEqual([result[k]["위반여부"] for k in baseline.SME_ITEMS], [1])
         self.assertEqual(result["v13"]["근거문구"], obj["v13"]["facts"]["qualification_quote"])
         for field, value in [("product_code", "9999999999"), ("scope_quote", "원문에 없는 문구"),
                              ("scope_matches", "unknown"), ("exception_applies", "yes")]:
@@ -62,19 +99,12 @@ class BaselineTests(unittest.TestCase):
         parsed["v13"]["facts"]["qualification_quote"] = "「중소기업확인서」를 소지한 업체."
         result, _ = baseline.verify_sme(parsed, rec, products, 16000)
         self.assertEqual(result["v13"]["위반여부"], 0)
-        rec["input_completeness"]["완전관측"] = False
-        result, _ = baseline.verify_sme(parsed, rec, products, 16000)
-        self.assertEqual(result["v10"]["위반여부"], 0)
-        rec["input_completeness"]["완전관측"] = True
-        rec["docs"][0]["text"] += "끝" * 200
-        result, _ = baseline.verify_sme(parsed, rec, products, 128)
-        self.assertEqual(result["v11"]["위반여부"], 0)
         for bad_value in [True, "maybe", None]:
             bad = copy.deepcopy(obj)
-            bad["v10"]["facts"]["scope_matches"] = bad_value
+            bad["v13"]["facts"]["scope_matches"] = bad_value
             with self.assertRaises(ValueError):
                 baseline.parse_judgment(json.dumps(bad), baseline.SME_ITEMS, sme=True)
-        del obj["v10"]["facts"]
+        del obj["v13"]["facts"]
         with self.assertRaises(ValueError):
             baseline.parse_judgment(json.dumps(obj), baseline.SME_ITEMS, sme=True)
 
@@ -96,6 +126,7 @@ class BaselineTests(unittest.TestCase):
         schema = runner.parameters_for_items(baseline.SME_ITEMS).structured_outputs.json
         self.assertEqual(set(schema["properties"]), set(baseline.SME_ITEMS))
         self.assertIn("facts", schema["properties"]["v13"]["required"])
+        self.assertEqual(schema["properties"]["v13"]["properties"]["근거문구"], {"type": "null"})
         output = {k: {"facts": baseline.empty_sme_facts(), "위반여부": 0, "근거문구": None}
                   for k in baseline.SME_ITEMS}
         self.assertEqual(baseline.parse_judgment(json.dumps(output), baseline.SME_ITEMS, sme=True)[0], output)
@@ -115,12 +146,12 @@ class BaselineTests(unittest.TestCase):
                         self_test.assertEqual(messages[0]["content"], expected_system)
                         self_test.assertNotIn("[Provided 고시", messages[1]["content"])
                     else:
-                        self_test.assertEqual(items, ["v10", "v11", "v13"])
+                        self_test.assertEqual(items, ["v13"])
                         self_test.assertNotIn("- v24:", messages[0]["content"])
                         self_test.assertIn("[Provided 고시", messages[1]["content"])
                     obj = {k: {"위반여부": 1, "근거문구": None} for k in (items or baseline.ITEMS)}
                     if items is not None:
-                        obj["v11"]["위반여부"] = 0
+                        obj["v13"]["위반여부"] = 0
                         for cell in obj.values():
                             cell["facts"] = baseline.empty_sme_facts()
                     outputs.append(json.dumps(obj))
@@ -131,16 +162,16 @@ class BaselineTests(unittest.TestCase):
             report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Isolated,
                                   limit=2, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
             self.assertEqual(len(instances), 1)
-            self.assertEqual(calls, [None, ["v10", "v11", "v13"]])
+            self.assertEqual(calls, [None, ["v13"]])
             with out.open(encoding="utf-8") as f:
                 final = list(csv.DictReader(f))
             with out.with_name("baseline_submission.csv").open(encoding="utf-8") as f:
                 original = list(csv.DictReader(f))
             for before, after in zip(original, final):
-                self.assertEqual(before["v11"], "1")
-                self.assertEqual(after["v11"], "0")
+                self.assertEqual(before["v13"], "1")
+                self.assertEqual(after["v13"], "0")
                 for col in baseline.COLUMNS:
-                    if col not in ["v10", "v11", "v13", "e10", "e11", "e13"]:
+                    if col not in ["v13", "e13"]:
                         self.assertEqual(before[col], after[col])
             self.assertIn("sme_inference_seconds", report)
             self.assertEqual(report["sme_model_success_count"], 0)  # Test double is not live evidence.
@@ -158,7 +189,7 @@ class BaselineTests(unittest.TestCase):
             events = [json.loads(line) for line in out.with_name("diagnostics.jsonl").read_text(
                 encoding="utf-8").splitlines()]
             fallback = next(e for e in events if e["event"] == "sme_fallback")
-            self.assertIn("정상 3항목", fallback["error_message"])
+            self.assertIn("정상 1항목", fallback["error_message"])
             self.assertEqual(fallback["id"], "PPS-S-0001")
 
     def test_split_retry_validates_every_group_without_changing_defaults(self):
@@ -173,7 +204,7 @@ class BaselineTests(unittest.TestCase):
             keys = sampling_params.structured_outputs.json["required"]
             if len(keys) in (1, 6):
                 for k in keys:
-                    if k not in baseline.ABSENCE:
+                    if k not in baseline.ABSENCE and "facts" not in sampling_params.structured_outputs.json["properties"][k]["properties"]:
                         self.assertEqual(sampling_params.structured_outputs.json["properties"][k]
                                          ["properties"]["근거문구"]["maxLength"], 100)
             calls.append(list(keys))
@@ -216,15 +247,15 @@ class BaselineTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "토큰 예산 없음"):
             baseline.run_chunk(runner, [messages])
         runner.count_tokens = lambda messages: 14000
-        def broken_three(batch, sampling_params, **kwargs):
+        def broken_first(batch, sampling_params, **kwargs):
             outputs = chat(batch, sampling_params, **kwargs)
-            if len(sampling_params.structured_outputs.json["required"]) == 3:
+            if len(calls) == 1:
                 outputs[0].outputs[0].text = "{}"
             return outputs
-        runner.llm.chat = broken_three
+        runner.llm.chat = broken_first
         calls.clear()
         result = baseline.run_chunk(runner, [messages], items=baseline.SME_ITEMS, phase="sme")
-        self.assertEqual([len(keys) for keys in calls], [3, 1, 1, 1])
+        self.assertEqual([len(keys) for keys in calls], [1, 1])
         self.assertEqual(baseline.parse_judgment(result[0], expected_items=baseline.SME_ITEMS, sme=True)[0],
                          {k: {**good[k], "facts": baseline.empty_sme_facts()} for k in baseline.SME_ITEMS})
 
@@ -290,11 +321,18 @@ class BaselineTests(unittest.TestCase):
             baseline.run_chunk(Broken(), batch, baseline_texts=[good] * 127, **kwargs)
         with self.assertRaises(ValueError):
             baseline.run_chunk(Broken(), batch, baseline_texts=[good] * 128)
+        events.clear()
+        indices = list(range(128, 384, 2))
+        baseline.run_chunk(Broken(), batch, baseline_texts=[good] * 128, indices=indices, **kwargs)
+        fallback = next(e for e in events if e["event"] == "sme_fallback")
+        self.assertEqual(fallback["global_index"], indices[62])
+        with self.assertRaisesRegex(ValueError, "인덱스 건수"):
+            baseline.run_chunk(Broken(), batch, indices=indices[:-1], **kwargs)
 
     def test_provided_law_and_product_context(self):
         laws, products = baseline.load_sme_reference(str(ROOT / "open/data"))
         self.assertIn("제7조(중소기업자간 경쟁입찰의 예외 등)", laws)
-        self.assertIn("제9조(직접생산의 확인 등)", laws)
+        self.assertNotIn("제9조(직접생산의 확인 등)", laws)
         rec = record()
         rec["meta"]["세부품명번호목록"] = None
         rec["docs"][0]["text"] = "세부품명번호 1110152201 활성탄 구매"
