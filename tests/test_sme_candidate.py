@@ -112,7 +112,23 @@ class ReplayStoredRun(unittest.TestCase):
         if not DIAGNOSE.is_file():
             raise unittest.SkipTest(f"{DIAGNOSE} 가 없다")
         cls.rows = load_jsonl(DIAGNOSE)
-        cls.amounts = {r["id"]: candidate.estimated_price(r) for r in load_jsonl(DEV)}
+        cls.recs = {r["id"]: r for r in load_jsonl(DEV)}
+        cls.amounts = {i: candidate.estimated_price(r) for i, r in cls.recs.items()}
+
+    def gated(self, row, item):
+        """**실제 진입점**으로 한 공고를 거른다.
+
+        `in_band` 를 직접 부르면 `apply_amount_gate` 의 키 조회 실수도 게이팅 방향
+        반대도 못 잡는다. 배포되는 경로를 태워야 헤드라인 수치가 하중을 받는다.
+
+        여기서 보는 것은 항목 하나의 `위반여부` 뿐이다. 근거문구를 비우는 것과 대상 밖
+        셀을 그대로 두는 것은 위 `Gate` 의 `test_out_of_band_positive_becomes_negative`
+        · `test_other_items_pass_through_untouched` 가 맡는다.
+        """
+        judged = (row.get("items") or {}).get(item) or {}
+        cell = {"위반여부": 1 if judged.get("판정") == 1 else 0, "근거문구": ""}
+        out = candidate.apply_amount_gate({item: cell}, self.recs[row["id"]])
+        return out[item]["위반여부"]
 
     def test_every_dev_notice_has_a_readable_amount(self):
         missing = [rid for rid, amount in self.amounts.items() if amount is None]
@@ -122,11 +138,8 @@ class ReplayStoredRun(unittest.TestCase):
         for item, expected in EXPECTED.items():
             tp = fp = fn = 0
             for row in self.rows:
-                judged = (row.get("items") or {}).get(item) or {}
-                pred = 1 if judged.get("판정") == 1 else 0
+                pred = self.gated(row, item)
                 truth = 1 if (row.get("truth") or {}).get(item) == 1 else 0
-                if pred and not candidate.in_band(item, self.amounts[row["id"]]):
-                    pred = 0
                 tp += pred and truth
                 fp += pred and not truth
                 fn += truth and not pred
@@ -138,8 +151,8 @@ class ReplayStoredRun(unittest.TestCase):
                 judged = (row.get("items") or {}).get(item) or {}
                 if judged.get("판정") != 1 or (row.get("truth") or {}).get(item) != 1:
                     continue
-                self.assertTrue(candidate.in_band(item, self.amounts[row["id"]]),
-                                f"{item} 의 TP {row['id']} 를 게이트가 지웠다")
+                self.assertEqual(self.gated(row, item), 1,
+                                 f"{item} 의 TP {row['id']} 를 게이트가 지웠다")
 
 
 class SubmissionContract(unittest.TestCase):
