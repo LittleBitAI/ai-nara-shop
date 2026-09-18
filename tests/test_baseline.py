@@ -36,9 +36,12 @@ class BaselineTests(unittest.TestCase):
             class Selective(baseline.MockRunner):
                 def chat(self, batch, items=None):
                     calls.append((items, len(batch)))
-                    if items is not None:
+                    if items == baseline.SME_ITEMS:
                         return [json.dumps({"v13": {"facts": baseline.empty_sme_facts(),
                                                    "위반여부": 0, "근거문구": None}})] * len(batch)
+                    if items is not None:   # N3 경쟁제품 호출은 facts 없이 두 칸만 낸다
+                        return [json.dumps({k: {"위반여부": 0, "근거문구": None}
+                                            for k in items})] * len(batch)
                     outputs = []
                     for i in range(len(batch)):
                         obj = valid()
@@ -50,7 +53,9 @@ class BaselineTests(unittest.TestCase):
                 out = Path(tmp) / "submission.csv"
                 report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Selective,
                                       limit=4, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
-                self.assertEqual(calls, [(None, 4)] + [(["v13"], 2)] * bool(positives))
+                # 합동 1회 → v13 추가 호출(선택 공고가 있을 때만) → N3 경쟁제품 호출(전건).
+                self.assertEqual(calls, [(None, 4)] + [(["v13"], 2)] * bool(positives)
+                                 + [(baseline.PRODUCT_ITEMS, 4)])
                 self.assertEqual(report["sme_selected_count"], len(positives))
                 self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
                 self.assertEqual(report["sme_fallback_count"], 0)
@@ -58,11 +63,16 @@ class BaselineTests(unittest.TestCase):
                     final = list(csv.DictReader(stream))
                 with out.with_name("baseline_submission.csv").open(encoding="utf-8") as stream:
                     original = list(csv.DictReader(stream))
+                # 추가 호출이 건드릴 수 있는 칸은 v13과 N3 경쟁제품 3항목뿐이다.
+                # 그 밖이 하나라도 움직이면 colab-1789719173182820657의 실패가 되풀이된 것이다.
+                touched = {"v13", "e13"} | {c for v in baseline.PRODUCT_ITEMS
+                                            for c in (v, "e" + v[1:])}
                 for i, (before, after) in enumerate(zip(original, final)):
                     self.assertEqual(after["v13"], "0")
                     for col in baseline.COLUMNS:
-                        if col not in ("v13", "e13") or i not in positives:
-                            self.assertEqual(before[col], after[col])
+                        if col in touched:
+                            continue
+                        self.assertEqual(before[col], after[col])
                 events = [json.loads(line) for line in out.with_name("diagnostics.jsonl").read_text(
                     encoding="utf-8").splitlines()]
                 responses = [e for e in events if e["event"] == "response" and e["phase"] == "sme"]
@@ -163,7 +173,9 @@ class BaselineTests(unittest.TestCase):
             report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Isolated,
                                   limit=2, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
             self.assertEqual(len(instances), 1)
-            self.assertEqual(calls, [None, ["v13"]])
+            self.assertEqual(calls[:2], [None, ["v13"]])
+            # 나머지는 N3 경쟁제품 호출뿐이다. 다른 항목 목록이 오면 실패한다.
+            self.assertTrue(all(c == baseline.PRODUCT_ITEMS for c in calls[2:]), calls)
             with out.open(encoding="utf-8") as f:
                 final = list(csv.DictReader(f))
             with out.with_name("baseline_submission.csv").open(encoding="utf-8") as f:

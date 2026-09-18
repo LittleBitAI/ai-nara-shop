@@ -51,6 +51,22 @@ EVID = [f"e{i}" for i in range(1, 25)]
 COLUMNS = ["id"] + ITEMS + EVID
 ABSENCE = ["v10", "v11", "v16", "v18", "v20"]          # 부재탐지 항목: 근거 문구 빈칸
 
+# ----- N3 실험: 경쟁제품 카탈로그를 v10·v11·v12에도 준다 -----
+# 가설은 하나다 — **판정에 필요한 자료를 받았는가**.
+# v10·v11·v12·v13은 전부 중기간 경쟁제품·직접생산 항목인데, 제공 고시 카탈로그를
+# 프롬프트에 받는 것은 **v13 하나뿐이다**(build_user_prompt의 products 인자는 v13
+# 추가 호출에만 넘어간다). 합동 24항목 호출은 카탈로그를 한 줄도 못 본다.
+# 그 셋은 여섯 회차 내내 TP가 0이고 아직 아무도 따로 물어본 적이 없다.
+#
+# 합동 프롬프트와 스키마는 한 글자도 안 바꾼다. 이 호출은 더하기만 하므로 대상 밖
+# 21항목은 구조적으로 움직일 수 없다 — colab-1789719173182820657의 실패
+# (합동을 건드려 여덟 항목이 TP 열하나를 잃음)가 되풀이될 수 없는 구조다.
+#
+# 게이트는 걸지 않는다. 판로지원법 제7조①에 금액 조건이 없고, 경쟁제품 코드 일치를
+# 적용 게이트로 쓰면 dev의 v10 양성 7건 중 6건이 사라진다(양성 공고가 전부 일반용역이라
+# 물품 코드가 안 맞는다). 카탈로그는 판정 재료로 주고 게이트로 쓰지 않는다.
+PRODUCT_ITEMS = ["v10", "v11", "v12"]
+
 DOC_ORDER = ["공고문", "규격서", "과업지시서", "제안요청서", "예외공표서", "기타"]
 META_FIELDS = [
     "적용계약법", "업무구분", "계약방법", "낙찰방법", "낙찰하한율",
@@ -471,7 +487,8 @@ class VLLMRunner:
         self.last_response_info = []  # A failed call must not reuse an earlier call's metadata.
         sp = self.sp if sampling_params is None else sampling_params
         if items is not None:
-            sp = self.parameters_for_items(items)
+            # v13 추가 호출만 facts 스키마를 쓴다. N3의 경쟁제품 호출은 기본 두 칸 그대로다.
+            sp = self.parameters_for_items(items, sme=items == SME_ITEMS)
         outs = self.llm.chat(batch, sampling_params=sp, use_tqdm=False,
                              chat_template_kwargs={"enable_thinking": False})
         for output in outs:
@@ -498,7 +515,7 @@ class VLLMRunner:
             messages[0]["content"] += (
                 "\n[Output scope for this call] Evaluate only these keys, overriding the earlier key list: "
                 + ", ".join(keys) + ". Return no other keys. Keep evidence quotations under 100 characters.")
-            sp = self.parameters_for_items(keys, sme=items is not None)
+            sp = self.parameters_for_items(keys, sme=items == SME_ITEMS)
             schema = sp.structured_outputs.json
             for key in keys:
                 if items is None and key not in ABSENCE:
@@ -515,7 +532,7 @@ class VLLMRunner:
                 if len(texts) != 1:
                     raise ValueError(f"분할 응답 건수 불일치: {len(texts)}")
                 group["stage"] = "parse"
-                parsed, _ = parse_judgment(texts[0], expected_items=keys, sme=items is not None)
+                parsed, _ = parse_judgment(texts[0], expected_items=keys, sme=items == SME_ITEMS)
                 merged.update(parsed)
                 group["status"] = "valid"
             except ValueError as error:
@@ -531,7 +548,7 @@ class VLLMRunner:
         for offset in range(0, len(expected), group_size):
             recover(expected[offset:offset + group_size])
         text = json.dumps(merged, ensure_ascii=False)
-        parse_judgment(text, expected_items=expected, sme=items is not None)
+        parse_judgment(text, expected_items=expected, sme=items == SME_ITEMS)
         return [text]
 
 
@@ -551,7 +568,7 @@ class MockRunner:
 
     def chat(self, batch: List[List[Dict[str, str]]], items=None) -> List[str]:
         texts = [self._one(m) for m in batch]
-        if items is not None:
+        if items == SME_ITEMS:
             texts = [json.dumps({key: {"facts": empty_sme_facts(), **json.loads(text)[key]} for key in items}, ensure_ascii=False)
                      for text in texts]
         return texts
@@ -577,8 +594,11 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
     if indices is not None and len(indices) != len(batch):
         raise ValueError("선택 공고 인덱스 건수 불일치")
     if baseline_texts is not None:
-        if phase != "sme" or items != SME_ITEMS or len(baseline_texts) != len(batch):
-            raise ValueError("기본 응답 보존은 동일 공고의 추가 v13 단계에만 허용한다")
+        # 추가 호출이 실패하면 그 공고의 검증된 합동 판정을 그대로 남긴다(보호 결정).
+        # v13 단계와 N3 경쟁제품 단계 둘 다 같은 성질의 추가 호출이다.
+        allowed = {"sme": SME_ITEMS, "product": PRODUCT_ITEMS}
+        if phase not in allowed or allowed[phase] != items or len(baseline_texts) != len(batch):
+            raise ValueError("기본 응답 보존은 동일 공고의 추가 호출 단계에만 허용한다")
         for text in baseline_texts:
             parse_judgment(text)  # No fallback without an already valid full model response.
     def record(event, **fields):
@@ -1474,13 +1494,47 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     sme_seconds = time.time() - t_sme
     inf_seconds += sme_seconds
 
+    # N3: 경쟁제품·직생 세 항목을 카탈로그와 함께 따로 묻는다. 전건에 붙는다(게이트 없음).
+    product_prompt = build_system_prompt(tbl, items=PRODUCT_ITEMS)
+    product_texts = [None] * len(recs)
+    emit("phase_started", phase="product", items=PRODUCT_ITEMS,
+         selected_count=len(recs), skipped_count=0,
+         system_prompt_sha256=hashlib.sha256(product_prompt.encode("utf-8")).hexdigest())
+    t_product = time.time()
+    for s in range(0, len(recs), chunk):
+        indices = list(range(s, min(s + chunk, len(recs))))
+        batch = []
+        for i in indices:
+            # products를 넘겨야 고시 카탈로그가 프롬프트에 붙는다. 이것이 이 실험의 변수다.
+            messages, _, _ = fit_to_budget(recs[i], product_prompt, runner, max_chars,
+                                           budget=budget, products=products)
+            batch.append(messages)
+        emit("chunk_started", phase="product", chunk_start=indices[0], count=len(batch), indices=indices)
+        responses = run_chunk(runner, batch, start=indices[0], ids=[recs[i]["id"] for i in indices],
+                              emit=emit, debug_responses=debug_responses, items=PRODUCT_ITEMS,
+                              phase="product", baseline_texts=[texts[i] for i in indices],
+                              indices=indices)
+        for i, response in zip(indices, responses):
+            product_texts[i] = response
+    product_seconds = time.time() - t_product
+    inf_seconds += product_seconds
+
     # 파싱·후처리 → 행
     if len(texts) != len(recs) or len(sme_texts) != len(recs):
         raise ValueError("입력과 모델 응답 건수 불일치")
     rows, baseline_rows, ev_kept, ev_dropped, rejected_positives = [], [], 0, 0, 0
-    for rec, text, sme_text, mc in zip(recs, texts, sme_texts, sme_chars):
+    for rec, text, sme_text, product_text, mc in zip(recs, texts, sme_texts, product_texts, sme_chars):
         parsed, _ = parse_judgment(text)
         baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
+        if product_text is not None:
+            # 호출이 실패하면 그 공고의 합동 판정을 그대로 쓴다.
+            try:
+                focused, _ = parse_judgment(product_text, expected_items=PRODUCT_ITEMS)
+            except ValueError:
+                focused = None
+            if focused is not None:
+                for item in PRODUCT_ITEMS:
+                    parsed[item] = dict(focused[item])
         if sme_text is not None:
             focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS, sme=True)
             verified, reasons = verify_sme(focused, rec, products, mc)
