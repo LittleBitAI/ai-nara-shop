@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-X",
+    "utf8",
+    "/content/t1-colab-ymub24mv/repo/tools/package.py",
+    "--output",
+    "/content/t1-colab-ymub24mv/candidate-submit.zip",
+    "--colab-output",
+    "/content/t1-colab-ymub24mv/candidate-colab-bundle.zip"
+  ],
+  "cwd": "/content/t1-colab-ymub24mv/repo",
+  "started": 1789723035.742046,
+  "returncode": 0,
+  "elapsed_seconds": 1.0484869480133057
+}

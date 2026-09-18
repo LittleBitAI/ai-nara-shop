@@ -1,0 +1,104 @@
+{
+  "mode": "live",
+  "model_success_count": 200,
+  "sme_model_success_count": 109,
+  "sme_verified_count": 109,
+  "sme_rejected_positive_count": 30,
+  "sme_selected_count": 109,
+  "sme_skipped_count": 91,
+  "sme_fallback_count": 0,
+  "baseline_inference_seconds": 362.7,
+  "sme_inference_seconds": 109.9,
+  "sme_prompt_tokens_max": 13186,
+  "sme_documents_shrunk": 0,
+  "model": {
+    "id": "google/gemma-4-26B-A4B-it",
+    "expected_revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+  },
+  "environment": {
+    "vllm": "0.26.0",
+    "python": "3.12.13",
+    "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "cuda": "13.0",
+    "gpus": [
+      {
+        "name": "NVIDIA A100-SXM4-40GB",
+        "total_memory": 42405855232
+      }
+    ],
+    "sampling_params": "SamplingParams(n=1, presence_penalty=0.0, frequency_penalty=0.0, repetition_penalty=1.0, temperature=0.0, top_p=1.0, top_k=0, min_p=0.0, seed=20260826, stop=[], stop_token_ids=[], bad_words=[], thinking_token_budget=None, include_stop_str_in_output=False, ignore_eos=False, max_tokens=2048, min_tokens=0, logprobs=None, prompt_logprobs=None, skip_special_tokens=True, spaces_between_special_tokens=True, structured_outputs=StructuredOutputsParams(json={'type': 'object', 'additionalProperties': False, 'required': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24'], 'properties': {'v1': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v2': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v3': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v4': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v5': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v6': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v7': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v8': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v9': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v10': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v11': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v12': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v13': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v14': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v15': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v16': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v17': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v18': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v19': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v20': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v21': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v22': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v23': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v24': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}}}, regex=None, choice=None, grammar=None, json_object=None, disable_any_whitespace=True, disable_additional_properties=False, whitespace_pattern=None, structural_tag=None, _backend=None, _backend_was_auto=False), extra_args=None)"
+  },
+  "code_sha256": "1ee90585067f46bd5e65812c64cda814299069150f5ae6f27dfcb8edff4cae33",
+  "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+  "reproduction": {
+    "mode": "live",
+    "argv": [
+      "script.py"
+    ],
+    "python": "3.12.13",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "settings": {
+      "input": "data/test.jsonl.gz",
+      "output": "<외부>/submission.csv",
+      "data_dir": "data",
+      "limit": null,
+      "chunk": 128,
+      "max_chars": 16000,
+      "debug_responses": false,
+      "max_model_len": 16384,
+      "temperature": 0,
+      "thinking": false,
+      "sme_items": [
+        "v13"
+      ],
+      "sme_selection": "baseline_v13_positive",
+      "prompt_language": "en_with_ko_legal_terms",
+      "sme_facts": true,
+      "model_dir": "<외부>/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+      "quant": "int8_per_channel_weight_only",
+      "max_tokens": 2048,
+      "seed": 20260826,
+      "gpu_mem": 0.92,
+      "tp": 1
+    },
+    "code_sha256": "1ee90585067f46bd5e65812c64cda814299069150f5ae6f27dfcb8edff4cae33",
+    "expected_model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "packages": {
+      "vllm": "0.26.0",
+      "torch": "2.11.0+cu130",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3",
+      "tokenizers": "0.22.2"
+    },
+    "asset_sha256": {
+      "input": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "items": "368cb41f376d8ad7edbbdf181542e6e959de356f7f70d86e72943325ecad61d9",
+      "decode_schema": "149580162261b446090bec075eb4c13f765a771c827b6bbe06660eb833a3c2ac",
+      "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt": "a4390e91cb991ce75bde7389c9297c6e4f6a947afd1a26cb9397e34aa4e9a445",
+      "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt": "1070092cca07468b755fa1e0fb13658d4c9ea72c48b555109c8fc4f87046cabb",
+      "법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv": "445257e4821c9d533f0c4b481e0ead89e85244ed6a6bf13d838510eb60fdbecd"
+    }
+  },
+  "seed": 20260826,
+  "temperature": 0,
+  "thinking": false,
+  "prompt_budget": 14272,
+  "max_tokens": 2048,
+  "max_chars": 16000,
+  "prompt_tokens_max": 12136,
+  "token_count_kind": "actual",
+  "건수": 200,
+  "모델로드_s": 208.9,
+  "추론_s": 647.2,
+  "건당_s": 3.24,
+  "전체_s": 859.963,
+  "유효JSON": 200,
+  "메운_항목수": 0,
+  "근거_유지": 170,
+  "근거_원문불일치_폐기": 74,
+  "출력": "<외부>/submission.csv",
+  "자가검증": "PASS"
+}

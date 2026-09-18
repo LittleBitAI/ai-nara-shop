@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "/content/t1-colab-wj_gs2n0/venv/bin/python",
+    "script.py"
+  ],
+  "cwd": "/content/t1-colab-wj_gs2n0/cases/dev",
+  "started": 1789724802.4187834,
+  "returncode": 0,
+  "elapsed_seconds": 790.610925912857
+}

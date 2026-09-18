@@ -1,0 +1,15 @@
+{
+  "status": "colab_pass",
+  "submit_sha256": "f850c467fd0b091b89156a8a6b8cd496dee3977c01af285c56b8c9e41ed15cdd",
+  "sample_count": 10,
+  "dev_count": 200,
+  "macro_f1": 0.36127747626194834,
+  "server_success_guaranteed": false,
+  "quality_pass": true,
+  "remaining_differences": [
+    "비공개 평가 입력 1853건",
+    "GPU/가용 메모리/CPU/RAM/OS",
+    "서버 전체 실행 시간",
+    "컨테이너 digest와 OS 수준 네트워크 차단"
+  ]
+}
