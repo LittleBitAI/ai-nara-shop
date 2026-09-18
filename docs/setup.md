@@ -11,7 +11,7 @@ Claude와 Codex는 같은 권한·역할·작업 절차를 따릅니다. 작업 
 submodule·패키지 배포·공용 hook 사본은 만들지 않습니다.
 
 - 위키 저장소: [ai-coding-agent-wiki-public](https://github.com/LittleBitAI/ai-coding-agent-wiki-public).
-- 위키 기준 커밋: `428a85d8e563f6d07e2a033b695474466f782b52`.
+- 위키 기준 커밋: `bf7200dfc692f7f4ace483200f004ac64ae0352e`.
   기계가 읽는 기준은 [.wiki/wiki-revision](../.wiki/wiki-revision)입니다.
   설치 도구는 HEAD와 실행 코드·규칙의 미커밋 변경을 확인합니다.
   이 SHA는 공용 설치 도구와 checkout-local adapter 지원을 포함합니다.
