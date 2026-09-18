@@ -16,7 +16,10 @@ REPO = Path(__file__).resolve().parents[1]
 DIAGNOSE = REPO / "reports/runs/colab-1789658250172468461/diagnose/items.jsonl"
 DEV = REPO / "open/dev.jsonl"
 
-# 1-1 에서 재현한 값. v16 만 조문 확정 고시금액 2.3억을 쓴 결과다.
+# 회차 `colab-1789658250172468461`(별도 `판정` 칸을 둔 **느슨한** 질의)에 조문 확정
+# 고시금액 2.3억을 씌운 값이다. **다른 회차에 그대로 기대하면 안 된다** — 판정을 묻는
+# 방식만 바꾼 `colab-1789695980726180378` 에서는 같은 게이트가 v16 1/17/5, v18 2/29/5 다.
+# 회차를 가로질러 서는 것은 아래 test_gate_removes_no_true_positive 의 불변식뿐이다.
 EXPECTED = {
     "v16": {"tp": 6, "fp": 39, "fn": 0},
     "v18": {"tp": 4, "fp": 51, "fn": 3},
@@ -97,7 +100,10 @@ class Gate(unittest.TestCase):
 
 
 class ReplayStoredRun(unittest.TestCase):
-    """보관된 별도 질의 회차에 게이트를 씌워 1-1 재현값을 지킨다."""
+    """보관된 **느슨한** 별도 질의 회차 하나에 게이트를 씌워 1-1 재현값을 지킨다.
+
+    이 클래스가 지키는 것은 그 회차의 값이지 게이트의 일반 성능이 아니다.
+    """
 
     @classmethod
     def setUpClass(cls):
