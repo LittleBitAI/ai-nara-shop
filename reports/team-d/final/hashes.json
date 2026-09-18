@@ -1,5 +1,5 @@
 {
-  "head": "4a6aaa9",
+  "head": "c5055e4",
   "paths": {
     "candidate": "experiments/qualification_candidate.py",
     "script": "script.py",
@@ -9,7 +9,7 @@
     "case_submission": "reports/runs/colab-1789655036303880754/dev-debug/submission.csv",
     "case_responses": "reports/runs/colab-1789655036303880754/dev-debug/diagnostics.jsonl",
     "candidate_replay": "reports/team-d/final/replay/submission.csv",
-    "head_baseline_replay": "reports/team-d/final/head-4a6aaa9-replay/submission.csv"
+    "head_baseline_replay": "reports/team-d/final/head-c5055e4-replay/submission.csv"
   },
   "sha256": {
     "candidate": "78d71b6cb4fad2fb9c20f7da3d38ff0da6ecd0b6bb0242d037e56a717c217822",

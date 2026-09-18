@@ -1,7 +1,7 @@
 # 회차 대조
 
 ```text
-기준 reports/team-d/final/head-4a6aaa9-replay/submission.csv
+기준 reports/team-d/final/head-c5055e4-replay/submission.csv
 후보 reports/team-d/final/replay/submission.csv
 정답 open/dev_labels.csv · 공고 200건 · 대상 v8, v7, v4, v3
 

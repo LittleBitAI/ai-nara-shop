@@ -50,11 +50,11 @@ HEAD를 검사하지 않는다(PR #30).
 효과가 섞인다. 이 브랜치가 `origin/main`을 병합한 뒤 실제로 그렇게 됐다 — B의 PR #30이
 `script.py`를 바꿔 같은 원응답의 기준 점수가 0.218204에서 0.235731로 올라갔다.
 그래서 기준은 후보 없이 HEAD 코드로 재생한
-[final/head-4a6aaa9-replay/](final/head-4a6aaa9-replay/)다.
+[final/head-c5055e4-replay/](final/head-c5055e4-replay/)다.
 
 ## 전체 결과
 
-기준은 HEAD `4a6aaa9`의 재생이다.
+기준은 HEAD `c5055e4`의 재생이다.
 
 | 항목 | 티켓 | 전 TP/FP/FN | 후 TP/FP/FN | F1 | 기여 |
 | --- | --- | --- | --- | --- | --- |
@@ -74,12 +74,12 @@ Macro F1 0.235731 → 0.360884 (+0.125153). 바뀐 셀 24 / 4800, 대상 밖 0.
 
 | 경로 | 내용 |
 | --- | --- |
-| [final/head-4a6aaa9-replay/](final/head-4a6aaa9-replay/) | **기준** — 후보 없이 HEAD 코드로 돌린 재생 CSV |
+| [final/head-c5055e4-replay/](final/head-c5055e4-replay/) | **기준** — 후보 없이 HEAD 코드로 돌린 재생 CSV |
 | [final/replay/](final/replay/) | 후보를 끼운 재생 CSV와 `manifest.json` (`model_called: false`) |
 | [final/score/](final/score/) | 후보 채점 |
 | [final/score-before/](final/score-before/) | HEAD 기준 재생의 채점 |
 | [final/compare/](final/compare/) | `compare_runs` 대조 |
-| [final/contributions.json](final/contributions.json) | 규칙별 단독 기여 |
+| [final/contributions.json](final/contributions.json) | 규칙별 단독 기여 (`tools/record_team_d_contributions.py`) |
 | [final/hashes.json](final/hashes.json) | 입력·코드·산출물 해시 |
 | [review/firings-dev.md](review/firings-dev.md) | 사람 검토 시트 — dev 200건 (라벨 있음) |
 | [review/firings-test-sample.md](review/firings-test-sample.md) | 사람 검토 시트 — test 샘플 10건 (라벨 없음) |

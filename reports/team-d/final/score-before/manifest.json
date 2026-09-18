@@ -4,7 +4,7 @@
   "status": "draft",
   "run_id": "score-before",
   "baseline_run": null,
-  "created_at": "2026-09-18T05:32:02.944781+00:00",
+  "created_at": "2026-09-18T05:39:11.269664+00:00",
   "sources": [
     {
       "role": "truth",
@@ -13,7 +13,7 @@
     },
     {
       "role": "pred",
-      "path": "reports/team-d/final/head-4a6aaa9-replay/submission.csv",
+      "path": "reports/team-d/final/head-c5055e4-replay/submission.csv",
       "sha256": "0818a23c496be50ab7de90d551848c10fa2bdb1c01d117ae294056d38b01496c"
     }
   ],
@@ -28,11 +28,11 @@
       "--truth",
       "open/dev_labels.csv",
       "--pred",
-      "reports/team-d/final/head-4a6aaa9-replay/submission.csv",
+      "reports/team-d/final/head-c5055e4-replay/submission.csv",
       "--output-dir",
       "reports/team-d/final/score-before"
     ],
-    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'reports/team-d/final/head-4a6aaa9-replay/submission.csv' '--output-dir' 'reports/team-d/final/score-before'",
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'reports/team-d/final/head-c5055e4-replay/submission.csv' '--output-dir' 'reports/team-d/final/score-before'",
     "settings": {
       "output_dir": "reports/team-d/final/score-before",
       "zero_division": 0,
@@ -58,5 +58,5 @@
     "evidence_substring": false,
     "evidence_quality": false
   },
-  "elapsed_seconds_before_publish": 0.23253539999132045
+  "elapsed_seconds_before_publish": 0.5449976999952924
 }
