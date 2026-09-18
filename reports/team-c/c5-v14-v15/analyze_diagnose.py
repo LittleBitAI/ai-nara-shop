@@ -32,6 +32,10 @@ from experiments.sme_candidate import (  # noqa: E402
 
 STAGES = ("context_not_observed", "fact_not_extracted", "condition_not_met", "violation_found")
 
+# 부재탐지 항목은 "없다"를 인용으로 보일 수 없으므로 인용 null 을 근거 없음으로 세지 않는다.
+# 출처: docs/items.md 의 부재탐지 열.
+ABSENCE_ITEMS = ("v10", "v11", "v16", "v18", "v20")
+
 # C5 조건표의 구간. 근거는 같은 폴더의 README.md 가 조문 위치와 함께 적는다.
 # **진단용 오버레이다.** 후보에 심은 게이트가 아니다.
 BANDS = {
@@ -105,6 +109,8 @@ def main(argv=None) -> int:
         fn_stages: collections.Counter = collections.Counter()
         fn_ids: list[str] = []
         band_killed_tp: list[str] = []
+        unsourced: list[str] = []      # 인용 없이 위반이라 한 건
+        unsourced_tp: list[str] = []   # 그중 정답도 양성인 건
 
         disagree = 0
         for row in rows:
@@ -125,6 +131,12 @@ def main(argv=None) -> int:
                 fn_ids.append(row["id"])
             if pred and not gated and truth:
                 band_killed_tp.append(row["id"])
+            # v14·v15·v17 은 부재탐지가 아니다. 제한이 **있는 것**이 위반이므로 그 문구를
+            # 인용할 수 있어야 하고, 제출 e 열도 채워야 한다. 인용 없는 양성은 근거가 없다.
+            if pred and item not in ABSENCE_ITEMS and not (cell.get("공고_인용") or "").strip():
+                unsourced.append(row["id"])
+                if truth:
+                    unsourced_tp.append(row["id"])
 
         a, b = counts(plain), counts(banded)
         support = a["tp"] + a["fn"]
@@ -137,6 +149,15 @@ def main(argv=None) -> int:
             if band_killed_tp:
                 print(f"    !! 구간이 지운 TP: {', '.join(band_killed_tp)}  ← 구간이 조문과 어긋난다")
         print("  막힌 단계 전체: " + ", ".join(f"{s}={stages[s]}" for s in STAGES if stages[s]))
+        if item not in ABSENCE_ITEMS:
+            share = f"{len(unsourced) / max(1, a['tp'] + a['fp']):.0%}"
+            print(f"  근거 없는 양성(인용 null + 판정 1): {len(unsourced)}건 / 양성 판정 "
+                  f"{a['tp'] + a['fp']}건 ({share})  그중 정답도 양성 {len(unsourced_tp)}건")
+            if unsourced:
+                print(f"    공고: {', '.join(unsourced[:12])}"
+                      + (f" … 외 {len(unsourced) - 12}건" if len(unsourced) > 12 else ""))
+            print("    이 항목은 부재탐지가 아니다. 제출 e 열을 채워야 하므로 인용 없는 양성은"
+                  " 그대로 쓸 수 없다.")
         if disagree:
             print(f"  !! `판정` 과 `막힌_단계` 가 {disagree}건 어긋난다 — 위 수치는 `판정` 기준이다.")
             print("     두 칸을 따로 채우던 옛 회차다. 단계 히스토그램을 근거로 쓰지 마라.")
