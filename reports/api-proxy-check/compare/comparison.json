@@ -1,0 +1,596 @@
+{
+  "created_at": "2026-09-18T12:32:49.828965+00:00",
+  "truth": "runs/api-dev100-20260918-1951/truth-100.csv",
+  "before": "runs/api-dev100-20260918-1951/colab-100.csv",
+  "after": "runs/api-dev100-20260918-1951/submission.csv",
+  "notices": 100,
+  "focus": [],
+  "macro_f1": {
+    "before": 0.4215546464772471,
+    "after": 0.25967832548714903,
+    "delta": -0.16187632099009808
+  },
+  "changed_cells": 114,
+  "changed_cells_off_focus": 114,
+  "drift_reference": {
+    "macro_f1_min": 7.917373e-06,
+    "macro_f1_max": 0.00312888228,
+    "cells": [
+      29,
+      45
+    ],
+    "pairs": 10,
+    "below_observed_max": false,
+    "source": "reports/runs/reproducibility.md"
+  },
+  "items": [
+    {
+      "item": "v1",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-01",
+        "PPS-DEV-049",
+        "PPS-DEV-058"
+      ],
+      "before": {
+        "tp": 4,
+        "fp": 0,
+        "fn": 3,
+        "f1": 0.7272727272727273
+      },
+      "after": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 6,
+        "f1": 0.25
+      },
+      "support": 7
+    },
+    {
+      "item": "v2",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-02",
+        "PPS-DEV-042",
+        "PPS-DEV-050",
+        "PPS-DEV-062"
+      ],
+      "before": {
+        "tp": 3,
+        "fp": 0,
+        "fn": 4,
+        "f1": 0.6
+      },
+      "after": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 7,
+        "f1": 0.0
+      },
+      "support": 7
+    },
+    {
+      "item": "v3",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-03"
+      ],
+      "before": {
+        "tp": 8,
+        "fp": 2,
+        "fn": 0,
+        "f1": 0.8888888888888888
+      },
+      "after": {
+        "tp": 8,
+        "fp": 1,
+        "fn": 0,
+        "f1": 0.9411764705882353
+      },
+      "support": 8
+    },
+    {
+      "item": "v4",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-052",
+        "PPS-DEV-061"
+      ],
+      "before": {
+        "tp": 6,
+        "fp": 1,
+        "fn": 0,
+        "f1": 0.9230769230769231
+      },
+      "after": {
+        "tp": 6,
+        "fp": 1,
+        "fn": 0,
+        "f1": 0.9230769230769231
+      },
+      "support": 6
+    },
+    {
+      "item": "v5",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-037",
+        "PPS-DEV-047",
+        "PPS-DEV-048",
+        "PPS-DEV-050",
+        "PPS-DEV-057",
+        "PPS-DEV-07",
+        "PPS-DEV-079",
+        "PPS-DEV-098"
+      ],
+      "before": {
+        "tp": 5,
+        "fp": 6,
+        "fn": 2,
+        "f1": 0.5555555555555556
+      },
+      "after": {
+        "tp": 1,
+        "fp": 4,
+        "fn": 6,
+        "f1": 0.16666666666666666
+      },
+      "support": 7
+    },
+    {
+      "item": "v6",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-050",
+        "PPS-DEV-061",
+        "PPS-DEV-072",
+        "PPS-DEV-08",
+        "PPS-DEV-09",
+        "PPS-DEV-092"
+      ],
+      "before": {
+        "tp": 3,
+        "fp": 2,
+        "fn": 3,
+        "f1": 0.5454545454545454
+      },
+      "after": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "support": 6
+    },
+    {
+      "item": "v7",
+      "focus": false,
+      "flipped": [],
+      "before": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "f1": 1.0
+      },
+      "after": {
+        "tp": 7,
+        "fp": 0,
+        "fn": 0,
+        "f1": 1.0
+      },
+      "support": 7
+    },
+    {
+      "item": "v8",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-053"
+      ],
+      "before": {
+        "tp": 6,
+        "fp": 0,
+        "fn": 0,
+        "f1": 1.0
+      },
+      "after": {
+        "tp": 6,
+        "fp": 1,
+        "fn": 0,
+        "f1": 0.9230769230769231
+      },
+      "support": 6
+    },
+    {
+      "item": "v9",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-061",
+        "PPS-DEV-09"
+      ],
+      "before": {
+        "tp": 5,
+        "fp": 0,
+        "fn": 1,
+        "f1": 0.9090909090909091
+      },
+      "after": {
+        "tp": 4,
+        "fp": 1,
+        "fn": 2,
+        "f1": 0.7272727272727273
+      },
+      "support": 6
+    },
+    {
+      "item": "v10",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-047"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 7,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 7,
+        "f1": 0.0
+      },
+      "support": 7
+    },
+    {
+      "item": "v11",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-047",
+        "PPS-DEV-064",
+        "PPS-DEV-080"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 1,
+        "fp": 2,
+        "fn": 5,
+        "f1": 0.2222222222222222
+      },
+      "support": 6
+    },
+    {
+      "item": "v12",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-063",
+        "PPS-DEV-30"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "support": 6
+    },
+    {
+      "item": "v13",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-03",
+        "PPS-DEV-056",
+        "PPS-DEV-059",
+        "PPS-DEV-069"
+      ],
+      "before": {
+        "tp": 1,
+        "fp": 3,
+        "fn": 5,
+        "f1": 0.2
+      },
+      "after": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "support": 6
+    },
+    {
+      "item": "v14",
+      "focus": false,
+      "flipped": [],
+      "before": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 8,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 8,
+        "f1": 0.0
+      },
+      "support": 8
+    },
+    {
+      "item": "v15",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-059",
+        "PPS-DEV-065",
+        "PPS-DEV-070",
+        "PPS-DEV-078",
+        "PPS-DEV-098",
+        "PPS-DEV-15",
+        "PPS-DEV-26"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 6,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "support": 6
+    },
+    {
+      "item": "v16",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-046",
+        "PPS-DEV-050"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 2,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "support": 6
+    },
+    {
+      "item": "v17",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-035",
+        "PPS-DEV-036",
+        "PPS-DEV-038",
+        "PPS-DEV-039",
+        "PPS-DEV-042",
+        "PPS-DEV-044",
+        "PPS-DEV-045",
+        "PPS-DEV-052",
+        "PPS-DEV-053",
+        "PPS-DEV-055",
+        "PPS-DEV-064",
+        "PPS-DEV-068",
+        "PPS-DEV-069",
+        "PPS-DEV-070",
+        "PPS-DEV-072",
+        "PPS-DEV-073",
+        "PPS-DEV-074",
+        "PPS-DEV-077",
+        "PPS-DEV-079",
+        "PPS-DEV-085",
+        "PPS-DEV-087",
+        "PPS-DEV-090",
+        "PPS-DEV-094",
+        "PPS-DEV-095",
+        "PPS-DEV-098",
+        "PPS-DEV-17",
+        "PPS-DEV-26"
+      ],
+      "before": {
+        "tp": 4,
+        "fp": 18,
+        "fn": 2,
+        "f1": 0.2857142857142857
+      },
+      "after": {
+        "tp": 0,
+        "fp": 13,
+        "fn": 6,
+        "f1": 0.0
+      },
+      "support": 6
+    },
+    {
+      "item": "v18",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-046",
+        "PPS-DEV-050",
+        "PPS-DEV-21"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 7,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 3,
+        "fn": 7,
+        "f1": 0.0
+      },
+      "support": 7
+    },
+    {
+      "item": "v19",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-033",
+        "PPS-DEV-037",
+        "PPS-DEV-079",
+        "PPS-DEV-093",
+        "PPS-DEV-096",
+        "PPS-DEV-100"
+      ],
+      "before": {
+        "tp": 6,
+        "fp": 7,
+        "fn": 0,
+        "f1": 0.631578947368421
+      },
+      "after": {
+        "tp": 4,
+        "fp": 5,
+        "fn": 2,
+        "f1": 0.5333333333333333
+      },
+      "support": 6
+    },
+    {
+      "item": "v20",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-064"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 1,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "f1": 0.0
+      },
+      "support": 1
+    },
+    {
+      "item": "v21",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-03",
+        "PPS-DEV-058",
+        "PPS-DEV-062",
+        "PPS-DEV-13"
+      ],
+      "before": {
+        "tp": 4,
+        "fp": 3,
+        "fn": 2,
+        "f1": 0.6153846153846154
+      },
+      "after": {
+        "tp": 3,
+        "fp": 2,
+        "fn": 3,
+        "f1": 0.5454545454545454
+      },
+      "support": 6
+    },
+    {
+      "item": "v22",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-060",
+        "PPS-DEV-26"
+      ],
+      "before": {
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "f1": 1.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 1,
+        "f1": 0.0
+      },
+      "support": 1
+    },
+    {
+      "item": "v23",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-035"
+      ],
+      "before": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 2,
+        "f1": 0.0
+      },
+      "after": {
+        "tp": 0,
+        "fp": 0,
+        "fn": 2,
+        "f1": 0.0
+      },
+      "support": 2
+    },
+    {
+      "item": "v24",
+      "focus": false,
+      "flipped": [
+        "PPS-DEV-039",
+        "PPS-DEV-044",
+        "PPS-DEV-045",
+        "PPS-DEV-046",
+        "PPS-DEV-050",
+        "PPS-DEV-057",
+        "PPS-DEV-060",
+        "PPS-DEV-061",
+        "PPS-DEV-062",
+        "PPS-DEV-065",
+        "PPS-DEV-068",
+        "PPS-DEV-07",
+        "PPS-DEV-071",
+        "PPS-DEV-073",
+        "PPS-DEV-076",
+        "PPS-DEV-079",
+        "PPS-DEV-08",
+        "PPS-DEV-082",
+        "PPS-DEV-09",
+        "PPS-DEV-091",
+        "PPS-DEV-099",
+        "PPS-DEV-11",
+        "PPS-DEV-15",
+        "PPS-DEV-28"
+      ],
+      "before": {
+        "tp": 4,
+        "fp": 22,
+        "fn": 4,
+        "f1": 0.23529411764705882
+      },
+      "after": {
+        "tp": 0,
+        "fp": 2,
+        "fn": 8,
+        "f1": 0.0
+      },
+      "support": 8
+    }
+  ]
+}

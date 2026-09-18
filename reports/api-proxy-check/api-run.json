@@ -1,0 +1,32 @@
+{
+  "purpose": "local_api_validation_only",
+  "mode": "api",
+  "is_contest_live_run": false,
+  "counts_as_r4_normal_call": false,
+  "api_model": "gemma-4-26b-a4b-it",
+  "notices": 100,
+  "seconds": 6010.8,
+  "code_sha256": "8dc7b9402eaa63eb1636965c2c5cc78b5271db004bdb620f2d50a276ba4b827b",
+  "input_sha256": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+  "input": "open/dev.jsonl",
+  "environment": {
+    "runner": "google_ai_studio_api",
+    "api_model": "gemma-4-26b-a4b-it",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it",
+    "python": "3.13.9",
+    "structured_output": "responseJsonSchema",
+    "temperature": 0,
+    "workers": 4,
+    "input_tokens_per_minute": 16000,
+    "thinking": "미제어 — 이 모델은 API에서 thinkingConfig를 받지 않는다",
+    "note": "고정 리비전·양자화·chat_template이 평가 서버와 같다는 보장이 없다"
+  },
+  "created_at": "2026-09-18T12:31:41.333929+00:00",
+  "note": "Google AI Studio가 호스팅한 같은 이름의 모델이다. 고정 리비전·양자화·chat_template·thinking 설정이 평가 서버와 같다는 보장이 없다. 서버 점수·R4 정상 호출의 대체가 아니다.",
+  "api_calls": 144,
+  "api_tokens": {
+    "prompt": 1155531,
+    "output": 79590
+  },
+  "input_tokens_per_minute": 16000
+}

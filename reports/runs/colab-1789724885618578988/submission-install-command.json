@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/t1-colab-ymub24mv/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/t1-colab-ymub24mv/submission/requirements.txt"
+  ],
+  "cwd": "/content/t1-colab-ymub24mv",
+  "started": 1789723338.2906072,
+  "returncode": 0,
+  "elapsed_seconds": 0.6070911884307861
+}

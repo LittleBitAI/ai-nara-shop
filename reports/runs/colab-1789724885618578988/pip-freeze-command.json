@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/t1-colab-ymub24mv/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/t1-colab-ymub24mv",
+  "started": 1789723338.8983319,
+  "returncode": 0,
+  "elapsed_seconds": 0.3718075752258301
+}
