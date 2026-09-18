@@ -37,7 +37,38 @@ class ReplayRunTests(unittest.TestCase):
             module = replay_run.load_module(ROOT / "script.py", "submission")
             self.assertIs(sys.modules.get("submission"), module)
         finally:
-            sys.modules["submission"] = saved
+            if saved is None:
+                sys.modules.pop("submission", None)
+            else:
+                sys.modules["submission"] = saved
+
+    def test_failed_load_keeps_the_previous_registration(self):
+        """--script 로 없는 경로를 받은 회차가 앞 회차의 제출 코드를 지우면 안 된다.
+
+        main() 은 이 OSError 를 삼키고 1 을 돌려주므로, 지워지면 뒤이은
+        sme_candidate.baseline() 이 조용히 워킹트리 script.py 로 되돌아간다.
+        """
+        saved = sys.modules.get("submission")
+        try:
+            good = replay_run.load_module(ROOT / "script.py", "submission")
+            with self.assertRaises(OSError):
+                replay_run.load_module(ROOT / "없는파일.py", "submission")
+            self.assertIs(sys.modules.get("submission"), good)
+        finally:
+            if saved is None:
+                sys.modules.pop("submission", None)
+            else:
+                sys.modules["submission"] = saved
+
+    def test_failed_first_load_leaves_no_registration(self):
+        saved = sys.modules.pop("submission", None)
+        try:
+            with self.assertRaises(OSError):
+                replay_run.load_module(ROOT / "없는파일.py", "submission")
+            self.assertNotIn("submission", sys.modules)
+        finally:
+            if saved is not None:
+                sys.modules["submission"] = saved
 
     def test_replay_reproduces_the_run_csv_byte_for_byte(self):
         """이 검사가 빨개지면 재생 결과를 근거로 쓸 수 없다."""
