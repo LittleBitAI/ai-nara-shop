@@ -41,6 +41,7 @@ ABSENCE_ITEMS = ("v10", "v11", "v16", "v18", "v20")
 BANDS = {
     "v14": (NOTICE_AMOUNT_WON, None),                # 고시금액 이상
     "v15": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),  # 1억 이상 - 고시금액 미만
+    "v17": (None, SME_BAND_FLOOR_WON),               # 1억 미만
     # v16·v18 은 후보가 소유한다. 여기 복제본을 두면 후보가 구간을 바꿔도
     # 이 진단은 옛 구간으로 계속 답한다.
     **AMOUNT_BANDS,
