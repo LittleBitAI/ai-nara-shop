@@ -1,0 +1,47 @@
+diff --git a/script.py b/script.py
+index 2a68dcf..23480b5 100644
+--- a/script.py
++++ b/script.py
+@@ -224,9 +224,10 @@ def decode_schema(data_dir: str = DATA_DIR) -> Dict[str, Any]:
+             s = json.load(f)
+         s = s["properties"]["판정"] if "판정" in s.get("properties", {}) else s
+         for v in ITEMS:
+-            evidence = s["properties"][v]["properties"]["근거문구"]
+-            if v not in ABSENCE:
+-                evidence["maxLength"] = EVIDENCE_MAX
++            props_v = s["properties"][v]["properties"]
++            # 제공 스키마는 부재탐지 항목의 근거문구를 null로 못 박는다. 제출 CSV는
++            # postprocess·validate_csv가 여전히 빈칸으로 만들므로 생성만 열어 준다.
++            props_v["근거문구"] = {"type": ["string", "null"], "maxLength": EVIDENCE_MAX}
+         return s
+     props = {}
+     for v in ITEMS:
+@@ -235,7 +236,7 @@ def decode_schema(data_dir: str = DATA_DIR) -> Dict[str, Any]:
+             "required": ["위반여부", "근거문구"],
+             "properties": {
+                 "위반여부": {"type": "integer", "enum": [0, 1]},
+-                "근거문구": {"type": "null"} if v in ABSENCE else {"type": ["string", "null"], "maxLength": EVIDENCE_MAX},
++                "근거문구": {"type": ["string", "null"], "maxLength": EVIDENCE_MAX},
+             },
+         }
+     return {"type": "object", "additionalProperties": False, "required": list(ITEMS), "properties": props}
+@@ -250,7 +251,9 @@ Rules:
+    Use 0 for non-applicable or insufficiently supported items. Do not infer a violation from a keyword alone.
+ 2. 근거문구 must be one exact, contiguous Korean quotation from a supplied notice document, preferably
+    under 100 characters (maximum 500). Never translate, repair, summarize or join separate quotations.
+-3. Absence-detection items concern a missing mandatory requirement. Their 근거문구 is always null.
++3. Absence-detection items concern a missing mandatory requirement. When you judge one as 위반여부=1,
++   quote the clause that shows the requirement is unmet, or the nearest 참가자격 clause you did observe;
++   use null only when no such clause exists in the supplied documents.
+    Also use null for every non-violation. Missing evidence text alone does not disprove an absence violation.
+ 4. Check 적용계약법, scope, amount thresholds and exceptions. null and 미입력 do not mean not applicable.
+ 5. Missing/truncated documents or 완전관측=false do not prove a requirement is absent.
+@@ -293,7 +296,7 @@ def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="", items=None)
+     lines = []
+     for v in ITEMS if items is None else items:
+         it = tbl[v]
+-        tag = "  [absence detection; evidence=null]" if it["부재탐지"] else ""
++        tag = "  [absence detection]" if it["부재탐지"] else ""
+         note = f" ({it['비고']})" if it.get("비고") else ""
+         lines.append(f"- {v}: {it['항목명']}{note}{tag}")
+     reference = ""
