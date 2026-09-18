@@ -7,6 +7,11 @@ Colab 왕복 없이 프롬프트·스키마 후보의 표본을 쌓는 용도다
   python -X utf8 tools/api_run.py --output-dir runs/api-001 --limit 10
   python -X utf8 tools/api_run.py --output-dir runs/api-dev --debug-responses
 
+`runs/`는 gitignore된 로컬 폴더다. 여기 쌓인 원응답은 **내 기계에만 있다** — Colab 회차가
+`reports/runs/<run-id>/`에 추적되는 것과 다르다. 팀이 이 corpus를 쓰려면 보관 규약
+(docs/runs.md)에 API 회차를 어떻게 넣을지 정해야 한다. `tools/register_run.py`는
+Colab 결과 ZIP 한 쌍을 받으므로 그대로는 안 맞는다.
+
 규칙 판단: 단계 = 개발·로컬 검증 / 활용 A3·A9 / 지킬 R6·R7·R9·R11·R15.
 - 부르는 모델은 R1 고정 모델과 같은 `gemma-4-26b-a4b-it`이지만 **같은 실행이 아니다.**
   Google 호스팅은 고정 리비전·int8 양자화·고정 chat_template을 보장하지 않고,
