@@ -30,6 +30,25 @@ def ids(count):
     return [f"PPS-DEV-{i:03d}" for i in range(1, count + 1)]
 
 
+DRIFT_SECTION = "## 무엇이 달랐나"
+
+
+def drift_table_rows(path):
+    """churn 표의 행만 (쌍, 코드, 셀, |Δ|)로 돌려준다. 절을 벗어난 표는 보지 않는다."""
+    rows, inside = [], False
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            inside = line.startswith(DRIFT_SECTION)
+            continue
+        if not (inside and line.startswith("|")):
+            continue
+        parts = [part.strip().strip("*") for part in line.strip().strip("|").split("|")]
+        if len(parts) != 4 or not parts[2].isdigit():
+            continue  # 머리글·구분선
+        rows.append((parts[0], parts[1], int(parts[2]), abs(float(parts[3]))))
+    return rows
+
+
 class CompareRunsTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -92,6 +111,19 @@ class CompareRunsTests(unittest.TestCase):
         inside = compare_runs.compare(SCORE, self.truth, before, same)
         self.assertTrue(inside["drift_reference"]["below_observed_max"])
         self.assertIn("TP/FP/FN", compare_runs.render(inside))
+
+    def test_drift_constants_match_the_table_that_owns_them(self):
+        """상수는 reproducibility.md의 churn 표에서 온다. 한쪽만 고치면 여기서 걸린다."""
+        rows = drift_table_rows(compare_runs.ROOT / "reports/runs/reproducibility.md")
+        self.assertEqual(len(rows), 13, "churn 표의 행 수가 달라졌다. 아래 기대값을 함께 고친다")
+        same = [(cells, delta) for _, code, cells, delta in rows if code == "같음"]
+        self.assertEqual(len(same), compare_runs.DRIFT_PAIRS, "코드가 같은 쌍 수와 DRIFT_PAIRS가 다르다")
+        self.assertEqual((min(c for c, _ in same), max(c for c, _ in same)), compare_runs.DRIFT_CELLS)
+        self.assertAlmostEqual(min(d for _, d in same), compare_runs.DRIFT_MIN, places=12)
+        self.assertAlmostEqual(max(d for _, d in same), compare_runs.DRIFT_MAX, places=12)
+        # 코드가 다른 쌍은 표에 남지만 상수에는 안 들어간다. 섞이면 하한이 내려간다.
+        other = [cells for _, code, cells, _ in rows if code != "같음"]
+        self.assertTrue(other and min(other) < compare_runs.DRIFT_CELLS[0])
 
     def test_rejects_mismatched_ids_and_unknown_items(self):
         before = write_csv(self.dir / "b3.csv", {i: {} for i in ids(10)})

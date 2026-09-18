@@ -67,6 +67,7 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `colab-1789650911655581500` | `36b6cc1` | 0.21825534501066987 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1789650911655581500/](../reports/runs/colab-1789650911655581500/) |
 | `colab-1789655036303880754` | `b113425` | 0.21821144133644133 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1789655036303880754/](../reports/runs/colab-1789655036303880754/) |
 | `colab-1789658250172468461` | `89a6a11` | 0.2208061355821381 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1789658250172468461/](../reports/runs/colab-1789658250172468461/) |
+| `colab-1789695980726180378` | `cc1e61d` | 0.22022398959670256 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1789695980726180378/](../reports/runs/colab-1789695980726180378/) |
 
 `미보관`은 그 실행의 ZIP을 이 규약으로 등록하기 전이라는 뜻입니다. 없었다는 뜻이 아닙니다.
 점수만 [history.json](../reports/team-score-audit/history.json)에 남아 있고 실행 환경·원응답 여부는
@@ -74,6 +75,13 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 
 `원응답 없음`은 `debug_responses=false`로 실행해 모델 응답 본문이 로그에 없다는 뜻입니다.
 `diagnostics.jsonl`에는 응답 길이·토큰 수·종료 사유만 있습니다.
+
+**노트북의 `quality_pass`는 이 표의 채택 근거가 아닙니다.** 판정 자체는 각 회차의
+`validation.json`에, 그 근거인 `macro_f1_delta`는 같은 폴더의 `quality-comparison.json`에
+있습니다. 통과 여부가 회차 간 churn만으로 뒤집힙니다 — `script.py`가 같은데
+`colab-…172468461`은 같은 기준선을 +0.00000477로 넘겨 `true`, `colab-…726180378`은
+−0.000577로 `false`를 받았습니다. 채택은 `tools/compare_runs.py`의 항목별 TP/FP/FN으로
+판단합니다.
 
 **이 표의 점수를 회차끼리 빼서 개선이라고 읽지 마십시오.** 프롬프트·스키마·모델·seed·입력
 토큰이 전부 같은 두 회차에서도 24항목 1차 판정이 4,800셀 중 25셀 달라져 Macro F1이 0.0025
