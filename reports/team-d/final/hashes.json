@@ -1,0 +1,25 @@
+{
+  "head": "c5055e4",
+  "paths": {
+    "candidate": "experiments/qualification_candidate.py",
+    "script": "script.py",
+    "dev_input": "open/dev.jsonl",
+    "dev_labels": "open/dev_labels.csv",
+    "test_sample": "open/data/test.jsonl.gz",
+    "case_submission": "reports/runs/colab-1789655036303880754/dev-debug/submission.csv",
+    "case_responses": "reports/runs/colab-1789655036303880754/dev-debug/diagnostics.jsonl",
+    "candidate_replay": "reports/team-d/final/replay/submission.csv",
+    "head_baseline_replay": "reports/team-d/final/head-c5055e4-replay/submission.csv"
+  },
+  "sha256": {
+    "candidate": "78d71b6cb4fad2fb9c20f7da3d38ff0da6ecd0b6bb0242d037e56a717c217822",
+    "script": "f7b430fac0721f6cdeadf27bdb3f3eefbfaf9a7be738f25527181ecf5b3c599b",
+    "dev_input": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+    "dev_labels": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
+    "test_sample": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+    "case_submission": "d1c4d8d954c51f3848c2bb48fa0231ce64ae120c417e27eaacc624f6886e032e",
+    "case_responses": "c7faa409c47eee02c0317103fba6e3e6012b49bd06aa149e9b2cb414766568f1",
+    "candidate_replay": "4e331643e46df41a8a9eceef1db6d9ae9656e77b691adcc8acdfc3a697692032",
+    "head_baseline_replay": "0818a23c496be50ab7de90d551848c10fa2bdb1c01d117ae294056d38b01496c"
+  }
+}

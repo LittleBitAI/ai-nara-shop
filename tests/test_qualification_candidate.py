@@ -148,12 +148,32 @@ class RegionExpansionCoverage(unittest.TestCase):
         text = "입찰참가자격 본점 소재지를 경기도 또는 서울특별시의 관할구역 안에 둔 업체"
         for meta in ({"적용계약법": "국가계약법", "업무구분": "일반용역", "입찰추정가격": None},
                      {"적용계약법": None, "업무구분": "일반용역", "입찰추정가격": 900_000_000},
-                     {"적용계약법": "지방계약법", "업무구분": "공사", "입찰추정가격": 900_000_000}):
+                     {"적용계약법": "지방계약법", "업무구분": "알 수 없음",
+                      "입찰추정가격": 900_000_000}):
             with self.subTest(str(meta)):
                 rec = notice(text)
                 rec["meta"].update(meta)
                 self.assertTrue(candidate.region_restriction_allowed(rec))
                 self.assertIsNotNone(candidate.detect_region_expansion(rec))
+
+    def test_construction_uses_its_own_limit_and_the_wide_branch(self):
+        """공사는 조문이 다른 금액을 둔다. 종합·전문을 메타로 못 가르므로 넓은 쪽을 쓴다.
+
+        이 선택의 결과가 10억~150억 구간의 전문공사를 못 막는 것이고, 그것을
+        고르는 이유는 좁은 쪽이 틀리면 종합공사의 정답 양성을 잃기 때문이다.
+        """
+        text = "입찰참가자격 본점 소재지를 경기도 또는 서울특별시의 관할구역 안에 둔 업체"
+        for law, limit in (("국가계약법", 8_800_000_000), ("지방계약법", 15_000_000_000)):
+            with self.subTest(law):
+                rec = notice(text)
+                rec["meta"].update({"적용계약법": law, "업무구분": "공사",
+                                    "입찰추정가격": limit})
+                self.assertIsNone(candidate.detect_region_expansion(rec))
+                rec["meta"]["입찰추정가격"] = limit - 1
+                self.assertIsNotNone(candidate.detect_region_expansion(rec))
+                # 문서로 남긴 결과: 전문공사 10억 기준은 이 게이트가 막지 못한다.
+                rec["meta"]["입찰추정가격"] = 5_000_000_000
+                self.assertTrue(candidate.region_restriction_allowed(rec))
 
 
 class InstitutionPerformanceCoverage(unittest.TestCase):
@@ -242,9 +262,54 @@ class ExcessPerformanceGuard(unittest.TestCase):
             with self.subTest(text):
                 self.assertEqual(expected, candidate.required_performance(notice(text)))
 
+    def test_composite_amounts_are_summed_not_split(self):
+        """`1억 5천만원`을 자리마다 따로 읽고 최댓값을 고르면 1억으로 33% 낮게 읽는다.
+
+        그 값이 1배 경계를 넘나들면 정답 양성을 내려 버린다. 이 표기는 dev 코퍼스에
+        이미 있다(PPS-DEV-063·PPS-DEV-076).
+        """
+        for text, expected in (("1억 5천만원 이상의 실적", 150_000_000),
+                               ("2억 3천만원 이상의 실적", 230_000_000),
+                               ("1억 5천만 원 이상 실적", 150_000_000),
+                               ("금169,521,600원 이상의 실적", 169_521_600),
+                               ("3억 이상의 실적", 300_000_000)):
+            with self.subTest(text):
+                self.assertEqual(expected, candidate.required_performance(notice(text)))
+
+    def test_bare_digit_runs_are_not_money(self):
+        """세부품명번호 10자리와 날짜를 금액으로 읽지 않는다."""
+        for text in ("세부품명번호 10자리 4321150102 로 등록한 업체의 실적",
+                     "2026. 3. 18. 까지 실적 제출"):
+            with self.subTest(text):
+                self.assertIsNone(candidate.required_performance(notice(text)))
+
+    def test_composite_amount_does_not_downgrade_a_true_positive(self):
+        """리뷰가 낸 시나리오. 1억 5천만을 1억으로 읽으면 v3 TP를 잃는다."""
+        rec = notice("입찰참가자격 최근 3년 이내 1억 5천만원 이상의 실적을 보유한 업체")
+        rec["meta"]["입찰추정가격"] = 120_000_000
+        self.assertEqual(150_000_000, candidate.required_performance(rec))
+        self.assertIsNone(candidate.performance_below_budget(rec))
+
     def test_scoring_table_amounts_are_not_used(self):
         rec = notice("제안서 평가 배점 유사 용역 수행실적 10억원 이상 5점")
         self.assertIsNone(candidate.required_performance(rec))
+
+
+class RecordedHashes(unittest.TestCase):
+    """보고서가 인용하는 해시가 실제 파일과 같은지.
+
+    PR #34 리뷰에서 후보 코드 해시가 어떤 커밋의 것도 아닌 값으로 남아 있었다.
+    손으로 적으면 코드를 한 번 더 고칠 때 조용히 낡고, 해시로 감사하는 사람에게는
+    증거 사슬 전체가 깨진 것으로 보인다. 이 검사가 그 낡음을 소리 나게 만든다.
+    빨개지면 `python -X utf8 tools/record_team_d_hashes.py`를 다시 돌린다.
+    """
+
+    def test_recorded_hashes_match_the_files(self):
+        spec = importlib.util.spec_from_file_location(
+            "record_team_d_hashes", ROOT / "tools" / "record_team_d_hashes.py")
+        recorder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(recorder)
+        self.assertEqual(0, recorder.main(["--check"]), "기록된 해시가 낡았다")
 
 
 class CounterExamples(unittest.TestCase):
@@ -262,6 +327,30 @@ class CounterExamples(unittest.TestCase):
         text = ("제안서 평가배점 - 지역업체 참여도 5점 - 유사 용역 수행 건수 10점 "
                 "※ 위 항목은 평가 배점이며 입찰참가자격을 제한하지 않는다")
         self.assertIsNone(candidate.detect(notice(text)))
+
+    def test_v8_does_not_fire_inside_a_scoring_table(self):
+        """리뷰가 낸 v8 오탐 시나리오. 지역업체 가점과 유사실적 배점이 한 표에 있다.
+
+        dev 음성 194건에는 창 안에 두 요건이 들어오는 공고가 없어 이 경로가 한 번도
+        실행되지 않았다. dev FP=0이 이 자리를 지켜 주지 않는다.
+        """
+        one_line = ("□ 제안서 평가 배점표 ○ 유사용역 수행실적(10점): 최근 3년간 3억원 이상 실적 만점 "
+                    "○ 지역업체 참여도(5점): 본점 소재지가 관내에 있는 업체 가점 "
+                    "※ 위 항목은 평가 배점이며 입찰참가자격을 제한하지 않는다")
+        many_lines = ("제안서 평가 배점표\n유사용역 수행실적(10점)\n최근 3년간 3억원 이상 실적 만점\n"
+                      "지역업체 참여도(5점): 본점 소재지가 관내에 있는 업체 가점")
+        for text in (one_line, many_lines):
+            with self.subTest(text[:20]):
+                self.assertIsNone(candidate.detect(notice(text)))
+
+    def test_a_submission_list_after_the_clause_does_not_kill_it(self):
+        """`PPS-DEV-048`이 죽었던 자리. 참가자격 뒤에 제출서류 목록이 붙는다.
+
+        앞뒤를 같은 글자 반경으로 재면 뒤에 오는 `제출서류`가 앞의 진짜 조항을 없앤다.
+        """
+        text = ("참가자격\n\n다. 공고일 기준 경북에 소재한 실적이 우수한 업체.\n\n"
+                "5. 심사(평가)기준 : 제안요청서 참조\n\n6. 제출서류\n\n❍ <서식1> 입찰참가신청서 1부")
+        self.assertIsNotNone(candidate.detect(notice(text)))
 
     def test_two_requirements_far_apart_do_not_fire(self):
         text = ("주된 영업소가 서울특별시 관내에 있는 업체" + "가" * (candidate.WINDOW + 200)
