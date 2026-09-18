@@ -196,6 +196,9 @@ dev 200건에 블라인드로 돌려 비교한다. 입력·출력·실행 절차
   재생 결과를 고정 CSV(`reports/team-b/b5-port-replay/submission.csv`)와 바이트 대조한다.
   HEAD 후단을 일부러 바꾸면 그 CSV를 새로 고정하고 이유를 PR에 적는다.
 - **비교 기준은 HEAD 재생 CSV다.** 후보 없이 `--verify` 없이 재생한 CSV를 `--before`로 쓴다.
+  만드는 명령(후보와 같은 HEAD에서 돌린다):
+  `python -X utf8 tools/replay_run.py --case <회차>/dev-debug --output-dir reports/<담당>/head-<커밋>-replay`.
+  전체 순서는 [업무 분배 §0](tasks/team-handoff.md#0-시작-전에-읽을-것--2026-09-17-저녁-갱신)의 명령 블록이다.
   보관 회차의 `submission.csv`를 `--before`로 쓰면 그 뒤에 병합된 후처리의 효과가 후보에 섞인다.
 - 실측: dev 200건 재생 **0.64초** + 채점 0.20초. 재생 점수가 회차 기록 0.218203523963과 일치했다.
   Colab 회차 12~16분이 0.84초가 된다.
