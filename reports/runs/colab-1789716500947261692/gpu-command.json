@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "nvidia-smi",
+    "--query-gpu=name,memory.total,driver_version",
+    "--format=csv,noheader"
+  ],
+  "cwd": "/content/t1-colab-m5onxz85",
+  "started": 1789714894.3658426,
+  "returncode": 0,
+  "elapsed_seconds": 0.021082401275634766
+}
