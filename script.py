@@ -52,19 +52,41 @@ EVID = [f"e{i}" for i in range(1, 25)]
 COLUMNS = ["id"] + ITEMS + EVID
 ABSENCE = ["v10", "v11", "v16", "v18", "v20"]          # 부재탐지 항목: 근거 문구 빈칸
 
-# ----- N1 실험: 부재탐지 두 항목만 별도 호출로 묻는다 -----
-# 가설은 하나다 — **한 번에 판정하는 항목 수**(24 → 2). 합동 프롬프트·스키마는 한 글자도
-# 안 바꾼다. 이 호출은 더하기만 하므로 대상 밖 22항목은 구조적으로 움직일 수 없다.
-# 회차 colab-1789719173182820657이 합동 안에서 근거문구를 푸는 길을 닫았다 —
-# 부재 5항목에 인용을 요구하자 손대지 않은 여덟 항목이 TP 열하나를 잃었다.
-SPLIT_ITEMS = ["v16", "v18"]
-# 금액 경계는 제공 조문에서 온다(experiments/sme_candidate.py와 같은 출처).
+# ----- 금액 경계: 제공 조문에서 온다 (experiments/sme_candidate.py와 같은 출처) -----
 # 고시금액: 재정경제부장관 고시 1.가 (물품 및 용역) — 국가계약법 시행령 제2조제3호.
 # 1억 경계: 국가 시행령 제21조①10호 가목/나목, 지방 시행령 제20조①12호.
 NOTICE_AMOUNT_WON = 230_000_000
 SME_BAND_FLOOR_WON = 100_000_000
+
+# ----- N1: 부재탐지 두 항목만 별도 호출로 묻는다 -----
+# 가설은 하나다 — **한 번에 판정하는 항목 수**(24 → 2). 합동 프롬프트·스키마는 한 글자도
+# 안 바꾼다. 이 호출은 더하기만 하므로 대상 밖 22항목은 구조적으로 움직일 수 없다.
+# 회차 colab-1789719173182820657이 합동 안에서 근거문구를 푸는 길을 닫았다 —
+# 부재 5항목에 인용을 요구하자 손대지 않은 여덟 항목이 TP 열하나를 잃었다.
+# 실측 colab-1789725593268014232: 회차 안 기준선 대비 +0.003788. v18만 벌었고(TP 0→2)
+# v16은 TP 0 그대로에 FP 13만 늘었다. 빈 리스트로 두면 이 단계 전체가 꺼진다.
+SPLIT_ITEMS = ["v16", "v18"]
 SPLIT_BANDS = {"v16": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),   # 1억 이상 ~ 고시금액 미만
                "v18": (None, SME_BAND_FLOOR_WON)}               # 1억 미만
+
+# ----- N2: 금액 구간 판정을 모델에게서 뺏어 코드로 옮긴다 -----
+# 가설은 하나다 — **조건 비교의 주체**(모델 → 코드). 합동 24항목 프롬프트와 스키마는
+# 한 글자도 안 바꾼다. 이 호출은 더하기만 하므로 대상 밖 21항목은 움직일 수 없다.
+#
+# 근거: colab-1789719173182820657의 진단에서 v15·v17은 dev 양성 6건 **전부**에 대해
+# 모델이 공고를 인용해 놓고 `condition_not_met`으로 0을 냈다. 관측 실패가 아니라
+# 조건 비교를 틀린 것이다. 그 조건은 금액 구간이고, 경계는 이미 조문으로 확정돼 있으며
+# `meta.입찰추정가격`에 숫자가 그대로 있다. 모델에게 맡길 필요가 없는 판단이었다.
+# **아직 회차를 안 돌렸다.** 실측이 생기기 전까지 빈 리스트로 꺼 둔다.
+BAND_ITEMS: List[str] = []
+BAND_RANGES = {"v14": (NOTICE_AMOUNT_WON, None),                   # 고시금액 이상
+               "v15": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),     # 1억 이상 ~ 고시금액 미만
+               "v17": (None, SME_BAND_FLOOR_WON)}                  # 1억원 미만
+# 항목명에서 금액 문구를 뺀 질문. 남는 것은 "기업 규모 제한이 걸렸나" 하나다.
+# v14와 v17이 같은 질문이 되는 것이 요점이다 — 둘을 가르는 것은 금액뿐이고 그 판정은 코드가 한다.
+BAND_QUESTION = {"v14": "일반물품 입찰의 참가자격을 중소기업으로 제한",
+                 "v15": "참가자격을 소기업·소상공인으로 제한",
+                 "v17": "일반물품 입찰의 참가자격을 중소기업으로 제한"}
 
 DOC_ORDER = ["공고문", "규격서", "과업지시서", "제안요청서", "예외공표서", "기타"]
 META_FIELDS = [
@@ -359,9 +381,9 @@ def estimated_price(rec: Dict[str, Any]) -> Optional[int]:
     return price if isinstance(price, (int, float)) and price > 0 else None
 
 
-def in_split_band(item: str, rec: Dict[str, Any]) -> bool:
+def in_band(item: str, rec: Dict[str, Any], ranges: Dict[str, Tuple]) -> bool:
     """그 항목의 조문 금액 구간 안인가. 금액을 못 읽으면 False — 모르는 것을 위반이라 하지 않는다."""
-    low, high = SPLIT_BANDS[item]
+    low, high = ranges[item]
     price = estimated_price(rec)
     if price is None:
         return False
@@ -373,7 +395,15 @@ def needs_split_call(rec: Dict[str, Any]) -> bool:
 
     dev 200건에서 155건(78%)이 통과하고, v16 양성 6건·v18 양성 7건이 **전부** 그 안에 있다.
     """
-    return any(in_split_band(item, rec) for item in SPLIT_ITEMS)
+    return any(in_band(item, rec, SPLIT_BANDS) for item in SPLIT_ITEMS)
+
+
+def band_item_table(tbl: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """금액 문구를 뺀 항목표 사본. 원본은 바꾸지 않는다."""
+    out = dict(tbl)
+    for item, name in BAND_QUESTION.items():
+        out[item] = dict(out[item], 항목명=name, 비고="")
+    return out
 
 
 def sme_product_lookup(rec, context, products):
@@ -520,7 +550,7 @@ class VLLMRunner:
         self.last_response_info = []  # A failed call must not reuse an earlier call's metadata.
         sp = self.sp if sampling_params is None else sampling_params
         if items is not None:
-            # v13 추가 호출만 facts 스키마를 쓴다. N1의 부재 분할 호출은 기본 두 칸 그대로다.
+            # v13 추가 호출만 facts 스키마를 쓴다. 나머지 추가 호출은 기본 두 칸 그대로다.
             sp = self.parameters_for_items(items, sme=items == SME_ITEMS)
         outs = self.llm.chat(batch, sampling_params=sp, use_tqdm=False,
                              chat_template_kwargs={"enable_thinking": False})
@@ -630,8 +660,9 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
         raise ValueError("선택 공고 인덱스 건수 불일치")
     if baseline_texts is not None:
         # 추가 호출이 실패하면 그 공고의 검증된 합동 판정을 그대로 남긴다(보호 결정).
-        # v13 단계와 N1 부재 분할 단계 둘 다 같은 성질의 추가 호출이다.
-        allowed = {"sme": SME_ITEMS, "split": SPLIT_ITEMS}
+        # v13 단계와 추가 호출 단계 전부 같은 성질이다.
+        allowed = {"sme": SME_ITEMS, "split": SPLIT_ITEMS,
+                   **{"band:" + v: [v] for v in BAND_ITEMS}}
         if phase not in allowed or allowed[phase] != items or len(baseline_texts) != len(batch):
             raise ValueError("기본 응답 보존은 동일 공고의 추가 호출 단계에만 허용한다")
         for text in baseline_texts:
@@ -1531,11 +1562,12 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
 
     # N1: 부재탐지 두 항목만 따로 묻는다. 합동 호출은 위에서 이미 끝났고 여기서 더하기만 한다.
     split_prompt = build_system_prompt(tbl, items=SPLIT_ITEMS)
-    split_selected = [i for i, rec in enumerate(recs) if needs_split_call(rec)]
+    split_selected = [i for i, rec in enumerate(recs) if needs_split_call(rec)] if SPLIT_ITEMS else []
     split_texts, split_chars = [None] * len(recs), [max_chars] * len(recs)
-    emit("phase_started", phase="split", items=SPLIT_ITEMS,
-         selected_count=len(split_selected), skipped_count=len(recs) - len(split_selected),
-         system_prompt_sha256=hashlib.sha256(split_prompt.encode("utf-8")).hexdigest())
+    if SPLIT_ITEMS:
+        emit("phase_started", phase="split", items=SPLIT_ITEMS,
+             selected_count=len(split_selected), skipped_count=len(recs) - len(split_selected),
+             system_prompt_sha256=hashlib.sha256(split_prompt.encode("utf-8")).hexdigest())
     t_split = time.time()
     for s in range(0, len(split_selected), chunk):
         indices = split_selected[s:s + chunk]
@@ -1553,11 +1585,40 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     split_seconds = time.time() - t_split
     inf_seconds += split_seconds
 
+    # N2: 금액 구간 세 항목을 구간별로 따로 묻는다. 한 공고는 정확히 한 구간에만 든다.
+    # 프롬프트에서 금액 문구를 뺐으므로 모델은 "제한이 걸렸나"만 답하고 구간은 코드가 정한다.
+    band_tbl = band_item_table(tbl) if BAND_ITEMS else tbl
+    band_texts = {item: [None] * len(recs) for item in BAND_ITEMS}
+    t_band = time.time()
+    for item in BAND_ITEMS:
+        band_prompt = build_system_prompt(band_tbl, items=[item])
+        picked = [i for i, rec in enumerate(recs) if in_band(item, rec, BAND_RANGES)]
+        emit("phase_started", phase="band:" + item, items=[item],
+             selected_count=len(picked), skipped_count=len(recs) - len(picked),
+             system_prompt_sha256=hashlib.sha256(band_prompt.encode("utf-8")).hexdigest())
+        for s in range(0, len(picked), chunk):
+            indices = picked[s:s + chunk]
+            batch = []
+            for i in indices:
+                messages, _, _ = fit_to_budget(recs[i], band_prompt, runner, max_chars, budget=budget)
+                batch.append(messages)
+            emit("chunk_started", phase="band:" + item, chunk_start=indices[0],
+                 count=len(batch), indices=indices)
+            responses = run_chunk(runner, batch, start=indices[0], ids=[recs[i]["id"] for i in indices],
+                                  emit=emit, debug_responses=debug_responses, items=[item],
+                                  phase="band:" + item, baseline_texts=[texts[i] for i in indices],
+                                  indices=indices)
+            for i, response in zip(indices, responses):
+                band_texts[item][i] = response
+    band_seconds = time.time() - t_band
+    inf_seconds += band_seconds
+
     # 파싱·후처리 → 행
     if len(texts) != len(recs) or len(sme_texts) != len(recs):
         raise ValueError("입력과 모델 응답 건수 불일치")
     rows, baseline_rows, ev_kept, ev_dropped, rejected_positives = [], [], 0, 0, 0
-    for rec, text, sme_text, split_text, mc in zip(recs, texts, sme_texts, split_texts, sme_chars):
+    for index, (rec, text, sme_text, split_text, mc) in enumerate(
+            zip(recs, texts, sme_texts, split_texts, sme_chars)):
         parsed, _ = parse_judgment(text)
         baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
         if split_text is not None:
@@ -1568,8 +1629,19 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
                 focused = None
             if focused is not None:
                 for item in SPLIT_ITEMS:
-                    hit = focused[item]["위반여부"] == 1 and in_split_band(item, rec)
+                    hit = focused[item]["위반여부"] == 1 and in_band(item, rec, SPLIT_BANDS)
                     parsed[item] = {"위반여부": 1 if hit else 0, "근거문구": None}
+        for item in BAND_ITEMS:
+            band_text = band_texts[item][index]
+            if band_text is None:
+                continue        # 구간 밖이거나 추가 호출이 실패했다 — 합동 판정을 그대로 둔다
+            try:
+                focused, _ = parse_judgment(band_text, expected_items=[item])
+            except ValueError:
+                continue
+            hit = focused[item]["위반여부"] == 1 and in_band(item, rec, BAND_RANGES)
+            parsed[item] = {"위반여부": 1 if hit else 0,
+                            "근거문구": focused[item]["근거문구"] if hit else None}
         if sme_text is not None:
             focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS, sme=True)
             verified, reasons = verify_sme(focused, rec, products, mc)
