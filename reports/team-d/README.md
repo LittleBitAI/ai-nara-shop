@@ -63,7 +63,8 @@ Macro F1 0.218204 → 0.341913 (+0.123710). 바뀐 셀 23 / 4800, 대상 밖 0.
 | [final/score-before/](final/score-before/) | 기준 회차 채점 |
 | [final/compare/](final/compare/) | `compare_runs` 대조 |
 | [final/contributions.json](final/contributions.json) | 규칙별 단독 기여 |
-| [review/firings-dev.md](review/firings-dev.md) | 사람 검토용 발화 사례 시트 |
+| [review/firings-dev.md](review/firings-dev.md) | 사람 검토 시트 — dev 200건 (라벨 있음) |
+| [review/firings-test-sample.md](review/firings-test-sample.md) | 사람 검토 시트 — test 샘플 10건 (라벨 없음) |
 
 ## 검사
 
@@ -73,9 +74,14 @@ Macro F1 0.218204 → 0.341913 (+0.123710). 바뀐 셀 23 / 4800, 대상 밖 0.
 
 ## 공통으로 확인되지 않은 것
 
-- **네 규칙 모두 공개 dev 200건을 보고 만들었다.** 저장소에 다른 라벨 세트가 없어
-  일반화를 수치로 검증할 방법이 없다. 사람 검토용 발화 사례는
-  [review/firings-dev.md](review/firings-dev.md)에 뽑아 두었다.
+- **네 규칙 모두 공개 dev 200건을 보고 만들었다.** 저장소에 다른 **라벨 세트**가 없어
+  일반화를 수치로 검증할 방법이 없다.
+  라벨 없는 공고는 `open/data/test.jsonl.gz`의 샘플 10건이 있고 git으로 추적된다.
+  dev 발화 19건이 전부 정답 양성이므로 **오탐을 찾을 로컬 재료는 그 10건뿐이다.**
+  사람 검토 시트를 둘 다 뽑아 두었다 —
+  [review/firings-dev.md](review/firings-dev.md) (발화 19건, 전부 정답 양성),
+  [review/firings-test-sample.md](review/firings-test-sample.md) (발화 1건, 읽은 결과 오탐 아님).
+  표본이 10건이라 이것으로 일반화를 말할 수 없다.
 - 정규식은 조문 표현과 dev 관측 표현을 주석으로 갈라 표시했다. 후자는 비공개 test에서
   다른 표기를 만날 수 있다.
 - 운영 코드 반영은 B의 판단이다. 새 의존성·프롬프트 변경·토큰 증가·추론 시간 영향이 없다.
