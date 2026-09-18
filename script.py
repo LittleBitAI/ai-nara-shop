@@ -88,6 +88,21 @@ BAND_QUESTION = {"v14": "일반물품 입찰의 참가자격을 중소기업으�
                  "v15": "참가자격을 소기업·소상공인으로 제한",
                  "v17": "일반물품 입찰의 참가자격을 중소기업으로 제한"}
 
+# ----- N3: 경쟁제품 카탈로그를 v10·v11·v12에도 준다 -----
+# 가설은 하나다 — **판정에 필요한 자료를 받았는가**.
+# v10·v11·v12·v13은 전부 중기간 경쟁제품·직접생산 항목인데, 제공 고시 카탈로그를
+# 프롬프트에 받는 것은 **v13 하나뿐이다**. 합동 24항목 호출은 카탈로그를 한 줄도 못 본다.
+#
+# 게이트는 걸지 않는다. 판로지원법 제7조①에 금액 조건이 없고, 경쟁제품 코드 일치를
+# 적용 게이트로 쓰면 dev의 v10 양성 7건 중 6건이 사라진다(양성 공고가 전부 일반용역이라
+# 물품 코드가 안 맞는다). 카탈로그는 판정 재료로 주고 게이트로 쓰지 않는다.
+#
+# 실측 colab-1789724885618578988: 회차 안 기준선 대비 +0.003788. v12만 벌었고(TP 0→1)
+# v10·v11은 TP 0 그대로에 FP 38만 늘었다. 전건 호출이라 서버에서 약 +1,618초다.
+# **N1(+1,025초)과 같이 켜면 한도의 96%를 쓴다.** 기본은 꺼 둔다 — 시간이 막는 것이지
+# 효과가 없는 것이 아니다. 켜려면 아래를 ["v10", "v11", "v12"]로 되돌린다.
+PRODUCT_ITEMS: List[str] = []
+
 DOC_ORDER = ["공고문", "규격서", "과업지시서", "제안요청서", "예외공표서", "기타"]
 META_FIELDS = [
     "적용계약법", "업무구분", "계약방법", "낙찰방법", "낙찰하한율",
@@ -661,7 +676,7 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
     if baseline_texts is not None:
         # 추가 호출이 실패하면 그 공고의 검증된 합동 판정을 그대로 남긴다(보호 결정).
         # v13 단계와 추가 호출 단계 전부 같은 성질이다.
-        allowed = {"sme": SME_ITEMS, "split": SPLIT_ITEMS,
+        allowed = {"sme": SME_ITEMS, "split": SPLIT_ITEMS, "product": PRODUCT_ITEMS,
                    **{"band:" + v: [v] for v in BAND_ITEMS}}
         if phase not in allowed or allowed[phase] != items or len(baseline_texts) != len(batch):
             raise ValueError("기본 응답 보존은 동일 공고의 추가 호출 단계에만 허용한다")
@@ -1613,12 +1628,39 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     band_seconds = time.time() - t_band
     inf_seconds += band_seconds
 
+    # N3: 경쟁제품·직생 세 항목을 카탈로그와 함께 따로 묻는다. 전건에 붙는다(게이트 없음).
+    product_prompt = build_system_prompt(tbl, items=PRODUCT_ITEMS)
+    product_texts = [None] * len(recs)
+    product_selected = list(range(len(recs))) if PRODUCT_ITEMS else []
+    if PRODUCT_ITEMS:
+        emit("phase_started", phase="product", items=PRODUCT_ITEMS,
+             selected_count=len(recs), skipped_count=0,
+             system_prompt_sha256=hashlib.sha256(product_prompt.encode("utf-8")).hexdigest())
+    t_product = time.time()
+    for s in range(0, len(product_selected), chunk):
+        indices = product_selected[s:s + chunk]
+        batch = []
+        for i in indices:
+            # products를 넘겨야 고시 카탈로그가 프롬프트에 붙는다. 이것이 이 실험의 변수다.
+            messages, _, _ = fit_to_budget(recs[i], product_prompt, runner, max_chars,
+                                           budget=budget, products=products)
+            batch.append(messages)
+        emit("chunk_started", phase="product", chunk_start=indices[0], count=len(batch), indices=indices)
+        responses = run_chunk(runner, batch, start=indices[0], ids=[recs[i]["id"] for i in indices],
+                              emit=emit, debug_responses=debug_responses, items=PRODUCT_ITEMS,
+                              phase="product", baseline_texts=[texts[i] for i in indices],
+                              indices=indices)
+        for i, response in zip(indices, responses):
+            product_texts[i] = response
+    product_seconds = time.time() - t_product
+    inf_seconds += product_seconds
+
     # 파싱·후처리 → 행
     if len(texts) != len(recs) or len(sme_texts) != len(recs):
         raise ValueError("입력과 모델 응답 건수 불일치")
     rows, baseline_rows, ev_kept, ev_dropped, rejected_positives = [], [], 0, 0, 0
-    for index, (rec, text, sme_text, split_text, mc) in enumerate(
-            zip(recs, texts, sme_texts, split_texts, sme_chars)):
+    for index, (rec, text, sme_text, split_text, product_text, mc) in enumerate(
+            zip(recs, texts, sme_texts, split_texts, product_texts, sme_chars)):
         parsed, _ = parse_judgment(text)
         baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
         if split_text is not None:
@@ -1642,6 +1684,15 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             hit = focused[item]["위반여부"] == 1 and in_band(item, rec, BAND_RANGES)
             parsed[item] = {"위반여부": 1 if hit else 0,
                             "근거문구": focused[item]["근거문구"] if hit else None}
+        if product_text is not None:
+            # 호출이 실패하면 그 공고의 합동 판정을 그대로 쓴다.
+            try:
+                focused, _ = parse_judgment(product_text, expected_items=PRODUCT_ITEMS)
+            except ValueError:
+                focused = None
+            if focused is not None:
+                for item in PRODUCT_ITEMS:
+                    parsed[item] = dict(focused[item])
         if sme_text is not None:
             focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS, sme=True)
             verified, reasons = verify_sme(focused, rec, products, mc)

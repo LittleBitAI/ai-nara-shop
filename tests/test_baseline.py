@@ -53,21 +53,22 @@ class BaselineTests(unittest.TestCase):
                 out = Path(tmp) / "submission.csv"
                 report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Selective,
                                       limit=4, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
-                # 합동 1회 → v13 추가 호출(선택된 공고가 있을 때만) → 켜져 있는 추가 호출.
+                # 합동 1회 → v13 추가 호출(선택 공고가 있을 때만) → 켜져 있는 추가 호출.
+                # 순서는 run()이 부르는 순서 그대로다: split → band(항목별) → product.
                 # 시험 입력 4건은 전부 고시금액 미만이라 분할 호출이 4건 모두에 붙는다.
                 expected = [(None, 4)] + [(["v13"], 2)] * bool(positives)
                 if baseline.SPLIT_ITEMS:
                     expected.append((baseline.SPLIT_ITEMS, 4))
-                self.assertEqual(calls[:len(expected)], expected)
-                # 남은 호출은 전부 금액 구간 호출이다. 빈 구간은 호출되지 않으므로 순서만
-                # 유지되고, 한 공고는 정확히 한 구간에 들어가 합계가 입력 건수다.
-                rest = calls[len(expected):]
-                self.assertTrue(all(len(c[0]) == 1 and c[0][0] in baseline.BAND_ITEMS
-                                    for c in rest), rest)
-                bands = [c[0][0] for c in rest]
-                self.assertEqual(bands, sorted(bands, key=baseline.BAND_ITEMS.index))
+                bands = [(c, n) for c, n in calls if len(c or []) == 1 and c[0] in baseline.BAND_ITEMS]
+                expected += bands
+                if baseline.PRODUCT_ITEMS:
+                    expected.append((baseline.PRODUCT_ITEMS, 4))
+                self.assertEqual(calls, expected)
+                # 한 공고는 정확히 한 구간에만 들어가므로 구간별 건수의 합이 입력 건수다.
                 if baseline.BAND_ITEMS:
-                    self.assertEqual(sum(c[1] for c in rest), 4)
+                    self.assertEqual([c[0] for c, _ in bands],
+                                     sorted((c[0] for c, _ in bands), key=baseline.BAND_ITEMS.index))
+                    self.assertEqual(sum(n for _, n in bands), 4)
                 self.assertEqual(report["sme_selected_count"], len(positives))
                 self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
                 self.assertEqual(report["sme_fallback_count"], 0)
@@ -75,11 +76,16 @@ class BaselineTests(unittest.TestCase):
                     final = list(csv.DictReader(stream))
                 with out.with_name("baseline_submission.csv").open(encoding="utf-8") as stream:
                     original = list(csv.DictReader(stream))
+                # 추가 호출이 건드릴 수 있는 칸은 v13과 N3 경쟁제품 3항목뿐이다.
+                # 그 밖이 하나라도 움직이면 colab-1789719173182820657의 실패가 되풀이된 것이다.
+                touched = {"v13", "e13"} | {c for v in baseline.PRODUCT_ITEMS
+                                            for c in (v, "e" + v[1:])}
                 for i, (before, after) in enumerate(zip(original, final)):
                     self.assertEqual(after["v13"], "0")
                     for col in baseline.COLUMNS:
-                        if col not in ("v13", "e13") or i not in positives:
-                            self.assertEqual(before[col], after[col])
+                        if col in touched:
+                            continue
+                        self.assertEqual(before[col], after[col])
                 events = [json.loads(line) for line in out.with_name("diagnostics.jsonl").read_text(
                     encoding="utf-8").splitlines()]
                 responses = [e for e in events if e["event"] == "response" and e["phase"] == "sme"]
@@ -184,11 +190,14 @@ class BaselineTests(unittest.TestCase):
             report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Isolated,
                                   limit=2, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
             self.assertEqual(len(instances), 1)
-            head = [None, ["v13"]] + ([baseline.SPLIT_ITEMS] if baseline.SPLIT_ITEMS else [])
-            self.assertEqual(calls[:len(head)], head)
-            # 나머지는 금액 구간 호출뿐이다. 그 밖의 항목 목록이 오면 실패한다.
-            self.assertTrue(all(c is not None and len(c) == 1 and c[0] in baseline.BAND_ITEMS
-                                for c in calls[len(head):]), calls)
+            expected = [None, ["v13"]]
+            if baseline.SPLIT_ITEMS:
+                expected.append(baseline.SPLIT_ITEMS)
+            expected += [c for c in calls if c is not None and len(c) == 1 and c[0] in baseline.BAND_ITEMS]
+            if baseline.PRODUCT_ITEMS:
+                expected.append(baseline.PRODUCT_ITEMS)
+            # 켜진 추가 호출 말고 다른 항목 목록이 오면 실패한다.
+            self.assertEqual(calls, expected)
             with out.open(encoding="utf-8") as f:
                 final = list(csv.DictReader(f))
             with out.with_name("baseline_submission.csv").open(encoding="utf-8") as f:
