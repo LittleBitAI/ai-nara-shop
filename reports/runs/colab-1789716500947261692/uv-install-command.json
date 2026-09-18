@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "pip",
+    "install",
+    "uv"
+  ],
+  "cwd": "/content/t1-colab-m5onxz85",
+  "started": 1789714894.3954625,
+  "returncode": 0,
+  "elapsed_seconds": 4.250644683837891
+}
