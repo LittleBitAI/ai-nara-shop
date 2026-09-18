@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 import json
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 
@@ -200,6 +202,35 @@ class SubmissionContract(unittest.TestCase):
             self.script.write_csv([row], path)
             errs = self.script.validate_csv(path, [rec["id"]])
             self.assertTrue(any("부재탐지" in e for e in errs), errs)
+
+
+class ScriptBinding(unittest.TestCase):
+    """후보가 replay_run 이 읽은 제출 코드를 집는지 본다.
+
+    갈라지면 파싱은 `--script` 로 넘긴 코드로, postprocess 는 워킹트리 코드로 돌고
+    manifest 에는 아무 흔적이 남지 않는다. 틀린 측정이 후보 탓이 된다.
+    """
+
+    def setUp(self):
+        self.saved_script = candidate._SCRIPT
+        self.saved_submission = sys.modules.get("submission")
+        candidate._SCRIPT = None
+
+    def tearDown(self):
+        candidate._SCRIPT = self.saved_script
+        if self.saved_submission is None:
+            sys.modules.pop("submission", None)
+        else:
+            sys.modules["submission"] = self.saved_submission
+
+    def test_prefers_the_module_replay_run_registered(self):
+        stub = types.ModuleType("submission")
+        sys.modules["submission"] = stub
+        self.assertIs(candidate.baseline(), stub, "저장소 루트의 script.py 를 따로 읽었다")
+
+    def test_falls_back_to_repo_root_when_imported_alone(self):
+        sys.modules.pop("submission", None)
+        self.assertTrue(hasattr(candidate.baseline(), "ITEMS"))
 
 
 if __name__ == "__main__":
