@@ -23,10 +23,16 @@ items.jsonl 에서 쓰는 칸은 `판정` 하나다. `막힌_단계` 는 쓰지 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 DEV = REPO / "open/dev.jsonl"
+
+# 금액 읽기와 구간 판정은 **후보에서 가져온다.** 복제본을 두면 둘이 갈라지고,
+# 이 스크립트가 낸 숫자가 실제로 나갈 게이트의 숫자가 아니게 된다.
+sys.path.insert(0, str(REPO))
+from experiments.sme_candidate import estimated_price, in_band  # noqa: E402
 OUT = Path(__file__).resolve().parent / "gate-result.json"
 
 # (이름, run-id). 판정을 묻는 방식이 다른 두 회차다. 없는 회차는 건너뛰고 그 사실을 적는다 —
@@ -65,19 +71,28 @@ def load_jsonl(path: Path) -> list[dict]:
         return [json.loads(line) for line in handle if line.strip()]
 
 
-def to_amount(raw: object) -> int | None:
-    """meta.입찰추정가격 을 정수 원 단위로 읽는다. 읽히지 않으면 None."""
-    if raw is None:
-        return None
-    if isinstance(raw, (int, float)):
-        return int(raw)
-    text = str(raw).strip().replace(",", "")
-    if not text:
-        return None
-    try:
-        return int(float(text))
-    except ValueError:
-        return None
+def inside(low: int | None, high: int | None, amount: int | None) -> bool:
+    """후보 구간 안인가. 금액을 못 읽으면 거르지 않는다 — 결손은 음성 근거가 아니다.
+
+    구간을 인자로 받는 이유는 이 스크립트가 **채택 전 후보 여럿을 견주기** 때문이다.
+    실제로 나갈 구간은 후보의 `in_band` 가 소유하며, 둘이 어긋나지 않는 것을
+    `check_matches_candidate()` 가 200건 전부에서 확인한다.
+    """
+    return amount is None or (
+        (low is None or amount >= low) and (high is None or amount < high))
+
+
+def check_matches_candidate(amounts: dict) -> None:
+    """조문 구간에 한해 이 스크립트와 후보가 같은 답을 내는지 확인한다."""
+    shipped = {"v16 · 상한 2.3억(조문)": "v16", "v18 · 1억 미만": "v18"}
+    for name, item, low, high in GATES:
+        if name not in shipped:
+            continue
+        for identifier, amount in amounts.items():
+            if inside(low, high, amount) != in_band(item, amount):
+                raise SystemExit(
+                    f"{name}: 재현 스크립트와 후보의 구간이 어긋난다 "
+                    f"({identifier}, 금액 {amount}). 후보의 AMOUNT_BANDS 를 확인하라")
 
 
 def score(pairs: list[tuple[int, int]]) -> dict:
@@ -113,10 +128,7 @@ def measure(rows: list[dict], amounts: dict, run_id: str) -> dict:
             pred = 1 if judged.get("판정") == 1 else 0
             truth = 1 if (row.get("truth") or {}).get(item) == 1 else 0
             amount = amounts.get(row["id"])
-            # 금액을 못 읽으면 거르지 않는다. 결손을 음성 근거로 쓰지 않는다.
-            inside = amount is None or (
-                (low is None or amount >= low) and (high is None or amount < high))
-            gated = pred if (pred == 0 or inside) else 0
+            gated = pred if (pred == 0 or inside(low, high, amount)) else 0
             base_pairs.append((pred, truth))
             gated_pairs.append((gated, truth))
             if pred == 1 and gated == 0:
@@ -148,10 +160,9 @@ def measure(rows: list[dict], amounts: dict, run_id: str) -> dict:
 
 
 def main() -> None:
-    amounts = {
-        row["id"]: to_amount((row.get("meta") or {}).get("입찰추정가격"))
-        for row in load_jsonl(DEV)
-    }
+    # 후보와 같은 읽기를 쓴다. 복제본을 두면 `true` 같은 값에서 둘이 갈라진다.
+    amounts = {row["id"]: estimated_price(row) for row in load_jsonl(DEV)}
+    check_matches_candidate(amounts)
 
     measured, skipped = [], []
     for label, run_id in RUNS:
