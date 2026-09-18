@@ -185,8 +185,14 @@ class APIRunner:
                 self._adopt_limit(detail)
                 if error.code not in RETRY_CODES or attempt == attempts:
                     raise ValueError(f"HTTP {error.code}: {detail[:300]}") from None
+                # `[\d.]+`는 `1.2.3` 같은 조각도 잡는다. float()가 거기서 터지면 그
+                # ValueError는 이 except 밖이라 회차를 그대로 끝낸다. 못 읽으면
+                # 힌트가 없는 것으로 보고 지수 백오프로 돌아간다.
                 hint = RETRY_HINT.search(detail)
-                wait = float(hint.group(1)) + 1 if hint else None
+                try:
+                    wait = float(hint.group(1)) + 1 if hint else None
+                except ValueError:
+                    wait = None
             except (urllib.error.URLError, TimeoutError, OSError) as error:
                 if attempt == attempts:
                     raise ValueError(f"{type(error).__name__}: {error}") from None

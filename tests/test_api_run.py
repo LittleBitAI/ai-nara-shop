@@ -105,20 +105,50 @@ class ApiRunTest(unittest.TestCase):
         self.assertAlmostEqual(calls[1], 361.0, places=1)
 
     def test_backoff_without_a_hint_still_has_a_ceiling(self):
-        """힌트가 없을 때의 지수 백오프에는 상한이 남아 있어야 한다."""
+        """힌트가 없을 때의 지수 백오프에는 상한이 남아 있어야 한다.
+
+        기본 `RETRIES = 4`로는 백오프가 2·4·8초까지만 가서 90초 상한에 **닿지 않는다** —
+        그 설정으로 쓴 검사는 상한을 지워도 통과하는 가짜 초록이다. 상한이 무는
+        지점(2**7 = 128 > 90)까지 가도록 재시도 횟수를 올려 실제로 건다.
+        """
         url = "https://example.invalid/v1beta/models/x:countTokens"
         waits = []
 
         def fake_urlopen(request, timeout=None):
             raise TimeoutError("timed out")
 
-        runner = Stub.__new__(Stub)
+        class Deep(Stub):
+            RETRIES = 8
+
+        runner = Deep.__new__(Deep)
         with mock.patch.object(api_run.urllib.request, "urlopen", fake_urlopen), \
                 mock.patch.object(api_run.time, "sleep", waits.append):
             with self.assertRaises(ValueError):
                 api_run.APIRunner._post(runner, url, {})
-        self.assertTrue(waits, "재시도를 한 번도 안 했다")
+        self.assertEqual(len(waits), 7, waits)
+        self.assertGreater(max(w for w in waits), 60.0, "상한이 무는 구간까지 안 갔다")
         self.assertTrue(all(w <= 90.0 for w in waits), waits)
+
+    def test_a_malformed_retry_hint_falls_back_instead_of_crashing(self):
+        """`[\\d.]+`는 `1.2.3` 같은 조각도 잡는다. float()가 거기서 터지면
+        그 ValueError는 `except` 밖이라 회차를 그대로 끝낸다. 힌트를 못 읽으면
+        힌트가 없는 것으로 보고 지수 백오프로 돌아가야 한다."""
+        url = "https://example.invalid/v1beta/models/x:countTokens"
+        body = b'{"error": {"code": 429, "message": "Please retry in 1.2.3s."}}'
+        answers = [urllib.error.HTTPError(url, 429, "err", {}, io.BytesIO(body)),
+                   io.BytesIO(b'{"totalTokens": 9}')]
+
+        def fake_urlopen(request, timeout=None):
+            got = answers.pop(0)
+            if isinstance(got, Exception):
+                raise got
+            return got
+
+        runner = Stub.__new__(Stub)
+        with mock.patch.object(api_run.urllib.request, "urlopen", fake_urlopen), \
+                mock.patch.object(api_run.time, "sleep") as slept:
+            self.assertEqual(api_run.APIRunner._post(runner, url, {}), {"totalTokens": 9})
+        self.assertLessEqual(slept.call_args[0][0], 90.0)
 
     def test_the_real_limit_is_read_from_the_quota_body(self):
         """Gemma는 공식 요금제 표에 행이 없다. 429가 알려 주는 값이 유일한 사실이다."""
