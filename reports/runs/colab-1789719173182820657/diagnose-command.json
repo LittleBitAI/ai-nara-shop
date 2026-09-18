@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "/content/t1-colab-mtu0_9cs/venv/bin/python",
+    "-X",
+    "utf8",
+    "/content/t1-colab-mtu0_9cs/tools/diagnose_items.py",
+    "--items",
+    "v14,v15,v17",
+    "--ids",
+    "",
+    "--input",
+    "/content/t1-colab-mtu0_9cs/open/dev.jsonl",
+    "--data-dir",
+    "/content/t1-colab-mtu0_9cs/open/data",
+    "--labels",
+    "/content/t1-colab-mtu0_9cs/open/dev_labels.csv",
+    "--model-dir",
+    "/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "--script",
+    "/content/t1-colab-mtu0_9cs/submission/script.py",
+    "--output-dir",
+    "/content/t1-colab-mtu0_9cs/results/diagnose"
+  ],
+  "cwd": "/content/t1-colab-mtu0_9cs",
+  "started": 1789718819.8834774,
+  "returncode": 0,
+  "elapsed_seconds": 353.29270100593567
+}

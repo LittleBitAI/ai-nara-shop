@@ -1,0 +1,129 @@
+{
+  "run_id": "colab-1789719173182820657",
+  "archive": "colab-results-1789719173182820657.zip",
+  "zip_sha256": {
+    "results": "29afd226d6be1aa9c4528b5e5c69649bbebca617a690c5383e34b3f176e9294f",
+    "submit": "b0e22de33fbe9d36c89a5ecdc5dc68b59de77d326e552910982fcfa24baae7fb"
+  },
+  "registered_at": "2026-09-18T08:15:25.733309+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "exp/round1-absence-evidence",
+    "commit": "99ebbf1188f72aca42af62b6a92b46625f8b7f5d",
+    "given_commit": "99ebbf1188f72aca42af62b6a92b46625f8b7f5d"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "dev-debug": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 174.0,
+        "baseline_inference": 355.5,
+        "extra_inference": 90.0,
+        "inference_total": 445.6,
+        "run_total": 623.037,
+        "wall_clock": 626.9815194606781
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 88,
+        "extra_selected": 88,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 27,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 159,
+        "evidence_dropped_not_verbatim": 65,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "dev": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 212.5,
+        "baseline_inference": 352.7,
+        "extra_inference": 93.2,
+        "inference_total": 446.0,
+        "run_total": 662.103,
+        "wall_clock": 666.8925545215607
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 91,
+        "extra_selected": 91,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 29,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 152,
+        "evidence_dropped_not_verbatim": 73,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.3334641077017238
+    },
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 463.5,
+        "baseline_inference": 34.2,
+        "extra_inference": 7.7,
+        "inference_total": 41.9,
+        "run_total": 505.664,
+        "wall_clock": 510.48756551742554
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 4,
+        "extra_selected": 4,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 8,
+        "evidence_dropped_not_verbatim": 7,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.3334641077017238,
+    "baseline_macro_f1_same_run": 0.3308151959033275,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": true,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1789719173182820657.zip",
+    "submit": "artifacts/inbox/submit.zip"
+  }
+}
