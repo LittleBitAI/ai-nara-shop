@@ -1,4 +1,4 @@
-"""v8 중복제한 후보 검사. 모델을 부르지 않는다. live 성능 검사가 아니다."""
+"""참가자격 제한 3항목(v8·v7·v4) 후보 검사. 모델을 부르지 않는다. live 성능 검사가 아니다."""
 
 import csv
 import importlib.util
@@ -15,9 +15,13 @@ spec.loader.exec_module(candidate)
 DEV = ROOT / "open" / "dev.jsonl"
 LABELS = ROOT / "open" / "dev_labels.csv"
 
-# 실제 dev 정답의 v8 양성 전수. 여기서 하나라도 빠지면 후보가 후퇴한 것이다.
+# 실제 dev 정답의 항목별 양성 전수. 여기서 하나라도 빠지면 후보가 후퇴한 것이다.
 POSITIVES = ["PPS-DEV-05", "PPS-DEV-11", "PPS-DEV-042",
              "PPS-DEV-048", "PPS-DEV-054", "PPS-DEV-071"]
+V7_POSITIVES = ["PPS-DEV-09", "PPS-DEV-10", "PPS-DEV-039",
+                "PPS-DEV-050", "PPS-DEV-054", "PPS-DEV-063", "PPS-DEV-072"]
+V4_POSITIVES = ["PPS-DEV-06", "PPS-DEV-042", "PPS-DEV-051",
+                "PPS-DEV-053", "PPS-DEV-059", "PPS-DEV-062"]
 
 
 def load_dev():
@@ -25,9 +29,9 @@ def load_dev():
             for line in DEV.read_text(encoding="utf-8").splitlines() if line.strip()}
 
 
-def load_truth():
+def load_truth(item="v8"):
     with LABELS.open(encoding="utf-8", newline="") as stream:
-        return {row["id"]: row["v8"] == "1" for row in csv.DictReader(stream)}
+        return {row["id"]: row[item] == "1" for row in csv.DictReader(stream)}
 
 
 def notice(text):
@@ -81,6 +85,69 @@ class DevCoverage(unittest.TestCase):
         self.assertEqual(["PPS-DEV-11", "PPS-DEV-048", "PPS-DEV-071"], flagged_n)
 
 
+class RegionExpansionCoverage(unittest.TestCase):
+    """v7 지역제한 인접 확대. dev 200건 전수."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.recs = load_dev()
+        cls.truth = load_truth("v7")
+
+    def test_dev_positive_ids_match_the_label_file(self):
+        self.assertEqual(sorted(V7_POSITIVES),
+                         sorted(i for i, gold in self.truth.items() if gold))
+
+    def test_every_positive_names_two_distinct_wide_regions(self):
+        for rec_id in V7_POSITIVES:
+            with self.subTest(rec_id):
+                hit = candidate.detect_region_expansion(self.recs[rec_id])
+                self.assertIsNotNone(hit, "양성인데 검출되지 않았다")
+                first, second = hit["regions"]
+                self.assertNotEqual(first, second, "같은 지역을 두 번 센다")
+
+    def test_no_false_positive_on_the_negatives(self):
+        fired = [i for i, rec in self.recs.items()
+                 if not self.truth[i] and candidate.detect_region_expansion(rec)]
+        self.assertEqual([], fired, f"음성에서 발화했다: {fired}")
+
+    def test_evidence_is_a_contiguous_quotation(self):
+        for rec_id in V7_POSITIVES:
+            with self.subTest(rec_id):
+                rec = self.recs[rec_id]
+                quote = candidate.detect_region_expansion(rec)["근거문구"]
+                self.assertLessEqual(len(quote), candidate.QUOTE_MAX)
+                self.assertTrue(any(quote in doc["text"] for doc in rec["docs"]))
+
+
+class InstitutionPerformanceCoverage(unittest.TestCase):
+    """v4 특정기관·특정실적. dev 200건 전수."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.recs = load_dev()
+        cls.truth = load_truth("v4")
+
+    def test_dev_positive_ids_match_the_label_file(self):
+        self.assertEqual(sorted(V4_POSITIVES),
+                         sorted(i for i, gold in self.truth.items() if gold))
+
+    def test_every_positive_is_detected(self):
+        for rec_id in V4_POSITIVES:
+            with self.subTest(rec_id):
+                self.assertIsNotNone(candidate.detect_institution_performance(self.recs[rec_id]))
+
+    def test_no_false_positive_on_the_negatives(self):
+        fired = [i for i, rec in self.recs.items()
+                 if not self.truth[i] and candidate.detect_institution_performance(rec)]
+        self.assertEqual([], fired, f"음성에서 발화했다: {fired}")
+
+    def test_amount_is_not_used_as_a_gate(self):
+        """금액 기준을 걸면 안 된다는 것을 데이터로 고정한다."""
+        prices = sorted(self.recs[i]["meta"]["입찰추정가격"] for i in V4_POSITIVES)
+        self.assertLess(prices[0], 220_000_000, "양성 최저가가 고시금액 근처보다 낮다")
+        self.assertGreater(prices[-1], 220_000_000, "양성 최고가가 고시금액 근처보다 높다")
+
+
 class CounterExamples(unittest.TestCase):
     """실적만·지역만·가점만 있는 공고는 중복제한이 아니다."""
 
@@ -102,6 +169,29 @@ class CounterExamples(unittest.TestCase):
                 + "최근 3년 이내 1억원 이상의 실적을 보유한 업체")
         self.assertIsNone(candidate.detect(notice(text)))
 
+    def test_single_region_restriction_is_not_an_expansion(self):
+        text = "입찰참가자격 주된 영업소의 소재지를 경상남도 내에 둔 사업자로 제한한다"
+        self.assertIsNone(candidate.detect_region_expansion(notice(text)))
+
+    def test_same_region_named_twice_is_not_an_expansion(self):
+        text = ("입찰참가자격 본점 소재지가 경기도에 있고 경기도 내 시설을 보유한 업체")
+        self.assertIsNone(candidate.detect_region_expansion(notice(text)))
+
+    def test_performance_open_to_private_clients_is_not_v4(self):
+        text = ("입찰참가자격 최근 5년간 국가, 지방자치단체, 공공기관, 민간에서 시행한 "
+                "행사 실적이 1억원 이상 있는 업체이어야 합니다")
+        self.assertIsNone(candidate.detect_institution_performance(notice(text)))
+
+    def test_institution_performance_in_a_scoring_table_is_not_v4(self):
+        text = ("제안서 평가 배점 - 유사사업 수행실적(5점) 최근 5년간 국가·지자체 및 "
+                "공공기관에서 발주한 용역 참여 실적 1건당 1점 배점")
+        self.assertIsNone(candidate.detect_institution_performance(notice(text)))
+
+    def test_institution_performance_in_a_submission_form_is_not_v4(self):
+        text = ("【서식 11】 연구용역 수행실적 ※ 범위 : 최근 5년간 국가, 지방자치단체, "
+                "공공기관 등에서 발주한 유사용역 수행실적으로 3천만원 이상 단일계약건")
+        self.assertIsNone(candidate.detect_institution_performance(notice(text)))
+
     def test_requirements_in_different_documents_do_not_fire(self):
         rec = {"id": "sample", "meta": {},
                "docs": [{"doc_id": "a", "type": "공고문",
@@ -112,14 +202,23 @@ class CounterExamples(unittest.TestCase):
 
 
 class ApplyContract(unittest.TestCase):
-    def test_only_v8_changes(self):
-        rec = load_dev()["PPS-DEV-11"]
-        before = empty_judgment()
-        after = candidate.apply(before, rec)
-        self.assertEqual(1, after["v8"]["위반여부"])
-        for item in after:
-            if item != "v8":
-                self.assertEqual(before[item], after[item])
+    def test_only_the_three_owned_items_can_change(self):
+        recs = load_dev()
+        for rec_id in set(POSITIVES + V7_POSITIVES + V4_POSITIVES):
+            with self.subTest(rec_id):
+                before = empty_judgment()
+                after = candidate.apply(before, recs[rec_id])
+                for item in after:
+                    if item not in candidate.ITEMS:
+                        self.assertEqual(before[item], after[item],
+                                         f"{item}이 담당 밖인데 바뀌었다")
+
+    def test_each_rule_marks_its_own_item(self):
+        recs = load_dev()
+        for item, rec_id in (("v8", "PPS-DEV-11"), ("v7", "PPS-DEV-09"), ("v4", "PPS-DEV-06")):
+            with self.subTest(item):
+                after = candidate.apply(empty_judgment(), recs[rec_id])
+                self.assertEqual(1, after[item]["위반여부"])
 
     def test_model_positive_is_kept_untouched(self):
         rec = load_dev()["PPS-DEV-11"]
