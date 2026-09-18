@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-ymub24mv/repo",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "exp/n3-competitive-product"
+  ],
+  "cwd": "/content/t1-colab-ymub24mv",
+  "started": 1789723034.3734913,
+  "returncode": 0,
+  "elapsed_seconds": 1.1432442665100098
+}
