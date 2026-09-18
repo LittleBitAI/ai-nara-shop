@@ -66,12 +66,23 @@ QUOTE_MAX = 480
 
 
 def _pairs(text):
-    """같은 문서에서 창 안에 함께 있는 (실적, 지역) 위치 쌍을 가까운 순으로 돌려준다."""
+    """같은 문서에서 창 안에 함께 있는 (실적, 지역) 위치 쌍.
+
+    한 인용에 두 절을 **함께 담을 수 있는 쌍을 먼저** 돌려준다. 그다음이 가까운 순이다.
+    거리만으로 고르면 더 가깝지만 인용 상한을 넘는 쌍을 집어, 근거문구가 항목의
+    절반만 입증하게 된다.
+    """
     perf = [(m.start(), m.end()) for m in PERFORMANCE.finditer(text)]
     region = [(m.start(), m.end()) for m in REGION.finditer(text)]
     found = [(abs(p[0] - r[0]), p, r)
              for p in perf for r in region if abs(p[0] - r[0]) <= WINDOW]
-    return sorted(found, key=lambda item: item[0])
+
+    def order(item):
+        distance, p, r = item
+        span = max(p[1], r[1]) - min(p[0], r[0])
+        return (span > QUOTE_MAX, distance)
+
+    return sorted(found, key=order)
 
 
 def _quote(text, perf, region):
@@ -79,6 +90,11 @@ def _quote(text, perf, region):
 
     지역 제한만 있는 공고는 v5·v6·v7이 따로 다룬다. v8을 가르는 것은 실적 쪽이므로
     둘을 한 인용에 못 담으면 실적 문구를 남긴다.
+
+    이 폴백은 근거문구가 항목의 절반만 입증한다는 뜻이다. 근거문구 셀은 한 개의
+    연속 인용이고 500자가 상한이라, 두 절이 그보다 멀면 한쪽을 버리는 수밖에 없다.
+    dev에서는 `PPS-DEV-054` 한 건이 여기 해당한다(두 절이 703자 떨어져 있다).
+    로컬 채점기는 근거를 보지 않으므로 이 손실은 점수에 안 나타난다. 서버만 본다.
     """
     lo, hi = min(perf[0], region[0]), max(perf[1], region[1])
     if hi - lo > QUOTE_MAX:
@@ -92,10 +108,18 @@ def _quote(text, perf, region):
 
 
 def detect(rec):
-    """공고 1건에서 중복제한 근거를 찾는다. 없으면 None."""
+    """공고 1건에서 중복제한 근거를 찾는다. 없으면 None.
+
+    배점표·서식 문맥은 v4와 같은 가드로 뺀다. 지역업체 참여 가점과 유사실적 배점이
+    한 표에 나란히 있는 제안요청서가 흔해서, 가드가 없으면 그 표에서 발화한다.
+    dev 음성 194건에는 창 안에 두 요건이 들어오는 공고가 없어 이 경로가 한 번도
+    실행되지 않았다. 통과가 안전을 뜻하지 않는다.
+    """
     for doc in rec.get("docs", []):
         text = doc.get("text") or ""
         for _, perf, region in _pairs(text):
+            if not _is_qualification_context(text, perf[0], region[0]):
+                continue
             quote = _quote(text, perf, region)
             if quote and unicodedata.normalize("NFC", quote) in unicodedata.normalize("NFC", text):
                 return {"doc_id": doc.get("doc_id"), "doc_type": doc.get("type"),
@@ -126,19 +150,44 @@ REGION_WINDOW = 200
 
 # 지역제한을 걸 수 있는 추정가격 상한. 항목명의 `고시금액 미만`이 이것이다.
 # 이 금액 이상인데 지역을 제한하면 v7이 아니라 v5(고시금액 이상 지역제한)다.
-#   국가: 시행령 제21조제1항제6호 → 재정경제부 고시 `물품 및 용역: 2억 3천만 원`
+#
+# 용역·물품
+#   국가: 시행령 제21조제1항제6호 → 시행규칙 제24조제2항제2호 `고시금액`
+#         → 재정경제부 고시 `물품 및 용역: 2억 3천만 원`
 #   지방: 시행령 제20조제1항제6호 → 시행규칙 제24조제2호 나목
 #
-# 지방 값 5억원은 **조건부 기준을 근사한 값이다.** 나목은 지자체를 둘로 나눈다.
+# 지방 용역·물품 값 5억원은 **조건부 기준을 근사한 값이다.** 나목은 지자체를 둘로 나눈다.
 #   - 법 제5조제1항을 적용받는 지자체: 행정안전부장관이 고시한 금액.
 #     그중 서울·부산·인천의 관할구역 안 군·구만 5억원으로 못 박혀 있다.
 #   - 법 제5조제1항을 적용받지 않는 지자체: 5억원.
 # 행정안전부장관 고시액이 제공 자료에 없어 첫 갈래의 실제 값을 알 수 없다.
 # 그래서 조문에 숫자로 적힌 5억원 하나로 두 갈래를 근사한다.
 # 고시액이 5억원과 다르면 그 지자체의 공고에서 이 게이트가 틀린다.
-REGION_PRICE_LIMIT = {"국가계약법": 230_000_000, "지방계약법": 500_000_000}
-# 위 금액은 용역·물품 기준이다. 공사는 조문이 다른 금액을 두므로 게이트를 적용하지 않는다.
-REGION_PRICE_SCOPE = ("일반용역", "물품(내자)")
+#
+# 공사
+#   국가: 시행규칙 제24조제2항제1호 — 건설공사(전문 제외)는 고시금액(공사 88억원),
+#         전문공사·그 밖의 공사는 10억원.
+#   지방: 시행규칙 제24조제1호 — 종합공사 150억원, 전문공사·그 밖의 공사 10억원.
+# **메타로는 종합공사와 전문공사를 가를 수 없다.** 낮은 쪽(10억원)을 쓰면 종합공사에서
+# 정답 양성을 막고, 높은 쪽을 쓰면 전문공사를 못 막는다. 막는 쪽이 틀리면 양성을
+# 잃으므로 넓은 쪽을 쓴다. 이 선택의 결과는 10억~150억 구간의 전문공사에서
+# 이 게이트가 막지 못한다는 것이다. dev에 공사 건이 없어 관측되지 않았다.
+REGION_PRICE_LIMIT = {
+    ("국가계약법", "용역물품"): 230_000_000,
+    ("지방계약법", "용역물품"): 500_000_000,
+    ("국가계약법", "공사"): 8_800_000_000,
+    ("지방계약법", "공사"): 15_000_000_000,
+}
+GOODS_AND_SERVICE_SCOPE = ("일반용역", "물품(내자)")
+
+
+def _price_scope(work_type):
+    """업무구분을 조문이 금액을 나누는 갈래로 옮긴다. 모르면 None."""
+    if work_type in GOODS_AND_SERVICE_SCOPE:
+        return "용역물품"
+    if work_type and "공사" in work_type:
+        return "공사"
+    return None
 
 
 def region_restriction_allowed(rec):
@@ -147,9 +196,10 @@ def region_restriction_allowed(rec):
     모르는 것을 근거로 막지 않는다. 막는 쪽이 틀리면 정답 양성을 잃는다.
     """
     meta = rec.get("meta") or {}
-    limit = REGION_PRICE_LIMIT.get(meta.get("적용계약법"))
+    scope = _price_scope(meta.get("업무구분"))
+    limit = REGION_PRICE_LIMIT.get((meta.get("적용계약법"), scope))
     price = meta.get("입찰추정가격")
-    if limit is None or not price or meta.get("업무구분") not in REGION_PRICE_SCOPE:
+    if limit is None or not price:
         return True
     return price < limit
 
@@ -187,8 +237,44 @@ INSTITUTION_ORDERED = re.compile(
 # 동사 없이 기관만 한정한 형태. 참가자격 어미를 함께 요구한다.
 INSTITUTION_NEAR = re.compile(r"(?:" + INSTITUTION + r")[^\n]{0,60}?실적")
 
-CONTEXT = 300   # 배점·서식·민간 여부를 볼 앞뒤 범위
+CONTEXT = 300    # 민간 포함 여부를 볼 앞뒤 범위. 그 문구는 실적 조항 안팎에 걸쳐 온다
 TAIL_REACH = 60  # 참가자격 어미를 찾을 범위
+
+
+# 참가자격 절을 여는 머리글. 이것을 만나면 위로 더 거슬러 올라가지 않는다.
+QUALIFICATION_HEADING = re.compile(r"참가\s*자격|자격요건|참가자격")
+HEADING_LOOKBACK = 40   # 위로 훑을 줄 수 상한. 문서 전체를 훑지 않는다
+
+
+def _line(text, pos):
+    """`pos`가 놓인 줄. 공고는 조항마다 줄을 바꾸므로 이것이 절 경계다."""
+    start = text.rfind("\n", 0, pos) + 1
+    end = text.find("\n", pos)
+    return text[start:] if end < 0 else text[start:end]
+
+
+def _is_qualification_context(text, *positions):
+    """그 조항이 참가자격 절 안에 있는지. 배점표·서식 절 안이면 아니다.
+
+    앞뒤를 같은 글자 반경으로 재면 안 된다. 두 방향이 비대칭이기 때문이다.
+    - **뒤**에는 참가자격 바로 다음에 제출서류·심사기준 목록이 붙는다.
+      `PPS-DEV-048`의 참가자격 `다.` 항목은 300자 뒤의 `6. 제출서류` 때문에 실제로 죽었다.
+      그래서 뒤는 보지 않는다.
+    - **앞**에는 배점표·서식의 머리글이 온다. `배점 | 1점` 같은 표 머리가 한 줄 위에,
+      `【서식 11】`이 여러 줄 위에 있다. 그래서 앞으로는 걸어 올라간다.
+
+    올라가다 참가자격 머리글을 만나면 거기서 멈춘다. 그 아래는 참가자격 절이다.
+    """
+    for pos in positions:
+        line_start = text.rfind("\n", 0, pos) + 1
+        if NOT_QUALIFICATION.search(_line(text, pos)):
+            return False
+        for line in reversed(text[:line_start].split("\n")[-HEADING_LOOKBACK:]):
+            if QUALIFICATION_HEADING.search(line):
+                break
+            if NOT_QUALIFICATION.search(line):
+                return False
+    return True
 
 
 def _span_quote(text, start, end):
@@ -236,7 +322,9 @@ def detect_institution_performance(rec):
         for pattern, needs_tail in ((INSTITUTION_ORDERED, False), (INSTITUTION_NEAR, True)):
             for match in pattern.finditer(text):
                 around = text[max(0, match.start() - CONTEXT):match.end() + CONTEXT]
-                if OPEN_TO_PRIVATE.search(around) or NOT_QUALIFICATION.search(around):
+                if OPEN_TO_PRIVATE.search(around):
+                    continue
+                if not _is_qualification_context(text, match.start()):
                     continue
                 if needs_tail and not QUALIFYING_TAIL.search(
                         text[match.end():match.end() + TAIL_REACH]):
@@ -251,11 +339,44 @@ def detect_institution_performance(rec):
 # ===== v3 실적제한 1배수 이상 =====
 # 항목표 비고가 `사업예산 기준`이다. 요구 실적금액이 사업예산의 1배 미만이면 1배수 제한이 아니다.
 # 이 규칙만 1을 0으로 내린다. 금액을 못 읽으면 모델 판정을 그대로 둔다.
-MONEY = re.compile(r"(\d+(?:\.\d+)?)\s*억|(\d+(?:\.\d+)?)\s*천만|([\d,]{4,})\s*(?:만)?\s*원")
+# 금액은 자리수 단위를 이어 붙여 적는다 — `1억 5천만원`은 1억이 아니라 1억 5천만원이다.
+# 단위마다 따로 읽고 최댓값을 고르면 그 표기를 33% 낮게 읽어 정답 양성을 내려 버린다.
+# 그래서 한 번의 일치로 억·천만·만·원 자리를 모두 먹고 더한다.
+MONEY = re.compile(
+    r"(?=\d)"
+    r"(?:(\d+(?:\.\d+)?)\s*억)?"
+    r"\s*(?:(\d+(?:\.\d+)?)\s*천만)?"
+    r"\s*(?:([\d,]+)\s*만)?"
+    r"\s*(?:([\d,]+))?"
+    r"\s*(원)?"
+)
 PERF_WORD = re.compile(r"실적")
 MONEY_REACH = 180      # 실적 문구 앞뒤에서 금액을 찾을 범위
 MONEY_MIN = 1_000_000            # 사람 수·건수를 금액으로 읽지 않기 위한 하한
 MONEY_MAX = 100_000_000_000      # 오독한 큰 수를 버리는 상한
+
+
+def parse_money(match):
+    """한 일치의 억·천만·만·원 자리를 더해 원 단위로 돌려준다. 금액이 아니면 None.
+
+    자리 표시가 하나도 없는 맨 숫자는 `원`이 붙었을 때만 금액으로 본다.
+    그렇지 않으면 세부품명번호 10자리나 날짜를 금액으로 읽는다.
+    """
+    eok, cheonman, man, plain, won = match.groups()
+    total = 0
+    if eok:
+        total += int(float(eok) * 100_000_000)
+    if cheonman:
+        total += int(float(cheonman) * 10_000_000)
+    if man:
+        total += int(man.replace(",", "")) * 10_000
+    if plain:
+        if not (eok or cheonman or man) and not won:
+            return None
+        total += int(plain.replace(",", ""))
+    if not (eok or cheonman or man or plain):
+        return None
+    return total
 
 
 def _money_near(text, pos):
@@ -263,13 +384,9 @@ def _money_near(text, pos):
     segment = text[max(0, pos - MONEY_REACH):pos + MONEY_REACH]
     values = []
     for match in MONEY.finditer(segment):
-        if match.group(1):
-            values.append(int(float(match.group(1)) * 100_000_000))
-        elif match.group(2):
-            values.append(int(float(match.group(2)) * 10_000_000))
-        elif match.group(3):
-            raw = int(match.group(3).replace(",", ""))
-            values.append(raw * 10_000 if "만" in segment[match.end() - 3:match.end() + 1] else raw)
+        value = parse_money(match)
+        if value is not None:
+            values.append(value)
     return values
 
 
@@ -279,8 +396,7 @@ def required_performance(rec):
     for doc in rec.get("docs", []):
         text = doc.get("text") or ""
         for match in PERF_WORD.finditer(text):
-            around = text[max(0, match.start() - CONTEXT):match.start() + CONTEXT]
-            if NOT_QUALIFICATION.search(around):
+            if not _is_qualification_context(text, match.start()):
                 continue
             for value in _money_near(text, match.start()):
                 if MONEY_MIN <= value <= MONEY_MAX and (best is None or value > best):
