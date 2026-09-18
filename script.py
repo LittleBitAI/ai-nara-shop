@@ -771,8 +771,80 @@ def clean_evidence(ev: Optional[str], src: str) -> str:
     return ev if ev in src else ""
 
 
+# 근거 대조 보정: 모델이 인용한 근거 자체가 위반이 아님을 보이면 양성을 내린다.
+# 공고 1건의 근거·메타·문서만 본다. 근거가 빈 양성은 건드리지 않는다.
+V19_POST_AWARD = re.compile(r"계약\s*시|계약체결|낙찰자\s*결정")   # 낙찰 후·계약 시 의무
+V19_BID_STAGE = re.compile(r"입찰|투찰")                        # 입찰 단계 표현이 있으면 유지
+V24_AMOUNT = re.compile(r"(\d{1,3}(?:,\d{3})+|\d{5,})\s*원")
+V24_REGION = re.compile(r"지역제한\s*\(([^)]*)\)")
+V24_TITLE_TAG = re.compile(r"\((일반경쟁|제한경쟁|지명경쟁)\s*[·ㆍ]\s*(\d+)\s*(억|천만)원\s*미만\)")
+V24_UNIT = {"억": 100_000_000, "천만": 10_000_000}
+V21_PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
+V21_JOINT_BARRED = re.compile(
+    r"공동\s*(?:수급|계약|도급|참여|이행)[^.。]*?(?:불허|불가|허용하지\s*않|금지)")
+V9_WINDOW = 300                                                # 근거 앞뒤로 볼 글자 수
+# "호환"은 제한일 수 있고 "상당"은 공고에서 대개 금액(상당액·상당가격) 뜻이라 넣지 않는다.
+V9_EQUIVALENT = re.compile(r"동등|이상의?\s*(?:제품|성능|사양)|또는\s*그\s*이상")
+V9_SPEC_FLOOR = re.compile(r"이상\s*$")
+
+
+def _region_names(text: Optional[str]) -> set:
+    return {part.strip() for part in re.split(r"[,，/]", text or "") if part.strip()}
+
+
+def v24_consistent_with_meta(evidence: str, meta: Dict[str, Any]) -> bool:
+    """근거의 금액·지역·(계약방법·금액구간)을 같은 뜻의 메타 필드와만 비교해 전부 일치하면 참."""
+    checked = False
+    amounts = V24_AMOUNT.findall(evidence)
+    if amounts:
+        known = {meta.get("배정예산금액"), meta.get("입찰추정가격")} - {None}
+        if not known or any(int(a.replace(",", "")) not in known for a in amounts):
+            return False
+        checked = True
+    region = V24_REGION.search(evidence)
+    if region:
+        listed = meta.get("제한지역코드목록")
+        if meta.get("지역제한여부") != "Y" or not listed or "[" in listed \
+                or _region_names(region.group(1)) != _region_names(listed):
+            return False
+        checked = True
+    tag = V24_TITLE_TAG.search(evidence)
+    if tag:
+        price = meta.get("입찰추정가격")
+        if tag.group(1) != meta.get("계약방법") or price is None \
+                or price >= int(tag.group(2)) * V24_UNIT[tag.group(3)]:
+            return False
+        checked = True
+    return checked
+
+
+def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
+    """근거 원문이 해당 항목의 위반 조건을 스스로 부정하는가(v9·v19·v21·v24)."""
+    if not evidence:
+        return False
+    if item == "v19":
+        return bool(V19_POST_AWARD.search(evidence)) and not V19_BID_STAGE.search(evidence)
+    if item == "v24":
+        return v24_consistent_with_meta(evidence, rec.get("meta") or {})
+    if item == "v21":
+        shares = [float(x) for x in V21_PERCENT.findall(evidence)]
+        if shares:
+            return all(share >= 10 for share in shares)
+        return bool(V21_JOINT_BARRED.search(evidence))
+    if item == "v9":
+        if V9_SPEC_FLOOR.search(evidence):
+            return True
+        for doc in rec["docs"]:
+            at = doc["text"].find(evidence)
+            if at >= 0:
+                window = doc["text"][max(0, at - V9_WINDOW):at + len(evidence) + V9_WINDOW]
+                return bool(V9_EQUIVALENT.search(window))
+    return False
+
+
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
-    """후처리: ① 부재탐지 5항목 근거 빈칸 고정 ② 위반이 아니면 근거 빈칸 ③ 근거문구 원문 대조(NFC)"""
+    """후처리: ① 부재탐지 5항목 근거 빈칸 고정 ② 위반이 아니면 근거 빈칸 ③ 근거문구 원문 대조(NFC)
+    ④ 근거가 위반 조건을 스스로 부정하면 양성을 내린다(evidence_refutes)"""
     out = {}
     for v in ITEMS:
         cell = dict(judgment.get(v, {"위반여부": 0, "근거문구": None}))
@@ -783,6 +855,8 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 ev = clean_evidence(cell.get("근거문구"), doc["text"])
                 if ev:
                     break
+            if evidence_refutes(v, ev, rec):
+                hit, ev = 0, ""
         out[v] = {"위반여부": hit, "근거문구": ev}
     return out
 

@@ -25,22 +25,30 @@
 **원응답 307건이 보관돼 있고 재생 도구가 있다.** 모델 뒤 단계(`postprocess`·`verify_sme`)만
 바꾸는 후보는 **GPU 없이 0.6초에 잰다.** 재생이 회차 자신의 CSV를 바이트 단위로 재현하는 것을
 검사가 지킨다. **같은 모델 출력을 쓰므로 회차 churn이 없고, 후보와 기준의 차이가 곧 효과다.**
+`--verify`는 **보관 원응답 무결성 검사**다. 회차가 기록한 커밋의 코드로 재현하며 HEAD를 검사하지 않는다(PR #30).
+**비교 기준은 HEAD 재생 CSV다.** 보관 회차의 `submission.csv`를 `--before`로 쓰면 그 뒤에 병합된 후처리 효과가 섞인다.
 
 ```powershell
-# 1) 후보 없이 재현되는지 먼저 확인한다
+# 1) 보관 원응답이 회차 코드로 재현되는지 확인한다 (HEAD 검사가 아니다)
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug --verify
 
-# 2) 후보를 끼운다. postprocess·verify_sme 중 정의한 것만 갈아 끼운다
+# 2) 기준 CSV를 만든다: 후보 없이, --verify 없이 HEAD 코드로 재생한다. 커밋마다 한 번
+python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug `
+  --output-dir reports/<담당>/head-$(git rev-parse --short HEAD)-replay
+
+# 3) 후보를 끼운다. postprocess·verify_sme 중 정의한 것만 갈아 끼운다
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug `
   --candidate experiments/<담당>_candidate.py --output-dir reports/<담당>/<티켓>-replay
 
-# 3) 채점하고 기준과 대조한다
+# 4) 채점하고 2)의 HEAD 재생 CSV와 대조한다. 보관 회차의 submission.csv를 --before로 쓰지 않는다
 python -X utf8 tools/score.py --truth open/dev_labels.csv `
   --pred reports/<담당>/<티켓>-replay/submission.csv --output-dir reports/<담당>/<티켓>-score
 python -X utf8 tools/compare_runs.py --items <대상> `
-  --before reports/runs/colab-1789655036303880754/dev-debug/submission.csv `
+  --before reports/<담당>/head-<커밋>-replay/submission.csv `
   --after  reports/<담당>/<티켓>-replay/submission.csv
 ```
+
+2)와 3)은 같은 HEAD에서 돌린다. 그 사이에 브랜치를 옮기거나 pull했으면 2)를 새 커밋으로 다시 만든다.
 
 프롬프트·스키마를 바꾸는 후보는 저장된 응답이 달라지므로 이 경로로 못 재고 Colab 회차가 필요하다.
 
@@ -429,6 +437,7 @@ python -X utf8 tools/package.py --output artifacts/team-candidate/submit.zip --c
 python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커밋>
 
 # 2. 기준 회차와 대조한다. 대상 항목과 대상 밖 회귀를 함께 낸다
+#    GPU 회차끼리의 대조(프롬프트·스키마 후보)다. 후처리 후보는 §0의 HEAD 재생 CSV와 대조한다
 python -X utf8 tools/compare_runs.py --items v8,v16 `
   --before reports/runs/<기준>/dev/submission.csv `
   --after  reports/runs/<후보>/dev/submission.csv `
