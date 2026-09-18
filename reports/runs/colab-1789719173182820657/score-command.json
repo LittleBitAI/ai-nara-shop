@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/content/t1-colab-mtu0_9cs/venv/bin/python",
+    "/content/t1-colab-mtu0_9cs/tools/score.py",
+    "--truth",
+    "/content/t1-colab-mtu0_9cs/open/dev_labels.csv",
+    "--pred",
+    "/content/t1-colab-mtu0_9cs/results/dev/submission.csv",
+    "--output-dir",
+    "/content/t1-colab-mtu0_9cs/results/score"
+  ],
+  "cwd": "/content/t1-colab-mtu0_9cs",
+  "started": 1789718192.0307183,
+  "returncode": 0,
+  "elapsed_seconds": 0.06943583488464355
+}

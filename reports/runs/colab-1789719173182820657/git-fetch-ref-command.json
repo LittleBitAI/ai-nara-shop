@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-mtu0_9cs/repo",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "exp/round1-absence-evidence"
+  ],
+  "cwd": "/content/t1-colab-mtu0_9cs",
+  "started": 1789716621.5569656,
+  "returncode": 0,
+  "elapsed_seconds": 0.5241899490356445
+}
