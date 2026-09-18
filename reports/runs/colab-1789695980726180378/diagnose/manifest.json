@@ -1,0 +1,51 @@
+{
+  "purpose": "item_diagnosis_only",
+  "note": "진단용 별도 질의다. 제출 판정·점수가 아니며 script.py와 submission.csv를 바꾸지 않는다.",
+  "created_at": "2026-09-18T01:46:17.057577+00:00",
+  "items": [
+    "v16",
+    "v18",
+    "v20"
+  ],
+  "notice_count": 200,
+  "input": "<외부>/dev.jsonl",
+  "labels": true,
+  "script": "script.py",
+  "script_sha256": "2ad9ea8f299e87ccf7acf5ce42b9fae2618a8167edbdbef0c51cc2ef5496c333",
+  "runner": "VLLMRunner",
+  "environment": {
+    "vllm": "0.26.0",
+    "python": "3.12.13",
+    "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "cuda": "13.0",
+    "gpus": [
+      {
+        "name": "NVIDIA A100-SXM4-40GB",
+        "total_memory": 42405855232
+      }
+    ],
+    "sampling_params": "SamplingParams(n=1, presence_penalty=0.0, frequency_penalty=0.0, repetition_penalty=1.0, temperature=0.0, top_p=1.0, top_k=0, min_p=0.0, seed=20260826, stop=[], stop_token_ids=[], bad_words=[], thinking_token_budget=None, include_stop_str_in_output=False, ignore_eos=False, max_tokens=2048, min_tokens=0, logprobs=None, prompt_logprobs=None, skip_special_tokens=True, spaces_between_special_tokens=True, structured_outputs=StructuredOutputsParams(json={'type': 'object', 'additionalProperties': False, 'required': ['v16', 'v18', 'v20'], 'properties': {'v16': {'type': 'object', 'additionalProperties': False, 'required': ['요구사항', '공고_인용', '막힌_단계'], 'properties': {'요구사항': {'type': 'string', 'maxLength': 200}, '공고_인용': {'type': ['string', 'null'], 'maxLength': 300}, '막힌_단계': {'type': 'string', 'enum': ['context_not_observed', 'fact_not_extracted', 'condition_not_met', 'violation_found']}}}, 'v18': {'type': 'object', 'additionalProperties': False, 'required': ['요구사항', '공고_인용', '막힌_단계'], 'properties': {'요구사항': {'type': 'string', 'maxLength': 200}, '공고_인용': {'type': ['string', 'null'], 'maxLength': 300}, '막힌_단계': {'type': 'string', 'enum': ['context_not_observed', 'fact_not_extracted', 'condition_not_met', 'violation_found']}}}, 'v20': {'type': 'object', 'additionalProperties': False, 'required': ['요구사항', '공고_인용', '막힌_단계'], 'properties': {'요구사항': {'type': 'string', 'maxLength': 200}, '공고_인용': {'type': ['string', 'null'], 'maxLength': 300}, '막힌_단계': {'type': 'string', 'enum': ['context_not_observed', 'fact_not_extracted', 'condition_not_met', 'violation_found']}}}}}, regex=None, choice=None, grammar=None, json_object=None, disable_any_whitespace=True, disable_additional_properties=False, whitespace_pattern=None, structural_tag=None, _backend=None, _backend_was_auto=False), extra_args=None)"
+  },
+  "prompt_sha256": "a450eea54c4647d3cddd835fc478bb6ac3ee35781d612c537b94959c4d7584e2",
+  "stages": {
+    "v16": {
+      "context_not_observed": 43,
+      "fact_not_extracted": 0,
+      "condition_not_met": 127,
+      "violation_found": 30
+    },
+    "v18": {
+      "context_not_observed": 58,
+      "fact_not_extracted": 0,
+      "condition_not_met": 106,
+      "violation_found": 36
+    },
+    "v20": {
+      "context_not_observed": 192,
+      "fact_not_extracted": 1,
+      "condition_not_met": 7,
+      "violation_found": 0
+    }
+  },
+  "elapsed_seconds": 392.25395761799996
+}

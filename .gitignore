@@ -4,11 +4,13 @@
 /open/train_unlabeled.jsonl
 /artifacts/
 /runs/
-# 디렉터리째 빼면 하위 파일을 되살릴 수 없어 내용물만 뺀다.
-# 팀 배정의 후보 소스는 산출물이 아니라 커밋 대상이다 (docs/tasks/team-handoff.md:196-197).
-/experiments/*
-!/experiments/sme_candidate.py
-!/experiments/qualification_candidate.py
+# 후보 모듈은 소스이므로 추적하고, 그 폴더에 생기는 실험 산출물은 계속 무시한다.
+# 디렉터리째 무시하면 하위 파일을 되살릴 수 없어 `/experiments/*` 로 적는다.
+# 하위 폴더도 되살려야 한다 — 무시된 디렉터리 안의 파일은 되살릴 수 없으므로
+# `!/experiments/*/` 가 없으면 `experiments/<티켓>/후보.py` 가 조용히 사라진다.
+/experiments/**
+!/experiments/**/
+!/experiments/**/*.py
 /checkpoints/
 /weights/
 /predictions/

@@ -13,9 +13,9 @@
 | --- | --- | --- |
 | **서버 첫 채점** | `654c556` 리더보드 **0.2197036943** (dev 0.2207877113) | dev와 서버가 0.0011 차이. 다른 입력 집합이라 오차가 아니다. [장부](../../reports/submissions.json) |
 | **시간 여유 14%** | 6,192초 / 한도 7,200초 = **86.0%**, 여유 1,008초 | 모델 호출을 늘리는 변경은 전부 이 안이다. 서버는 L40S 1장 |
-| **회차 간 churn** | 같은 조건인데 v 셀 **25~43/4,800**, 그 Macro F1 영향 **0.000008~0.003129** (8쌍) | 한 쌍의 Macro F1 차이는 이 규모에서 신호가 아니다. [근거](../../reports/runs/reproducibility.md) |
-| **같은 코드 4회 실측** | dev 0.2182553450 / 0.2182114413 / **0.2208061356** | 코드 변경 0인데 0.0026 벌어졌다. 노트북 `quality_pass`도 믿지 않는다 |
-| **부재탐지가 풀릴 수 있다** | 별도 질의에서 v16 TP 0→**6/6**, v18 0→4, v20 0→3 | 모델은 안다. 24항목 합동 프롬프트가 억눌렀다. [근거](../../reports/team-score-audit/absence-detection.md) |
+| **회차 간 churn** | 같은 조건인데 v 셀 **29~45/4,800**, 그 Macro F1 영향 **0.000008~0.003129** (같은 코드 10쌍) | 한 쌍의 Macro F1 차이는 이 규모에서 신호가 아니다. [근거](../../reports/runs/reproducibility.md) |
+| **같은 코드 5회 실측** | dev 0.2182553 / 0.2182114 / 0.2182035 / **0.2208061** / **0.2202240** | 코드 변경 0인데 폭이 0.0026이다. `quality_pass`도 이 폭 위에서 뒤집힌다(run4 통과, run5 탈락) |
+| **부재탐지는 묻는 방식이 가른다** | 별도 `판정` 칸이면 재현율 **13/18**, 칸을 없애고 보수화 지시를 넣으면 **3/18** | 모델은 안다. 다이얼이 프롬프트 쪽에 있다. 단 두 변수가 아직 한 묶음이다. [근거](../../reports/team-score-audit/absence-detection.md) |
 
 **이것이 이 배정의 규칙을 하나 바꾼다.** 전체 Macro F1 하나로 개선을 주장할 수 없다 —
 0.002를 얻어도 churn이 쏠린 것일 수 있고 0.00002를 얻어도 진짜 효과가 묻힌 것일 수 있다.
@@ -25,22 +25,30 @@
 **원응답 307건이 보관돼 있고 재생 도구가 있다.** 모델 뒤 단계(`postprocess`·`verify_sme`)만
 바꾸는 후보는 **GPU 없이 0.6초에 잰다.** 재생이 회차 자신의 CSV를 바이트 단위로 재현하는 것을
 검사가 지킨다. **같은 모델 출력을 쓰므로 회차 churn이 없고, 후보와 기준의 차이가 곧 효과다.**
+`--verify`는 **보관 원응답 무결성 검사**다. 회차가 기록한 커밋의 코드로 재현하며 HEAD를 검사하지 않는다(PR #30).
+**비교 기준은 HEAD 재생 CSV다.** 보관 회차의 `submission.csv`를 `--before`로 쓰면 그 뒤에 병합된 후처리 효과가 섞인다.
 
 ```powershell
-# 1) 후보 없이 재현되는지 먼저 확인한다
+# 1) 보관 원응답이 회차 코드로 재현되는지 확인한다 (HEAD 검사가 아니다)
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug --verify
 
-# 2) 후보를 끼운다. postprocess·verify_sme 중 정의한 것만 갈아 끼운다
+# 2) 기준 CSV를 만든다: 후보 없이, --verify 없이 HEAD 코드로 재생한다. 커밋마다 한 번
+python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug `
+  --output-dir reports/<담당>/head-$(git rev-parse --short HEAD)-replay
+
+# 3) 후보를 끼운다. postprocess·verify_sme 중 정의한 것만 갈아 끼운다
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789655036303880754/dev-debug `
   --candidate experiments/<담당>_candidate.py --output-dir reports/<담당>/<티켓>-replay
 
-# 3) 채점하고 기준과 대조한다
+# 4) 채점하고 2)의 HEAD 재생 CSV와 대조한다. 보관 회차의 submission.csv를 --before로 쓰지 않는다
 python -X utf8 tools/score.py --truth open/dev_labels.csv `
   --pred reports/<담당>/<티켓>-replay/submission.csv --output-dir reports/<담당>/<티켓>-score
 python -X utf8 tools/compare_runs.py --items <대상> `
-  --before reports/runs/colab-1789655036303880754/dev-debug/submission.csv `
+  --before reports/<담당>/head-<커밋>-replay/submission.csv `
   --after  reports/<담당>/<티켓>-replay/submission.csv
 ```
+
+2)와 3)은 같은 HEAD에서 돌린다. 그 사이에 브랜치를 옮기거나 pull했으면 2)를 새 커밋으로 다시 만든다.
 
 프롬프트·스키마를 바꾸는 후보는 저장된 응답이 달라지므로 이 경로로 못 재고 Colab 회차가 필요하다.
 
@@ -129,9 +137,15 @@ v24 양성 47건 중 e24가 빈 26건에 TP 2건이 포함된다.
 
 **C3은 출발점이 바뀌었다.** 2026-09-18 실제 GPU 질의에서 v16·v18·v20을 **별도 스키마로 3항목만**
 물었더니 v16이 양성 6건을 전부 잡았다(파이프라인 TP=0 → 6). v18은 4/7, v20은 3/5다.
-문제는 미탐이 아니라 **정밀도**다 — 같은 질의가 200건 중 139건을 v16 위반이라고 했다.
-첫 실험은 세 변수(항목 수 24→3, 근거 null 고정 해제, 출력 형식) 중 무엇이 재현율을 살렸는지
-가르는 것이다. 자료와 한계는 [부재탐지 진단](../../reports/team-score-audit/absence-detection.md).
+**다만 같은 날 두 번째 회차가 그 재현율을 13/18에서 3/18로 떨어뜨렸다.** 묻는 방식이 만드는
+지점이지 항목의 실력이 아니라는 뜻이다. 그러므로 "문제는 미탐이 아니라 정밀도"는 느슨하게
+물었을 때만 맞는 말이다 — 느슨한 쪽에서는 200건 중 145건(TP 6 + FP 139)을 v16 위반이라 하고, 보수적인 쪽에서는
+6건 중 1건만 잡는다.
+
+첫 실험은 **넷째 변수를 둘로 가르는 것**이다. 두 번째 회차는 `판정` 칸 제거와 프롬프트
+보수화 지시 두 문장을 한 번에 넣었다. `판정` 칸을 되살리되 지시는 남긴 회차 하나면 갈린다.
+그다음이 나머지 세 변수(항목 수 24→3, 근거 null 고정 해제, 출력 형식)다.
+자료와 한계는 [부재탐지 진단](../../reports/team-score-audit/absence-detection.md).
 
 공통 입력: v10~v18·v20 항목 정의, 제공 판로지원법·국가/지방·SW 조문·경쟁제품 CSV,
 `sme_product_lookup`·`verify_sme`, 기본/최종 CSV와 진단.
@@ -339,7 +353,7 @@ Dev ID나 정답을 실제 추론 분기에 넣지 마라. 사례의 예상 판�
 외부 API 명세·프롬프트·오답 분류 자동화 공정은 기존 Q1 경계를 따른다.
 유료 API·대량 라벨링·서브에이전트를 자동 실행하지 마라.
 
-같은 조건 회차 간에 판정 셀이 25~43개 바뀌고 그 Macro F1 영향이 0.000008~0.003129로 벌어진다
+같은 조건 회차 간에 판정 셀이 29~45개 바뀌고 그 Macro F1 영향이 0.000008~0.003129로 벌어진다
 (docs/tasks/team-handoff.md §0). 전체 Macro F1 하나로 개선을 주장하지 마라.
 tools/compare_runs.py로 대상 항목의 TP/FP/FN과 대상 밖 회귀를 내고 churn 판정을 그대로 옮겨라.
 후처리·재검증만 바꾸는 후보는 보관된 원응답으로 CPU에서 재평가하고 GPU 회차를 쓰지 마라.
@@ -423,6 +437,7 @@ python -X utf8 tools/package.py --output artifacts/team-candidate/submit.zip --c
 python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커밋>
 
 # 2. 기준 회차와 대조한다. 대상 항목과 대상 밖 회귀를 함께 낸다
+#    GPU 회차끼리의 대조(프롬프트·스키마 후보)다. 후처리 후보는 §0의 HEAD 재생 CSV와 대조한다
 python -X utf8 tools/compare_runs.py --items v8,v16 `
   --before reports/runs/<기준>/dev/submission.csv `
   --after  reports/runs/<후보>/dev/submission.csv `

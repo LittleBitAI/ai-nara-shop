@@ -12,7 +12,9 @@ import importlib.util
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -20,8 +22,37 @@ ROOT = Path(__file__).resolve().parents[1]
 def load_module(path, name):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # 후보가 저장소 루트의 script.py 를 따로 읽지 않고 여기서 읽은 것을 집게 한다.
+    # --script 로 다른 코드를 넘겼을 때 파싱과 postprocess 가 갈라지는 것을 막는다.
+    previous = sys.modules.get(name)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        # main() 은 한 프로세스에서 여러 번 돈다. 실패한 적재가 앞 회차의 멀쩡한
+        # 등록본까지 지우면 후보가 조용히 워킹트리 script.py 로 되돌아간다.
+        if previous is None:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = previous
+        raise
     return module
+
+
+def run_script(case_dir, into):
+    """회차가 실제로 돌린 커밋의 script.py. HEAD의 후처리가 바뀌어도 회차 재현을 확인할 수 있다."""
+    manifest = Path(case_dir).resolve().parent / "manifest.json"
+    if not manifest.is_file():
+        raise ValueError(f"{manifest} 가 없다. --script로 회차 코드를 직접 준다")
+    commit = json.loads(manifest.read_text(encoding="utf-8"))["code"]["commit"]
+    shown = subprocess.run(["git", "-C", str(ROOT), "show", f"{commit}:script.py"],
+                           capture_output=True)
+    if shown.returncode != 0:
+        raise ValueError(f"회차 커밋 {commit[:7]}의 script.py를 git에서 읽지 못했다. "
+                         "전체 이력을 받거나 --script로 준다")
+    path = Path(into) / f"script-{commit[:12]}.py"
+    path.write_bytes(shown.stdout)
+    return load_module(path, "run_submission")
 
 
 def saved_responses(case_dir):
@@ -97,7 +128,7 @@ def main(argv=None):
                         help="원응답이 있는 회차 폴더, 예: reports/runs/<run-id>/dev-debug")
     parser.add_argument("--input", default=str(ROOT / "open/dev.jsonl"))
     parser.add_argument("--data-dir", default=str(ROOT / "open/data"))
-    parser.add_argument("--script", help="제출 코드. 기본은 저장소 루트의 script.py")
+    parser.add_argument("--script", help="제출 코드. 기본은 저장소 루트의 script.py, --verify면 회차 커밋의 script.py")
     parser.add_argument("--candidate",
                         help="후보 모듈. postprocess·verify_sme 중 정의한 것만 갈아 끼운다")
     parser.add_argument("--output-dir", help="새 디렉터리. CSV와 기록을 남긴다")
@@ -105,7 +136,14 @@ def main(argv=None):
                         help="회차 자신의 CSV를 바이트 단위로 재현하는지 확인한다")
     args = parser.parse_args(argv)
     try:
-        script = load_module(Path(args.script) if args.script else ROOT / "script.py", "submission")
+        if args.script:
+            script = load_module(Path(args.script), "submission")
+        elif args.verify:
+            # 재현 확인은 회차의 코드로 한다. HEAD의 후처리 변경과 무관하게 원응답 보관을 검사한다.
+            scratch = tempfile.mkdtemp(prefix="replay-script-")
+            script = run_script(args.case, scratch)
+        else:
+            script = load_module(ROOT / "script.py", "submission")
         candidate = load_module(Path(args.candidate), "candidate") if args.candidate else None
         result = replay(script, args.case, input_path=args.input, data_dir=args.data_dir,
                         postprocess=getattr(candidate, "postprocess", None),

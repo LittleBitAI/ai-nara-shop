@@ -1,0 +1,62 @@
+{
+  "artifact_id": "score-score-opus5-33",
+  "version": 1,
+  "status": "draft",
+  "run_id": "score-opus5-33",
+  "baseline_run": null,
+  "created_at": "2026-09-18T02:34:30.032021+00:00",
+  "sources": [
+    {
+      "role": "truth",
+      "path": "reports/label-compare/truth-cover3.csv",
+      "sha256": "f9a3450a90890f80557e93af6a0551df4c94fd256ea627cc44562effa92df191"
+    },
+    {
+      "role": "pred",
+      "path": "reports/label-compare/opus5-cover3.csv",
+      "sha256": "b5e9cf11356a9270673193810d463bb5a76a14cb0bacf6fea8bd8d8c12052514"
+    }
+  ],
+  "generator": {
+    "path": "tools/score.py",
+    "sha256": "17cb568c299239e52d3c843a668cc0d1436b18b2b68656f929f5e5a2d8e5b7a3",
+    "argv": [
+      "python",
+      "-X",
+      "utf8",
+      "tools/score.py",
+      "--truth",
+      "reports/label-compare/truth-cover3.csv",
+      "--pred",
+      "reports/label-compare/opus5-cover3.csv",
+      "--output-dir",
+      "reports/label-compare/score-opus5-33"
+    ],
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'reports/label-compare/truth-cover3.csv' '--pred' 'reports/label-compare/opus5-cover3.csv' '--output-dir' 'reports/label-compare/score-opus5-33'",
+    "settings": {
+      "output_dir": "reports/label-compare/score-opus5-33",
+      "zero_division": 0,
+      "items": 24
+    }
+  },
+  "environment": {
+    "python": "3.13.9",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cwd": "."
+  },
+  "mode": "local_scoring",
+  "model": null,
+  "prompt_hash": null,
+  "seed": null,
+  "parents": [],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "execution_status": "complete",
+  "validation": {
+    "csv_contract": true,
+    "evidence_substring": false,
+    "evidence_quality": false
+  },
+  "elapsed_seconds_before_publish": 0.07280249998439103
+}
