@@ -29,13 +29,14 @@ m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 print(json.dumps(m.decode_schema('open/data')['properties']['v16']['properties']['근거문구'], ensure_ascii=False))"
 ```
 
-적용 전 `{"type": "null"}` · 적용 후 `{"type": ["string", "null"], "maxLength": 500}`.
+적용 전 `{"type": "null"}` · 적용 후 `{"type": ["string", "null"], "maxLength": 100}`.
+v16 은 부재탐지 항목이라 100 이다. 부재가 아닌 항목(예: v1)을 찍으면 500 이 나온다.
 
 ## 4개 자리
 
 | # | 위치 | 바뀌는 것 |
 | --- | --- | --- |
-| 1 | `decode_schema` 224-228, 파일 적재 분기 | **실효 자리.** 모든 항목의 `근거문구` 를 `string\|null`(500자)로 덮어쓴다 |
+| 1 | `decode_schema` 224-228, 파일 적재 분기 | **실효 자리.** 모든 항목의 `근거문구` 를 `string\|null` 로 덮어쓴다. 부재탐지 5항목은 100자, 나머지는 500자 |
 | 2 | `decode_schema` 238, fallback 조립 | 스키마 파일이 없는 환경에서 같은 결과가 되도록 맞춘다 |
 | 3 | `SYSTEM_HEAD` 규칙 3 | "Their 근거문구 is always null" → 위반 판정 시 관측한 조항을 인용하고, 그런 조항이 없을 때만 null |
 | 4 | `build_system_prompt` 항목표 태그 | `[absence detection; evidence=null]` → `[absence detection]` |

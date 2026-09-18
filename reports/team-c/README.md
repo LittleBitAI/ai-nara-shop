@@ -45,7 +45,7 @@
 
 | # | 확인한 값 | 적용 전 → 후 |
 | --- | --- | --- |
-| 1 | `decode_schema('open/data')` 의 v16 `근거문구` | `{"type":"null"}` → `{"type":["string","null"],"maxLength":500}` |
+| 1 | `decode_schema('open/data')` 의 v16 `근거문구` | `{"type":"null"}` → `{"type":["string","null"],"maxLength":100}` (부재탐지라 100, 그 밖은 500) |
 | 2 | fallback 조립 블록의 `"null"` 잔존 | 있음 → 없음 |
 | 3 | `SYSTEM_HEAD` 의 `always null` | 있음 → 없음 |
 | 4 | 항목표 태그 | `[absence detection; evidence=null]` → `[absence detection]` |
