@@ -19,6 +19,8 @@ PLAIN_CASE = ROOT / "reports/runs/colab-1789655036303880754/dev"
 # 재현은 회차가 실제로 돌린 커밋의 코드로 확인한다. HEAD의 후처리는 바뀔 수 있다.
 _SCRATCH = tempfile.TemporaryDirectory()
 RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
+# HEAD 코드로 같은 원응답을 재생한 고정 결과(PR #30, sha256 0818a23c…).
+HEAD_REPLAY = ROOT / "reports/team-b/b5-port-replay/submission.csv"
 
 CANDIDATE = '''"""검사용 후보. 모든 판정을 0으로 만든다."""
 
@@ -41,6 +43,13 @@ class ReplayRunTests(unittest.TestCase):
         self.assertEqual(replay_run.to_csv_bytes(RUN_SCRIPT, result["baseline_rows"]),
                          (CASE / "baseline_submission.csv").read_bytes())
         self.assertEqual(len(result["rejected_conditions"]), 107)
+
+    def test_head_replay_matches_the_pinned_head_csv(self):
+        """HEAD 회귀 가드. --verify는 회차 코드로 돌아 HEAD의 parse_judgment·verify_sme·postprocess를
+        검사하지 않는다. HEAD 후단을 일부러 바꿨다면 재생 결과를 새로 고정하고 그 이유를 PR에 적는다."""
+        result = replay_run.replay(SCRIPT, CASE, input_path=ROOT / "open/dev.jsonl",
+                                   data_dir=ROOT / "open/data")
+        self.assertEqual(replay_run.to_csv_bytes(SCRIPT, result["rows"]), HEAD_REPLAY.read_bytes())
 
     def test_candidate_replaces_only_the_stage_it_defines(self):
         with tempfile.TemporaryDirectory() as tmp:

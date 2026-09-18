@@ -559,6 +559,8 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(judged("v21", "구성원별 최소지분율은 10% 이상이어야 합니다."), 0)
         self.assertEqual(judged("v21", "구성원별 최소 지분율은 5% 이상으로 하여야 함"), 1)
         self.assertEqual(judged("v21", "업체별 최소 지분율은 2% 이상"), 1)
+        # "단독"만으로는 내리지 않는다(특수관계인 지분 조항 등).
+        self.assertEqual(judged("v21", "단독으로 또는 합산하여 발행주식 총수의 100분의 30 이상"), 1)
         # v24: 같은 뜻의 메타 값과 일치할 때만 내린다.
         meta = {"배정예산금액": 30000000, "입찰추정가격": 27272727, "계약방법": "제한경쟁",
                 "지역제한여부": "Y", "제한지역코드목록": "경상남도"}
@@ -576,6 +578,9 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(judged("v9", "제조사·모델명 : ABC 터보젯"), 1)
         self.assertEqual(judged("v9", "형식명 : ABC-100",
                                 text="형식명 : ABC-100 과 호환되어야 함"), 1)
+        # 곁의 "상당"은 대개 금액 뜻이라 동등품 허용으로 읽지 않는다.
+        self.assertEqual(judged("v9", "형식명 : ABC-100",
+                                text="형식명 : ABC-100 1대 (부가세 상당액 포함)"), 1)
 
         # 근거가 비었거나 원문에 없는 양성은 근거만으로 내리지 않는다.
         rec = record()

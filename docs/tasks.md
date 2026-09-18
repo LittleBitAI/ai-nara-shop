@@ -150,9 +150,16 @@ dev 200건에 블라인드로 돌려 비교한다. 입력·출력·실행 절차
 `cpu-replay`: "후처리 후보는 CPU에서 잰다"고 두 번 적었는데 그걸 하는 도구가 없었다. 만든다.
 - `tools/replay_run.py`는 보관된 원응답으로 `parse_judgment`→`verify_sme`→`postprocess`를 다시
   돌린다. 모델을 부르지 않는다. `--candidate`로 그 두 단계 중 정의한 것만 갈아 끼운다.
-- **합격 기준은 회차 자신의 CSV를 바이트 단위로 재현하는 것이다.** `--verify`가 그것이고
-  `tests/test_replay_run.py`가 최종·기본 CSV 양쪽을 검사한다. 재현이 깨지면 재생 결과를 근거로
+- **`--verify`는 보관 원응답의 무결성 검사다. HEAD 회귀 가드가 아니다.** 회차 `manifest.json`에
+  기록된 커밋의 `script.py`를 `git show`로 읽어, 그 코드로 회차 자신의 CSV를 바이트 단위로
+  재현하는지 본다(PR #30부터). HEAD의 후단이 바뀌어도 회차는 그 회차의 코드로만 재현되기 때문이다.
+  `tests/test_replay_run.py`가 최종·기본 CSV 양쪽을 검사한다. 재현이 깨지면 보관 응답을 근거로
   쓸 수 없다는 뜻이므로 검사가 먼저 빨개져야 한다.
+- **HEAD 회귀 가드는 따로 있다.** `test_head_replay_matches_the_pinned_head_csv`가 HEAD 코드의
+  재생 결과를 고정 CSV(`reports/team-b/b5-port-replay/submission.csv`)와 바이트 대조한다.
+  HEAD 후단을 일부러 바꾸면 그 CSV를 새로 고정하고 이유를 PR에 적는다.
+- **비교 기준은 HEAD 재생 CSV다.** 후보 없이 `--verify` 없이 재생한 CSV를 `--before`로 쓴다.
+  보관 회차의 `submission.csv`를 `--before`로 쓰면 그 뒤에 병합된 후처리의 효과가 후보에 섞인다.
 - 실측: dev 200건 재생 **0.64초** + 채점 0.20초. 재생 점수가 회차 기록 0.218203523963과 일치했다.
   Colab 회차 12~16분이 0.84초가 된다.
 - **회차 churn이 없다.** 같은 모델 출력을 쓰므로 후보와 기준의 차이가 곧 후보의 효과다.
