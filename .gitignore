@@ -4,7 +4,11 @@
 /open/train_unlabeled.jsonl
 /artifacts/
 /runs/
-/experiments/
+# 디렉터리째 빼면 하위 파일을 되살릴 수 없어 내용물만 뺀다.
+# 팀 배정의 후보 소스는 산출물이 아니라 커밋 대상이다 (docs/tasks/team-handoff.md:196-197).
+/experiments/*
+!/experiments/sme_candidate.py
+!/experiments/qualification_candidate.py
 /checkpoints/
 /weights/
 /predictions/
