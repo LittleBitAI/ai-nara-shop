@@ -36,9 +36,12 @@ class BaselineTests(unittest.TestCase):
             class Selective(baseline.MockRunner):
                 def chat(self, batch, items=None):
                     calls.append((items, len(batch)))
-                    if items is not None:
+                    if items == baseline.SME_ITEMS:
                         return [json.dumps({"v13": {"facts": baseline.empty_sme_facts(),
                                                    "위반여부": 0, "근거문구": None}})] * len(batch)
+                    if items is not None:   # N1 부재 분할 호출은 facts 없이 두 칸만 낸다
+                        return [json.dumps({k: {"위반여부": 0, "근거문구": None}
+                                            for k in items})] * len(batch)
                     outputs = []
                     for i in range(len(batch)):
                         obj = valid()
@@ -50,7 +53,10 @@ class BaselineTests(unittest.TestCase):
                 out = Path(tmp) / "submission.csv"
                 report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Selective,
                                       limit=4, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
-                self.assertEqual(calls, [(None, 4)] + [(["v13"], 2)] * bool(positives))
+                # 합동 1회 → v13 추가 호출(선택된 공고가 있을 때만) → N1 부재 분할 호출.
+                # 시험 입력 4건은 전부 고시금액 미만이라 분할 호출이 4건 모두에 붙는다.
+                self.assertEqual(calls, [(None, 4)] + [(["v13"], 2)] * bool(positives)
+                                 + [(baseline.SPLIT_ITEMS, 4)])
                 self.assertEqual(report["sme_selected_count"], len(positives))
                 self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
                 self.assertEqual(report["sme_fallback_count"], 0)
@@ -146,12 +152,16 @@ class BaselineTests(unittest.TestCase):
                     if items is None:
                         self_test.assertEqual(messages[0]["content"], expected_system)
                         self_test.assertNotIn("[Provided 고시", messages[1]["content"])
+                    elif items == baseline.SPLIT_ITEMS:
+                        # N1 분할 호출: 합동 프롬프트와 다른 항목 목록, 고시 자료는 안 붙는다.
+                        self_test.assertNotIn("- v24:", messages[0]["content"])
+                        self_test.assertNotIn("[Provided 고시", messages[1]["content"])
                     else:
                         self_test.assertEqual(items, ["v13"])
                         self_test.assertNotIn("- v24:", messages[0]["content"])
                         self_test.assertIn("[Provided 고시", messages[1]["content"])
                     obj = {k: {"위반여부": 1, "근거문구": None} for k in (items or baseline.ITEMS)}
-                    if items is not None:
+                    if items == baseline.SME_ITEMS:
                         obj["v13"]["위반여부"] = 0
                         for cell in obj.values():
                             cell["facts"] = baseline.empty_sme_facts()
@@ -163,7 +173,7 @@ class BaselineTests(unittest.TestCase):
             report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Isolated,
                                   limit=2, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
             self.assertEqual(len(instances), 1)
-            self.assertEqual(calls, [None, ["v13"]])
+            self.assertEqual(calls, [None, ["v13"], baseline.SPLIT_ITEMS])
             with out.open(encoding="utf-8") as f:
                 final = list(csv.DictReader(f))
             with out.with_name("baseline_submission.csv").open(encoding="utf-8") as f:
@@ -171,8 +181,14 @@ class BaselineTests(unittest.TestCase):
             for before, after in zip(original, final):
                 self.assertEqual(before["v13"], "1")
                 self.assertEqual(after["v13"], "0")
+                # 추가 호출이 건드릴 수 있는 칸은 v13과 N1 분할 2항목뿐이다.
+                # 그 밖의 항목이 하나라도 움직이면 회차 colab-1789719173182820657의
+                # 실패(대상 밖 여덟 항목이 TP 열하나를 잃음)가 되풀이된 것이다.
+                touched = ["v13", "e13"]
+                for item in baseline.SPLIT_ITEMS:
+                    touched += [item, "e" + item[1:]]
                 for col in baseline.COLUMNS:
-                    if col not in ["v13", "e13"]:
+                    if col not in touched:
                         self.assertEqual(before[col], after[col])
             self.assertIn("sme_inference_seconds", report)
             self.assertEqual(report["sme_model_success_count"], 0)  # Test double is not live evidence.
