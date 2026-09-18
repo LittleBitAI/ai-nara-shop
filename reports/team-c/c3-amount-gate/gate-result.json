@@ -153,12 +153,142 @@
           "masked_false_positives_count": 107
         }
       ]
-    }
-  ],
-  "runs_not_present": [
+    },
     {
       "label": "보수 · 칸 제거+보수화 지시",
-      "run": "colab-1789695980726180378"
+      "run": "colab-1789695980726180378",
+      "notices": 200,
+      "notice_amount_confirmed_won": 230000000,
+      "source_columns": "판정만 사용. 막힌_단계는 쓰지 않는다",
+      "notices_without_amount": [],
+      "gates": [
+        {
+          "name": "v16 · 상한 2.2억(잠정)",
+          "item": "v16",
+          "floor_won": 100000000,
+          "ceiling_won": 220000000,
+          "support": 6,
+          "before": {
+            "tp": 1,
+            "fp": 29,
+            "fn": 5,
+            "tn": 165,
+            "f1": 0.05555555555555555
+          },
+          "after": {
+            "tp": 1,
+            "fp": 17,
+            "fn": 5,
+            "tn": 177,
+            "f1": 0.08333333333333333
+          },
+          "handoff_target": null,
+          "target_matched": null,
+          "masked_true_positives": [],
+          "masked_false_positives_count": 12
+        },
+        {
+          "name": "v16 · 상한 2.3억(조문)",
+          "item": "v16",
+          "floor_won": 100000000,
+          "ceiling_won": 230000000,
+          "support": 6,
+          "before": {
+            "tp": 1,
+            "fp": 29,
+            "fn": 5,
+            "tn": 165,
+            "f1": 0.05555555555555555
+          },
+          "after": {
+            "tp": 1,
+            "fp": 17,
+            "fn": 5,
+            "tn": 177,
+            "f1": 0.08333333333333333
+          },
+          "handoff_target": null,
+          "target_matched": null,
+          "masked_true_positives": [],
+          "masked_false_positives_count": 12
+        },
+        {
+          "name": "v18 · 1억 미만",
+          "item": "v18",
+          "floor_won": null,
+          "ceiling_won": 100000000,
+          "support": 7,
+          "before": {
+            "tp": 2,
+            "fp": 34,
+            "fn": 5,
+            "tn": 159,
+            "f1": 0.09302325581395349
+          },
+          "after": {
+            "tp": 2,
+            "fp": 29,
+            "fn": 5,
+            "tn": 164,
+            "f1": 0.10526315789473684
+          },
+          "handoff_target": null,
+          "target_matched": null,
+          "masked_true_positives": [],
+          "masked_false_positives_count": 5
+        },
+        {
+          "name": "v20 · 1억 이상(임시)",
+          "item": "v20",
+          "floor_won": 100000000,
+          "ceiling_won": null,
+          "support": 5,
+          "before": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 5,
+            "tn": 195,
+            "f1": 0.0
+          },
+          "after": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 5,
+            "tn": 195,
+            "f1": 0.0
+          },
+          "handoff_target": null,
+          "target_matched": null,
+          "masked_true_positives": [],
+          "masked_false_positives_count": 0
+        },
+        {
+          "name": "v20 · 20억 이상(별표1)",
+          "item": "v20",
+          "floor_won": 2000000000,
+          "ceiling_won": null,
+          "support": 5,
+          "before": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 5,
+            "tn": 195,
+            "f1": 0.0
+          },
+          "after": {
+            "tp": 0,
+            "fp": 0,
+            "fn": 5,
+            "tn": 195,
+            "f1": 0.0
+          },
+          "handoff_target": null,
+          "target_matched": null,
+          "masked_true_positives": [],
+          "masked_false_positives_count": 0
+        }
+      ]
     }
-  ]
+  ],
+  "runs_not_present": []
 }
