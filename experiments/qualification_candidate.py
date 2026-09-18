@@ -1,4 +1,4 @@
-"""참가자격 제한 3항목(v8·v7·v4) 후보. 모델 뒤에 붙는 후처리 단계다.
+"""참가자격 제한 4항목(v8·v7·v4·v3) 후보. 모델 뒤에 붙는 후처리 단계다.
 
 왜 후처리인가. 등록된 회차 4개에서 세 항목이 모두 TP=0이고 v8·v7은 FP도 0이다.
 FP가 0이라는 것은 모델이 dev 200건 어디에서도 1을 낸 적이 없다는 뜻이다.
@@ -14,6 +14,10 @@ FP가 0이라는 것은 모델이 dev 200건 어디에서도 1을 낸 적이 없
 - v4 특정기관·특정실적: 실적을 특정 기관이 발주·시행·납품한 것으로 한정한다.
   금액 기준을 걸지 않는다. 양성 6건의 추정가격이 2,269만~7.48억으로 흩어져 있다.
   민간까지 열어 둔 실적은 특정기관 제한이 아니다(`PPS-DEV-054`가 v4=0인 이유).
+- v3 실적제한 1배수 이상: **이 항목만 1을 0으로 내린다.** 항목표 비고가 `사업예산 기준`이고
+  모델은 실적제한을 보면 배수를 따지지 않고 1을 낸다. 요구 실적금액을 읽어
+  사업예산의 1배에 못 미치면 내린다. 금액이나 예산을 못 읽으면 건드리지 않는다.
+  모르는 것을 근거로 내리면 정답 양성을 잃는다.
 
 공통으로 제안서 평가 배점표와 제출 서식은 참가 제한이 아니므로 제외한다.
 
@@ -198,13 +202,69 @@ def detect_institution_performance(rec):
     return None
 
 
+# ===== v3 실적제한 1배수 이상 =====
+# 항목표 비고가 `사업예산 기준`이다. 요구 실적금액이 사업예산의 1배 미만이면 1배수 제한이 아니다.
+# 이 규칙만 1을 0으로 내린다. 금액을 못 읽으면 모델 판정을 그대로 둔다.
+MONEY = re.compile(r"(\d+(?:\.\d+)?)\s*억|(\d+(?:\.\d+)?)\s*천만|([\d,]{4,})\s*(?:만)?\s*원")
+PERF_WORD = re.compile(r"실적")
+MONEY_REACH = 180      # 실적 문구 앞뒤에서 금액을 찾을 범위
+MONEY_MIN = 1_000_000            # 사람 수·건수를 금액으로 읽지 않기 위한 하한
+MONEY_MAX = 100_000_000_000      # 오독한 큰 수를 버리는 상한
+
+
+def _money_near(text, pos):
+    """실적 문구 근처의 원 단위 금액. 억·천만·만원 표기를 모두 원으로 바꾼다."""
+    segment = text[max(0, pos - MONEY_REACH):pos + MONEY_REACH]
+    values = []
+    for match in MONEY.finditer(segment):
+        if match.group(1):
+            values.append(int(float(match.group(1)) * 100_000_000))
+        elif match.group(2):
+            values.append(int(float(match.group(2)) * 10_000_000))
+        elif match.group(3):
+            raw = int(match.group(3).replace(",", ""))
+            values.append(raw * 10_000 if "만" in segment[match.end() - 3:match.end() + 1] else raw)
+    return values
+
+
+def required_performance(rec):
+    """참가자격이 요구하는 실적 금액의 최댓값. 읽지 못하면 None."""
+    best = None
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        for match in PERF_WORD.finditer(text):
+            around = text[max(0, match.start() - CONTEXT):match.start() + CONTEXT]
+            if NOT_QUALIFICATION.search(around):
+                continue
+            for value in _money_near(text, match.start()):
+                if MONEY_MIN <= value <= MONEY_MAX and (best is None or value > best):
+                    best = value
+    return best
+
+
+def performance_below_budget(rec):
+    """v3. 요구 실적금액이 사업예산의 1배 미만이면 그 배수를 돌려준다. 아니면 None.
+
+    금액이나 예산을 읽지 못하면 None을 돌려준다. 모르는 것을 근거로 내리지 않는다.
+    """
+    budget = (rec.get("meta") or {}).get("배정예산금액")
+    if not budget:
+        return None
+    required = required_performance(rec)
+    if required is None:
+        return None
+    ratio = required / budget
+    return ratio if ratio < 1.0 else None
+
+
 RULES = {"v8": detect, "v7": detect_region_expansion, "v4": detect_institution_performance}
 
 
 def apply(judgment, rec):
-    """모델 판정에 v8·v7·v4만 덧쓴다. 다른 21항목은 그대로 돌려준다.
+    """모델 판정에 v8·v7·v4를 올리고 v3만 내린다. 다른 20항목은 그대로 돌려준다.
 
-    이미 1이면 모델 근거를 유지한다. 규칙은 0을 1로 올리기만 하고 내리지 않는다.
+    v8·v7·v4는 이미 1이면 모델 근거를 유지하고, 0일 때만 올린다.
+    v3는 요구 실적금액이 예산 1배 미만인 것을 읽었을 때만 내린다.
     """
     out = dict(judgment)
     for item in ITEMS:
@@ -214,6 +274,9 @@ def apply(judgment, rec):
         hit = RULES[item](rec)
         if hit:
             out[item] = {"위반여부": 1, "근거문구": hit["근거문구"]}
+    v3 = dict(out.get("v3") or {"위반여부": 0, "근거문구": None})
+    if v3.get("위반여부") == 1 and performance_below_budget(rec) is not None:
+        out["v3"] = {"위반여부": 0, "근거문구": None}
     return out
 
 

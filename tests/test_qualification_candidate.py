@@ -148,6 +148,58 @@ class InstitutionPerformanceCoverage(unittest.TestCase):
         self.assertGreater(prices[-1], 220_000_000, "양성 최고가가 고시금액 근처보다 높다")
 
 
+class ExcessPerformanceGuard(unittest.TestCase):
+    """v3 실적제한 1배수 이상. 이 규칙만 1을 0으로 내리므로 TP 보존을 먼저 지킨다."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.recs = load_dev()
+        cls.truth = load_truth("v3")
+
+    def test_no_true_positive_is_downgraded(self):
+        """v3 TP 8건을 하나라도 잃으면 이 후보는 반려다."""
+        lost = [i for i, rec in self.recs.items()
+                if self.truth[i] and candidate.performance_below_budget(rec) is not None]
+        self.assertEqual([], lost, f"정답 양성을 내렸다: {lost}")
+
+    def test_known_false_positives_are_downgraded(self):
+        """예산 1배에 못 미치는 것이 실제로 읽힌 오탐."""
+        for rec_id, ceiling in (("PPS-DEV-06", 0.6), ("PPS-DEV-054", 0.4),
+                                ("PPS-DEV-069", 0.7), ("PPS-DEV-141", 0.3)):
+            with self.subTest(rec_id):
+                ratio = candidate.performance_below_budget(self.recs[rec_id])
+                self.assertIsNotNone(ratio, "배수를 읽지 못했다")
+                self.assertLess(ratio, ceiling)
+
+    def test_unreadable_amount_leaves_the_model_alone(self):
+        """금액을 못 읽으면 내리지 않는다. 모르는 것을 근거로 삼지 않는다."""
+        rec = notice("입찰참가자격 유사 용역 수행 실적이 있는 업체")
+        rec["meta"]["배정예산금액"] = 100_000_000
+        self.assertIsNone(candidate.required_performance(rec))
+        self.assertIsNone(candidate.performance_below_budget(rec))
+
+    def test_missing_budget_leaves_the_model_alone(self):
+        rec = notice("입찰참가자격 최근 3년 이내 1억원 이상의 실적을 보유한 업체")
+        rec["meta"]["배정예산금액"] = None
+        self.assertIsNone(candidate.performance_below_budget(rec))
+
+    def test_at_or_above_one_times_budget_is_kept(self):
+        rec = notice("입찰참가자격 최근 3년 이내 3억원 이상의 실적을 보유한 업체")
+        rec["meta"]["배정예산금액"] = 250_000_000
+        self.assertIsNone(candidate.performance_below_budget(rec))
+
+    def test_korean_amount_units_are_read(self):
+        for text, expected in (("1억원 이상의 실적", 100_000_000),
+                               ("5천만원 이상의 실적", 50_000_000),
+                               ("3,000만원 이상 실적", 30_000_000)):
+            with self.subTest(text):
+                self.assertEqual(expected, candidate.required_performance(notice(text)))
+
+    def test_scoring_table_amounts_are_not_used(self):
+        rec = notice("제안서 평가 배점 유사 용역 수행실적 10억원 이상 5점")
+        self.assertIsNone(candidate.required_performance(rec))
+
+
 class CounterExamples(unittest.TestCase):
     """실적만·지역만·가점만 있는 공고는 중복제한이 아니다."""
 
@@ -202,16 +254,33 @@ class CounterExamples(unittest.TestCase):
 
 
 class ApplyContract(unittest.TestCase):
-    def test_only_the_three_owned_items_can_change(self):
+    def test_only_the_owned_items_can_change(self):
+        owned = set(candidate.ITEMS) | {"v3"}
         recs = load_dev()
         for rec_id in set(POSITIVES + V7_POSITIVES + V4_POSITIVES):
             with self.subTest(rec_id):
                 before = empty_judgment()
                 after = candidate.apply(before, recs[rec_id])
                 for item in after:
-                    if item not in candidate.ITEMS:
+                    if item not in owned:
                         self.assertEqual(before[item], after[item],
                                          f"{item}이 담당 밖인데 바뀌었다")
+
+    def test_v3_is_only_lowered_never_raised(self):
+        """v3 규칙은 내리기만 한다. 0을 1로 올리지 않는다."""
+        recs = load_dev()
+        for rec_id in ("PPS-DEV-06", "PPS-DEV-054", "PPS-DEV-05"):
+            with self.subTest(rec_id):
+                after = candidate.apply(empty_judgment(), recs[rec_id])
+                self.assertEqual(0, after["v3"]["위반여부"])
+
+    def test_v3_positive_is_lowered_when_the_amount_falls_short(self):
+        recs = load_dev()
+        before = empty_judgment()
+        before["v3"] = {"위반여부": 1, "근거문구": "모델이 고른 문구"}
+        after = candidate.apply(before, recs["PPS-DEV-06"])
+        self.assertEqual(0, after["v3"]["위반여부"])
+        self.assertIsNone(after["v3"]["근거문구"])
 
     def test_each_rule_marks_its_own_item(self):
         recs = load_dev()
@@ -226,10 +295,15 @@ class ApplyContract(unittest.TestCase):
         before["v8"] = {"위반여부": 1, "근거문구": "모델이 고른 문구"}
         self.assertEqual(before["v8"], candidate.apply(before, rec)["v8"])
 
-    def test_rule_never_downgrades_a_negative_to_a_different_value(self):
+    def test_v8_v7_v4_never_lower_a_model_positive(self):
         rec = notice("이 공고에는 아무 제한도 없다")
-        after = candidate.apply(empty_judgment(), rec)
-        self.assertEqual(0, after["v8"]["위반여부"])
+        before = empty_judgment()
+        for item in candidate.ITEMS:
+            before[item] = {"위반여부": 1, "근거문구": "모델이 고른 문구"}
+        after = candidate.apply(before, rec)
+        for item in candidate.ITEMS:
+            with self.subTest(item):
+                self.assertEqual(before[item], after[item])
 
     def test_input_is_not_mutated(self):
         rec = load_dev()["PPS-DEV-11"]
