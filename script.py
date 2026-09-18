@@ -15,6 +15,7 @@
 로컬 실행
   python script.py --mock          # 모델 없이 입력·출력 흐름 확인
   python script.py --limit 10      # 앞 10건 실행
+  tools/api_run.py                 # 같은 파이프라인을 Google AI Studio API로 — 제출물 아님
 """
 from __future__ import annotations
 
@@ -424,9 +425,27 @@ def empty_sme_facts():
                 qualification_quote=None, qualification="unknown", exception_applies="unknown")
 
 
+def restrict_schema(schema: Dict[str, Any], items, *, sme: bool = True) -> Dict[str, Any]:
+    """출력 스키마를 지정 항목만으로 좁힙니다. 받은 스키마를 제자리에서 고칩니다."""
+    schema["required"] = list(items)
+    schema["properties"] = {key: schema["properties"][key] for key in items}
+    if sme:
+        for key in items:
+            cell = schema["properties"][key]
+            cell["properties"] = {"facts": sme_facts_schema(), **cell["properties"]}
+            cell["properties"]["근거문구"] = {"type": "null"}
+            cell["required"] = ["facts", "위반여부", "근거문구"]
+    return schema
+
+
 # ===== 5. 모델 러너 (vLLM offline / mock) =====
+# 러너는 `MODE`로 자기 실행을 밝힙니다. 실행 기록이 live·mock·api를 섞지 않게 하는 유일한 근거입니다.
+# 세 번째 러너(Google AI Studio API)는 제출물이 아니므로 `tools/api_run.py`에 있습니다.
 class VLLMRunner:
     """평가 서버의 모델을 vLLM offline API로 실행합니다."""
+
+    MODE = "live"                 # 고정 모델 정상 호출(R4)로 셀 수 있는 유일한 실행이다.
+    TOKEN_COUNT = "actual"
 
     def __init__(self, schema: Dict[str, Any], model_dir: str = MODEL_DIR, quant: Optional[str] = QUANT,
                  max_tokens: int = MAX_TOKENS, seed: int = SEED, gpu_mem: float = 0.92, tp: int = 1):
@@ -472,15 +491,7 @@ class VLLMRunner:
 
     def parameters_for_items(self, items, *, sme=True):
         sp = copy.deepcopy(self.sp)
-        schema = sp.structured_outputs.json
-        schema["required"] = list(items)
-        schema["properties"] = {key: schema["properties"][key] for key in items}
-        if sme:
-            for key in items:
-                cell = schema["properties"][key]
-                cell["properties"] = {"facts": sme_facts_schema(), **cell["properties"]}
-                cell["properties"]["근거문구"] = {"type": "null"}
-                cell["required"] = ["facts", "위반여부", "근거문구"]
+        restrict_schema(sp.structured_outputs.json, items, sme=sme)
         return sp
 
     def chat(self, batch: List[List[Dict[str, str]]], sampling_params=None, items=None) -> List[str]:
@@ -554,6 +565,8 @@ class VLLMRunner:
 
 class MockRunner:
     """모델 없이 입력·출력 및 제출 형식을 확인합니다."""
+    MODE = "mock"
+    TOKEN_COUNT = "mock_estimate"
     load_seconds = 0.0
 
     def __init__(self, schema: Dict[str, Any], **_):
@@ -1382,7 +1395,7 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
             stream.flush()
         try:
             metadata = {
-                "mode": "live" if runner_cls is VLLMRunner else "mock",
+                "mode": runner_cls.MODE,
                 "argv": [record_path(a) if os.path.isabs(a) else a for a in sys.argv],
                 "python": platform.python_version(), "platform": platform.platform(),
                 "settings": {"input": record_path(input_path), "output": record_path(out_path),
@@ -1551,7 +1564,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     live = runner_cls is VLLMRunner
     sme_success_count = sum(text is not None for text in sme_texts)
     report = {
-        "mode": "live" if live else "mock", "model_success_count": len(recs) if live else 0,
+        "mode": runner_cls.MODE, "model_success_count": len(recs) if live else 0,
         "sme_model_success_count": sme_success_count if live else 0,
         "sme_verified_count": sme_success_count, "sme_rejected_positive_count": rejected_positives,
         "sme_selected_count": len(selected), "sme_skipped_count": len(recs) - len(selected),
@@ -1566,7 +1579,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         "reproduction": metadata,
         "seed": runner_kw["seed"], "temperature": 0, "thinking": False,
         "prompt_budget": budget, "max_tokens": output_tokens, "max_chars": max_chars,
-        "prompt_tokens_max": max(ntok), "token_count_kind": "actual" if live else "mock_estimate",
+        "prompt_tokens_max": max(ntok), "token_count_kind": runner_cls.TOKEN_COUNT,
         "건수": len(recs), "모델로드_s": round(runner.load_seconds, 1), "추론_s": round(inf_seconds, 1),
         "건당_s": round(inf_seconds / len(recs), 2), "전체_s": round(time.time() - t_all, 1),
         "유효JSON": len(recs), "메운_항목수": 0,

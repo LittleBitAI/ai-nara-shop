@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-ymub24mv/repo",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/t1-colab-ymub24mv",
+  "started": 1789723035.5169656,
+  "returncode": 0,
+  "elapsed_seconds": 0.22059845924377441
+}
