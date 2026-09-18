@@ -1,0 +1,151 @@
+{
+  "run": "colab-1789658250172468461",
+  "notices": 200,
+  "notice_amount_confirmed_won": 230000000,
+  "source_columns": "판정만 사용. 막힌_단계는 쓰지 않는다",
+  "notices_without_amount": [],
+  "gates": [
+    {
+      "name": "v16 · 상한 2.2억(잠정)",
+      "item": "v16",
+      "floor_won": 100000000,
+      "ceiling_won": 220000000,
+      "support": 6,
+      "before": {
+        "tp": 6,
+        "fp": 139,
+        "fn": 0,
+        "tn": 55,
+        "f1": 0.07947019867549669
+      },
+      "after": {
+        "tp": 6,
+        "fp": 36,
+        "fn": 0,
+        "tn": 158,
+        "f1": 0.25
+      },
+      "handoff_target": [
+        6,
+        36,
+        0,
+        0.25
+      ],
+      "target_matched": true,
+      "masked_true_positives": [],
+      "masked_false_positives_count": 103
+    },
+    {
+      "name": "v16 · 상한 2.3억(조문)",
+      "item": "v16",
+      "floor_won": 100000000,
+      "ceiling_won": 230000000,
+      "support": 6,
+      "before": {
+        "tp": 6,
+        "fp": 139,
+        "fn": 0,
+        "tn": 55,
+        "f1": 0.07947019867549669
+      },
+      "after": {
+        "tp": 6,
+        "fp": 39,
+        "fn": 0,
+        "tn": 155,
+        "f1": 0.23529411764705882
+      },
+      "handoff_target": null,
+      "target_matched": null,
+      "masked_true_positives": [],
+      "masked_false_positives_count": 100
+    },
+    {
+      "name": "v18 · 1억 미만",
+      "item": "v18",
+      "floor_won": null,
+      "ceiling_won": 100000000,
+      "support": 7,
+      "before": {
+        "tp": 4,
+        "fp": 109,
+        "fn": 3,
+        "tn": 84,
+        "f1": 0.06666666666666667
+      },
+      "after": {
+        "tp": 4,
+        "fp": 51,
+        "fn": 3,
+        "tn": 142,
+        "f1": 0.12903225806451613
+      },
+      "handoff_target": [
+        4,
+        51,
+        3,
+        0.129
+      ],
+      "target_matched": true,
+      "masked_true_positives": [],
+      "masked_false_positives_count": 58
+    },
+    {
+      "name": "v20 · 1억 이상(임시)",
+      "item": "v20",
+      "floor_won": 100000000,
+      "ceiling_won": null,
+      "support": 5,
+      "before": {
+        "tp": 3,
+        "fp": 109,
+        "fn": 2,
+        "tn": 86,
+        "f1": 0.05128205128205128
+      },
+      "after": {
+        "tp": 3,
+        "fp": 39,
+        "fn": 2,
+        "tn": 156,
+        "f1": 0.1276595744680851
+      },
+      "handoff_target": [
+        3,
+        39,
+        2,
+        0.128
+      ],
+      "target_matched": true,
+      "masked_true_positives": [],
+      "masked_false_positives_count": 70
+    },
+    {
+      "name": "v20 · 20억 이상(별표1)",
+      "item": "v20",
+      "floor_won": 2000000000,
+      "ceiling_won": null,
+      "support": 5,
+      "before": {
+        "tp": 3,
+        "fp": 109,
+        "fn": 2,
+        "tn": 86,
+        "f1": 0.05128205128205128
+      },
+      "after": {
+        "tp": 2,
+        "fp": 2,
+        "fn": 3,
+        "tn": 193,
+        "f1": 0.4444444444444444
+      },
+      "handoff_target": null,
+      "target_matched": null,
+      "masked_true_positives": [
+        "PPS-DEV-132"
+      ],
+      "masked_false_positives_count": 107
+    }
+  ]
+}

@@ -9,3 +9,8 @@ AGENTS.md text eol=lf
 
 # Preserve run-log bytes as the run produced them, including trailing spaces.
 /reports/runs/** whitespace=-trailing-space
+
+# Patch files must keep their bytes or they stop applying. A diff's context line
+# for a blank source line is a single space, which is not a whitespace error.
+*.diff whitespace=-trailing-space
+*.patch whitespace=-trailing-space
