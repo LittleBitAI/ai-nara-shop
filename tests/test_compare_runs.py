@@ -93,6 +93,22 @@ class CompareRunsTests(unittest.TestCase):
         self.assertTrue(inside["drift_reference"]["below_observed_max"])
         self.assertIn("TP/FP/FN", compare_runs.render(inside))
 
+    def test_drift_constants_match_the_table_that_owns_them(self):
+        """상수는 reproducibility.md의 표에서 온다. 회차를 더하고 한쪽만 고치면 여기서 걸린다."""
+        rows = [line for line in (compare_runs.ROOT / "reports/runs/reproducibility.md")
+                .read_text(encoding="utf-8").splitlines()
+                if line.startswith("|") and line.count("|") == 5]
+        cells, deltas = [], []
+        for row in rows:
+            cell, delta = (part.strip().strip("*") for part in row.strip("|").split("|")[-2:])
+            if cell.isdigit():
+                cells.append(int(cell))
+                deltas.append(abs(float(delta)))
+        self.assertEqual(len(cells), compare_runs.DRIFT_PAIRS, "표의 쌍 수와 DRIFT_PAIRS가 다르다")
+        self.assertEqual((min(cells), max(cells)), compare_runs.DRIFT_CELLS)
+        self.assertAlmostEqual(min(deltas), compare_runs.DRIFT_MIN, places=12)
+        self.assertAlmostEqual(max(deltas), compare_runs.DRIFT_MAX, places=12)
+
     def test_rejects_mismatched_ids_and_unknown_items(self):
         before = write_csv(self.dir / "b3.csv", {i: {} for i in ids(10)})
         short = write_csv(self.dir / "a3.csv", {i: {} for i in ids(9)})

@@ -76,6 +76,12 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 `원응답 없음`은 `debug_responses=false`로 실행해 모델 응답 본문이 로그에 없다는 뜻입니다.
 `diagnostics.jsonl`에는 응답 길이·토큰 수·종료 사유만 있습니다.
 
+**노트북의 `quality_pass`는 이 표의 채택 근거가 아닙니다.** 각 회차의 `validation.json`에
+있지만 통과 여부가 회차 간 churn만으로 뒤집힙니다 — `script.py`가 같은데
+`colab-…172468461`은 같은 기준선을 +0.00000477로 넘겨 `true`, `colab-…726180378`은
+−0.000577로 `false`를 받았습니다. 채택은 `tools/compare_runs.py`의 항목별 TP/FP/FN으로
+판단합니다.
+
 **이 표의 점수를 회차끼리 빼서 개선이라고 읽지 마십시오.** 프롬프트·스키마·모델·seed·입력
 토큰이 전부 같은 두 회차에서도 24항목 1차 판정이 4,800셀 중 25셀 달라져 Macro F1이 0.0025
 움직였습니다. 근거와 그 여파는 [회차 간 비결정성](../reports/runs/reproducibility.md)이 소유합니다.
