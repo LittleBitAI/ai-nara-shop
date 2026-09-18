@@ -10,9 +10,9 @@ index 2a68dcf..23480b5 100644
 -            if v not in ABSENCE:
 -                evidence["maxLength"] = EVIDENCE_MAX
 +            props_v = s["properties"][v]["properties"]
-+            # 제공 스키마는 부재탐지 항목의 근거문구를 null로 못 박는다. 제출 CSV는
-+            # postprocess·validate_csv가 여전히 빈칸으로 만들므로 생성만 열어 준다.
-+            props_v["근거문구"] = {"type": ["string", "null"], "maxLength": EVIDENCE_MAX}
++            # 제공 스키마는 부재탐지 항목의 근거문구를 null로 못 박는다. 생성만 열어 주되
++            # 부재는 100자로 조인다 — 다섯 항목이 500자씩 쓰면 MAX_TOKENS를 넘긴다.
++            props_v["근거문구"] = {"type": ["string", "null"], "maxLength": 100 if v in ABSENCE else EVIDENCE_MAX}
          return s
      props = {}
      for v in ITEMS:
@@ -21,7 +21,7 @@ index 2a68dcf..23480b5 100644
              "properties": {
                  "위반여부": {"type": "integer", "enum": [0, 1]},
 -                "근거문구": {"type": "null"} if v in ABSENCE else {"type": ["string", "null"], "maxLength": EVIDENCE_MAX},
-+                "근거문구": {"type": ["string", "null"], "maxLength": EVIDENCE_MAX},
++                "근거문구": {"type": ["string", "null"], "maxLength": 100 if v in ABSENCE else EVIDENCE_MAX},
              },
          }
      return {"type": "object", "additionalProperties": False, "required": list(ITEMS), "properties": props}

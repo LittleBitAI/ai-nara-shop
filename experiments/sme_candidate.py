@@ -17,6 +17,7 @@ dev 양성 5건 중 3건이 20억 미만이라 하한만으로 라벨이 설명�
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +48,15 @@ _SCRIPT = None
 
 
 def baseline():
-    """제출 코드를 한 번만 읽어 돌려준다."""
+    """제출 코드를 한 번만 읽어 돌려준다.
+
+    replay_run 이 `--script` 로 다른 제출 코드를 넘겼으면 그것을 쓴다. 저장소 루트를
+    고집하면 파싱은 넘긴 코드로, postprocess 는 워킹트리 코드로 갈라지고 manifest 에
+    그 불일치가 남지 않는다. 단독으로 import 될 때만 루트의 script.py 를 읽는다.
+    """
+    submitted = sys.modules.get("submission")
+    if submitted is not None:
+        return submitted  # 캐시하지 않는다 — main() 이 다시 돌면 새 모듈로 바뀐다
     global _SCRIPT
     if _SCRIPT is None:
         _SCRIPT = _load_script()

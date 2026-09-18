@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 import unittest
 
@@ -26,6 +27,18 @@ def postprocess(judgment, rec):
 
 
 class ReplayRunTests(unittest.TestCase):
+    def test_loaded_script_is_reachable_as_sys_modules_submission(self):
+        """후보가 이걸로 같은 제출 코드를 집는다. experiments/sme_candidate.baseline() 참고.
+
+        main() 이 다시 돌면 새 모듈로 바뀌므로 모듈 수준 SCRIPT 와 견주지 않는다.
+        """
+        saved = sys.modules.get("submission")
+        try:
+            module = replay_run.load_module(ROOT / "script.py", "submission")
+            self.assertIs(sys.modules.get("submission"), module)
+        finally:
+            sys.modules["submission"] = saved
+
     def test_replay_reproduces_the_run_csv_byte_for_byte(self):
         """이 검사가 빨개지면 재생 결과를 근거로 쓸 수 없다."""
         self.assertTrue(CASE.is_dir(), f"{CASE} 가 없다")

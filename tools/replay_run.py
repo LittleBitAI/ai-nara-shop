@@ -20,7 +20,14 @@ ROOT = Path(__file__).resolve().parents[1]
 def load_module(path, name):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # 후보가 저장소 루트의 script.py 를 따로 읽지 않고 여기서 읽은 것을 집게 한다.
+    # --script 로 다른 코드를 넘겼을 때 파싱과 postprocess 가 갈라지는 것을 막는다.
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        del sys.modules[name]
+        raise
     return module
 
 
