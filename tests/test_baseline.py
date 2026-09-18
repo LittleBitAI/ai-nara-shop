@@ -36,9 +36,12 @@ class BaselineTests(unittest.TestCase):
             class Selective(baseline.MockRunner):
                 def chat(self, batch, items=None):
                     calls.append((items, len(batch)))
-                    if items is not None:
+                    if items == baseline.SME_ITEMS:
                         return [json.dumps({"v13": {"facts": baseline.empty_sme_facts(),
                                                    "위반여부": 0, "근거문구": None}})] * len(batch)
+                    if items is not None:   # N2 금액 구간 호출은 facts 없이 두 칸만 낸다
+                        return [json.dumps({k: {"위반여부": 0, "근거문구": None}
+                                            for k in items})] * len(batch)
                     outputs = []
                     for i in range(len(batch)):
                         obj = valid()
@@ -50,7 +53,17 @@ class BaselineTests(unittest.TestCase):
                 out = Path(tmp) / "submission.csv"
                 report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Selective,
                                       limit=4, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
-                self.assertEqual(calls, [(None, 4)] + [(["v13"], 2)] * bool(positives))
+                # 합동 1회 → v13 추가 호출(선택된 공고가 있을 때만) → N2 금액 구간 호출 셋.
+                # 한 공고는 정확히 한 구간에만 들어가므로 구간별 건수의 합이 입력 건수다.
+                head = 1 + bool(positives)
+                self.assertEqual(calls[:head], [(None, 4)] + [(["v13"], 2)] * bool(positives))
+                # 남은 호출은 전부 N2 금액 구간 호출이다. 빈 구간은 호출되지 않으므로
+                # 순서만 유지되고, 한 공고는 정확히 한 구간에 들어가 합계가 입력 건수다.
+                bands = [c[0][0] for c in calls[head:]]
+                self.assertTrue(all(len(c[0]) == 1 and c[0][0] in baseline.BAND_ITEMS
+                                    for c in calls[head:]))
+                self.assertEqual(bands, sorted(bands, key=baseline.BAND_ITEMS.index))
+                self.assertEqual(sum(c[1] for c in calls[head:]), 4)
                 self.assertEqual(report["sme_selected_count"], len(positives))
                 self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
                 self.assertEqual(report["sme_fallback_count"], 0)
@@ -163,7 +176,10 @@ class BaselineTests(unittest.TestCase):
             report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Isolated,
                                   limit=2, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
             self.assertEqual(len(instances), 1)
-            self.assertEqual(calls, [None, ["v13"]])
+            self.assertEqual(calls[:2], [None, ["v13"]])
+            # 나머지는 N2 금액 구간 호출뿐이다. 그 밖의 항목 목록이 오면 실패한다.
+            self.assertTrue(all(c is not None and len(c) == 1 and c[0] in baseline.BAND_ITEMS
+                                for c in calls[2:]), calls)
             with out.open(encoding="utf-8") as f:
                 final = list(csv.DictReader(f))
             with out.with_name("baseline_submission.csv").open(encoding="utf-8") as f:
