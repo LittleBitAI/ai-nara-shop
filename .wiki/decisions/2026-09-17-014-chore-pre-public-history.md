@@ -9,6 +9,14 @@ branch: "chore/pre-public-history"
 
 # chore: 공개 전 개발 이력을 대용량 파일만 빼고 공개한다
 
+> **2026-09-19 갱신 — 이 브랜치는 이제 없습니다.** 사용자가 원격 브랜치를 `main` 하나로
+> 줄이기로 해 `chore/pre-public-history`(`2d5afad`)를 원격·로컬에서 지웠습니다.
+> 같은 6커밋이 로컬 `chore/team-agent-setup`(`01d2124`)에 그대로 있고, 지우기 전
+> `git diff --stat`으로 두 브랜치의 차이가 `open/train_unlabeled.jsonl` 하나뿐임을
+> 확인했습니다. 잃은 것은 GitHub의 off-machine 백업 하나입니다. 다시 만들려면 아래
+> 절차를 `chore/team-agent-setup`에 그대로 쓰면 됩니다.
+> 출처: `docs/tasks/public-push.md` "2026-09-19 후속".
+
 무엇. 로컬에만 있던 공개 전 개발 이력 6커밋을 `open/train_unlabeled.jsonl`(790,790,220 bytes)만
 제거한 사본으로 만들어 `chore/pre-public-history`(tip `2d5afad`)로 push했습니다. 원본
 `chore/team-agent-setup`(`01d2124`)과 `master`(`4816cf6`)는 로컬에 그대로 둡니다.

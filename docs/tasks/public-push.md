@@ -67,3 +67,17 @@ Orca CLI로 제거했다. 거기에 있던 터미널은 에이전트가 아닌 �
   같은 OID다. `docs/sources.md`의 `sk-` 적중은 `ask-with-arrow-key-options`의 부분문자열이다.
 - 남은 문제: `reports/t2-*/manifest.json`의 개인 절대경로는 이 push 이전부터 공개 `main`에
   있다. 이번 작업으로 생긴 것이 아니며 별도로 판단한다.
+
+## 2026-09-19 후속 — `chore/pre-public-history`를 지운다
+
+사용자 판단으로 위 "별도 브랜치로만 올린다"를 갱신한다. **원격 브랜치를 `main` 하나로
+줄이기로 했고**, 그 이력은 로컬에 온전히 남으므로 공개 브랜치를 유지할 이유가 없어졌다.
+
+- 원격·로컬 `chore/pre-public-history`(`2d5afad`)를 지웠다. 이제 원격 브랜치는 `main` 하나다.
+- **잃은 것은 GitHub의 off-machine 백업 하나뿐이다.** 같은 6커밋이 로컬
+  `chore/team-agent-setup`(`01d2124`)에 그대로 있고, 지우기 전 `git diff --stat`으로
+  두 브랜치의 차이가 `open/train_unlabeled.jsonl` **하나뿐**임을 확인했다.
+  `master`(`4816cf6`)는 그 브랜치의 조상이다. 둘 다 사용자 지시로 로컬에 남긴다.
+- 다시 만들려면 `chore/team-agent-setup`에서 같은 `git filter-branch --index-filter`로
+  그 파일만 빼면 된다. 위 2026-09-17 절이 그 절차를 그대로 적고 있다.
+- 이 PC가 사라지면 공개 전 이력도 사라진다. 그것을 알고 내린 결정이다.
