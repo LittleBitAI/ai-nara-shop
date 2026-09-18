@@ -1,0 +1,17 @@
+{
+  "purpose": "colab_validation_only",
+  "live_verified": false,
+  "sha256": {
+    "submit.zip": "a5e038ea0113286877f84bf9eeef319b547f996951fa5736bcd40bb49c08b669",
+    "tools/score.py": "17cb568c299239e52d3c843a668cc0d1436b18b2b68656f929f5e5a2d8e5b7a3",
+    "tools/diagnose_items.py": "903c332ff6bacfc3a3e443164efe2718dc4b55a2e0f4b5b05697ab3058a1adaa",
+    "open/dev.jsonl": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+    "open/dev_labels.csv": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
+    "open/data/test.jsonl.gz": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+    "open/data/항목표.json": "368cb41f376d8ad7edbbdf181542e6e959de356f7f70d86e72943325ecad61d9",
+    "open/data/정답스키마_디코딩.json": "149580162261b446090bec075eb4c13f765a771c827b6bbe06660eb833a3c2ac",
+    "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt": "a4390e91cb991ce75bde7389c9297c6e4f6a947afd1a26cb9397e34aa4e9a445",
+    "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt": "1070092cca07468b755fa1e0fb13658d4c9ea72c48b555109c8fc4f87046cabb",
+    "open/data/법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv": "445257e4821c9d533f0c4b481e0ead89e85244ed6a6bf13d838510eb60fdbecd"
+  }
+}

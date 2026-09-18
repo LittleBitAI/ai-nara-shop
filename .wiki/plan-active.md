@@ -17,8 +17,8 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
   693c695 이후 코드는 로컬 검사만 통과했고 새 GPU 실행·제출은 아직 없다.
   제출 이력은 [submissions.json](../reports/submissions.json)이 소유한다.
 - **한 쌍의 회차에서 나온 Macro F1 차이는 신호가 아니다.** 같은 조건인데 24항목 판정이 회차마다
-  4,800셀 중 25~43개 바뀌고, 그 churn의 Macro F1 영향이 여덟 쌍에서 **0.000008~0.003129**로
-  400배 벌어졌다. **같은 코드가 dev 0.2182를 세 번, 0.2208을 한 번 냈다**
+  4,800셀 중 25~45개 바뀌고, 그 churn의 Macro F1 영향이 열두 쌍에서 **0.000008~0.003129**로
+  400배 벌어졌다. **같은 `script.py`가 dev 0.2182를 세 번, 0.2208과 0.2202를 한 번씩 냈다**
   ([근거](../reports/runs/reproducibility.md)).
   쓸 수 있는 신호는 대상 항목의 TP/FP/FN이다 — `tools/compare_runs.py`가 낸다.
   노트북 `quality_pass`도 믿지 않는다. run4는 과거 기준선을 0.00000477 넘겨 통과했다.
@@ -27,6 +27,10 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
   run1과의 두 차이가 26%만 겹치고 방향도 7:6으로 균형이다.
   추가 호출이 200건에서 107건으로 줄어 추가 추론이 330.8초에서 110.7초로, dev 전체가
   896.9초에서 694.8초로 줄었다. 아직 제출하지 않았다.
+- **부재탐지는 묻는 방식이 가른다.** 같은 모델·같은 공고인데 판정 칸을 따로 두면 v16·v18·v20
+  재현율이 13/18, 단계와 합치면 3/18이다. 제출 파이프라인은 두 회차 모두 0/18이다.
+  재현율·정밀도 다이얼이 프롬프트·스키마 쪽에 있다 ([근거](../reports/team-score-audit/absence-detection.md)).
+  v20만 다르다 — 200건 중 192건이 `context_not_observed`라 관측 단계에서 막힌다.
 - **모델 뒤 단계 후보는 GPU를 안 쓴다.** 원응답 307건을 보관했고 `tools/replay_run.py`가
   dev 200건을 **0.6초**에 재생한다. 재생이 회차 자신의 CSV를 바이트 단위로 재현하는 것을 검사가
   지킨다. 같은 모델 출력을 쓰므로 **회차 churn이 없고 후보와 기준의 차이가 곧 효과다.**
