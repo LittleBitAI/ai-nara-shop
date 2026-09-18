@@ -17,7 +17,7 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
   693c695 이후 코드는 로컬 검사만 통과했고 새 GPU 실행·제출은 아직 없다.
   제출 이력은 [submissions.json](../reports/submissions.json)이 소유한다.
 - **한 쌍의 회차에서 나온 Macro F1 차이는 신호가 아니다.** 같은 조건인데 24항목 판정이 회차마다
-  4,800셀 중 25~45개 바뀌고, 그 churn의 Macro F1 영향이 열두 쌍에서 **0.000008~0.003129**로
+  4,800셀 중 29~45개 바뀌고, 그 churn의 Macro F1 영향이 같은 코드 열 쌍에서 **0.000008~0.003129**로
   400배 벌어졌다. **같은 `script.py`가 dev 0.2182를 세 번, 0.2208과 0.2202를 한 번씩 냈다**
   ([근거](../reports/runs/reproducibility.md)).
   쓸 수 있는 신호는 대상 항목의 TP/FP/FN이다 — `tools/compare_runs.py`가 낸다.
