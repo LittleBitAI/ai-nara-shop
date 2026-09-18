@@ -191,7 +191,11 @@ class APIRunner:
                 if attempt == attempts:
                     raise ValueError(f"{type(error).__name__}: {error}") from None
                 wait = None
-            time.sleep(min(90.0, wait if wait else 2 ** attempt + random.random()))
+            # 서버가 "Please retry in 360s"라고 알려 주면 그 값은 자르지 않는다.
+            # 90초로 자르면 90·180·270초에 두드려 전부 429를 맞고, 한 번만 기다렸으면
+            # 성공했을 요청이 회차를 통째로 끝낸다 — count_tokens()는 이 실패를
+            # 공고별 복구 없이 그대로 올린다. 상한은 힌트가 없을 때의 지수 백오프에만 건다.
+            time.sleep(wait if wait else min(90.0, 2 ** attempt + random.random()))
 
     def _adopt_limit(self, detail):
         """공식 문서의 요금제 표에 Gemma 행이 없다. 실제 상한은 429가 알려 주는 것이 유일한 사실이라,

@@ -78,6 +78,48 @@ class ApiRunTest(unittest.TestCase):
             self.assertEqual(api_run.APIRunner._post(runner, url, {}), {"totalTokens": 9})
         self.assertAlmostEqual(slept.call_args[0][0], 42.9, places=1)
 
+    def test_a_long_server_hint_is_not_truncated_into_early_retries(self):
+        """서버가 알려 준 대기 시간은 자르지 않는다.
+
+        90초로 자르면 90·180·270초에 두드려 전부 429를 맞고, 한 번만 기다렸으면
+        성공했을 요청이 회차를 끝낸다. `count_tokens()`는 이 실패를 공고별 복구 없이
+        그대로 올린다. 상한은 힌트가 없을 때의 지수 백오프에만 건다.
+        """
+        url = "https://example.invalid/v1beta/models/x:countTokens"
+        clock, calls = [0.0], []
+
+        def fake_urlopen(request, timeout=None):
+            calls.append(clock[0])
+            if clock[0] < 360:
+                body = f"Please retry in {360 - clock[0]}s.".encode("utf-8")
+                raise urllib.error.HTTPError(url, 429, "quota", {}, io.BytesIO(body))
+            return io.BytesIO(b'{"totalTokens": 9}')
+
+        runner = Stub.__new__(Stub)
+        with mock.patch.object(api_run.urllib.request, "urlopen", fake_urlopen), \
+                mock.patch.object(api_run.time, "sleep",
+                                  lambda s: clock.__setitem__(0, clock[0] + s)):
+            self.assertEqual(api_run.APIRunner._post(runner, url, {}), {"totalTokens": 9})
+        # 두 번째 시도가 서버가 말한 361초에 간다. 자르면 90초에 가고 네 번 다 실패한다.
+        self.assertEqual(len(calls), 2)
+        self.assertAlmostEqual(calls[1], 361.0, places=1)
+
+    def test_backoff_without_a_hint_still_has_a_ceiling(self):
+        """힌트가 없을 때의 지수 백오프에는 상한이 남아 있어야 한다."""
+        url = "https://example.invalid/v1beta/models/x:countTokens"
+        waits = []
+
+        def fake_urlopen(request, timeout=None):
+            raise TimeoutError("timed out")
+
+        runner = Stub.__new__(Stub)
+        with mock.patch.object(api_run.urllib.request, "urlopen", fake_urlopen), \
+                mock.patch.object(api_run.time, "sleep", waits.append):
+            with self.assertRaises(ValueError):
+                api_run.APIRunner._post(runner, url, {})
+        self.assertTrue(waits, "재시도를 한 번도 안 했다")
+        self.assertTrue(all(w <= 90.0 for w in waits), waits)
+
     def test_the_real_limit_is_read_from_the_quota_body(self):
         """Gemma는 공식 요금제 표에 행이 없다. 429가 알려 주는 값이 유일한 사실이다."""
         runner = Stub(baseline.decode_schema(str(ROOT / "open/data")))
