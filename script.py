@@ -51,6 +51,20 @@ EVID = [f"e{i}" for i in range(1, 25)]
 COLUMNS = ["id"] + ITEMS + EVID
 ABSENCE = ["v10", "v11", "v16", "v18", "v20"]          # 부재탐지 항목: 근거 문구 빈칸
 
+# ----- N1 실험: 부재탐지 두 항목만 별도 호출로 묻는다 -----
+# 가설은 하나다 — **한 번에 판정하는 항목 수**(24 → 2). 합동 프롬프트·스키마는 한 글자도
+# 안 바꾼다. 이 호출은 더하기만 하므로 대상 밖 22항목은 구조적으로 움직일 수 없다.
+# 회차 colab-1789719173182820657이 합동 안에서 근거문구를 푸는 길을 닫았다 —
+# 부재 5항목에 인용을 요구하자 손대지 않은 여덟 항목이 TP 열하나를 잃었다.
+SPLIT_ITEMS = ["v16", "v18"]
+# 금액 경계는 제공 조문에서 온다(experiments/sme_candidate.py와 같은 출처).
+# 고시금액: 재정경제부장관 고시 1.가 (물품 및 용역) — 국가계약법 시행령 제2조제3호.
+# 1억 경계: 국가 시행령 제21조①10호 가목/나목, 지방 시행령 제20조①12호.
+NOTICE_AMOUNT_WON = 230_000_000
+SME_BAND_FLOOR_WON = 100_000_000
+SPLIT_BANDS = {"v16": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),   # 1억 이상 ~ 고시금액 미만
+               "v18": (None, SME_BAND_FLOOR_WON)}               # 1억 미만
+
 DOC_ORDER = ["공고문", "규격서", "과업지시서", "제안요청서", "예외공표서", "기타"]
 META_FIELDS = [
     "적용계약법", "업무구분", "계약방법", "낙찰방법", "낙찰하한율",
@@ -337,6 +351,30 @@ The catalogue is a set of candidates, not a list of violations. Do not use model
     return head + "\n" + "\n".join(lines) + reference + "\n" + tail
 
 
+def estimated_price(rec: Dict[str, Any]) -> Optional[int]:
+    """공고의 추정가격. 없으면 배정예산금액으로 물러서고, 둘 다 없으면 None."""
+    meta = rec.get("meta") or {}
+    price = meta.get("입찰추정가격") or meta.get("배정예산금액")
+    return price if isinstance(price, (int, float)) and price > 0 else None
+
+
+def in_split_band(item: str, rec: Dict[str, Any]) -> bool:
+    """그 항목의 조문 금액 구간 안인가. 금액을 못 읽으면 False — 모르는 것을 위반이라 하지 않는다."""
+    low, high = SPLIT_BANDS[item]
+    price = estimated_price(rec)
+    if price is None:
+        return False
+    return (low is None or price >= low) and (high is None or price < high)
+
+
+def needs_split_call(rec: Dict[str, Any]) -> bool:
+    """추가 호출을 붙일 공고인가. 두 구간의 합집합이라 고시금액 미만이면 참이다.
+
+    dev 200건에서 155건(78%)이 통과하고, v16 양성 6건·v18 양성 7건이 **전부** 그 안에 있다.
+    """
+    return any(in_split_band(item, rec) for item in SPLIT_ITEMS)
+
+
 def sme_product_lookup(rec, context, products):
     """관측된 코드/품명과 고시 후보를 분리한다. 조회 결과로 판정을 덮어쓰지 않는다."""
     meta = rec.get("meta", {})
@@ -471,7 +509,8 @@ class VLLMRunner:
         self.last_response_info = []  # A failed call must not reuse an earlier call's metadata.
         sp = self.sp if sampling_params is None else sampling_params
         if items is not None:
-            sp = self.parameters_for_items(items)
+            # v13 추가 호출만 facts 스키마를 쓴다. N1의 부재 분할 호출은 기본 두 칸 그대로다.
+            sp = self.parameters_for_items(items, sme=items == SME_ITEMS)
         outs = self.llm.chat(batch, sampling_params=sp, use_tqdm=False,
                              chat_template_kwargs={"enable_thinking": False})
         for output in outs:
@@ -498,7 +537,7 @@ class VLLMRunner:
             messages[0]["content"] += (
                 "\n[Output scope for this call] Evaluate only these keys, overriding the earlier key list: "
                 + ", ".join(keys) + ". Return no other keys. Keep evidence quotations under 100 characters.")
-            sp = self.parameters_for_items(keys, sme=items is not None)
+            sp = self.parameters_for_items(keys, sme=items == SME_ITEMS)
             schema = sp.structured_outputs.json
             for key in keys:
                 if items is None and key not in ABSENCE:
@@ -515,7 +554,7 @@ class VLLMRunner:
                 if len(texts) != 1:
                     raise ValueError(f"분할 응답 건수 불일치: {len(texts)}")
                 group["stage"] = "parse"
-                parsed, _ = parse_judgment(texts[0], expected_items=keys, sme=items is not None)
+                parsed, _ = parse_judgment(texts[0], expected_items=keys, sme=items == SME_ITEMS)
                 merged.update(parsed)
                 group["status"] = "valid"
             except ValueError as error:
@@ -531,7 +570,7 @@ class VLLMRunner:
         for offset in range(0, len(expected), group_size):
             recover(expected[offset:offset + group_size])
         text = json.dumps(merged, ensure_ascii=False)
-        parse_judgment(text, expected_items=expected, sme=items is not None)
+        parse_judgment(text, expected_items=expected, sme=items == SME_ITEMS)
         return [text]
 
 
@@ -551,7 +590,7 @@ class MockRunner:
 
     def chat(self, batch: List[List[Dict[str, str]]], items=None) -> List[str]:
         texts = [self._one(m) for m in batch]
-        if items is not None:
+        if items == SME_ITEMS:
             texts = [json.dumps({key: {"facts": empty_sme_facts(), **json.loads(text)[key]} for key in items}, ensure_ascii=False)
                      for text in texts]
         return texts
@@ -577,8 +616,11 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
     if indices is not None and len(indices) != len(batch):
         raise ValueError("선택 공고 인덱스 건수 불일치")
     if baseline_texts is not None:
-        if phase != "sme" or items != SME_ITEMS or len(baseline_texts) != len(batch):
-            raise ValueError("기본 응답 보존은 동일 공고의 추가 v13 단계에만 허용한다")
+        # 추가 호출이 실패하면 그 공고의 검증된 합동 판정을 그대로 남긴다(보호 결정).
+        # v13 단계와 N1 부재 분할 단계 둘 다 같은 성질의 추가 호출이다.
+        allowed = {"sme": SME_ITEMS, "split": SPLIT_ITEMS}
+        if phase not in allowed or allowed[phase] != items or len(baseline_texts) != len(batch):
+            raise ValueError("기본 응답 보존은 동일 공고의 추가 호출 단계에만 허용한다")
         for text in baseline_texts:
             parse_judgment(text)  # No fallback without an already valid full model response.
     def record(event, **fields):
@@ -1474,13 +1516,47 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     sme_seconds = time.time() - t_sme
     inf_seconds += sme_seconds
 
+    # N1: 부재탐지 두 항목만 따로 묻는다. 합동 호출은 위에서 이미 끝났고 여기서 더하기만 한다.
+    split_prompt = build_system_prompt(tbl, items=SPLIT_ITEMS)
+    split_selected = [i for i, rec in enumerate(recs) if needs_split_call(rec)]
+    split_texts, split_chars = [None] * len(recs), [max_chars] * len(recs)
+    emit("phase_started", phase="split", items=SPLIT_ITEMS,
+         selected_count=len(split_selected), skipped_count=len(recs) - len(split_selected),
+         system_prompt_sha256=hashlib.sha256(split_prompt.encode("utf-8")).hexdigest())
+    t_split = time.time()
+    for s in range(0, len(split_selected), chunk):
+        indices = split_selected[s:s + chunk]
+        batch = []
+        for i in indices:
+            messages, _, mc = fit_to_budget(recs[i], split_prompt, runner, max_chars, budget=budget)
+            batch.append(messages)
+            split_chars[i] = mc
+        emit("chunk_started", phase="split", chunk_start=indices[0], count=len(batch), indices=indices)
+        responses = run_chunk(runner, batch, start=indices[0], ids=[recs[i]["id"] for i in indices],
+                              emit=emit, debug_responses=debug_responses, items=SPLIT_ITEMS, phase="split",
+                              baseline_texts=[texts[i] for i in indices], indices=indices)
+        for i, response in zip(indices, responses):
+            split_texts[i] = response
+    split_seconds = time.time() - t_split
+    inf_seconds += split_seconds
+
     # 파싱·후처리 → 행
     if len(texts) != len(recs) or len(sme_texts) != len(recs):
         raise ValueError("입력과 모델 응답 건수 불일치")
     rows, baseline_rows, ev_kept, ev_dropped, rejected_positives = [], [], 0, 0, 0
-    for rec, text, sme_text, mc in zip(recs, texts, sme_texts, sme_chars):
+    for rec, text, sme_text, split_text, mc in zip(recs, texts, sme_texts, split_texts, sme_chars):
         parsed, _ = parse_judgment(text)
         baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
+        if split_text is not None:
+            # 분할 호출이 실패하면 그 공고의 합동 판정을 그대로 쓴다. 구간 밖 양성은 버린다.
+            try:
+                focused, _ = parse_judgment(split_text, expected_items=SPLIT_ITEMS)
+            except ValueError:
+                focused = None
+            if focused is not None:
+                for item in SPLIT_ITEMS:
+                    hit = focused[item]["위반여부"] == 1 and in_split_band(item, rec)
+                    parsed[item] = {"위반여부": 1 if hit else 0, "근거문구": None}
         if sme_text is not None:
             focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS, sme=True)
             verified, reasons = verify_sme(focused, rec, products, mc)
