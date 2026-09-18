@@ -162,8 +162,10 @@
 
 ## 9. 다음 / A·B 에게 필요한 전달
 
-1. **C(나):** v14·v15 의 FN 을 진단 질의로 확인한다. `tools/diagnose_items.py --items v14,v15` 이며
-   **A 승인이 필요한 GPU 회차다.** 회차 ① 과 섞지 않는다 — 한 회차에 한 변수다.
+1. **A — 승인됨(2026-09-18). 실행만 남았다.** 노트북 셀 18 의 `DIAGNOSE_ITEMS = "v14,v15"`
+   한 줄이다. 실행 지시·예상 비용·받을 파일은 **[RUN-REQUEST.md](RUN-REQUEST.md)**.
+   회차 ①·②·③ 과 섞지 않으며 `--products` 도 넣지 않는다 — 한 회차에 한 변수다.
+   결과가 오면 [analyze_diagnose.py](analyze_diagnose.py) 로 정리한다. 손으로 세지 않는다.
 2. **A:** 회차 ① 승인·회차 ① diff 적용(B)은 그대로 대기 중이다.
 3. **A·B:** 공기업 7.1억 밴드에 대한 [c3-amount-gate/README.md](../c3-amount-gate/README.md)의
    기술을 이 절의 명시 참조로 좁힐 수 있다. 같은 PR 에서 함께 고쳤다.
