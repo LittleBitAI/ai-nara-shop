@@ -26,7 +26,6 @@ import re
 import unicodedata
 
 ROOT = Path(__file__).resolve().parents[1]
-ITEM = "v8"
 ITEMS = ("v8", "v7", "v4")
 _script = None
 
