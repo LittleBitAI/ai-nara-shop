@@ -73,7 +73,6 @@ class ApiRunTest(unittest.TestCase):
             return got
 
         runner = Stub.__new__(Stub)
-        runner.max_tokens = 8
         with mock.patch.object(api_run.urllib.request, "urlopen", fake_urlopen), \
                 mock.patch.object(api_run.time, "sleep") as slept:
             self.assertEqual(api_run.APIRunner._post(runner, url, {}), {"totalTokens": 9})
@@ -107,7 +106,34 @@ class ApiRunTest(unittest.TestCase):
         schema = runner.sent["generationConfig"]["responseJsonSchema"]
         self.assertEqual(set(schema["properties"]), set(baseline.SME_ITEMS))
         self.assertIn("facts", schema["properties"]["v13"]["properties"])
-        self.assertIn("v1", runner.schema["properties"])  # 원본 스키마는 그대로 둔다.
+        # 원본 스키마는 그대로 둔다. 좁힌 것이 남으면 다음 공고가 24항목을 못 받는다.
+        self.assertIn("v1", runner.sp.structured_outputs.json["properties"])
+
+    def test_runaway_answer_recovers_through_the_submission_split_retry(self):
+        """API의 responseJsonSchema는 maxLength를 안 지킨다. 근거 문자열에서 폭주하면
+        2048토큰을 다 쓰고 JSON이 안 닫힌다 — dev 200건 회차가 PPS-DEV-08에서 이렇게 죽었다.
+        복구는 제출 코드의 6개·1개 분할이 한다."""
+        runner = Stub(baseline.decode_schema(str(ROOT / "open/data")))
+        runner.SCRIPT = baseline
+        asked = []
+
+        def answers(url, body):
+            if url.endswith("countTokens"):     # 분할 재시도는 건마다 예산을 다시 센다.
+                return {"totalTokens": 11000}
+            keys = list(body["generationConfig"]["responseJsonSchema"]["properties"])
+            asked.append(keys)
+            if len(keys) == 24:      # 통짜 호출은 폭주해서 JSON이 안 닫힌다.
+                return answer('{"v1":{"위반여부":0,"근거문구":"' + "폭주 " * 400)
+            return answer(json.dumps({k: {"위반여부": 0, "근거문구": None} for k in keys},
+                                     ensure_ascii=False))
+
+        runner._post = answers
+        with self.assertRaises(ValueError):                      # 통짜는 파싱에서 막힌다.
+            baseline.parse_judgment(runner.chat([MESSAGES])[0])
+        merged = json.loads(runner.retry_chat([MESSAGES])[0])
+        self.assertEqual(set(merged), set(baseline.ITEMS))       # 24항목이 다 모인다.
+        self.assertEqual([len(k) for k in asked[1:]], [6, 6, 6, 6])
+        self.assertEqual(runner.last_response_info[0]["retry_strategy"], "split_items")
 
     def test_failed_call_surfaces_the_api_error_instead_of_a_field_collision(self):
         """`error_type`·`error_message`는 run_chunk의 record()가 자기 인자로 쓴다."""

@@ -40,6 +40,7 @@ import re
 import sys
 import threading
 import time
+from types import SimpleNamespace
 import urllib.error
 import urllib.request
 
@@ -142,8 +143,9 @@ class APIRunner:
     def __init__(self, schema, *, max_tokens=2048, **_):
         if not self.KEY:
             raise ValueError(f"API 키가 없다. {' 또는 '.join(KEY_NAMES)}를 환경변수나 .env에 둔다")
-        self.schema = schema
-        self.max_tokens = max_tokens
+        # VLLMRunner의 `sp`와 같은 모양으로 둔다. 복구 전략을 그대로 빌려 쓰기 위해서다.
+        self.sp = SimpleNamespace(max_tokens=max_tokens,
+                                  structured_outputs=SimpleNamespace(json=schema))
         self.last_response_info = []
         self.load_seconds = 0.0
         self._lock = threading.Lock()
@@ -210,15 +212,16 @@ class APIRunner:
         self._counted[prompt_key(messages)] = total
         return total
 
-    def _one(self, messages, schema):
+    def _one(self, messages, sp):
         # fit_to_budget이 이미 센 값이다. 못 찾으면 글자 수로 센다 — 한국어는 글자당 1토큰이
         # 안 되므로 넉넉한 쪽으로 틀린다. 여기서 한도를 통째로 물리면 호출이 분당 한 건이 된다.
         counted = self._counted.get(prompt_key(messages))
         self.bucket.take(counted or sum(len(m["content"]) for m in messages))
         body = to_request(messages)
         body["generationConfig"] = {
-            "temperature": 0, "candidateCount": 1, "maxOutputTokens": self.max_tokens,
-            "responseMimeType": "application/json", "responseJsonSchema": schema,
+            "temperature": 0, "candidateCount": 1, "maxOutputTokens": sp.max_tokens,
+            "responseMimeType": "application/json",
+            "responseJsonSchema": sp.structured_outputs.json,
         }
         started = time.time()
         try:
@@ -237,19 +240,35 @@ class APIRunner:
             "prompt_tokens": usage.get("promptTokenCount"),
             "output_tokens": usage.get("candidatesTokenCount"),
             "thought_tokens": usage.get("thoughtsTokenCount"),
-            "finish_reason": candidate.get("finishReason"), "max_tokens": self.max_tokens,
+            "finish_reason": candidate.get("finishReason"), "max_tokens": sp.max_tokens,
             "model_version": data.get("modelVersion"), "response_id": data.get("responseId"),
             "seconds": round(time.time() - started, 1),
         }
 
-    def chat(self, batch, items=None):
+    def parameters_for_items(self, items, *, sme=True):
+        sp = copy.deepcopy(self.sp)
+        self.SCRIPT.restrict_schema(sp.structured_outputs.json, items, sme=sme)
+        return sp
+
+    def chat(self, batch, sampling_params=None, items=None):
         self.last_response_info = []  # 실패한 호출이 앞 호출의 기록을 물려받지 않게 한다.
-        schema = self.schema if items is None else self.SCRIPT.restrict_schema(
-            copy.deepcopy(self.schema), items)
+        sp = self.sp if sampling_params is None else sampling_params
+        if items is not None:
+            sp = self.parameters_for_items(items)
         with ThreadPoolExecutor(max_workers=max(1, min(self.WORKERS, len(batch)))) as pool:
-            results = list(pool.map(lambda messages: self._one(messages, schema), batch))
+            results = list(pool.map(lambda messages: self._one(messages, sp), batch))
         self.last_response_info = [info for _, info in results]
         return [text for text, _ in results]
+
+    def retry_chat(self, batch, items=None):
+        """복구는 제출 코드의 전략을 그대로 빌린다 — 24항목을 6개씩, 다시 1개씩 쪼개고
+        재시도에서는 근거를 100자로 묶는다.
+
+        여기서 다시 구현하면 API 경로와 제출 경로의 복구가 갈린다. 그러면 이 도구로 본 실패가
+        서버에서 어떻게 복구되는지를 더는 말할 수 없다. `sp`를 VLLMRunner와 같은 모양으로
+        둔 이유가 이것이다.
+        """
+        return self.SCRIPT.VLLMRunner.retry_chat(self, batch, items)
 
 
 def main(argv=None):
