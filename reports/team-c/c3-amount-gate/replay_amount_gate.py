@@ -32,7 +32,7 @@ DEV = REPO / "open/dev.jsonl"
 # 금액 읽기와 구간 판정은 **후보에서 가져온다.** 복제본을 두면 둘이 갈라지고,
 # 이 스크립트가 낸 숫자가 실제로 나갈 게이트의 숫자가 아니게 된다.
 sys.path.insert(0, str(REPO))
-from experiments.sme_candidate import estimated_price, in_band  # noqa: E402
+from experiments.sme_candidate import AMOUNT_BANDS, estimated_price, in_band  # noqa: E402
 OUT = Path(__file__).resolve().parent / "gate-result.json"
 
 # (이름, run-id). 판정을 묻는 방식이 다른 두 회차다. 없는 회차는 건너뛰고 그 사실을 적는다 —
@@ -83,15 +83,21 @@ def inside(low: int | None, high: int | None, amount: int | None) -> bool:
 
 
 def check_matches_candidate(amounts: dict) -> None:
-    """조문 구간에 한해 이 스크립트와 후보가 같은 답을 내는지 확인한다."""
-    shipped = {"v16 · 상한 2.3억(조문)": "v16", "v18 · 1억 미만": "v18"}
-    for name, item, low, high in GATES:
-        if name not in shipped:
-            continue
+    """후보가 실제로 쓰는 구간마다 이 스크립트와 같은 답을 내는지 확인한다.
+
+    **기준은 후보의 `AMOUNT_BANDS` 다.** 예전에는 `GATES` 의 라벨 문자열로 골랐는데,
+    라벨을 고치면 어느 게이트도 안 걸려 루프가 한 번도 안 돌고 조용히 통과했다.
+    지금은 후보의 구간이 `GATES` 에 없으면 그 자리에서 죽는다.
+    """
+    for item, (low, high) in AMOUNT_BANDS.items():
+        if not any(i == item and lo == low and hi == high for _, i, lo, hi in GATES):
+            raise SystemExit(
+                f"{item}: 후보가 쓰는 구간 [{low}, {high}) 이 GATES 에 없다. "
+                "재현 스크립트가 실제로 나갈 게이트를 재고 있지 않다")
         for identifier, amount in amounts.items():
             if inside(low, high, amount) != in_band(item, amount):
                 raise SystemExit(
-                    f"{name}: 재현 스크립트와 후보의 구간이 어긋난다 "
+                    f"{item}: 재현 스크립트와 후보의 구간이 어긋난다 "
                     f"({identifier}, 금액 {amount}). 후보의 AMOUNT_BANDS 를 확인하라")
 
 

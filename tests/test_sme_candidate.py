@@ -118,9 +118,12 @@ class ReplayStoredRun(unittest.TestCase):
     def gated(self, row, item):
         """**실제 진입점**으로 한 공고를 거른다.
 
-        `in_band` 를 직접 부르면 `apply_amount_gate` 가 망가져도 — 키 조회 실수,
-        게이팅 방향 반대, 엉뚱한 셀 변경 — 이 검사가 여전히 초록이다.
-        배포되는 경로를 태워야 헤드라인 수치가 하중을 받는다.
+        `in_band` 를 직접 부르면 `apply_amount_gate` 의 키 조회 실수도 게이팅 방향
+        반대도 못 잡는다. 배포되는 경로를 태워야 헤드라인 수치가 하중을 받는다.
+
+        여기서 보는 것은 항목 하나의 `위반여부` 뿐이다. 근거문구를 비우는 것과 대상 밖
+        셀을 그대로 두는 것은 위 `Gate` 의 `test_out_of_band_positive_becomes_negative`
+        · `test_other_items_pass_through_untouched` 가 맡는다.
         """
         judged = (row.get("items") or {}).get(item) or {}
         cell = {"위반여부": 1 if judged.get("판정") == 1 else 0, "근거문구": ""}

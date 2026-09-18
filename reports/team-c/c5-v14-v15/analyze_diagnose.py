@@ -27,17 +27,19 @@ DEV = REPO / "open/dev.jsonl"
 
 # 금액 읽기와 구간은 후보에서 가져온다. 복제본을 두지 않는다.
 sys.path.insert(0, str(REPO))
-from experiments.sme_candidate import NOTICE_AMOUNT_WON, SME_BAND_FLOOR_WON, estimated_price  # noqa: E402
+from experiments.sme_candidate import (  # noqa: E402
+    AMOUNT_BANDS, NOTICE_AMOUNT_WON, SME_BAND_FLOOR_WON, estimated_price)
 
 STAGES = ("context_not_observed", "fact_not_extracted", "condition_not_met", "violation_found")
 
 # C5 조건표의 구간. 근거는 같은 폴더의 README.md 가 조문 위치와 함께 적는다.
 # **진단용 오버레이다.** 후보에 심은 게이트가 아니다.
 BANDS = {
-    "v14": (NOTICE_AMOUNT_WON, None),          # 고시금액 이상
+    "v14": (NOTICE_AMOUNT_WON, None),                # 고시금액 이상
     "v15": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),  # 1억 이상 - 고시금액 미만
-    "v16": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),
-    "v18": (None, SME_BAND_FLOOR_WON),
+    # v16·v18 은 후보가 소유한다. 여기 복제본을 두면 후보가 구간을 바꿔도
+    # 이 진단은 옛 구간으로 계속 답한다.
+    **AMOUNT_BANDS,
 }
 
 
@@ -92,6 +94,9 @@ def main(argv=None) -> int:
     missing = sorted(i for i in (r["id"] for r in rows) if amounts.get(i) is None)
 
     print(f"회차 파일 {path.as_posix()} · 공고 {len(rows)}건 · 금액 미확인 {len(missing)}건")
+    if len(missing) == len(rows):
+        print("  !! 전건 금액 미확인 — 이 회차의 공고가 open/dev.jsonl 에 없다(예: 테스트셋).")
+        print("     구간 덧씌움은 아무것도 거르지 못하므로 아래 '덧씌움' 수치는 원래 수치와 같다.")
 
     for item in items:
         plain: list[tuple[int, int]] = []
