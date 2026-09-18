@@ -1,4 +1,4 @@
-"""참가자격 제한 3항목(v8·v7·v4) 후보 검사. 모델을 부르지 않는다. live 성능 검사가 아니다."""
+"""참가자격 제한 4항목(v8·v7·v4·v3) 후보 검사. 모델을 부르지 않는다. live 성능 검사가 아니다."""
 
 import csv
 import importlib.util
@@ -118,6 +118,43 @@ class RegionExpansionCoverage(unittest.TestCase):
                 self.assertLessEqual(len(quote), candidate.QUOTE_MAX)
                 self.assertTrue(any(quote in doc["text"] for doc in rec["docs"]))
 
+    def test_every_positive_is_below_the_price_limit(self):
+        """항목명의 `고시금액 미만`. 게이트가 정답 양성을 막지 않아야 한다."""
+        for rec_id in V7_POSITIVES:
+            with self.subTest(rec_id):
+                self.assertTrue(candidate.region_restriction_allowed(self.recs[rec_id]))
+
+    def test_v5_positives_are_above_the_price_limit(self):
+        """고시금액 이상 지역제한은 v5의 몫이다. 경계가 두 항목을 실제로 가르는지 본다."""
+        truth_v5 = load_truth("v5")
+        for rec_id, gold in truth_v5.items():
+            if gold:
+                with self.subTest(rec_id):
+                    self.assertFalse(candidate.region_restriction_allowed(self.recs[rec_id]))
+
+    def test_price_at_or_above_the_limit_suppresses_the_rule(self):
+        text = ("입찰참가자격 본점 소재지를 경기도 또는 서울특별시의 관할구역 안에 둔 업체")
+        for law, price in (("국가계약법", 230_000_000), ("지방계약법", 500_000_000)):
+            with self.subTest(law):
+                rec = notice(text)
+                rec["meta"].update({"적용계약법": law, "업무구분": "일반용역",
+                                    "입찰추정가격": price})
+                self.assertIsNone(candidate.detect_region_expansion(rec))
+                rec["meta"]["입찰추정가격"] = price - 1
+                self.assertIsNotNone(candidate.detect_region_expansion(rec))
+
+    def test_unknown_price_or_scope_does_not_suppress(self):
+        """금액·업무구분을 모르면 막지 않는다. 막는 쪽이 틀리면 양성을 잃는다."""
+        text = "입찰참가자격 본점 소재지를 경기도 또는 서울특별시의 관할구역 안에 둔 업체"
+        for meta in ({"적용계약법": "국가계약법", "업무구분": "일반용역", "입찰추정가격": None},
+                     {"적용계약법": None, "업무구분": "일반용역", "입찰추정가격": 900_000_000},
+                     {"적용계약법": "지방계약법", "업무구분": "공사", "입찰추정가격": 900_000_000}):
+            with self.subTest(str(meta)):
+                rec = notice(text)
+                rec["meta"].update(meta)
+                self.assertTrue(candidate.region_restriction_allowed(rec))
+                self.assertIsNotNone(candidate.detect_region_expansion(rec))
+
 
 class InstitutionPerformanceCoverage(unittest.TestCase):
     """v4 특정기관·특정실적. dev 200건 전수."""
@@ -174,18 +211,28 @@ class ExcessPerformanceGuard(unittest.TestCase):
     def test_unreadable_amount_leaves_the_model_alone(self):
         """금액을 못 읽으면 내리지 않는다. 모르는 것을 근거로 삼지 않는다."""
         rec = notice("입찰참가자격 유사 용역 수행 실적이 있는 업체")
-        rec["meta"]["배정예산금액"] = 100_000_000
+        rec["meta"]["입찰추정가격"] = 100_000_000
         self.assertIsNone(candidate.required_performance(rec))
         self.assertIsNone(candidate.performance_below_budget(rec))
 
-    def test_missing_budget_leaves_the_model_alone(self):
+    def test_missing_basis_leaves_the_model_alone(self):
         rec = notice("입찰참가자격 최근 3년 이내 1억원 이상의 실적을 보유한 업체")
+        rec["meta"]["입찰추정가격"] = None
         rec["meta"]["배정예산금액"] = None
+        self.assertIsNone(candidate.performance_below_budget(rec))
+
+    def test_estimated_price_is_the_basis_and_budget_is_the_fallback(self):
+        """조문 기준은 추정가격이다. 없을 때만 예산으로 물러선다."""
+        rec = notice("입찰참가자격 최근 3년 이내 1억원 이상의 실적을 보유한 업체")
+        rec["meta"]["입찰추정가격"] = 300_000_000
+        rec["meta"]["배정예산금액"] = 50_000_000
+        self.assertIsNotNone(candidate.performance_below_budget(rec))
+        rec["meta"]["입찰추정가격"] = None
         self.assertIsNone(candidate.performance_below_budget(rec))
 
     def test_at_or_above_one_times_budget_is_kept(self):
         rec = notice("입찰참가자격 최근 3년 이내 3억원 이상의 실적을 보유한 업체")
-        rec["meta"]["배정예산금액"] = 250_000_000
+        rec["meta"]["입찰추정가격"] = 250_000_000
         self.assertIsNone(candidate.performance_below_budget(rec))
 
     def test_korean_amount_units_are_read(self):

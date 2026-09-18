@@ -1,10 +1,10 @@
 {
-  "artifact_id": "score-score-after",
+  "artifact_id": "score-score",
   "version": 1,
   "status": "draft",
-  "run_id": "score-after",
+  "run_id": "score",
   "baseline_run": null,
-  "created_at": "2026-09-18T02:33:26.381249+00:00",
+  "created_at": "2026-09-18T03:16:19.029977+00:00",
   "sources": [
     {
       "role": "truth",
@@ -13,7 +13,7 @@
     },
     {
       "role": "pred",
-      "path": "reports/team-d/d5-d6-v23-v3/replay/submission.csv",
+      "path": "reports/team-d/final/replay/submission.csv",
       "sha256": "71a87847155ae6d303590036bcd851ec8b845f77b5138310fa6fe4e21da53f3c"
     }
   ],
@@ -28,13 +28,13 @@
       "--truth",
       "open/dev_labels.csv",
       "--pred",
-      "reports/team-d/d5-d6-v23-v3/replay/submission.csv",
+      "reports/team-d/final/replay/submission.csv",
       "--output-dir",
-      "reports/team-d/d5-d6-v23-v3/score-after"
+      "reports/team-d/final/score"
     ],
-    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'reports/team-d/d5-d6-v23-v3/replay/submission.csv' '--output-dir' 'reports/team-d/d5-d6-v23-v3/score-after'",
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'reports/team-d/final/replay/submission.csv' '--output-dir' 'reports/team-d/final/score'",
     "settings": {
-      "output_dir": "reports/team-d/d5-d6-v23-v3/score-after",
+      "output_dir": "reports/team-d/final/score",
       "zero_division": 0,
       "items": 24
     }
@@ -58,5 +58,5 @@
     "evidence_substring": false,
     "evidence_quality": false
   },
-  "elapsed_seconds_before_publish": 0.40722349999123253
+  "elapsed_seconds_before_publish": 0.12039870000444353
 }
