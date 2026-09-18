@@ -1,0 +1,6 @@
+{
+  "mode": "clone",
+  "url": "https://github.com/LittleBitAI/ai-nara-shop.git",
+  "requested_ref": "exp/n3-competitive-product",
+  "commit": "a84cd72c5f53b729c5f62c46a08eddf3cf2edb02"
+}

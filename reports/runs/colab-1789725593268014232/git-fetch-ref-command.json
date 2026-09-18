@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-wj_gs2n0/repo",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "exp/n1-absence-split"
+  ],
+  "cwd": "/content/t1-colab-wj_gs2n0",
+  "started": 1789723852.3282294,
+  "returncode": 0,
+  "elapsed_seconds": 1.1109938621520996
+}

@@ -1,0 +1,3 @@
+{"path": "/content/t1-colab-wj_gs2n0/candidate-submit.zip", "bytes": 29386, "sha256": "f850c467fd0b091b89156a8a6b8cd496dee3977c01af285c56b8c9e41ed15cdd"}
+ZIP 검증 PASS (압축 해제 mock 10건·49열). 실제 모델·서버 제출 미검증.
+Colab 전용 번들: /content/t1-colab-wj_gs2n0/candidate-colab-bundle.zip (대회 제출 금지)

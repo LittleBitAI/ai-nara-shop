@@ -1,0 +1,6 @@
+{
+  "mode": "clone",
+  "url": "https://github.com/LittleBitAI/ai-nara-shop.git",
+  "requested_ref": "exp/n1-absence-split",
+  "commit": "568ae5d521d78558526a5aafbed7c28fca130d11"
+}
