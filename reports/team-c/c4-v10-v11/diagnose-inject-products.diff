@@ -1,0 +1,62 @@
+diff --git a/tools/diagnose_items.py b/tools/diagnose_items.py
+index 137bdc0..6cb6e52 100644
+--- a/tools/diagnose_items.py
++++ b/tools/diagnose_items.py
+@@ -115,7 +115,8 @@ def load_labels(path, items):
+ 
+ 
+ def diagnose(module, items, identifiers, *, input_path, data_dir, output_dir, runner_cls,
+-             labels_path=None, max_chars=16000, chunk=32, limit=None, model_dir=None):
++             labels_path=None, max_chars=16000, chunk=32, limit=None, model_dir=None,
++             products=False):
+     output_dir = Path(output_dir)
+     if output_dir.exists():
+         raise ValueError(f"{output_dir} 가 이미 있다. 새 경로를 쓴다")
+@@ -132,6 +133,9 @@ def diagnose(module, items, identifiers, *, input_path, data_dir, output_dir, ru
+     if not records:
+         raise ValueError("진단할 공고가 없다")
+     labels = load_labels(labels_path, items) if labels_path else {}
++    # 경쟁제품 해당 여부가 적용 조건인 항목(v10·v11·v12·v13)에만 켠다. 기본은 꺼 둬서
++    # 이전 회차(v16·v18·v20)와 프롬프트가 달라지지 않게 한다. 조회는 script.py 것을 그대로 쓴다.
++    catalogue = module.load_sme_reference(str(data_dir))[1] if products else ()
+ 
+     prompt = build_prompt(table, items)
+     started = time.perf_counter()
+@@ -140,7 +144,8 @@ def diagnose(module, items, identifiers, *, input_path, data_dir, output_dir, ru
+     for start in range(0, len(records), chunk):
+         batch, budgets = [], []
+         for rec in records[start:start + chunk]:
+-            messages, tokens, fitted = module.fit_to_budget(rec, prompt, runner, max_chars)
++            messages, tokens, fitted = module.fit_to_budget(rec, prompt, runner, max_chars,
++                                                            products=catalogue)
+             batch.append(messages)
+             budgets.append({"prompt_tokens": tokens, "max_chars": fitted})
+         texts = runner.chat(batch)
+@@ -161,7 +166,7 @@ def diagnose(module, items, identifiers, *, input_path, data_dir, output_dir, ru
+         "purpose": "item_diagnosis_only",
+         "note": "진단용 별도 질의다. 제출 판정·점수가 아니며 script.py와 submission.csv를 바꾸지 않는다.",
+         "created_at": datetime.now(timezone.utc).isoformat(),
+-        "items": list(items), "notice_count": len(rows),
++        "items": list(items), "notice_count": len(rows), "products_injected": bool(products),
+         "input": module.record_path(input_path), "labels": bool(labels),
+         "script": module.record_path(str(getattr(module, "__diagnose_path__", ROOT / "script.py"))),
+         "script_sha256": hashlib.sha256(
+@@ -193,6 +198,9 @@ def main(argv=None):
+     parser.add_argument("--max-chars", type=int, default=16000)
+     parser.add_argument("--limit", type=int)
+     parser.add_argument("--mock", action="store_true", help="모델 없이 흐름만 확인. 진단 결과가 아니다")
++    parser.add_argument("--products", action="store_true",
++                        help="제공 경쟁제품 고시 후보를 프롬프트에 붙인다. v10·v11 처럼 "
++                             "경쟁제품 해당 여부가 적용 조건인 항목에만 쓴다")
+     args = parser.parse_args(argv)
+     try:
+         module = load_submission_script(args.script)
+@@ -202,7 +210,7 @@ def main(argv=None):
+             input_path=args.input, data_dir=args.data_dir, output_dir=args.output_dir,
+             runner_cls=MockRunner if args.mock else module.VLLMRunner,
+             labels_path=args.labels, max_chars=args.max_chars, chunk=args.chunk,
+-            limit=args.limit, model_dir=args.model_dir)
++            limit=args.limit, model_dir=args.model_dir, products=args.products)
+     except (OSError, ValueError, KeyError) as exc:
+         print(f"error: {exc}", file=sys.stderr)
+         return 1

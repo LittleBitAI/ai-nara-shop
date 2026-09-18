@@ -22,7 +22,20 @@ ROOT = Path(__file__).resolve().parents[1]
 def load_module(path, name):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # 후보가 저장소 루트의 script.py 를 따로 읽지 않고 여기서 읽은 것을 집게 한다.
+    # --script 로 다른 코드를 넘겼을 때 파싱과 postprocess 가 갈라지는 것을 막는다.
+    previous = sys.modules.get(name)
+    sys.modules[name] = module
+    try:
+        spec.loader.exec_module(module)
+    except BaseException:
+        # main() 은 한 프로세스에서 여러 번 돈다. 실패한 적재가 앞 회차의 멀쩡한
+        # 등록본까지 지우면 후보가 조용히 워킹트리 script.py 로 되돌아간다.
+        if previous is None:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = previous
+        raise
     return module
 
 
