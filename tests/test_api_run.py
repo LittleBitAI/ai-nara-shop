@@ -79,6 +79,14 @@ class ApiRunTest(unittest.TestCase):
             self.assertEqual(api_run.APIRunner._post(runner, url, {}), {"totalTokens": 9})
         self.assertAlmostEqual(slept.call_args[0][0], 42.9, places=1)
 
+    def test_the_real_limit_is_read_from_the_quota_body(self):
+        """Gemma는 공식 요금제 표에 행이 없다. 429가 알려 주는 값이 유일한 사실이다."""
+        runner = Stub(baseline.decode_schema(str(ROOT / "open/data")))
+        runner._adopt_limit("...input_token_count, limit: 400000, model: gemma-4-26b...")
+        self.assertEqual(runner.bucket.per_minute, 400000)
+        runner._adopt_limit('"quotaId": "RequestsPerMinute", limit: 30, model: gemma-4-26b')
+        self.assertEqual(runner.bucket.per_minute, 400000)  # 다른 할당량의 숫자는 안 가져온다.
+
     def test_request_puts_the_system_turn_in_system_instruction(self):
         body = api_run.to_request(MESSAGES)
         self.assertEqual(body["systemInstruction"], {"parts": [{"text": "역할"}]})

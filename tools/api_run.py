@@ -49,9 +49,13 @@ DEFAULT_MODEL = "gemma-4-26b-a4b-it"
 KEY_NAMES = ("GEMINI_API_KEY", "GOOGLE_API_KEY")
 RETRY_CODES = frozenset({408, 429, 500, 502, 503, 504})
 RETRY_HINT = re.compile(r"retry in ([\d.]+)s")
+# 429 본문이 지금 걸린 상한을 그대로 적어 준다. 입력 토큰 할당량일 때만 읽는다 —
+# 다른 할당량(요청 수 등)의 숫자를 토큰 예산으로 삼으면 분당 한 건으로 주저앉는다.
+QUOTA_LIMIT = re.compile(r"input_token_count, limit: (\d+)")
 # 이 모델의 429는 요청 수가 아니라 **분당 입력 토큰**으로 난다. 2026-09-18 실측 오류 본문:
 # GenerateContentPaidTierInputTokensPerModelPerMinute-PaidTier2, limit 16000, model gemma-4-26b.
-# 공고 한 건이 약 11,000 토큰이라 분당 1~2건이 상한이다. 키 등급이 다르면 --tpm으로 바꾼다.
+# 공고 한 건이 약 11,000 토큰이라 분당 1~2건이 상한이다. 공식 요금제 표에 Gemma 행이 없으므로
+# 이 값은 시작 추정치일 뿐이고, 429를 만나면 본문이 알려 주는 실제 상한으로 갈아탄다.
 DEFAULT_TPM = 16000
 TOKENS_PER_NOTICE = 11000  # dev 실측 중앙값(--max-chars 16000). 시간 예상에만 쓴다.
 
@@ -171,6 +175,7 @@ class APIRunner:
                 # 본문 전체에서 찾는다. "Please retry in 41.9s"는 400자쯤 뒤에 있어서
                 # 잘라낸 조각에서 찾으면 영영 안 걸리고 조용히 지수 백오프로 돌아간다.
                 detail = error.read().decode("utf-8", "replace")
+                self._adopt_limit(detail)
                 if error.code not in RETRY_CODES or attempt == attempts:
                     raise ValueError(f"HTTP {error.code}: {detail[:300]}") from None
                 hint = RETRY_HINT.search(detail)
@@ -180,6 +185,16 @@ class APIRunner:
                     raise ValueError(f"{type(error).__name__}: {error}") from None
                 wait = None
             time.sleep(min(90.0, wait if wait else 2 ** attempt + random.random()))
+
+    def _adopt_limit(self, detail):
+        """공식 문서의 요금제 표에 Gemma 행이 없다. 실제 상한은 429가 알려 주는 것이 유일한 사실이라,
+        `--tpm` 추정치 대신 그 값을 쓴다. 등급을 올리면 다음 회차가 알아서 빨라진다."""
+        found = QUOTA_LIMIT.search(detail)
+        if not found or int(found.group(1)) == self.bucket.per_minute:
+            return
+        print(f"  분당 입력 토큰 상한을 {self.bucket.per_minute:,} → {int(found.group(1)):,}"
+              " 으로 바꾼다 (429 본문이 알려 준 값)")
+        self.bucket.per_minute = int(found.group(1))
 
     def _record(self, usage):
         with self._lock:
@@ -251,7 +266,8 @@ def main(argv=None):
     parser.add_argument("--max-chars", type=int, default=16000)
     parser.add_argument("--workers", type=int, default=4, help="동시 API 호출 수")
     parser.add_argument("--tpm", type=int, default=DEFAULT_TPM,
-                        help=f"분당 입력 토큰 상한. 기본 {DEFAULT_TPM:,}은 2026-09-18 실측 키 등급이다")
+                        help=f"분당 입력 토큰 시작 추정치. 기본 {DEFAULT_TPM:,}은 2026-09-18 실측값이고,"
+                             " 429가 실제 상한을 알려 주면 그것으로 갈아탄다")
     parser.add_argument("--model", default=os.environ.get("PPS_API_MODEL", DEFAULT_MODEL))
     parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--retries", type=int, default=4, help="429·5xx 재시도 횟수")
@@ -305,7 +321,9 @@ def main(argv=None):
                  "서버 점수·R4 정상 호출의 대체가 아니다."),
     }
     if runner:
-        manifest.update(api_calls=runner.calls, api_tokens=runner.tokens)
+        # 시작값이 아니라 실제로 지킨 상한을 적는다. 429를 만나면 도중에 바뀐다.
+        manifest.update(api_calls=runner.calls, api_tokens=runner.tokens,
+                        input_tokens_per_minute=runner.bucket.per_minute)
     (output / "api-run.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
 
