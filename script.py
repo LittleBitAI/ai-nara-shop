@@ -338,6 +338,7 @@ def load_sme_reference(data_dir):
     if not products or any("세부품명" not in p or "특이사항" not in p or
                            not re.fullmatch(r"(?:\d{10})?", p.get("세부품명번호", "")) for p in products):
         raise ValueError("제공 경쟁제품 CSV의 세부품명번호 형식 오류")
+    _PRODUCTS[:] = products                 # 경쟁제품 규칙(v11·v12)이 후처리에서 읽는다
     return "\n\n".join(excerpts), products
 
 
@@ -1341,6 +1342,102 @@ def performance_below_budget(rec):
 RULES = {"v8": detect, "v7": detect_region_expansion, "v4": detect_institution_performance}
 
 
+# ----- 경쟁제품 규칙 (v11·v12) -----
+# 고시 카탈로그 617행에는 **용역·서비스가 들어 있다**(기타행사기획및대행서비스 8014199001,
+# 축제기획및대행서비스 9015189001 등). 그리고 `특이사항`에 금액 상한이 붙는다 —
+# 축제는 "추정가격 3억원 미만에 한함"이다. 지금까지 코드는 이 상한을 읽지 않고 모델에게
+# 문자열로 넘기기만 했다.
+#
+# 게이트는 공고의 meta 코드가 아니라 **직생 요구 문구가 스스로 적은 품명**에서 온다.
+# dev 양성 21건 중 20건이 일반용역이고 `meta.세부품명번호목록`이 비어 있어 메타로는 못 연다.
+# 반면 직생을 요구하는 공고는 거의 언제나 그 문장 안에 세부품명번호나 품명을 적는다.
+#
+# 실측(dev 200건, 57761ff 판정 위에 적용): v11 F1 0.000 → 0.400(첫 TP 2건),
+# v12 0.000 → 0.444(첫 TP 2건). Macro +0.0352, 바뀐 셀 4,800개 중 5개.
+# 무라벨 6,000건 발화율은 dev 대비 v11 0.73배, v12 0.03배다 — v12 쪽은 서버 전이를
+# 보수적으로 읽는다. 판단 근거는 reports/team-c/a2-competitive-product/README.md.
+_PRODUCTS: List[Dict[str, str]] = []        # load_sme_reference가 채운다. 비면 규칙이 쉰다
+
+PRODUCT_CAP = re.compile(r"추정가격\s*([\d,]+)\s*억원\s*미만")
+CODE10 = re.compile(r"(?<!\d)\d{10}(?!\d)")
+# 참가자격으로 직생 확인을 요구하는 문구. 사후 제재 문구는 요구가 아니다.
+DP_DEMAND = re.compile(r"직접\s*생산\s*확인\s*(?:증명서|서류)?[^.\n]{0,40}?"
+                       r"(?:소지|보유|제출|갖춘|있는|발급)")
+DP_SANCTION = re.compile(r"직접\s*생산\s*확인\s*기준을?\s*위반")
+# 참가자격이 중소기업자까지 허용하는가. 없으면 v11(중소 없음)이다.
+SME_ALLOWED = re.compile(r"중소기업(?:자|기본법)?[^.\n]{0,60}?"
+                         r"(?:확인서|제한|한정|참가|자격|로서|이어야)")
+
+
+def product_cap_won(row: Dict[str, str]) -> Optional[int]:
+    """고시 특이사항이 정한 추정가격 상한. 없으면 None."""
+    found = PRODUCT_CAP.search(row.get("특이사항") or "")
+    return int(found[1].replace(",", "")) * 100_000_000 if found else None
+
+
+def direct_production_demand(rec: Dict[str, Any]) -> Tuple[Optional[str], set]:
+    """(참가자격의 직생 요구 문장, 그 문장이 지목한 세부품명번호). 요구가 없으면 (None, 빈 집합)."""
+    quote, codes = None, set()
+    for doc in rec.get("docs") or []:
+        text = doc.get("text") or ""
+        for found in DP_DEMAND.finditer(text):
+            window = text[max(0, found.start() - 200): found.end() + 200]
+            if DP_SANCTION.search(window):
+                continue                    # 계약 후 제재 안내이지 참가자격이 아니다
+            if quote is None:
+                start = max(text.rfind("\n", 0, found.start()) + 1, found.end() - EVIDENCE_MAX)
+                end = text.find("\n", found.end())
+                quote = text[start: end if 0 < end <= start + EVIDENCE_MAX else start + EVIDENCE_MAX]
+            codes.update(CODE10.findall(window))
+            flat = re.sub(r"\s+", "", window)
+            for product in _PRODUCTS:
+                name = re.sub(r"\s+", "", product["세부품명"])
+                if len(name) >= 4 and name in flat:
+                    codes.add(product["세부품명번호"])
+    return quote, codes
+
+
+def competitive_product(rec: Dict[str, Any], codes: set) -> Optional[bool]:
+    """직생 요구가 지목한 품명이 중기간 경쟁제품인가. 판단할 수 없으면 None."""
+    if not codes or not _PRODUCTS:
+        return None
+    price = estimated_price(rec)
+    listed = {p["세부품명번호"]: p for p in _PRODUCTS}
+    for code in codes:
+        row = listed.get(code)
+        if row is None:
+            continue                        # 카탈로그 밖 코드 하나로 단정하지 않는다
+        cap = product_cap_won(row)
+        if cap is not None and price is not None and price >= cap:
+            continue                        # 상한 초과 — 이 품명으로는 경쟁제품이 아니다
+        return True
+    return False                            # 품명을 적었는데 어느 것도 경쟁제품이 아니다
+
+
+def apply_product_rules(judgment, rec):
+    """경쟁제품 게이트로 v11·v12만 올린다. 이미 1인 항목과 다른 22항목은 그대로 둔다.
+
+    v13은 건드리지 않는다. v13의 판별축은 "공고가 어느 기업 등급으로 제한했나"이고
+    그것은 v14~v18과 같은 축이라 a1-company-size 티켓이 소유한다. 두 번 만들지 않는다.
+    """
+    quote, codes = direct_production_demand(rec)
+    if quote is None:
+        return judgment                     # 직생을 요구하지 않았다 — 이 규칙은 아무 말도 못 한다
+    out = dict(judgment)
+    listed = competitive_product(rec, codes)
+    if listed is False:
+        cell = out.get("v12") or {"위반여부": 0, "근거문구": None}
+        if cell.get("위반여부") != 1:
+            out["v12"] = {"위반여부": 1, "근거문구": quote}
+    elif listed is True:
+        cell = out.get("v11") or {"위반여부": 0, "근거문구": None}
+        # ponytail: 중소기업자 허용을 정규식 한 개로 본다. a1-company-size의 기업등급 축이
+        # 서면 그것으로 갈아 끼운다 — 같은 질문의 거친 판이다.
+        if cell.get("위반여부") != 1 and not SME_ALLOWED.search(build_context(rec, max_chars=PROMPT_BUDGET)):
+            out["v11"] = {"위반여부": 1, "근거문구": None}   # 부재탐지 — 근거는 항상 빈칸
+    return out
+
+
 def apply_qualification_rules(judgment, rec):
     """모델 판정에 v8·v7·v4를 올리고 v3만 내린다. 다른 20항목은 그대로 돌려준다.
 
@@ -1366,8 +1463,9 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     ④ 근거가 위반 조건을 스스로 부정하면 양성을 내린다(evidence_refutes)
 
     ⑤는 ①~④보다 먼저 돈다 — 참가자격 규칙이 v8·v7·v4를 올리고 v3을 내린 결과를
-    ①~④가 그대로 검사한다. 근거문구 원문 대조도 그 인용에 걸린다."""
-    judgment = apply_qualification_rules(judgment, rec)
+    ①~④가 그대로 검사한다. 근거문구 원문 대조도 그 인용에 걸린다.
+    ⑥ 경쟁제품 규칙도 같은 자리에서 v11·v12를 올린다. 두 규칙은 항목이 겹치지 않는다."""
+    judgment = apply_product_rules(apply_qualification_rules(judgment, rec), rec)
     out = {}
     for v in ITEMS:
         cell = dict(judgment.get(v, {"위반여부": 0, "근거문구": None}))

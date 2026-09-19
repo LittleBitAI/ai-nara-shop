@@ -21,6 +21,9 @@ PLAIN_CASE = ROOT / "reports/runs/colab-1789655036303880754/dev"
 _SCRATCH = tempfile.TemporaryDirectory()
 RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
 # HEAD 코드로 같은 원응답을 재생한 고정 결과(PR #30, sha256 0818a23c…).
+# 2026-09-20 재고정(sha256 beb68293…): 경쟁제품 규칙(v11·v12)이 postprocess에 들어왔다.
+# 6셀만 움직였고 대상 밖 변화는 0이다 — v11 TP 0→2, v12 TP 0→2.
+# 근거는 reports/team-c/a2-competitive-product/README.md.
 HEAD_REPLAY = ROOT / "reports/team-b/b5-port-replay/submission.csv"
 
 CANDIDATE = '''"""검사용 후보. 모든 판정을 0으로 만든다."""
