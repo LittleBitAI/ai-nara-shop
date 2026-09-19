@@ -103,7 +103,19 @@ BAND_QUESTION = {"v14": "일반물품 입찰의 참가자격을 중소기업으�
 # 효과가 없는 것이 아니다. 켜려면 아래를 ["v10", "v11", "v12"]로 되돌린다.
 PRODUCT_ITEMS: List[str] = []
 
-DOC_ORDER = ["공고문", "규격서", "과업지시서", "제안요청서", "예외공표서", "기타"]
+
+def extra_call_items() -> Dict[str, List[str]]:
+    """추가 호출 단계와 그 단계가 덮어쓰는 항목. **단계를 늘리면 여기만 고친다.**
+
+    두 곳이 이것을 읽는다 — 실패 시 기본 판정 보존 가드와 실행 보고서다.
+    전에는 둘이 목록을 따로 들고 있었고, N1을 켜면서 보고서 쪽이 빠져
+    노트북 `check_live`가 "v13만 바뀔 수 있다"는 낡은 불변식으로 회차를 죽였다.
+    """
+    return {"split": SPLIT_ITEMS, "product": PRODUCT_ITEMS,
+            **{"band:" + item: [item] for item in BAND_ITEMS}}
+
+
+DOC_ORDER =["공고문", "규격서", "과업지시서", "제안요청서", "예외공표서", "기타"]
 META_FIELDS = [
     "적용계약법", "업무구분", "계약방법", "낙찰방법", "낙찰하한율",
     "배정예산금액", "입찰추정가격", "소관구분", "공동도급구성방식", "정보화사업여부",
@@ -677,8 +689,7 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
     if baseline_texts is not None:
         # 추가 호출이 실패하면 그 공고의 검증된 합동 판정을 그대로 남긴다(보호 결정).
         # v13 단계와 추가 호출 단계 전부 같은 성질이다.
-        allowed = {"sme": SME_ITEMS, "split": SPLIT_ITEMS, "product": PRODUCT_ITEMS,
-                   **{"band:" + v: [v] for v in BAND_ITEMS}}
+        allowed = {"sme": SME_ITEMS, **extra_call_items()}
         if phase not in allowed or allowed[phase] != items or len(baseline_texts) != len(batch):
             raise ValueError("기본 응답 보존은 동일 공고의 추가 호출 단계에만 허용한다")
         for text in baseline_texts:
@@ -1570,6 +1581,11 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                              "debug_responses": debug_responses, "max_model_len": MAX_MODEL_LEN,
                              "temperature": 0, "thinking": False, "sme_items": SME_ITEMS,
                              "sme_selection": "baseline_v13_positive",
+                             # 어느 추가 호출 단계가 켜져 있었나. 이 단계들은 기본 판정 뒤에
+                             # 자기 항목을 덮어쓰므로 baseline_submission.csv와 submission.csv가
+                             # 그 항목에서 갈린다. 검사하는 쪽이 무엇이 바뀌어도 되는지를
+                             # 손으로 적지 않고 여기서 읽는다.
+                             "extra_call_items": extra_call_items(),
                              "prompt_language": "en_with_ko_legal_terms", "sme_facts": True, **settings,
                              "model_dir": record_path(settings["model_dir"])},
                 "code_sha256": file_sha256(__file__),

@@ -114,5 +114,41 @@ class CompetitiveProductTest(unittest.TestCase):
         self.assertLessEqual(false_positive["v12"], 0)
 
 
+class ExtraCallReportTest(unittest.TestCase):
+    """추가 호출 단계가 보고서에 남는지. 이것이 없으면 회차가 샘플 10건에서 죽는다.
+
+    노트북 `check_live`는 baseline_submission.csv와 submission.csv가 어느 항목에서
+    갈려도 되는지를 `settings["extra_call_items"]`에서 읽는다. 단계를 늘리고 이 기록을
+    빠뜨리면 그 단계가 바꾼 항목이 '대상 밖 변경'으로 잡혀 실행이 중단된다.
+    실제로 N1(v16·v18)을 켠 회차가 그렇게 죽었다.
+    """
+
+    def test_guard_and_report_read_the_same_list(self):
+        """실패 시 보존 가드와 보고서가 같은 함수를 본다. 단계를 늘리면 둘 다 따라온다."""
+        source = (REPO / "script.py").read_text(encoding="utf-8")
+        self.assertIn('allowed = {"sme": SME_ITEMS, **extra_call_items()}', source)
+        self.assertIn('"extra_call_items": extra_call_items(),', source)
+
+    def test_every_enabled_phase_is_recorded(self):
+        recorded = script.extra_call_items()
+        covered = set().union(*recorded.values()) if recorded else set()
+        for name, items in (("SPLIT_ITEMS", script.SPLIT_ITEMS),
+                            ("BAND_ITEMS", script.BAND_ITEMS),
+                            ("PRODUCT_ITEMS", script.PRODUCT_ITEMS)):
+            self.assertTrue(set(items) <= covered, f"{name}이 보고서에 안 남는다")
+
+    def test_recorded_items_are_real_items(self):
+        for phase, items in script.extra_call_items().items():
+            for item in items:
+                self.assertIn(item, script.ITEMS, f"{phase}에 항목 아닌 값: {item}")
+
+    def test_notebook_derives_allowed_columns_from_the_report(self):
+        """노트북에 항목을 손으로 적어 두면 스위치를 켤 때마다 낡는다."""
+        notebook = json.loads((REPO / "notebooks/colab-baseline.ipynb").read_text(encoding="utf-8"))
+        source = "".join("".join(c["source"]) for c in notebook["cells"])
+        self.assertIn('settings.get("extra_call_items")', source)
+        self.assertNotIn('protected = set(columns) - {"v13", "e13"}', source)
+
+
 if __name__ == "__main__":
     unittest.main()

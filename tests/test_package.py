@@ -234,9 +234,24 @@ class PackageTests(unittest.TestCase):
                 writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
                 writer.writeheader()
                 writer.writerows(rows)
-            with self.assertRaisesRegex(RuntimeError, "다른 23항목"):
+            # e1은 어느 추가 호출 단계의 항목도 아니므로 여전히 거부돼야 한다.
+            with self.assertRaisesRegex(RuntimeError, "대상 밖"):
                 namespace["check_live"]("dev", 200)
             baseline_path.write_bytes(original_baseline)
+            # 반대로 켜진 단계의 항목이 갈리는 것은 설계다. N1이 켜진 채로 v16이 달라도
+            # 통과해야 한다 — 이것을 막던 낡은 불변식이 실제 회차를 샘플 10건에서 죽였다.
+            enabled = set().union(*report["reproduction"]["settings"]["extra_call_items"].values())
+            if enabled:
+                item = sorted(enabled)[0]
+                with baseline_path.open(encoding="utf-8") as stream:
+                    rows = list(csv.DictReader(stream))
+                rows[0][item] = "1" if rows[0][item] == "0" else "0"
+                with baseline_path.open("w", encoding="utf-8", newline="") as stream:
+                    writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+                    writer.writeheader()
+                    writer.writerows(rows)
+                namespace["check_live"]("dev", 200)
+                baseline_path.write_bytes(original_baseline)
             downloaded = []
             colab.files.download = downloaded.append
             # Real scoring of mock CSVs must not export a non-improving ZIP.
