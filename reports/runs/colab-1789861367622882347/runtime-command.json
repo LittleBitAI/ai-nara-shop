@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/t1-colab-oxy9s1au/venv/bin/python",
+    "-c",
+    "\nimport json, platform, shutil, subprocess, sys, torch, vllm, transformers, xgrammar\nfrom importlib.metadata import version\nfrom pathlib import Path\nruntime = {\"python\": platform.python_version(), \"cuda\": torch.version.cuda,\n           \"packages\": {n: version(n) for n in [\"torch\", \"vllm\", \"transformers\", \"xgrammar\"]},\n           \"gpu\": torch.cuda.get_device_name(0),\n           \"ninja_path\": shutil.which(\"ninja\"),\n           \"ninja_version\": subprocess.check_output([\"ninja\", \"--version\"], text=True).strip()}\nPath(sys.argv[1]).write_text(json.dumps(runtime, indent=2) + \"\\n\", encoding=\"utf-8\")\nprint(runtime)\ntorch.empty(1, device=\"cuda\")\n",
+    "/content/t1-colab-oxy9s1au/results/runtime.json"
+  ],
+  "cwd": "/content/t1-colab-oxy9s1au",
+  "started": 1789859004.1453478,
+  "returncode": 0,
+  "elapsed_seconds": 6.83802342414856
+}

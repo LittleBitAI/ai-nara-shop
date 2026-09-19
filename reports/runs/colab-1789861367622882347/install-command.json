@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/content/t1-colab-oxy9s1au/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "--extra-index-url",
+    "https://download.pytorch.org/whl/cu130",
+    "vllm==0.26.0",
+    "torch==2.11.0+cu130",
+    "transformers==5.14.1",
+    "xgrammar==0.2.3"
+  ],
+  "cwd": "/content/t1-colab-oxy9s1au",
+  "started": 1789858792.356566,
+  "returncode": 0,
+  "elapsed_seconds": 210.79043054580688
+}
