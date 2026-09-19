@@ -115,7 +115,7 @@ class CompareRunsTests(unittest.TestCase):
     def test_drift_constants_match_the_table_that_owns_them(self):
         """상수는 reproducibility.md의 churn 표에서 온다. 한쪽만 고치면 여기서 걸린다."""
         rows = drift_table_rows(compare_runs.ROOT / "reports/runs/reproducibility.md")
-        self.assertEqual(len(rows), 13, "churn 표의 행 수가 달라졌다. 아래 기대값을 함께 고친다")
+        self.assertEqual(len(rows), 14, "churn 표의 행 수가 달라졌다. 아래 기대값을 함께 고친다")
         same = [(cells, delta) for _, code, cells, delta in rows if code == "같음"]
         self.assertEqual(len(same), compare_runs.DRIFT_PAIRS, "코드가 같은 쌍 수와 DRIFT_PAIRS가 다르다")
         self.assertEqual((min(c for c, _ in same), max(c for c, _ in same)), compare_runs.DRIFT_CELLS)
