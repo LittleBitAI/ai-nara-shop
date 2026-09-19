@@ -111,8 +111,38 @@ def extra_call_items() -> Dict[str, List[str]]:
     전에는 둘이 목록을 따로 들고 있었고, N1을 켜면서 보고서 쪽이 빠져
     노트북 `check_live`가 "v13만 바뀔 수 있다"는 낡은 불변식으로 회차를 죽였다.
     """
-    return {"split": SPLIT_ITEMS, "product": PRODUCT_ITEMS,
-            **{"band:" + item: [item] for item in BAND_ITEMS}}
+    # 순서는 run()이 얹는 순서와 같다. 항목이 겹치지 않아 결과는 같지만,
+    # 재생이 run()과 같은 순서로 돌아야 나중에 겹치는 단계가 생겨도 안 갈린다.
+    return {"split": SPLIT_ITEMS,
+            **{"band:" + item: [item] for item in BAND_ITEMS},
+            "product": PRODUCT_ITEMS}
+
+
+def merge_extra_call(parsed, rec, phase: str, items, text) -> None:
+    """추가 호출 응답을 기본 판정 위에 얹는다. `parsed`를 제자리에서 고친다.
+
+    **`run()`과 `tools/replay_run.py`가 같은 것을 쓴다.** 전에는 재생이 `sme` 단계만
+    알아서, N1이 켜진 회차의 보관 원응답이 그 회차의 CSV를 재현하지 못했다
+    (v16 13건·v18 37건 불일치). 원응답에는 `split` 155건이 그대로 있었는데 읽지 않았다.
+
+    호출이 실패했거나(`text`가 None) 응답을 못 읽으면 그 공고의 합동 판정을 그대로 남긴다.
+    """
+    if text is None or not items:
+        return
+    try:
+        focused, _ = parse_judgment(text, expected_items=list(items))
+    except ValueError:
+        return                          # 파싱 실패도 합동 판정 보존 (보호 결정)
+    for item in items:
+        if phase == "split":
+            hit = focused[item]["위반여부"] == 1 and in_band(item, rec, SPLIT_BANDS)
+            parsed[item] = {"위반여부": 1 if hit else 0, "근거문구": None}
+        elif phase.startswith("band:"):
+            hit = focused[item]["위반여부"] == 1 and in_band(item, rec, BAND_RANGES)
+            parsed[item] = {"위반여부": 1 if hit else 0,
+                            "근거문구": focused[item]["근거문구"] if hit else None}
+        else:                           # product — 금액 게이트 없이 그대로 받는다
+            parsed[item] = dict(focused[item])
 
 
 DOC_ORDER =["공고문", "규격서", "과업지시서", "제안요청서", "예외공표서", "기타"]
@@ -1777,36 +1807,12 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             zip(recs, texts, sme_texts, split_texts, product_texts, sme_chars)):
         parsed, _ = parse_judgment(text)
         baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
-        if split_text is not None:
-            # 분할 호출이 실패하면 그 공고의 합동 판정을 그대로 쓴다. 구간 밖 양성은 버린다.
-            try:
-                focused, _ = parse_judgment(split_text, expected_items=SPLIT_ITEMS)
-            except ValueError:
-                focused = None
-            if focused is not None:
-                for item in SPLIT_ITEMS:
-                    hit = focused[item]["위반여부"] == 1 and in_band(item, rec, SPLIT_BANDS)
-                    parsed[item] = {"위반여부": 1 if hit else 0, "근거문구": None}
-        for item in BAND_ITEMS:
-            band_text = band_texts[item][index]
-            if band_text is None:
-                continue        # 구간 밖이거나 추가 호출이 실패했다 — 합동 판정을 그대로 둔다
-            try:
-                focused, _ = parse_judgment(band_text, expected_items=[item])
-            except ValueError:
-                continue
-            hit = focused[item]["위반여부"] == 1 and in_band(item, rec, BAND_RANGES)
-            parsed[item] = {"위반여부": 1 if hit else 0,
-                            "근거문구": focused[item]["근거문구"] if hit else None}
-        if product_text is not None:
-            # 호출이 실패하면 그 공고의 합동 판정을 그대로 쓴다.
-            try:
-                focused, _ = parse_judgment(product_text, expected_items=PRODUCT_ITEMS)
-            except ValueError:
-                focused = None
-            if focused is not None:
-                for item in PRODUCT_ITEMS:
-                    parsed[item] = dict(focused[item])
+        # 추가 호출을 얹는다. 실패·구간 밖은 merge_extra_call이 합동 판정으로 남긴다.
+        # 재생 도구가 같은 함수를 쓴다 — 여기서만 얹으면 보관 원응답이 회차를 재현하지 못한다.
+        phase_text = {"split": split_text, "product": product_text,
+                      **{"band:" + item: band_texts[item][index] for item in BAND_ITEMS}}
+        for phase, items in extra_call_items().items():
+            merge_extra_call(parsed, rec, phase, items, phase_text[phase])
         if sme_text is not None:
             focused, _ = parse_judgment(sme_text, expected_items=SME_ITEMS, sme=True)
             verified, reasons = verify_sme(focused, rec, products, mc)

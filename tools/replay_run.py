@@ -86,6 +86,17 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
     verify_sme = verify_sme or script.verify_sme
 
     texts = saved_responses(case_dir)
+    # 이 제출 코드가 추가 호출 단계를 아는가. 회차 커밋이 오래됐으면 모른다.
+    phases = (script.extra_call_items()
+              if hasattr(script, "extra_call_items") and hasattr(script, "merge_extra_call")
+              else None)
+    if phases is None:
+        stored = {name for name, by_id in texts.items()
+                  if by_id and name not in ("baseline", "sme")}
+        if stored:
+            # 모르는 채로 얹지 않으면 회차 CSV를 조용히 못 맞춘다. 소리를 낸다.
+            raise ValueError(f"이 회차에는 {sorted(stored)} 단계 원응답이 있는데 "
+                             "그 코드는 재생할 줄 모른다. 더 최신 --script 로 재생한다")
     _, products = script.load_sme_reference(str(data_dir))
     rows, baseline_rows, reasons = [], [], {}
     for rec in script.iter_records(str(input_path)):
@@ -94,6 +105,14 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             raise ValueError(f"{rec['id']}: 저장된 기본 응답이 없다")
         parsed, _ = script.parse_judgment(text)
         baseline_rows.append(script.to_row(rec["id"], script.postprocess(parsed, rec)))
+        # 추가 호출 단계를 회차와 같은 순서·같은 코드로 얹는다. 전에는 이 줄이 없어
+        # N1이 켜진 회차의 재생이 회차 CSV를 재현하지 못했다(v16 13건·v18 37건).
+        # `--verify`는 회차 커밋의 코드로 도는데 옛 회차에는 이 두 함수가 없다.
+        # 그때는 얹지 않는다 — 그 코드에는 sme 말고 얹을 단계가 없었다.
+        if phases is not None:
+            for phase, items in phases.items():
+                script.merge_extra_call(parsed, rec, phase, items,
+                                        texts.get(phase, {}).get(rec["id"]))
         sme_text = texts["sme"].get(rec["id"])
         if sme_text is not None:
             focused, _ = script.parse_judgment(sme_text, expected_items=script.SME_ITEMS, sme=True)

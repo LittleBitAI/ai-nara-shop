@@ -91,6 +91,30 @@ class ReplayRunTests(unittest.TestCase):
                          (CASE / "baseline_submission.csv").read_bytes())
         self.assertEqual(len(result["rejected_conditions"]), 107)
 
+    def test_replay_reproduces_a_run_with_extra_call_phases(self):
+        """추가 호출이 켜진 회차도 재현해야 한다.
+
+        `colab-1789861367622882347`은 N1(`SPLIT_ITEMS`)을 켜고 돈 첫 회차다.
+        재생이 `sme` 단계만 알던 동안 이 회차는 v16 13건·v18 37건이 어긋났다 —
+        원응답에 `split` 155건이 그대로 있었는데 읽지 않았다. 재생 결과를 근거로 쓰려면
+        이것이 초록이어야 한다. HEAD 코드로 돌린다: 회차 커밋에는 `merge_extra_call`이 없다.
+        """
+        case = ROOT / "reports/runs/colab-1789861367622882347/dev-debug"
+        self.assertTrue(case.is_dir(), f"{case} 가 없다")
+        stored = replay_run.saved_responses(case)
+        self.assertTrue(stored.get("split"), "split 단계 원응답이 없다")
+        result = replay_run.replay(SCRIPT, case, input_path=ROOT / "open/dev.jsonl",
+                                   data_dir=ROOT / "open/data")
+        self.assertEqual(replay_run.to_csv_bytes(SCRIPT, result["rows"]),
+                         (case / "submission.csv").read_bytes())
+
+    def test_refuses_a_run_whose_phases_the_script_cannot_replay(self):
+        """모르는 단계를 조용히 건너뛰면 틀린 CSV를 근거로 쓰게 된다. 소리를 내야 한다."""
+        case = ROOT / "reports/runs/colab-1789861367622882347/dev-debug"
+        with self.assertRaisesRegex(ValueError, "재생할 줄 모른다"):
+            replay_run.replay(RUN_SCRIPT, case, input_path=ROOT / "open/dev.jsonl",
+                              data_dir=ROOT / "open/data")
+
     def test_head_replay_matches_the_pinned_head_csv(self):
         """HEAD 회귀 가드. --verify는 회차 코드로 돌아 HEAD의 parse_judgment·verify_sme·postprocess를
         검사하지 않는다. HEAD 후단을 일부러 바꿨다면 재생 결과를 새로 고정하고 그 이유를 PR에 적는다."""
