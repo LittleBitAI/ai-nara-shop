@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>회차 진단</title>
+    <script>
+      // 첫 칠에서 테마가 한 번 깜빡이지 않게 본문보다 먼저 정한다.
+      try {
+        const saved = localStorage.getItem('theme')
+        if (saved) document.documentElement.dataset.theme = saved
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

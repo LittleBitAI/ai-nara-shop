@@ -18,6 +18,15 @@
 /submissions/
 /final-models/
 
+# 진단 화면(web/). 소스만 추적하고 설치물과 build_report.py 생성물은 뺀다.
+/web/node_modules/
+/web/dist/
+/web/public/runs/
+/web/public/items.json
+# --share 요약은 같은 회차에 다시 뽑으면 덮어쓴다. score/ 는 기존 디렉터리를 거부해
+# 한 번만 생기지만 이건 아니라서, 추적하면 돌릴 때마다 트리가 더러워진다.
+/reports/runs/*/share.html
+
 # Model files
 *.pt
 *.pth

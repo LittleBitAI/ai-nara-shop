@@ -81,6 +81,7 @@
 | 0점 항목이 막힌 단계 찾기 | [항목 진단 전용 회차](colab.md#항목-진단-전용-회차-선택) | `tools/diagnose_items.py`, 노트북 `diagnose` 셀, `reports/team-score-audit/recall-check.csv`의 양성 ID |
 | 다음 GPU 회차에 무엇을 돌릴지 | [GPU 회차 대기열](tasks/gpu-run-queue.md) | 회차 제한 없음(2026-09-20~)·제출 1일 1회·여유 2,919초, 노트북 셀 18의 `RUN_DIAGNOSTIC`·`DIAGNOSE_ITEMS` |
 | 후보가 정말 나아졌는지 판정 | [workflow W5](workflow.md#w5-실험검증), [회차 간 비결정성](../reports/runs/reproducibility.md) | `tools/compare_runs.py`로 항목별 TP/FP/FN과 대상 밖 회귀·churn 범위 |
+| 어느 항목이 낮고 dev를 어떻게 읽었는지 눈으로 | [화면 설계](../DESIGN.md), [실행법](../web/README.md) | 결과 ZIP을 `artifacts/inbox/`에 넣고 `report.cmd`(Windows)·`report.command`(macOS). 채점은 `score.py` 한 곳이고 화면은 그리기만 한다 |
 | 프롬프트·스키마 후보를 Colab 없이 몇 건만 확인 | [workflow W5](workflow.md#w5-실험검증) | `tools/api_run.py`. 키가 있으면 API의 `gemma-4-26b-a4b-it`, 없으면 mock. 분당 입력 토큰 16,000 상한이라 표본용이고 전량 dev는 Colab 회차 |
 | 모델 뒤 단계 후보를 GPU 없이 측정 | [workflow W5](workflow.md#w5-실험검증) | `tools/replay_run.py`와 보관된 원응답 `reports/runs/colab-1789655036303880754/dev-debug/`. `--verify`는 보관 응답 무결성 검사(회차 커밋 코드)이고, 비교 기준은 HEAD 재생 CSV |
 | 리뷰 | [workflow](workflow.md), 변경한 계약 문서 | diff, 호출자, 실행 기록 |
