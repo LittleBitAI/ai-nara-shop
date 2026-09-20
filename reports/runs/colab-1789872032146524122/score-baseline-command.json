@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/content/t1-colab-2s8kpsvm/venv/bin/python",
+    "/content/t1-colab-2s8kpsvm/tools/score.py",
+    "--truth",
+    "/content/t1-colab-2s8kpsvm/open/dev_labels.csv",
+    "--pred",
+    "/content/t1-colab-2s8kpsvm/results/dev/baseline_submission.csv",
+    "--output-dir",
+    "/content/t1-colab-2s8kpsvm/results/score-baseline"
+  ],
+  "cwd": "/content/t1-colab-2s8kpsvm",
+  "started": 1789871178.928333,
+  "returncode": 0,
+  "elapsed_seconds": 0.0634298324584961
+}

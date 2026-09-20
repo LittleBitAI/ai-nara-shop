@@ -1,0 +1,129 @@
+{
+  "run_id": "colab-1789872032146524122",
+  "archive": "colab-results-1789872032146524122.zip",
+  "zip_sha256": {
+    "results": "fe97c5ecce7b1b74606e5649328f92d67bfa5f48f223a9c0c60e5a0fb228e9b9",
+    "submit": "01fca075a6db0bbf08605f4b3a272e699ba6288ab10937c1e2e3b0bdc5ae8823"
+  },
+  "registered_at": "2026-09-20T02:42:17.035530+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "0a172a2379bea801566afa0a403cd86b8a9e7fc9",
+    "commit": "0a172a2379bea801566afa0a403cd86b8a9e7fc9",
+    "given_commit": "0a172a2"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "dev-debug": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 168.4,
+        "baseline_inference": 361.8,
+        "extra_inference": 107.6,
+        "inference_total": 676.0,
+        "run_total": 848.664,
+        "wall_clock": 852.4218807220459
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 106,
+        "extra_selected": 106,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 27,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 146,
+        "evidence_dropped_not_verbatim": 88,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "dev": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 192.9,
+        "baseline_inference": 361.9,
+        "extra_inference": 104.4,
+        "inference_total": 672.8,
+        "run_total": 869.947,
+        "wall_clock": 874.4084355831146
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 103,
+        "extra_selected": 103,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 26,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 152,
+        "evidence_dropped_not_verbatim": 90,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.4780515523487083
+    },
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 442.1,
+        "baseline_inference": 31.8,
+        "extra_inference": 12.2,
+        "inference_total": 57.3,
+        "run_total": 499.749,
+        "wall_clock": 504.471075296402
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 6,
+        "extra_selected": 6,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 7,
+        "evidence_dropped_not_verbatim": 6,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.4780515523487083,
+    "baseline_macro_f1_same_run": 0.4054415467669072,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": true,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1789872032146524122.zip",
+    "submit": "artifacts/inbox/submit.zip"
+  }
+}
