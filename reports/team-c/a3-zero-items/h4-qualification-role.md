@@ -67,7 +67,8 @@ python -X utf8 -m unittest tests.test_baseline tests.test_company_size tests.tes
 
 ## 다음 회차
 
-[전용 노트북](../../../notebooks/exp-a3-source-role.ipynb)의 H4 전체 SHA를 고정해 게시한다.
+[전용 노트북](../../../notebooks/exp-a3-source-role.ipynb)의 H4 추론 커밋은
+`18f07e5cd9446500aa92bf254e104d4a8f5123dd`로 고정했다.
 새 A100급 런타임과 HF_TOKEN 접근만 준비하고 처음부터 실행한다. 기존 종료된 런타임은 필요 없다.
 SOURCE_MODE/REPO_REF/RUN_DIAGNOSTIC/DIAGNOSE_ITEMS는 게시된 값 그대로 사용한다.
 
