@@ -9,6 +9,13 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 ## 바로 답할 내용
 
+**2026-09-20 A3 첫 live 갱신:** `b7ac265` 회차 `colab-1789886517580784653`은 dev 200건을
+883.168초에 정상 추론했으나 노트북의 옛 v13 보호 검사에서 중단됐다. 공용/A3 검사 수정,
+실제 저장 CSV로 재현·통과 확인. CPU 복구 dev **0.5357800832**, v10·v18·v20 TP는 모두 0이다.
+원응답 보존 단계 전 중단이므로 역할 추출 변화는 확인하지 못했다. 성능 미채택이며
+동일 ZIP 반복·무라벨 발화율·서버 시간은 미측정이다.
+[복구·재개 절차](../reports/team-c/a3-zero-items/run-1789886517580784653/README.md)를 따른다.
+
 **2026-09-20 A3 착수:** `glassfish`는 [A3 작업서](../docs/tasks/a3-zero-items.md)를 따른다.
 고정 코드 `6bb692d`의 scope 원응답 재생 기준은 dev **0.547985038075**다. 새 GPU 성과가 아니다.
 첫 실험은 기존 company_size 프롬프트의 자격 추출에서 문장 원천·역할 구분이며,

@@ -199,6 +199,37 @@ class PackageTests(unittest.TestCase):
                     writer.writeheader()
                     writer.writerows(changed_rows)
                 namespace["check_live"]("dev", 200)
+            baseline_path.write_bytes(original_baseline)
+            final_path = results / "dev/submission.csv"
+            original_final = final_path.read_bytes()
+            changed_rows = list(csv.DictReader(io.StringIO(original_final.decode("utf-8"))))
+            changed_rows[0].update(v13="1", e13="기업등급 제한")
+            with final_path.open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=changed_rows[0].keys())
+                writer.writeheader()
+                writer.writerows(changed_rows)
+            # A1 scope owns v13 even when the selective SME call skipped this notice.
+            # Check both shipping notebooks against the same changed CSV.
+            for notebook in ("colab-baseline.ipynb", "exp-a3-source-role.ipynb"):
+                nb = json.loads((ROOT / "notebooks" / notebook).read_text(encoding="utf-8"))
+                source = next("".join(c["source"]) for c in nb["cells"] if c["id"] == "sample")
+                check = next(n for n in ast.parse(source).body
+                             if isinstance(n, ast.FunctionDef) and n.name == "check_live")
+                exec(compile(ast.Module(body=[check], type_ignores=[]), notebook, "exec"), namespace)
+                namespace["check_live"]("dev", 200)
+                owners = report["reproduction"]["settings"]["extra_call_items"]
+                owners["company_size"].remove("v13")
+                write()
+                with self.assertRaisesRegex(RuntimeError, "생략한 공고"):
+                    namespace["check_live"]("dev", 200)
+                owners["company_size"].append("v13")
+                write()
+            final_path.write_bytes(original_final)
+            # Keep an A1-only change for the missing ownership-map failure below.
+            with baseline_path.open("w", encoding="utf-8", newline="") as stream:
+                writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+                writer.writeheader()
+                writer.writerows([dict(row, v18="1") if i == 0 else row for i, row in enumerate(rows)])
             owned = report["reproduction"]["settings"].pop("extra_call_items")
             write()
             with self.assertRaisesRegex(RuntimeError, "대상 밖"):
@@ -242,8 +273,13 @@ class PackageTests(unittest.TestCase):
             write_baseline()
             final_path.write_bytes(baseline_path.read_bytes())
             baseline_path.write_bytes(original_baseline)
+            # With no other phase owning v13, skipped-SME preservation still applies.
+            report["reproduction"]["settings"]["extra_call_items"]["company_size"].remove("v13")
+            write()
             with self.assertRaisesRegex(RuntimeError, "생략한 공고"):
                 namespace["check_live"]("dev", 200)
+            report["reproduction"]["settings"]["extra_call_items"]["company_size"].append("v13")
+            write()
             final_path.write_bytes(original_final)
             with baseline_path.open(encoding="utf-8") as stream:
                 rows = list(csv.DictReader(stream))
