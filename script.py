@@ -1042,8 +1042,23 @@ def clean_evidence(ev: Optional[str], src: str) -> str:
 
 # 근거 대조 보정: 모델이 인용한 근거 자체가 위반이 아님을 보이면 양성을 내린다.
 # 공고 1건의 근거·메타·문서만 본다. 근거가 빈 양성은 건드리지 않는다.
+# v19는 인용이 아니라 **공고가 무엇을 요구했는지**를 본다.
+# [items](docs/items.md) 2026-09-18 확정 해석: 위반은 **입찰·투찰 단계에서 확약서를
+# 요구한 경우**로 한정한다. 계약 시·낙찰자 결정 후 제출 요구만 있는 공고는 음성이다.
+# 그 해석은 공고의 요구에 대한 진술이지 모델이 어느 문장을 인용했는지에 대한 것이 아니다.
+# 실제로 오탐 15건 중 다수가 "④ 확약서 1부" 같은 **제출서류 목록 한 줄**을 인용했고,
+# 그 공고에는 입찰 단계 시점이 아예 없다.
+# 실측(합본 재생): F1 0.444(6/15/0) → 0.714(5/3/1). 잃는 TP는 `PPS-DEV-033` 하나이고
+# 그 공고는 확약서 언급이 제출서류 목록뿐이라 본문 어디에도 입찰 시점이 없다.
+# 무라벨 6,000건 발화율은 dev 대비 확약서 언급 1.01배·입찰 시점 0.67배로 건강하다.
+# 두 규칙은 서로 다른 것을 잡는다. 공고가 입찰 단계에서 요구했더라도 그 인용이
+# 계약 시 의무만 말하면 그 인용은 위반의 근거가 아니다 — `PPS-DEV-088`·`110`이 그것이다.
 V19_POST_AWARD = re.compile(r"계약\s*시|계약체결|낙찰자\s*결정")   # 낙찰 후·계약 시 의무
 V19_BID_STAGE = re.compile(r"입찰|투찰")                        # 입찰 단계 표현이 있으면 유지
+V19_PLEDGE = re.compile(r"확약서")
+V19_BID_DEADLINE = re.compile(r"입찰서?\s*제출\s*마감|입찰\s*전|입찰전|투찰\s*마감"
+                              r"|개찰\s*전|입찰\s*참가\s*시")
+V19_WINDOW = 200                                               # 확약서 언급 앞뒤로 볼 글자 수
 V24_AMOUNT = re.compile(r"(\d{1,3}(?:,\d{3})+|\d{5,})\s*원")
 V24_REGION = re.compile(r"지역제한\s*\(([^)]*)\)")
 V24_TITLE_TAG = re.compile(r"\((일반경쟁|제한경쟁|지명경쟁)\s*[·ㆍ]\s*(\d+)\s*(억|천만)원\s*미만\)")
@@ -1087,11 +1102,29 @@ def v24_consistent_with_meta(evidence: str, meta: Dict[str, Any]) -> bool:
     return checked
 
 
+def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
+    """공고가 입찰·투찰 단계에서 확약서를 요구했는가. 확약서 언급 주변만 본다.
+
+    공고 전체에 "입찰"이 없는 경우는 없으므로 낱말의 유무로는 못 가른다 —
+    확약서를 말하는 자리에 그 시점이 붙어 있는지가 갈림이다.
+    """
+    for doc in rec.get("docs") or []:
+        text = doc.get("text") or ""
+        for found in V19_PLEDGE.finditer(text):
+            window = text[max(0, found.start() - V19_WINDOW): found.end() + V19_WINDOW]
+            if V19_BID_DEADLINE.search(window):
+                return True
+    return False
+
+
 def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
     """근거 원문이 해당 항목의 위반 조건을 스스로 부정하는가(v9·v19·v21·v24)."""
     if not evidence:
         return False
     if item == "v19":
+        if not v19_demanded_at_bid_stage(rec):
+            return True                     # 공고가 입찰 단계에서 요구한 적이 없다
+        # 요구했더라도 이 인용이 계약 시 의무만 말하면 그 인용은 근거가 아니다.
         return bool(V19_POST_AWARD.search(evidence)) and not V19_BID_STAGE.search(evidence)
     if item == "v24":
         return v24_consistent_with_meta(evidence, rec.get("meta") or {})

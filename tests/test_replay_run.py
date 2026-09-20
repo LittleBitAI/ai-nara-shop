@@ -24,6 +24,9 @@ RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
 # 2026-09-20 재고정(sha256 beb68293…): 경쟁제품 규칙(v11·v12)이 postprocess에 들어왔다.
 # 6셀만 움직였고 대상 밖 변화는 0이다 — v11 TP 0→2, v12 TP 0→2.
 # 근거는 reports/team-c/a2-competitive-product/README.md.
+# 2026-09-20 재고정(sha256 74dd4706…): v19가 인용이 아니라 공고의 요구를 보게 됐다.
+# 14셀이 움직였고 대상 밖 변화는 0이다 — v19 오탐 15→3.
+# 근거는 reports/team-b/b1-v19-bid-stage/README.md.
 HEAD_REPLAY = ROOT / "reports/team-b/b5-port-replay/submission.csv"
 
 CANDIDATE = '''"""검사용 후보. 모든 판정을 0으로 만든다."""
