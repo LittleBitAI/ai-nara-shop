@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-osc36cay/repo",
+    "rev-parse",
+    "HEAD"
+  ],
+  "cwd": "/content/t1-colab-osc36cay",
+  "started": 1789887226.676975,
+  "returncode": 0,
+  "elapsed_seconds": 0.0043430328369140625
+}

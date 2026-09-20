@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/t1-colab-osc36cay/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/t1-colab-osc36cay/submission/requirements.txt"
+  ],
+  "cwd": "/content/t1-colab-osc36cay",
+  "started": 1789887501.4551904,
+  "returncode": 0,
+  "elapsed_seconds": 0.610527515411377
+}

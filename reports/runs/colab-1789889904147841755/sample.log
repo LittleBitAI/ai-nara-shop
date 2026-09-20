@@ -1,0 +1,161 @@
+[baseline] 입력 10건 ← data/test.jsonl.gz
+[baseline] vllm 0.26.0 · 모델 <외부>/4d7ae4984b7db7de8f8457170b3f1a419ee76d52 · quant=int8_per_channel_weight_only · max_model_len=16384
+INFO 09-20 07:01:09 [api_utils.py:273] non-default args: {'tokenizer': '/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52', 'seed': 20260826, 'max_model_len': 16384, 'disable_log_stats': True, 'quantization': 'int8_per_channel_weight_only', 'quantization_config': QuantizationConfigArgs(linear=None, moe=QuantSpec(weight=QuantKey(dtype=torch.int8, scale=ScaleDesc(dtype=torch.float32, static=True, group_shape=GroupShape(row=-1, col=1)), scale2=None, symmetric=True), activation=None), ignore=[]), 'model': '/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52'}
+INFO 09-20 07:01:21 [model.py:623] Resolved architecture: Gemma4ForConditionalGeneration
+INFO 09-20 07:01:21 [model.py:1788] Using max model len 16384
+INFO 09-20 07:01:24 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 09-20 07:01:24 [config.py:240] Gemma4 model has heterogeneous head dimensions (head_dim=256, global_head_dim=512). FA4 not available, forcing TRITON_ATTN backend.
+INFO 09-20 07:01:25 [vllm.py:1109] Asynchronous scheduling is enabled.
+INFO 09-20 07:01:25 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+WARNING 09-20 07:01:25 [cuda.py:323] Forcing --disable_chunked_mm_input for models with multimodal-bidirectional attention.
+(EngineCore pid=10482) INFO 09-20 07:01:33 [core.py:116] Initializing a V1 LLM engine (v0.26.0) with config: model='/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52', speculative_config=None, tokenizer='/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=16384, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=int8_per_channel_weight_only, quantization_config=QuantizationConfigArgs(linear=None, moe=QuantSpec(weight=QuantKey(dtype=torch.int8, scale=ScaleDesc(dtype=torch.float32, static=True, group_shape=GroupShape(row=-1, col=1)), scale2=None, symmetric=True), activation=None), ignore=[]), enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=20260826, served_model_name=/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::qwen_gdn_attention_core', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=10482) INFO 09-20 07:01:33 [parallel_state.py:1615] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.28.0.12:59161 backend=nccl
+(EngineCore pid=10482) INFO 09-20 07:01:33 [parallel_state.py:1946] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+(EngineCore pid=10482) INFO 09-20 07:01:36 [topk_topp_sampler.py:55] Using FlashInfer for top-p & top-k sampling.
+(EngineCore pid=10482) INFO 09-20 07:01:36 [gpu_model_runner.py:5250] Starting to load model /root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52...
+(EngineCore pid=10482) INFO 09-20 07:01:36 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+(EngineCore pid=10482) INFO 09-20 07:01:37 [cuda.py:422] Using AttentionBackendEnum.TRITON_ATTN backend.
+(EngineCore pid=10482) INFO 09-20 07:01:37 [int8.py:173] Using TRITON Int8 MoE backend out of potential backends: ['TRITON', 'HUMMING', 'CPU'].
+(EngineCore pid=10482) INFO 09-20 07:01:37 [cuda.py:422] Using AttentionBackendEnum.TRITON_ATTN backend.
+(EngineCore pid=10482) INFO 09-20 07:01:37 [weight_utils.py:869] Filesystem type for checkpoints: OVERLAY. Checkpoint size: 48.07 GiB. Available RAM: 79.13 GiB.
+(EngineCore pid=10482) INFO 09-20 07:01:37 [weight_utils.py:892] Auto-prefetch is disabled because the filesystem (OVERLAY) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=10482) 
+Loading safetensors checkpoint shards:   0% Completed | 0/2 [00:00<?, ?it/s]
+(EngineCore pid=10482) INFO 09-20 07:01:45 [int8.py:307] Using MoEPrepareAndFinalizeNoDPEPModular
+(EngineCore pid=10482) 
+Loading safetensors checkpoint shards:  50% Completed | 1/2 [02:13<02:13, 133.30s/it]
+(EngineCore pid=10482) 
+Loading safetensors checkpoint shards: 100% Completed | 2/2 [02:28<00:00, 64.02s/it]
+(EngineCore pid=10482)  
+Loading safetensors checkpoint shards: 100% Completed | 2/2 [02:28<00:00, 74.42s/it]
+(EngineCore pid=10482) 
+(EngineCore pid=10482) INFO 09-20 07:04:06 [default_loader.py:430] Loading weights took 148.88 seconds
+(EngineCore pid=10482) INFO 09-20 07:04:07 [gpu_model_runner.py:5347] Model loading took 27.36 GiB memory and 149.751804 seconds
+(EngineCore pid=10482) INFO 09-20 07:04:07 [gpu_model_runner.py:6396] Encoder cache will be initialized with a budget of 8192 tokens, and profiled with 3 video items of the maximum feature size.
+(EngineCore pid=10482) INFO 09-20 07:05:01 [backends.py:1094] Using cache directory: /root/.cache/vllm/torch_compile_cache/656eb33fd3/rank_0_0/backbone for vLLM's torch.compile
+(EngineCore pid=10482) INFO 09-20 07:05:01 [backends.py:1155] Dynamo bytecode transform time: 14.11 s
+(EngineCore pid=10482) INFO 09-20 07:05:13 [backends.py:378] Cache the graph of compile range (1, 8192) for later use
+(EngineCore pid=10482) INFO 09-20 07:05:40 [backends.py:393] Compiling a graph for compile range (1, 8192) takes 38.95 s
+(EngineCore pid=10482) INFO 09-20 07:05:48 [decorators.py:708] saved AOT compiled function to /root/.cache/vllm/torch_compile_cache/torch_aot_compile/6b6ce80c76548b3c3fe694f358ce9086547221a688deb7931ca2611c94843109/rank_0_0/model
+(EngineCore pid=10482) INFO 09-20 07:05:48 [monitor.py:53] torch.compile took 60.69 s in total
+(EngineCore pid=10482) WARNING 09-20 07:05:49 [fused_moe.py:1107] Using default MoE config. Performance might be sub-optimal! Config file not found at /content/t1-colab-osc36cay/venv/lib/python3.12/site-packages/vllm/model_executor/layers/fused_moe/configs/E=128,N=704,device_name=NVIDIA_A100-SXM4-40GB,dtype=int8_w8a16.json
+(EngineCore pid=10482) INFO 09-20 07:05:52 [monitor.py:81] Initial profiling/warmup run took 4.73 s
+(EngineCore pid=10482) INFO 09-20 07:07:43 [gpu_model_runner.py:6612] Profiling CUDA graph memory: PIECEWISE=51 (largest=512), FULL=35 (largest=256)
+(EngineCore pid=10482) INFO 09-20 07:07:51 [gpu_model_runner.py:6737] Estimated CUDA graph memory: 0.66 GiB total
+(EngineCore pid=10482) INFO 09-20 07:07:51 [gpu_worker.py:560] Available KV cache memory: 6.33 GiB
+(EngineCore pid=10482) INFO 09-20 07:07:51 [gpu_worker.py:575] CUDA graph memory profiling is enabled (default since v0.21.0). The current --gpu-memory-utilization=0.9200 is equivalent to --gpu-memory-utilization=0.9033 without CUDA graph memory profiling. To maintain the same effective KV cache size as before, increase --gpu-memory-utilization to 0.9367. To disable, set VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0.
+(EngineCore pid=10482) INFO 09-20 07:07:51 [kv_cache_utils.py:2177] GPU KV cache size: 30,146 tokens
+(EngineCore pid=10482) INFO 09-20 07:07:51 [kv_cache_utils.py:2178] Maximum concurrency for 16,384 tokens per request: 1.84x
+(EngineCore pid=10482) INFO 09-20 07:07:52 [cutedsl_warmup.py:101] Skipping CuTeDSL warmup because no compile units were requested.
+(EngineCore pid=10482) INFO 09-20 07:07:52 [gpu_model_runner.py:6798] Rank 0: Torch profiler disabled for CUDA graph capture
+(EngineCore pid=10482) 
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   2%|▏         | 1/51 [00:00<00:05,  8.54it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   4%|▍         | 2/51 [00:00<00:05,  8.78it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   6%|▌         | 3/51 [00:00<00:05,  8.73it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):   8%|▊         | 4/51 [00:00<00:05,  8.80it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  10%|▉         | 5/51 [00:00<00:05,  8.81it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  12%|█▏        | 6/51 [00:00<00:05,  8.80it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  14%|█▎        | 7/51 [00:00<00:05,  8.78it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  16%|█▌        | 8/51 [00:00<00:04,  8.76it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  18%|█▊        | 9/51 [00:01<00:04,  8.70it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  20%|█▉        | 10/51 [00:01<00:04,  8.64it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  22%|██▏       | 11/51 [00:01<00:04,  8.61it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  24%|██▎       | 12/51 [00:01<00:04,  8.62it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  25%|██▌       | 13/51 [00:01<00:04,  8.65it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  27%|██▋       | 14/51 [00:01<00:04,  8.64it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  29%|██▉       | 15/51 [00:01<00:04,  8.72it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  31%|███▏      | 16/51 [00:01<00:03,  8.81it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  33%|███▎      | 17/51 [00:01<00:03,  8.86it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  35%|███▌      | 18/51 [00:02<00:03,  8.90it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  37%|███▋      | 19/51 [00:02<00:03,  8.88it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  39%|███▉      | 20/51 [00:02<00:03,  8.89it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  41%|████      | 21/51 [00:02<00:03,  8.85it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  43%|████▎     | 22/51 [00:02<00:03,  8.83it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  45%|████▌     | 23/51 [00:02<00:03,  8.70it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  47%|████▋     | 24/51 [00:02<00:03,  8.62it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  49%|████▉     | 25/51 [00:02<00:03,  8.47it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  51%|█████     | 26/51 [00:02<00:02,  8.51it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  53%|█████▎    | 27/51 [00:03<00:02,  8.56it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  55%|█████▍    | 28/51 [00:03<00:02,  8.53it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  57%|█████▋    | 29/51 [00:03<00:02,  8.57it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  59%|█████▉    | 30/51 [00:03<00:02,  8.54it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  61%|██████    | 31/51 [00:03<00:02,  8.52it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  63%|██████▎   | 32/51 [00:03<00:02,  8.54it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  65%|██████▍   | 33/51 [00:04<00:07,  2.27it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  67%|██████▋   | 34/51 [00:04<00:05,  2.91it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  69%|██████▊   | 35/51 [00:05<00:04,  3.62it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  71%|███████   | 36/51 [00:05<00:03,  4.36it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  73%|███████▎  | 37/51 [00:06<00:06,  2.26it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  75%|███████▍  | 38/51 [00:06<00:04,  2.91it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  76%|███████▋  | 39/51 [00:06<00:03,  3.63it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  78%|███████▊  | 40/51 [00:06<00:02,  4.39it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  80%|████████  | 41/51 [00:07<00:04,  2.26it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  82%|████████▏ | 42/51 [00:07<00:03,  2.91it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  84%|████████▍ | 43/51 [00:07<00:02,  3.63it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  86%|████████▋ | 44/51 [00:07<00:01,  4.40it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  88%|████████▊ | 45/51 [00:08<00:02,  2.42it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  90%|█████████ | 46/51 [00:08<00:01,  3.10it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  92%|█████████▏| 47/51 [00:08<00:01,  3.71it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  94%|█████████▍| 48/51 [00:09<00:00,  4.48it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  96%|█████████▌| 49/51 [00:10<00:01,  1.72it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE):  98%|█████████▊| 50/51 [00:10<00:00,  2.26it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:11<00:00,  1.78it/s]
+Capturing CUDA graphs (mixed prefill-decode, PIECEWISE): 100%|██████████| 51/51 [00:11<00:00,  4.47it/s]
+(EngineCore pid=10482) 
+Capturing CUDA graphs (decode, FULL):   0%|          | 0/35 [00:00<?, ?it/s]
+Capturing CUDA graphs (decode, FULL):   3%|▎         | 1/35 [00:00<00:04,  8.39it/s]
+Capturing CUDA graphs (decode, FULL):   6%|▌         | 2/35 [00:00<00:03,  8.42it/s]
+Capturing CUDA graphs (decode, FULL):   9%|▊         | 3/35 [00:00<00:03,  8.37it/s]
+Capturing CUDA graphs (decode, FULL):  11%|█▏        | 4/35 [00:00<00:03,  8.39it/s]
+Capturing CUDA graphs (decode, FULL):  14%|█▍        | 5/35 [00:00<00:03,  8.44it/s]
+Capturing CUDA graphs (decode, FULL):  17%|█▋        | 6/35 [00:00<00:03,  8.36it/s]
+Capturing CUDA graphs (decode, FULL):  20%|██        | 7/35 [00:00<00:03,  8.39it/s]
+Capturing CUDA graphs (decode, FULL):  23%|██▎       | 8/35 [00:00<00:03,  8.41it/s]
+Capturing CUDA graphs (decode, FULL):  26%|██▌       | 9/35 [00:01<00:03,  8.43it/s]
+Capturing CUDA graphs (decode, FULL):  29%|██▊       | 10/35 [00:01<00:02,  8.42it/s]
+Capturing CUDA graphs (decode, FULL):  31%|███▏      | 11/35 [00:01<00:02,  8.43it/s]
+Capturing CUDA graphs (decode, FULL):  34%|███▍      | 12/35 [00:01<00:02,  8.44it/s]
+Capturing CUDA graphs (decode, FULL):  37%|███▋      | 13/35 [00:01<00:02,  8.46it/s]
+Capturing CUDA graphs (decode, FULL):  40%|████      | 14/35 [00:01<00:02,  8.51it/s]
+Capturing CUDA graphs (decode, FULL):  43%|████▎     | 15/35 [00:01<00:02,  8.51it/s]
+Capturing CUDA graphs (decode, FULL):  46%|████▌     | 16/35 [00:01<00:02,  8.51it/s]
+Capturing CUDA graphs (decode, FULL):  49%|████▊     | 17/35 [00:02<00:02,  8.51it/s]
+Capturing CUDA graphs (decode, FULL):  51%|█████▏    | 18/35 [00:02<00:01,  8.51it/s]
+Capturing CUDA graphs (decode, FULL):  54%|█████▍    | 19/35 [00:02<00:01,  8.52it/s]
+Capturing CUDA graphs (decode, FULL):  57%|█████▋    | 20/35 [00:02<00:01,  8.52it/s]
+Capturing CUDA graphs (decode, FULL):  60%|██████    | 21/35 [00:02<00:01,  8.52it/s]
+Capturing CUDA graphs (decode, FULL):  63%|██████▎   | 22/35 [00:02<00:01,  8.53it/s]
+Capturing CUDA graphs (decode, FULL):  66%|██████▌   | 23/35 [00:02<00:01,  8.35it/s]
+Capturing CUDA graphs (decode, FULL):  69%|██████▊   | 24/35 [00:02<00:01,  8.43it/s]
+Capturing CUDA graphs (decode, FULL):  71%|███████▏  | 25/35 [00:02<00:01,  8.48it/s]
+Capturing CUDA graphs (decode, FULL):  74%|███████▍  | 26/35 [00:03<00:01,  8.54it/s]
+Capturing CUDA graphs (decode, FULL):  77%|███████▋  | 27/35 [00:03<00:00,  8.60it/s]
+Capturing CUDA graphs (decode, FULL):  80%|████████  | 28/35 [00:03<00:00,  8.60it/s]
+Capturing CUDA graphs (decode, FULL):  83%|████████▎ | 29/35 [00:03<00:00,  8.66it/s]
+Capturing CUDA graphs (decode, FULL):  86%|████████▌ | 30/35 [00:03<00:00,  8.67it/s]
+Capturing CUDA graphs (decode, FULL):  89%|████████▊ | 31/35 [00:06<00:03,  1.10it/s]
+Capturing CUDA graphs (decode, FULL):  91%|█████████▏| 32/35 [00:08<00:03,  1.26s/it]
+Capturing CUDA graphs (decode, FULL):  94%|█████████▍| 33/35 [00:08<00:01,  1.09it/s]
+Capturing CUDA graphs (decode, FULL):  97%|█████████▋| 34/35 [00:08<00:00,  1.47it/s]
+Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:10<00:00,  1.18s/it]
+Capturing CUDA graphs (decode, FULL): 100%|██████████| 35/35 [00:10<00:00,  3.19it/s]
+(EngineCore pid=10482) INFO 09-20 07:08:15 [gpu_model_runner.py:6844] Graph capturing finished in 24 secs, took 0.61 GiB
+(EngineCore pid=10482) INFO 09-20 07:08:15 [gpu_worker.py:793] CUDA graph pool memory: 0.61 GiB (actual), 0.66 GiB (estimated), difference: 0.05 GiB (8.0%).
+(EngineCore pid=10482) INFO 09-20 07:08:15 [gpu_worker.py:857] Free memory on device (39.08/39.49 GiB) on startup. Desired GPU memory utilization is (0.92, 36.33 GiB). Actual usage is 27.36 GiB for weight, 1.84 GiB for peak activation, 0.14 GiB for non-torch memory, and 0.61 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=6692900926` (6.23 GiB) to fit into requested memory, or `--kv-cache-memory=9636644352` (8.97 GiB) to fully utilize gpu memory. Current kv cache memory in use is 6.33 GiB.
+(EngineCore pid=10482) INFO 09-20 07:08:16 [jit_monitor.py:79] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=10482) INFO 09-20 07:08:17 [core.py:340] init engine (profile, create kv cache, warmup model) took 250.38 s (compilation: 60.69 s)
+(EngineCore pid=10482) INFO 09-20 07:08:17 [kernel.py:295] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+[baseline] 모델 로드 444.7s
+[baseline] 프롬프트 토큰 중앙값 11,290 · 최대 11,855 · 예산 축소 0건
+INFO 09-20 07:08:20 [hf.py:540] Detected the chat template content format to be 'openai'. You can set `--chat-template-content-format` to override this.
+(EngineCore pid=10482) WARNING 09-20 07:08:26 [jit_monitor.py:135] Triton kernel JIT compilation during inference: _compute_slot_mapping_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=10482) WARNING 09-20 07:08:27 [jit_monitor.py:135] Triton kernel JIT compilation during inference: apply_token_bitmask_inplace_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=10482) WARNING 09-20 07:08:29 [jit_monitor.py:135] Triton kernel JIT compilation during inference: fused_moe_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+[baseline]   10/10건 … 32s
+(EngineCore pid=10482) WARNING 09-20 07:08:52 [jit_monitor.py:135] Triton kernel JIT compilation during inference: kernel_unified_attention. This causes a latency spike; consider extending warmup to cover this shape/config.
+[baseline] {"mode": "live", "model_success_count": 10, "sme_model_success_count": 6, "sme_verified_count": 6, "sme_rejected_positive_count": 0, "sme_selected_count": 6, "sme_skipped_count": 4, "sme_fallback_count": 0, "baseline_inference_seconds": 31.9, "sme_inference_seconds": 12.2, "sme_prompt_tokens_max": 12982, "sme_documents_shrunk": 0, "company_size_selected_count": 10, "company_size_response_count": 10, "company_size_fallback_count": 0, "company_size_model_success_count": 10, "company_size_decisions": {"unverified_priority_exception": 1, "decided": 5, "outside_general_scope": 2, "unverified_scope": 1, "absence_not_observable": 1}, "company_size_inference_seconds": 13.942, "company_size_prompt_tokens_max": 13104, "company_size_documents_shrunk": 0, "model": {"id": "google/gemma-4-26B-A4B-it", "expected_revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"}, "environment": {"vllm": "0.26.0", "python": "3.12.13", "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4", "cuda": "13.0", "gpus": [{"name": "NVIDIA A100-SXM4-40GB", "total_memory": 42405855232}], "sampling_params": "SamplingParams(n=1, presence_penalty=0.0, frequency_penalty=0.0, repetition_penalty=1.0, temperature=0.0, top_p=1.0, top_k=0, min_p=0.0, seed=20260826, stop=[], stop_token_ids=[], bad_words=[], thinking_token_budget=None, include_stop_str_in_output=False, ignore_eos=False, max_tokens=2048, min_tokens=0, logprobs=None, prompt_logprobs=None, skip_special_tokens=True, spaces_between_special_tokens=True, structured_outputs=StructuredOutputsParams(json={'type': 'object', 'additionalProperties': False, 'required': ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'v9', 'v10', 'v11', 'v12', 'v13', 'v14', 'v15', 'v16', 'v17', 'v18', 'v19', 'v20', 'v21', 'v22', 'v23', 'v24'], 'properties': {'v1': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v2': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v3': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v4': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v5': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v6': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v7': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v8': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v9': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v10': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v11': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v12': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v13': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v14': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v15': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v16': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v17': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v18': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v19': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v20': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': 'null'}}}, 'v21': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v22': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v23': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}, 'v24': {'type': 'object', 'additionalProperties': False, 'required': ['위반여부', '근거문구'], 'properties': {'위반여부': {'type': 'integer', 'enum': [0, 1]}, '근거문구': {'type': ['string', 'null'], 'maxLength': 500}}}}}, regex=None, choice=None, grammar=None, json_object=None, disable_any_whitespace=True, disable_additional_properties=False, whitespace_pattern=None, structural_tag=None, _backend=None, _backend_was_auto=False), extra_args=None)"}, "code_sha256": "0e432eacf0416bbf8d478fca5b3c8fe78d0c454dcd5ccb6ee7a6871375831b89", "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504", "records_sha256": "5b8cffcefe13239cf17c0a7249f18d8a81460a7d1ad485a7b1fcfebb720aa5d4", "reproduction": {"mode": "live", "argv": ["script.py"], "python": "3.12.13", "platform": "Linux-6.6.122+-x86_64-with-glibc2.39", "settings": {"input": "data/test.jsonl.gz", "output": "<외부>/submission.csv", "data_dir": "data", "limit": null, "chunk": 128, "max_chars": 16000, "debug_responses": false, "max_model_len": 16384, "temperature": 0, "thinking": false, "sme_items": ["v13"], "sme_selection": "baseline_v13_positive", "extra_call_items": {"split": [], "product": [], "company_size": ["v14", "v15", "v16", "v17", "v18", "v12", "v13"]}, "company_size_items": ["v14", "v15", "v16", "v17", "v18"], "split_items": [], "product_items": [], "prompt_language": "en_with_ko_legal_terms", "sme_facts": true, "model_dir": "<외부>/4d7ae4984b7db7de8f8457170b3f1a419ee76d52", "quant": "int8_per_channel_weight_only", "max_tokens": 2048, "seed": 20260826, "gpu_mem": 0.92, "tp": 1}, "code_sha256": "0e432eacf0416bbf8d478fca5b3c8fe78d0c454dcd5ccb6ee7a6871375831b89", "expected_model": {"id": "google/gemma-4-26B-A4B-it", "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"}, "packages": {"vllm": "0.26.0", "torch": "2.11.0+cu130", "transformers": "5.14.1", "xgrammar": "0.2.3", "tokenizers": "0.22.2"}, "asset_sha256": {"input": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504", "items": "368cb41f376d8ad7edbbdf181542e6e959de356f7f70d86e72943325ecad61d9", "decode_schema": "149580162261b446090bec075eb4c13f765a771c827b6bbe06660eb833a3c2ac", "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt": "a4390e91cb991ce75bde7389c9297c6e4f6a947afd1a26cb9397e34aa4e9a445", "법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt": "1070092cca07468b755fa1e0fb13658d4c9ea72c48b555109c8fc4f87046cabb", "법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv": "445257e4821c9d533f0c4b481e0ead89e85244ed6a6bf13d838510eb60fdbecd"}}, "seed": 20260826, "temperature": 0, "thinking": false, "prompt_budget": 14272, "max_tokens": 2048, "max_chars": 16000, "prompt_tokens_max": 11855, "token_count_kind": "actual", "건수": 10, "모델로드_s": 444.7, "추론_s": 58.0, "건당_s": 5.8, "전체_s": 503.111, "유효JSON": 10, "메운_항목수": 0, "근거_유지": 7, "근거_원문불일치_폐기": 6, "출력": "<외부>/submission.csv", "자가검증": "PASS"}
+(EngineCore pid=10482) INFO 09-20 07:09:16 [core.py:1313] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=10482) INFO 09-20 07:09:16 [core.py:1432] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=10482) INFO 09-20 07:09:16 [core.py:1463] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=10482) INFO 09-20 07:09:16 [core.py:1326] [shutdown] EngineCore: exiting busy loop
