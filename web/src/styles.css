@@ -1,0 +1,395 @@
+/* 색은 역할로만 쓴다. 밝기 전환이 한 자리에서 끝나도록 값은 여기에만 둔다.
+   TP·FP·FN 세 계열은 dataviz 검증기를 통과한 조합이다(라이트·다크 전체쌍 PASS).
+   TN 은 계열이 아니라 바탕이다 — 계열로 넣으면 deutan 에서 청록과 붙는다. */
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb;
+  --raised: #ffffff;
+  --sunken: #f4f3f0;
+  --line: #e6e5e0;
+  --line-strong: #cfcdc5;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #85837c;
+
+  --tp: #1baf7a;
+  --fp: #eb6834;
+  --fn: #4a3aa7;
+  --tn: #d9d7d0;
+  --seq: #2a78d6;
+  --seq-soft: #cde2fb;
+
+  --ok: #0ca30c;
+  --no: #d03b3b;
+  --warn: #fab219;
+
+  --find: #fde68a;
+  --pred-wash: #fbd8c6;
+  --truth-wash: #cfe8dd;
+
+  --r-lg: 10px;
+  --r-md: 6px;
+  --r-sm: 4px;
+  --gut: 16px;
+
+  /* 단계는 여덟이고 쓰임이 안 겹친다. 새 크기를 쓰기 전에 여기 하나를 먼저 찾는다.
+     본문(sans) 다섯 — 제목 / 읽는 글 / 라벨-강 / 라벨-약 / 배지
+     수치(mono) 셋  — 큰 수치 / 표 안 수치 / 막대·눈금 안 수치 */
+  --t-h2:    600 20px/1.3 var(--sans);
+  --t-body:  400 15px/1.75 var(--sans);
+  --t-label: 500 13px/1.5 var(--sans);
+  --t-aux:   400 13px/1.5 var(--sans);
+  --t-badge: 600 11px/1.5 var(--sans);
+  --m-lg:    600 15px/1.2 var(--mono);
+  --m-md:    600 12px/1.3 var(--mono);
+  --m-sm:    600 10px/1 var(--mono);
+
+  --sans: 'Pretendard Variable', Pretendard, -apple-system, 'Segoe UI Variable Text',
+          'Segoe UI', 'Malgun Gothic', 'Apple SD Gothic Neo', system-ui, sans-serif;
+  --mono: ui-monospace, 'Cascadia Mono', Consolas, 'D2Coding', monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --raised: #232321;
+    --sunken: #141413;
+    --line: #33332f;
+    --line-strong: #4a4a44;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --ink-3: #8e8d84;
+
+    --tp: #199e70;
+    --fp: #d95926;
+    --fn: #9085e9;
+    --tn: #3a3a36;
+    --seq: #3987e5;
+    --seq-soft: #184f95;
+
+    --find: #7a5c00;
+    --pred-wash: #5a2f16;
+    --truth-wash: #10422f;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface: #1a1a19;
+  --raised: #232321;
+  --sunken: #141413;
+  --line: #33332f;
+  --line-strong: #4a4a44;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --ink-3: #8e8d84;
+
+  --tp: #199e70;
+  --fp: #d95926;
+  --fn: #9085e9;
+  --tn: #3a3a36;
+  --seq: #3987e5;
+  --seq-soft: #184f95;
+
+  --find: #7a5c00;
+  --pred-wash: #5a2f16;
+  --truth-wash: #10422f;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  /* 공고 원문은 읽는 글이다. 한글 고딕이 먼저 오고 숫자만 등폭으로 뺀다. */
+  font: var(--t-body);
+  word-break: keep-all;
+}
+
+.mono, .num, input[type='search'], pre, code, q {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.num, .tag, .mono, .cell, .delta, .trendfoot .mono, .auditlist { font: var(--m-md); }
+
+.dim { color: var(--ink-2); }
+.pad { padding: 32px var(--gut); }
+.spacer { flex: 1; }
+.ok { color: var(--ok); }
+.no { color: var(--no); }
+
+button, select, input { font: inherit; color: inherit; }
+
+.linkish {
+  background: none; border: 0; padding: 2px 4px; cursor: pointer;
+  color: var(--ink-2); font: var(--t-aux); border-radius: var(--r-sm);
+}
+.linkish:hover { color: var(--ink); background: var(--sunken); }
+:focus-visible { outline: 2px solid var(--seq); outline-offset: 2px; }
+
+/* 화면 하나가 통째로 스크롤하면, 원문을 읽으려고 내린 순간 F1 막대·항목 헤더·스트립이
+   전부 위로 빠져나가 다음 칸을 누르러 매번 되올라와야 한다. 그래서 바깥은 안 움직이고
+   좌우 기둥이 각자 스크롤한다. min-height:0 이 없으면 격자 칸이 내용만큼 늘어나 안 먹는다. */
+html, body, #root { height: 100%; }
+.app { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+/* ── 머리 ───────────────────────────────────────────────── */
+.top {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  padding: 10px var(--gut); border-bottom: 1px solid var(--line); background: var(--raised);
+  position: sticky; top: 0; z-index: 5;
+}
+.pickrun { display: flex; align-items: center; gap: 6px; font: var(--t-aux); color: var(--ink-2); }
+.pickrun select, .filters select {
+  background: var(--surface); border: 1px solid var(--line-strong);
+  border-radius: var(--r-md); padding: 4px 8px; font: var(--t-aux);
+}
+.macro { font: var(--t-label); color: var(--ink-2); }
+.macro b { font: var(--m-lg); font-variant-numeric: tabular-nums; color: var(--ink); }
+
+.filters {
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+  padding: 8px var(--gut); border-bottom: 1px solid var(--line); background: var(--sunken);
+  font: var(--t-aux); color: var(--ink-2);
+}
+.filters label { display: flex; align-items: center; gap: 6px; }
+
+.diffbar {
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline;
+  padding: 8px var(--gut); font: var(--t-aux);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in oklab, var(--seq) 10%, var(--surface));
+}
+.diffbar.churn { background: color-mix(in oklab, var(--warn) 16%, var(--surface)); }
+.diffbar b { font: var(--m-md); }
+.churnnote { color: var(--ink-2); flex: 1 1 260px; }
+
+/* ── 좌우 분할 ──────────────────────────────────────────── */
+.split { display: grid; grid-template-columns: 340px minmax(0, 1fr); flex: 1; min-height: 0; }
+.items { border-right: 1px solid var(--line); background: var(--raised); overflow-y: auto; min-height: 0; }
+.itemshead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px 6px; font: var(--t-label); color: var(--ink-2);
+  position: sticky; top: 0; background: var(--raised); z-index: 1;
+}
+.items ol { list-style: none; margin: 0; padding: 0 6px 16px; }
+
+.item {
+  display: grid; width: 100%; text-align: left; cursor: pointer;
+  grid-template-columns: 30px 1fr 40px auto; gap: 8px; align-items: center;
+  padding: 5px 6px; border: 0; border-radius: var(--r-md); background: none;
+}
+.item:hover { background: var(--sunken); }
+.item.on { background: color-mix(in oklab, var(--seq) 14%, var(--surface)); }
+.item .tag { color: var(--ink-2); }
+.item .track { height: 7px; background: var(--line); border-radius: var(--r-sm); overflow: hidden; }
+.item .track i { display: block; height: 100%; background: var(--seq); border-radius: var(--r-sm); }
+.item .num { text-align: right; color: var(--ink-2); }
+.item.on .num { color: var(--ink); }
+.item .label {
+  grid-column: 2 / -1; font: var(--t-aux); color: var(--ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.item.on .label { color: var(--ink); }
+.delta.up { color: var(--ok); }
+.delta.down { color: var(--no); }
+
+.badge {
+  display: inline-block; margin-left: 6px; padding: 0 5px; border-radius: var(--r-sm);
+  font: var(--t-badge); background: var(--sunken);
+  color: var(--ink-2); border: 1px solid var(--line-strong);
+}
+
+/* ── 오른쪽 ─────────────────────────────────────────────── */
+.pane { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+/* 안 움직이는 윗칸. 스트립이 길어지면(v24 는 헛짚음만 32칸) 여기 안에서만 스크롤한다 */
+.paneTop {
+  flex: 0 0 auto; max-height: 46vh; overflow: auto;
+  padding: 16px var(--gut) 0; border-bottom: 1px solid var(--line);
+}
+.paneScroll { flex: 1; min-height: 0; overflow-y: auto; padding: 16px var(--gut) 48px; }
+.panehead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.panehead h2 { font: var(--t-h2); margin: 0; letter-spacing: -0.01em; }
+
+.chart {
+  margin: 0 0 24px; padding: 12px 14px; border: 1px solid var(--line);
+  border-radius: var(--r-lg); background: var(--raised);
+}
+.chart figcaption { font: var(--t-label); margin-bottom: 8px; }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font: var(--t-aux); color: var(--ink-2); }
+.lg { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.swatch.ln { height: 3px; border-radius: 2px; width: 14px; }
+.swatch.tp, .seg.tp, .cell.tp, .pill.tp { background: var(--tp); }
+.swatch.fp, .seg.fp, .cell.fp, .pill.fp { background: var(--fp); }
+.swatch.fn, .seg.fn, .cell.fn, .pill.fn { background: var(--fn); }
+.swatch.tn, .cell.tn, .pill.tn { background: var(--tn); }
+.swatch.ln.macro { background: var(--seq); }
+.swatch.ln.item { background: var(--fp); }
+
+/* 누적 막대 — 칸 사이 2px 는 바탕색으로 벌린다 */
+.stack { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
+.stackrow {
+  display: grid; grid-template-columns: 34px minmax(0, 3fr) minmax(0, 2fr); gap: 10px;
+  align-items: center; background: none; border: 0; padding: 2px 4px; cursor: pointer;
+  border-radius: var(--r-sm); text-align: left; width: 100%;
+}
+.stackrow:hover { background: var(--sunken); }
+.stackrow.on { background: color-mix(in oklab, var(--seq) 14%, var(--surface)); }
+.stackrow .tag { color: var(--ink-2); }
+.stackrow .label {
+  font: var(--t-aux); color: var(--ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.stackrow.on .label { color: var(--ink); }
+.barwrap { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.bars { display: flex; gap: 2px; height: 16px; min-width: 2px; }
+.seg {
+  border-radius: 2px; font: var(--m-sm); line-height: 16px;
+  color: #fff; text-align: center; overflow: hidden; min-width: 3px;
+}
+.seg:first-child { border-radius: var(--r-sm) 2px 2px var(--r-sm); }
+.seg:last-child { border-radius: 2px var(--r-sm) var(--r-sm) 2px; }
+.stackrow .num { white-space: nowrap; }
+
+/* 추이선 */
+.trend { width: 100%; height: auto; display: block; margin: 6px 0; }
+.grid { stroke: var(--line); stroke-width: 1; }
+.tick { fill: var(--ink-3); font: var(--m-sm); }
+.trendline { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.trendline.macro { stroke: var(--seq); }
+.trendline.item { stroke: var(--fp); }
+.dot { stroke: var(--raised); stroke-width: 1.5; }
+.dot.macro { fill: var(--seq); }
+.dot.item { fill: var(--fp); }
+.endlabel { font: var(--m-md); }
+.endlabel.macro { fill: var(--seq); }
+.endlabel.item { fill: var(--fp); }
+.mark { stroke-width: 2; }
+.mark.cur { stroke: var(--ink-3); }
+.mark.cmp { stroke: var(--line-strong); stroke-dasharray: 3 3; }
+.trendfoot { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; font: var(--t-aux); }
+.trendfoot .mono { margin-left: auto; }
+
+/* ── 스트립 ─────────────────────────────────────────────── */
+.strip { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.group h4, .tnfold summary {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font: var(--t-label); margin: 0 0 6px; cursor: default;
+}
+.tnfold summary { cursor: pointer; list-style: revert; }
+.group h4 b, .tnfold summary b { font: var(--m-md); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; }
+.cell {
+  min-width: 34px; height: 26px; padding: 0 6px; border: 1px solid transparent;
+  border-radius: var(--r-sm); cursor: pointer; color: #fff;
+}
+.cell.tn { color: var(--ink-2); }
+.cell:hover { filter: brightness(1.08); }
+.cell.on { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cell.flip { border-color: var(--ink); border-style: dashed; }
+.tnfold .cells { max-height: 150px; overflow: auto; padding-top: 4px; }
+.tnfold .cell { min-width: 30px; height: 20px; font: var(--m-sm); }
+
+/* ── 드릴다운 ───────────────────────────────────────────── */
+.detail {
+  border: 1px solid var(--line); border-radius: var(--r-lg);
+  background: var(--raised); padding: 14px; margin-bottom: 24px;
+}
+.dhead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.dhead b.mono { font: var(--m-lg); }
+.pill { padding: 1px 8px; border-radius: 999px; font: var(--t-badge); color: #fff; }
+.pill.tn { color: var(--ink); }
+
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.chip {
+  font: var(--t-aux); padding: 2px 8px; border-radius: var(--r-md);
+  background: var(--sunken); border: 1px solid var(--line); color: var(--ink-2);
+}
+.chip b { color: var(--ink); font-weight: inherit; }
+.chip.warn { border-color: var(--warn); background: color-mix(in oklab, var(--warn) 18%, var(--surface)); }
+
+.note {
+  font: var(--t-aux); margin: 0 0 12px; padding: 8px 10px;
+  border-left: 3px solid var(--line-strong); background: var(--sunken); border-radius: 0 var(--r-md) var(--r-md) 0;
+}
+
+.quote { margin-bottom: 10px; }
+.qh { display: flex; gap: 8px; align-items: center; font: var(--t-label); margin-bottom: 3px; }
+.qh b { font: var(--t-badge); }
+/* 인용은 법령 문장이다. 등폭으로 깔면 안 읽힌다 — 본문 글씨 그대로 둔다 */
+.quote q {
+  display: block; quotes: none; padding: 7px 10px; border-radius: var(--r-md);
+  background: var(--sunken); border: 1px solid var(--line); font: var(--t-body);
+}
+
+.findrow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 12px 0 8px; }
+.findrow input {
+  flex: 1 1 240px; padding: 5px 10px; border-radius: var(--r-md);
+  border: 1px solid var(--line-strong); background: var(--surface); font: var(--t-aux);
+}
+.tabs { display: flex; gap: 4px; }
+.tabs button {
+  border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer;
+  padding: 4px 10px; border-radius: var(--r-md); font: var(--t-aux); color: var(--ink-2);
+}
+.tabs button.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.tabs button { display: inline-flex; align-items: center; gap: 5px; }
+.dotmark { width: 6px; height: 6px; border-radius: 50%; background: var(--tp); display: inline-block; }
+
+/* 원문은 제 상자 안에서 구른다. 밖으로 풀면 1만 2천자 뒤에 있는 추이선까지 내내 내려야 한다 */
+.doc {
+  white-space: pre-wrap; max-height: 52vh; overflow: auto;
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--sunken); font: var(--t-body);
+}
+.marklegend {
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+  font: var(--t-aux); color: var(--ink-2); margin-bottom: 6px;
+}
+.marklegend .dim { margin-left: auto; }
+.swatch.mk { width: 14px; height: 10px; border-radius: 2px; }
+mark { border-radius: 2px; padding: 0 1px; color: inherit; }
+mark.pred, .swatch.mk.pred { background: var(--pred-wash); box-shadow: inset 0 -2px 0 var(--fp); }
+mark.truth, .swatch.mk.truth { background: var(--truth-wash); box-shadow: inset 0 -2px 0 var(--tp); }
+/* 둘이 일치할 때. 아래 두 줄이 주황·청록을 같이 든다 */
+mark.both, .swatch.mk.both {
+  background: var(--truth-wash);
+  box-shadow: inset 0 -2px 0 var(--tp), inset 0 -4px 0 var(--fp);
+}
+mark.find, .swatch.mk.find { background: var(--find); }
+
+.model { margin-top: 14px; font: var(--t-aux); }
+.model summary { cursor: pointer; font: var(--t-label); }
+.model pre {
+  white-space: pre-wrap; background: var(--sunken); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 8px 10px; font: var(--m-md); line-height: 1.55;
+  max-height: 260px; overflow: auto;
+}
+
+.auditline { display: flex; gap: 12px; align-items: baseline; font: var(--t-aux); margin: 6px 0 0; }
+.auditline b { font: var(--m-lg); }
+.auditlist { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.auditlist li { display: flex; gap: 10px; align-items: baseline; font: var(--t-aux); }
+.auditlist q { quotes: none; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 900px) {
+  /* 좁은 화면에서는 칸을 둘로 쪼갤 세로가 없다. 평소대로 페이지 하나가 스크롤한다 */
+  html, body, #root { height: auto; }
+  .app { height: auto; overflow: visible; }
+  .split { grid-template-columns: 1fr; }
+  .items { border-right: 0; border-bottom: 1px solid var(--line); max-height: 44vh; }
+  .pane { overflow: visible; }
+  /* 좁은 화면에서도 위칸은 붙어 있되, 스트립이 길면 화면을 다 먹으므로 여기서도 막는다 */
+  .paneTop { max-height: 40vh; overflow: auto; position: sticky; top: 0; background: var(--surface); z-index: 2; }
+  .paneScroll { overflow: visible; padding-bottom: 32px; }
+  .item { grid-template-columns: 30px 1fr 40px; }
+  .delta { display: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cell, .item, .stackrow { transition: background-color .12s ease, filter .12s ease; }
+}
