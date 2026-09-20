@@ -73,7 +73,8 @@ def saved_responses(case_dir):
     return texts
 
 
-def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_sme=None):
+def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_sme=None,
+           verify_company_size=None):
     """저장된 응답으로 행을 다시 만든다. 바꿀 단계만 인자로 갈아 끼운다."""
     case_dir = Path(case_dir)
     report = json.loads((case_dir / "run_report.json").read_text(encoding="utf-8"))
@@ -84,6 +85,9 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
         raise ValueError("이 회차는 문서 예산이 축소된 공고가 있어 재생할 수 없다")
     postprocess = postprocess or script.postprocess
     verify_sme = verify_sme or script.verify_sme
+    # A1 이전 회차의 코드에는 이 함수가 없다. 그 회차에는 company_size 원응답도 없으므로
+    # 아래 호출 지점에 닿지 않는다. 여기서 속성을 요구하면 그 회차의 재생이 통째로 막힌다.
+    verify_company_size = verify_company_size or getattr(script, "verify_company_size", None)
 
     texts = saved_responses(case_dir)
     # 이 제출 코드가 모르는 단계의 원응답이 있으면 조용히 건너뛰지 않는다. 건너뛰면
@@ -125,7 +129,7 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             if rec["id"] not in company_chars:
                 raise ValueError("기업규모 입력의 문서 예산 기록이 없다")
             focused, _ = script.parse_judgment(company_text, expected_items=script.COMPANY_SIZE_KEYS)
-            verified, reason = script.verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
+            verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
             parsed.update(verified)
             reasons.setdefault(rec["id"], {})["company_size"] = reason
         rows.append(script.to_row(rec["id"], postprocess(parsed, rec)))
@@ -158,7 +162,7 @@ def main(argv=None):
     parser.add_argument("--data-dir", default=str(ROOT / "open/data"))
     parser.add_argument("--script", help="제출 코드. 기본은 저장소 루트의 script.py, --verify면 회차 커밋의 script.py")
     parser.add_argument("--candidate",
-                        help="후보 모듈. postprocess·verify_sme 중 정의한 것만 갈아 끼운다")
+                        help="후보 모듈. postprocess·verify_sme·verify_company_size 중 정의한 것만 갈아 끼운다")
     parser.add_argument("--output-dir", help="새 디렉터리. CSV와 기록을 남긴다")
     parser.add_argument("--verify", action="store_true",
                         help="회차 자신의 CSV를 바이트 단위로 재현하는지 확인한다")
@@ -175,7 +179,8 @@ def main(argv=None):
         candidate = load_module(Path(args.candidate), "candidate") if args.candidate else None
         result = replay(script, args.case, input_path=args.input, data_dir=args.data_dir,
                         postprocess=getattr(candidate, "postprocess", None),
-                        verify_sme=getattr(candidate, "verify_sme", None))
+                        verify_sme=getattr(candidate, "verify_sme", None),
+                        verify_company_size=getattr(candidate, "verify_company_size", None))
         produced = to_csv_bytes(script, result["rows"])
         original = (Path(args.case) / "submission.csv").read_bytes()
         identical = produced == original

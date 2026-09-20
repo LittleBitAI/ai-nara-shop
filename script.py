@@ -522,6 +522,42 @@ def empty_company_size():
             for key, spec in company_size_schema()["properties"].items()}
 
 
+QUOTE_MIN_RESTORE = 8          # 이보다 짧은 인용은 아무 데나 걸린다
+_QUOTE_SPACE = re.compile(r"\s+")
+
+
+def restore_spacing(quote, rec, visible):
+    """인용의 **공백·줄바꿈만** 원문 표기로 되돌린다. 못 찾거나 이미 맞으면 None.
+
+    왜. 인용 검증은 원문 그대로일 것을 요구하는데(D4-4) 모델이 그 계약을 내용이 아니라
+    표기에서 놓친다. 원문은 `입 찰 방 법`인데 모델은 `입찰 방법`이라 적고, 원문이
+    줄 끝에서 `관\\n한 법률`로 꺾이면 모델은 그것을 접어 한 줄로 쓴다.
+    가리키는 자리는 맞는데 문자열이 달라 떨어진다.
+
+    문장부호·낱말·법령 제목은 바꾸지 않는다. 공백을 지운 인용이 공백을 지운 문서에서
+    연속으로 일치할 때만, 그 구간의 원문 문자열을 돌려준다. 복원한 문자열이 모델이
+    실제로 본 `visible` 안에도 있어야 한다 — 잘려서 못 본 자리는 되살리지 않는다.
+    후보가 여럿이면 가장 짧은 것을 쓴다. 긴 것은 인용이 가리키지 않던 문맥을 끌고 온다.
+    """
+    flat_quote = _QUOTE_SPACE.sub("", quote or "")
+    if len(flat_quote) < QUOTE_MIN_RESTORE:
+        return None
+    best = None
+    for doc in rec["docs"]:
+        text = doc["text"]
+        if quote in text:
+            return None                          # 이미 원문 그대로다
+        where = [i for i, ch in enumerate(text) if not ch.isspace()]
+        flat = "".join(text[i] for i in where)
+        start = flat.find(flat_quote)
+        while start != -1:
+            span = text[where[start]:where[start + len(flat_quote) - 1] + 1]
+            if span in visible and (best is None or len(span) < len(best)):
+                best = span
+            start = flat.find(flat_quote, start + 1)
+    return best
+
+
 def verify_company_size(facts, rec, max_chars):
     """A1 결정표. {}는 미확인으로 기본 판정 보존, 0 다섯 개는 확인된 비해당이다.
 
@@ -529,6 +565,14 @@ def verify_company_size(facts, rec, max_chars):
     여기서는 v13을 수정하지 않는다. 예외는 해당 칸에만 적용한다.
     """
     visible = build_context(rec, max_chars)
+    # 인용의 공백 표기만 원문으로 되돌린 뒤 검증한다. 실측(같은 원응답 재생, churn 0):
+    # 12셀 · 대상 밖 0셀 · v17 F1 0.320→0.500(FP 15→9) · v14·v15·v17 TP 각 +1.
+    # 무라벨 카나리는 조건 비율 dev 98.0% vs 무라벨 98.7%(1.007배)다.
+    facts = dict(facts)
+    for key in ("scope_quote", "qualification_quote"):
+        fixed = restore_spacing(facts.get(key), rec, visible)
+        if fixed is not None:
+            facts[key] = fixed
     def quoted(value):
         return bool(value and value.strip() and value in visible
                     and any(value in d["text"] for d in rec["docs"]))
