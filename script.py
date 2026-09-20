@@ -469,14 +469,25 @@ Return one JSON object with key company_size and these fields:
   other includes construction, 엔지니어링사업, 건설엔지니어링 and software subject to separate
   소프트웨어사업자 size rules. Use unknown when the purchased scope cannot be resolved.
 - scope_quote: exact notice quotation identifying the purchased goods/service.
-- qualification: small_only/sme_allowed/unrestricted/unknown. Read the operative 참가자격 clauses.
+- qualification: small_only/sme_allowed/unrestricted/unknown. First identify the source and role
+  of each size-related statement, then read what enterprise category can actually bid.
+  Use [Notice documents] for this fact. 나라장터 metadata, including 조항호내용, describes registered
+  fields or legal grounds; it cannot supply a missing bidder condition or qualification quotation.
+  In the documents, distinguish an operative eligibility condition from a submission checklist,
+  a cited law, a disqualification clause, and an award/contract-stage obligation.
+  An operative condition connects a bidder category to eligibility, including an explicit
+  size-limited competition heading. A list of certificate names/copy counts alone does not.
+  A statutory exclusion does not positively establish which enterprise sizes may bid.
+  Direct-production eligibility concerns production, not enterprise size; keep those facts separate.
   small_only = only 소기업 or 소상공인 can bid; 중기업 is excluded.
   sme_allowed = 중소기업 (including 중기업), 중·소기업, or 중기업·소기업·소상공인 can bid.
   unrestricted = no enterprise-size condition in the fully observed bidder qualifications.
   unknown = missing or conflicting operative clauses, or eligibility cannot be resolved.
   Follow the enterprise category actually required, not the name/article number of a cited law.
-  Prefer the detailed mandatory qualification over a summary heading. If two detailed mandatory
-  clauses conflict, use unknown. The words 중소기업 in a law title do not include 중기업 by themselves.
+  Prefer the detailed mandatory qualification over a summary heading when they explicitly differ.
+  Silence in the detailed section does not cancel an explicit size restriction in the heading.
+  If two detailed mandatory clauses conflict, use unknown. The words 중소기업 in a law title
+  do not include 중기업 by themselves.
   A certificate name in a document checklist, financing note or award-stage submission is not
   a qualification. A mandatory certificate explicitly required to be eligible DOES restrict size.
   A 비영리법인 exception permits that additional category; it does not erase the size restriction

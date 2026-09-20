@@ -1,0 +1,184 @@
+{
+  "mode": "source_audit_only",
+  "model_called": false,
+  "baseline_commit": "6bb692d6162e6b604dae34e6e8044cc31dd7a60b",
+  "case": "reports/runs/colab-1789880471715651259/dev-debug",
+  "only_qualification_prompt_changed": true,
+  "script_sha256": "0e432eacf0416bbf8d478fca5b3c8fe78d0c454dcd5ccb6ee7a6871375831b89",
+  "prompt_sha256": [
+    "c026596ab6ad2edd49142262393c30c5136bc4b0ab4977496cd896688aa0a00e",
+    "7d2b68dcb83de6557071efce82b7a6a07106981a3a7c8da34e9f36853192da69"
+  ],
+  "all_dev_metadata_quote_ids": [
+    "PPS-DEV-22",
+    "PPS-DEV-040",
+    "PPS-DEV-041",
+    "PPS-DEV-044",
+    "PPS-DEV-097",
+    "PPS-DEV-115",
+    "PPS-DEV-178",
+    "PPS-DEV-189"
+  ],
+  "v18_positive_cases": [
+    {
+      "id": "PPS-DEV-22",
+      "facts": {
+        "scope": "general",
+        "scope_quote": "치매환자 조호물품 13종",
+        "qualification": "small_only",
+        "qualification_quote": "[판로지원법 시행령] 소기업,소상공인제한",
+        "qualification_complete": "yes",
+        "priority_exception": "unknown",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null
+      },
+      "exact_document_matches": [],
+      "exact_metadata_matches": [
+        "조항호내용"
+      ]
+    },
+    {
+      "id": "PPS-DEV-038",
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "2026학년도 교복(동·하복) 학교주관구매",
+        "qualification": "small_only",
+        "qualification_quote": "소기업 또는 소상공인확인서 1부",
+        "qualification_complete": "yes",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null
+      },
+      "exact_document_matches": [
+        "D0"
+      ],
+      "exact_metadata_matches": []
+    },
+    {
+      "id": "PPS-DEV-039",
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "준정부기관 농촌 혁신아이디어 콘테스트 운영 용역(제한경쟁·1억원미만)",
+        "qualification": "small_only",
+        "qualification_quote": "입찰방법: 제한경쟁(소기업·소상공인), 총액(전자)입찰",
+        "qualification_complete": "yes",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null
+      },
+      "exact_document_matches": [],
+      "exact_metadata_matches": []
+    },
+    {
+      "id": "PPS-DEV-040",
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "2026년 모범이장 해외 선진지연수 용역",
+        "qualification": "small_only",
+        "qualification_quote": "[판로지원법 시행령] 소기업,소상공인제한",
+        "qualification_complete": "yes",
+        "priority_exception": "unknown",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null
+      },
+      "exact_document_matches": [],
+      "exact_metadata_matches": [
+        "조항호내용"
+      ]
+    },
+    {
+      "id": "PPS-DEV-041",
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "「제31회 부산국제영화제 굿즈숍 및 관객라운지 공간 조성」 용역",
+        "qualification": "small_only",
+        "qualification_quote": "[판로지원법 시행령] 소기업,소상공인제한",
+        "qualification_complete": "yes",
+        "priority_exception": "unknown",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null
+      },
+      "exact_document_matches": [],
+      "exact_metadata_matches": [
+        "조항호내용"
+      ]
+    },
+    {
+      "id": "PPS-DEV-043",
+      "facts": {
+        "scope": "general",
+        "scope_quote": "2026학년도 학교 2학년 수학여행 위탁 용역",
+        "qualification": "sme_allowed",
+        "qualification_quote": "중·소기업, 소상공인확인서 중 1부(제출마감일 전일까지 발급된 것으로 유효 기간 내에 있어야 함)",
+        "qualification_complete": "yes",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null
+      },
+      "exact_document_matches": [],
+      "exact_metadata_matches": []
+    },
+    {
+      "id": "PPS-DEV-044",
+      "facts": {
+        "scope": "general",
+        "scope_quote": "2026년 교육운영지원",
+        "qualification": "small_only",
+        "qualification_quote": "추정가격 1억원 미만 물품·용역(소기업, 소상공인, 벤처기업, 창업자)",
+        "qualification_complete": "yes",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null
+      },
+      "exact_document_matches": [],
+      "exact_metadata_matches": [
+        "조항호내용"
+      ]
+    }
+  ],
+  "role_examples": [
+    {
+      "id": "PPS-DEV-038",
+      "doc_id": "D0",
+      "start": 5104,
+      "end": 5124,
+      "quote": "거. 소기업 또는 소상공인확인서 1부",
+      "expected_role": "checklist",
+      "model_role_tested": false
+    },
+    {
+      "id": "PPS-DEV-043",
+      "doc_id": "D0",
+      "start": 3229,
+      "end": 3252,
+      "quote": "12) 중·소기업, 소상공인확인서 중 1부",
+      "expected_role": "checklist",
+      "model_role_tested": false
+    },
+    {
+      "id": "PPS-DEV-044",
+      "doc_id": "D0",
+      "start": 1906,
+      "end": 1949,
+      "quote": "① 「중소기업제품 구매촉진 및 판로지원에 관한 법률」 제8조의2에 해당하는 자",
+      "expected_role": "statutory_exclusion",
+      "model_role_tested": false
+    },
+    {
+      "id": "PPS-DEV-039",
+      "doc_id": "D0",
+      "start": 871,
+      "end": 904,
+      "quote": "입 찰 방 법: 제한경쟁(소기업·소상공인), 총액(전자)입찰",
+      "expected_role": "eligibility",
+      "model_role_tested": false
+    }
+  ]
+}

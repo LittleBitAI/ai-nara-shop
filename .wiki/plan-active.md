@@ -9,6 +9,14 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 ## 바로 답할 내용
 
+**2026-09-20 A3 착수:** `glassfish`는 [A3 작업서](../docs/tasks/a3-zero-items.md)를 따른다.
+고정 코드 `6bb692d`의 scope 원응답 재생 기준은 dev **0.547985038075**다. 새 GPU 성과가 아니다.
+첫 실험은 기존 company_size 프롬프트의 자격 추출에서 문장 원천·역할 구분이며,
+별도 호출·결정표·A2·v10 배선은 바꾸지 않는다. v20은 적용 대상 추출을 별도 가설로 남긴다.
+현재 결과는 [A3 보고서](../reports/team-c/a3-zero-items/README.md)가 소유한다.
+후보의 실제 TP/FP·동일 ZIP 반복 churn·무라벨 6,000건 발화율·서버 시간은 미측정이다.
+아래 A1 착수 문단은 이전 세션 기록이며 이 A3 실행 지시를 대신하지 않는다.
+
 **2026-09-20 A1 착수 정정:** 아래 9/17 수치는 과거 기준선이다. 최신 서버 제출은
 `57761ff`(9/18), **0.2978624361 / 4,281초**, 같은 코드 dev **0.3719775476**이다.
 시간 여유는 2,919초다. `docs/runs.md`와 `reports/submissions.json`이 소유한다.
