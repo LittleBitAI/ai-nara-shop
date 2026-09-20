@@ -27,6 +27,14 @@
 
 ## 첫 작업 큐
 
+`a3-zero-items / H2`: in_progress. `6738328`의 회차 2 기록을 반영한다.
+H1 두 회차 모두 v10·v18·v20 TP=0. 기존 company_size 호출에서 등록 제한값과 본문 요건을
+분리하고 v10·v20의 존재/부재 사실을 확장한다. v18 결정표·A2는 유지한다.
+입력·출력·범위·관측 경계는 [작업서](tasks/a3-zero-items.md), 검증·실행은
+[H2 보고서](../reports/team-c/a3-zero-items/h2-document-requirements.md)가 소유한다.
+각 TP>0과 기존 일반화·FP·대상 밖 변화·반복·시간 조건을 모두 유지한다. 실제 모델 미측정.
+아래 A3 H1·검사 복구 항목은 이전 기록이다.
+
 `a3-colab-stage-guard`: 로컬 수정·검증 완료. A3 live dev 200건 완료 후 check_live의 옛 v13 보호 조건으로 중단.
 입력: `colab-results-1789886517580784653.zip`, 고정 코드 `b7ac265`.
 출력: 단계 소유권에 맞는 검사·실패 회귀 검사·원본 회차 등록·복구 채점·재개 안내.

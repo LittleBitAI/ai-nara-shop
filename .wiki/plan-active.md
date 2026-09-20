@@ -9,6 +9,13 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 ## 바로 답할 내용
 
+**2026-09-20 A3 회차 2·H2:** `6738328`의 [회차 2 사실](../reports/team-c/a3-zero-items/run2-facts.md)을
+반영했다. H1 두 회차 모두 v10·v18·v20 TP=0으로 미채택이며 같은 ZIP churn은 16셀·0.005077이다.
+다음 [H2 후보](../reports/team-c/a3-zero-items/h2-document-requirements.md)는 기존 company_size
+한 호출에서 조항호내용 등록값을 제외하고 직접생산·SW 본문 요건의 존재/부재를 추출한다.
+기업규모 결정표·A2는 유지하며 각 TP>0을 포함한 기존 조건 전부가 남는다. 실제 모델 미측정.
+아래 A3 첫 live/착수 문단은 이력이다. 새 원응답은 있어 H1 실패를 확인했지만 H2 효과는 모른다.
+
 **2026-09-20 A3 첫 live 갱신:** `b7ac265` 회차 `colab-1789886517580784653`은 dev 200건을
 883.168초에 정상 추론했으나 노트북의 옛 v13 보호 검사에서 중단됐다. 공용/A3 검사 수정,
 실제 저장 CSV로 재현·통과 확인. CPU 복구 dev **0.5357800832**, v10·v18·v20 TP는 모두 0이다.

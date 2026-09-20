@@ -29,13 +29,68 @@ def facts(qualification="small_only"):
     quotes = {"small_only": "소기업 또는 소상공인인 업체.",
               "sme_allowed": "중소기업자로서 확인서를 소지한 업체.",
               "unrestricted": "사업자등록 업체 누구나 참가 가능.", "unknown": None}
-    return dict(scope="general", scope_quote="일반 의료기기 구매.",
+    return dict(script.empty_company_size(), scope="general", scope_quote="일반 의료기기 구매.",
                 qualification=qualification, qualification_quote=quotes[qualification],
                 qualification_complete="yes", priority_exception="no", priority_exception_quote=None,
                 size_exception="none", size_exception_quote=None)
 
 
 class CompanySizeTests(unittest.TestCase):
+    def test_document_absence_reaches_csv_without_inventing_unseen_facts(self):
+        rec = notice(50_000_000)
+        rec["docs"][0]["text"] = (
+            "정보시스템 개발 용역. 입찰참가자격: 사업자등록 업체 누구나 참가 가능.")
+        f = facts("unrestricted")
+        f.update(scope="competitive", scope_quote="정보시스템 개발 용역.",
+                 requirements_complete="yes", direct_production="absent", direct_production_quote=None,
+                 software_business="yes", software_business_quote="정보시스템 개발 용역.",
+                 software_participation="absent", software_participation_quote=None)
+        out, _ = script.verify_company_size(f, rec, 16000)
+        self.assertEqual([v for v in ("v10", "v20") if out.get(v, {}).get("위반여부") == 1],
+                         ["v10", "v20"])
+        row = script.to_row(rec["id"], script.postprocess({**valid(), **out}, rec))
+        self.assertEqual([row[v] for v in ("v10", "v20")], [1, 1])
+        self.assertFalse(row["e10"] or row["e20"])
+        # SW 명시 장소인 공고문/RFP는 완전 관측, 규격서만 잘리면 SW 부재는 관측 가능하다.
+        spec_tail = copy.deepcopy(rec)
+        spec_tail["docs"].append({"doc_id": "b", "type": "규격서", "text": "장비 규격 " * 5000})
+        partial, _ = script.verify_company_size(f, spec_tail, 16000)
+        self.assertEqual(partial["v20"]["위반여부"], 1)
+        self.assertNotIn("v10", partial)
+        spec_tail["docs"][-1]["type"] = "제안요청서"
+        self.assertNotIn("v20", script.verify_company_size(f, spec_tail, 16000)[0])
+        # 미관측·메타에만 있는 인용으로는 부재를 확정하지 않는다.
+        for change in ("missing", "truncated", "unobserved", "unknown", "metadata_quote"):
+            candidate, record = copy.deepcopy(f), copy.deepcopy(rec)
+            if change == "missing":
+                record["input_completeness"]["완전관측"] = False
+            elif change == "truncated":
+                record["docs"][0]["text"] += "뒤쪽 문서 " * 4000
+            elif change == "unobserved":
+                candidate["requirements_complete"] = "no"
+            elif change == "unknown":
+                candidate.update(direct_production="unknown", software_participation="unknown")
+            else:
+                record["meta"]["조항호내용"] = "본문에 없는 적용 대상"
+                candidate.update(scope_quote="본문에 없는 적용 대상",
+                                 software_business_quote="본문에 없는 적용 대상")
+            with self.subTest(change=change):
+                rejected, _ = script.verify_company_size(candidate, record, 16000)
+                self.assertNotIn("v10", rejected)
+                self.assertNotIn("v20", rejected)
+        # 같은 사실 추출의 일반물품/무제한은 기존 결정표를 통해 v18에 닿는다.
+        f.update(scope="general", software_business="no")
+        out, _ = script.verify_company_size(f, rec, 16000)
+        self.assertEqual(out["v18"], {"위반여부": 1, "근거문구": None})
+        rec["docs"][0]["text"] += (
+            " 직접생산확인증명서를 보유한 업체. 소프트웨어 진흥법 제48조에 따라 대기업 참여를 제한합니다.")
+        f.update(scope="competitive", software_business="yes", direct_production="present",
+                 direct_production_quote="직접생산확인증명서를 보유한 업체.",
+                 software_participation="present",
+                 software_participation_quote="소프트웨어 진흥법 제48조에 따라 대기업 참여를 제한합니다.")
+        out, _ = script.verify_company_size(f, rec, 16000)
+        self.assertEqual([out[v]["위반여부"] for v in ("v10", "v20")], [0, 0])
+
     def test_table_and_exact_boundaries(self):
         table = {
             99_999_999: ("v18", None, "v17"),
@@ -102,6 +157,13 @@ class CompanySizeTests(unittest.TestCase):
         obj = {"company_size": facts()}
         parsed, _ = script.parse_judgment(json.dumps(obj), script.COMPANY_SIZE_KEYS)
         self.assertEqual(parsed, obj)
+        old = {k: v for k, v in obj["company_size"].items()
+               if k in script.company_size_schema(legacy=True)["properties"]}
+        with self.assertRaisesRegex(ValueError, "필드 결손"):
+            script.parse_judgment(json.dumps({"company_size": old}), script.COMPANY_SIZE_KEYS)
+        replayed, _ = script.parse_judgment(json.dumps({"company_size": old}), script.COMPANY_SIZE_KEYS,
+                                           company_size_legacy=True)
+        self.assertEqual(replayed["company_size"], old)
         for key, value in [("qualification", "없음?"), ("qualification_complete", True),
                            ("priority_exception_quote", 42), ("scope_quote", "a" * 501)]:
             bad = copy.deepcopy(obj)
@@ -152,7 +214,9 @@ class CompanySizeTests(unittest.TestCase):
             def chat(self, batch, items=None):
                 calls.append(items)
                 if items == script.COMPANY_SIZE_KEYS:
+                    assert all("메타에만 있는 소기업 제한" not in m[1]["content"] for m in batch)
                     return [json.dumps({"company_size": facts()}) for _ in batch]
+                assert all("메타에만 있는 소기업 제한" in m[1]["content"] for m in batch)
                 base = valid()
                 base["v1"] = {"위반여부": 1, "근거문구": "일반 의료기기 구매."}
                 return [json.dumps(base) for _ in batch]
@@ -163,6 +227,7 @@ class CompanySizeTests(unittest.TestCase):
             recs = [notice(price) for price in (150_000_000, 50_000_000, 250_000_000)]
             for index, rec in enumerate(recs):
                 rec["id"] += str(index)
+                rec["meta"]["조항호내용"] = "메타에만 있는 소기업 제한"
             source.write_text("".join(json.dumps(rec, ensure_ascii=False) + "\n" for rec in recs), encoding="utf-8")
             out = root / "run/submission.csv"
             report = script.run(str(source), str(out), Runner, None, 128, 16000,
@@ -172,7 +237,7 @@ class CompanySizeTests(unittest.TestCase):
             # 이 단계가 덮어쓸 수 있는 열을 그대로 신고해야 노트북 보호 가드가 맞는 것을 지킨다.
             # 금액·등급 축(BAND_ITEMS)과 scope 축(SCOPE_ITEMS) 둘 다 이 한 호출에서 나온다.
             self.assertEqual(script.extra_call_items()["company_size"],
-                             script.BAND_ITEMS + script.SCOPE_ITEMS)
+                             script.BAND_ITEMS + script.SCOPE_ITEMS + script.DOCUMENT_CHECK_ITEMS)
             self.assertFalse(set(script.BAND_ITEMS) & set(script.SCOPE_ITEMS))
             self.assertEqual(report["company_size_selected_count"], 3)
             self.assertEqual(report["company_size_fallback_count"], 0)
@@ -203,7 +268,8 @@ class CompanySizeTests(unittest.TestCase):
             synthetic = dict(report, mode="live", model_success_count=3, company_size_model_success_count=3)
             out.with_name("run_report.json").write_text(json.dumps(synthetic), encoding="utf-8")
             _, metrics = measured(out.parent, recs, script.records_sha256(recs))
-            self.assertEqual(metrics["firings"], {"v14": 1, "v15": 1, "v16": 0, "v17": 0, "v18": 0})
+            self.assertEqual(metrics["firings"], {v: int(v in ("v14", "v15"))
+                                                 for v in script.extra_call_items()["company_size"]})
             compressed = root / "input.jsonl.gz"
             with gzip.open(compressed, "wt", encoding="utf-8") as stream:
                 stream.write(source.read_text(encoding="utf-8"))
