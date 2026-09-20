@@ -530,6 +530,15 @@ def verify_company_size(facts, rec, max_chars):
     out = {v: {"위반여부": 0, "근거문구": None} for v in BAND_ITEMS}
     if facts["scope"] in ("competitive", "other"):
         return out, "outside_general_scope"
+    # 모델이 general이라 해도 **제공 고시 카탈로그 대조가 경쟁제품이라고 말하면 그쪽을 믿는다.**
+    # v14·v17·v18은 항목명이 "일반물품"이고, 경쟁제품이면 애초에 그 항목이 아니다.
+    # 같은 공고를 A2가 이미 열어 본다 — 직생 요구가 지목한 세부품명번호를 고시와 대조하고
+    # `특이사항`의 금액 상한까지 본다. 그 둘이 어긋나는 자리가 v14·v17 오탐의 한 무리였다.
+    # 실측(A1 원응답 재생, astra 진단 reports/team-c/a1-company-size/precision-analysis.md):
+    # v14 FP 9→4, v17 FP 23→15, TP 손실 0, 대상 밖 0셀. 무라벨 발화율은 dev 대비 1.16배다.
+    demand, product_codes = direct_production_demand(rec)
+    if demand is not None and competitive_product(rec, product_codes) is True:
+        return out, "competitive_by_catalogue"
     price = estimated_price(rec)
     if isinstance(price, bool) or price is None or not math.isfinite(price):
         return {}, "unknown_price"
