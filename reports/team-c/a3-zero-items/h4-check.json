@@ -1,0 +1,62 @@
+{
+  "status": "cpu_contracts_only",
+  "model_called": false,
+  "base_commit": "49475c3",
+  "script_sha256": "1691e8cc2e3a94c7af8a7dec703e58616dcc05337e633283630318ee69ac2a5b",
+  "protected_functions_unchanged": true,
+  "old_response_replays": [
+    {
+      "case": "reports/runs/colab-1789880471715651259/dev-debug",
+      "rows": 200,
+      "csv_bytes_identical": true,
+      "changed_cells": 0,
+      "csv_sha256": "aaa06e1bc7fc9dfb694e81b5bc7bda2dbf234c9043f9acf739c92d350ee7e23e"
+    },
+    {
+      "case": "reports/runs/colab-1789889904147841755/dev-debug",
+      "rows": 200,
+      "csv_bytes_identical": true,
+      "changed_cells": 0,
+      "csv_sha256": "6727aab1d0d637223c4dd581afc181709894212a55839f9c76b811b91dfeea0a"
+    },
+    {
+      "case": "reports/runs/colab-1789894949866134428/dev-debug",
+      "rows": 200,
+      "csv_bytes_identical": true,
+      "changed_cells": 0,
+      "csv_sha256": "65cb458edbf5ede4d14b3237ccd021adb0eeef83dc53a9e494f187a696916a6c"
+    },
+    {
+      "case": "reports/runs/colab-1789898958261656296/dev-debug",
+      "rows": 200,
+      "csv_bytes_identical": true,
+      "changed_cells": 0,
+      "csv_sha256": "bd3651efb4a21a39ccaa201647088ac5984c957f24a94e556c40ddcb673e9406"
+    }
+  ],
+  "source_sha256": {
+    "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt": "a4390e91cb991ce75bde7389c9297c6e4f6a947afd1a26cb9397e34aa4e9a445",
+    "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt": "1070092cca07468b755fa1e0fb13658d4c9ea72c48b555109c8fc4f87046cabb",
+    "open/data/법령패키지/법령/소프트웨어 진흥법.txt": "fed9d2ae28079aec3a0e8f1ab4a60399b516bbe92551b422c8aa947911294857",
+    "open/data/법령패키지/법령/중소 소프트웨어사업자의 사업 참여 지원에 관한 지침.txt": "de502b0352f44f55dd22b3357d86a705faf35045c0f769d31b979b59b2a9b0c6"
+  },
+  "extra_call_items": {
+    "split": [],
+    "product": [],
+    "company_size": [
+      "v14",
+      "v15",
+      "v16",
+      "v17",
+      "v18",
+      "v12",
+      "v13",
+      "v10",
+      "v20"
+    ]
+  },
+  "live_target_tp": null,
+  "same_zip_churn": null,
+  "unlabeled_firing_rates": null,
+  "server_time": null
+}
