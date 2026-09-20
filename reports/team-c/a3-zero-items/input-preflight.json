@@ -1,0 +1,33 @@
+{
+  "status": "input_preflight_only",
+  "model_called": false,
+  "script_sha256": "0e432eacf0416bbf8d478fca5b3c8fe78d0c454dcd5ccb6ee7a6871375831b89",
+  "dev": {
+    "count": 200,
+    "input_sha256": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+    "records_sha256": "6b2886a8640acdeb856302635c5f811c6f8221c5bea75205fad36e2d0819b4c6",
+    "selection": "input_order_prefix",
+    "limit": 200,
+    "price_bands": {
+      "at_least_notice": 45,
+      "below_100m": 106,
+      "100m_to_notice": 49
+    },
+    "complete_input_count": 190
+  },
+  "unlabeled": {
+    "count": 6000,
+    "input_sha256": "f46449fb84f980a5ddf868d66f5daff2bcf0991135d9b81da5656dd607275698",
+    "records_sha256": "32639ee2f20e13abdd40a139098eedb6788b9e73d37560803deeae32071b2fe5",
+    "selection": "input_order_prefix",
+    "limit": 6000,
+    "price_bands": {
+      "below_100m": 3967,
+      "100m_to_notice": 1117,
+      "at_least_notice": 834,
+      "unknown": 82
+    },
+    "complete_input_count": 5781
+  },
+  "firing_rate_ratio": null
+}
