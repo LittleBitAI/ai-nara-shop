@@ -27,9 +27,18 @@
 
 ## 첫 작업 큐
 
-`a1-scope`: in_progress. 합본 `0a172a2`를 고정하고 기업규모 scope 질문만 바꾸는 후속 실험.
-검색·qualification·스키마·결정표는 유지한다. [단일변수 계약](tasks/a1-company-size.md#후속--scope-단일변수-실험-2026-09-20).
-실제 모델 성과·무라벨 발화율은 미측정이며 A1 단독 브랜치 ZIP과 합본을 비교하지 않는다.
+`a3-zero-items`: 배정 2026-09-20, `glassfish` 세션(astra). **F1 0.000인 v10·v18·v20**.
+합계 천장 +0.125로 남은 것 중 가장 크다. [입력·수정 범위·통과 조건](tasks/a3-zero-items.md).
+셋 다 부재탐지이고 **모델 1차 호출이 200건 전체에서 한 번도 1이라 하지 않는다** —
+후처리로 열 자리가 없어 GPU 회차가 필요하다. v16을 같은 방식으로 뚫은 전례가 있다.
+
+`a4-precision`: 배정 2026-09-20, 주 세션. 재생으로 잴 수 있는 오탐·배선 전부.
+v24 FP 36(F1 0.167) · v9 FP 12 · v17 FP 9 · v6 FP 5, 그리고 열린 `scope`를
+v11·v13에 잇는 배선. `script.py:538`이 그 값을 v14~v18에만 쓴다.
+
+`a1-scope`: **완료.** `0a8459a`가 `scope` 절을 바꿔 회차 `colab-1789880471715651259`에서
+경쟁제품 15건 중 `scope==competitive`가 0→15가 됐다. dev 0.505382 / dev-debug 0.512314.
+[결과](../reports/team-c/merged-candidate/result.md). 무라벨 발화율·같은 ZIP churn은 미측정.
 
 `a1-company-size`: in_progress. 사용자 지정 `merganser` 구현 세션이 기업등급 세로축과
 v14~v18 결정표를 맡는다. [입력·출력·수정 범위·통과선](tasks/a1-company-size.md).
