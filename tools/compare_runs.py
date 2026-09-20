@@ -13,10 +13,15 @@ ROOT = Path(__file__).resolve().parents[1]
 # — 그 셋을 넣으면 하한이 29에서 25로 내려가 churn을 실제보다 넓게 말하게 된다.
 # 셀 수로는 구분되지 않는다 — 29셀이 0.0020, 30셀이 0.0026을 내고 41셀이 0.000008을 냈다.
 # 같은 `script.py`가 dev Macro F1 0.2182를 세 번, 0.2208을 한 번, 0.2202를 한 번 냈다.
+# 2026-09-20 재갱신: run12 재생 ↔ run13 dev-debug 가 17셀·0.010088 을 냈다. 프롬프트·스키마·
+# 후처리가 전부 같은 두 회차다. 셀 수가 기존 하한(29)보다 적은데 영향은 기존 상한의 2.2배다 —
+# PPS-DEV-02 한 건이 지지 7건짜리 v2 의 F1 을 0.600 에서 0.444 로 옮겼다.
+# **이 범위는 서로 다른 모델 실행을 비교할 때만 쓴다.** 같은 원응답을 재생한 두 CSV 에는
+# churn 이 없고 차이가 곧 효과다. 아래 문구가 두 경우에 똑같이 찍히므로 읽는 쪽이 가른다.
 DRIFT_MIN = 0.000007917373
-DRIFT_MAX = 0.003128882280
-DRIFT_CELLS = (29, 45)
-DRIFT_PAIRS = 10
+DRIFT_MAX = 0.010087517153
+DRIFT_CELLS = (17, 45)
+DRIFT_PAIRS = 13
 
 
 def load_score():
@@ -62,7 +67,7 @@ def compare(score, truth_path, before_path, after_path, focus=()):
         # churn은 임계값이 아니다. 관측 범위만 적고 판정은 사람이 한다.
         "drift_reference": {
             "macro_f1_min": DRIFT_MIN, "macro_f1_max": DRIFT_MAX, "cells": list(DRIFT_CELLS),
-            "pairs": DRIFT_PAIRS, "below_observed_max": abs(delta) <= DRIFT_MAX,
+            "pairs": DRIFT_PAIRS, "below_observed_max": round(abs(delta), 12) <= DRIFT_MAX,
             "source": "reports/runs/reproducibility.md"},
         "items": items,
     }
@@ -82,14 +87,15 @@ def render(result, show_all=False):
         "",
     ]
     lines += [
-        f"churn    회차 간 실측 {DRIFT_CELLS[0]}~{DRIFT_CELLS[1]}셀, 그 Macro F1 영향"
+        f"churn    과거 코드의 회차 간 실측 {DRIFT_CELLS[0]}~{DRIFT_CELLS[1]}셀, 그 Macro F1 영향"
         f" {DRIFT_MIN:.6f}~{DRIFT_MAX:.6f} ({DRIFT_PAIRS}쌍)",
     ]
     if result["drift_reference"]["below_observed_max"]:
-        lines += ["         이번 차이는 그 범위 안이다. Macro F1만으로는 아무것도 말할 수 없다.",
+        lines += ["         이번 차이는 과거 관측 범위 안이다. 현재 코드의 churn 판정은 아니다.",
                   "         대상 항목의 TP/FP/FN이 가설대로 움직였는지로 판단한다."]
     else:
-        lines += ["         이번 차이는 관측 범위를 넘는다. 그래도 항목별 변화를 함께 확인한다."]
+        lines += ["         이번 차이는 과거 관측 범위를 넘는다. 현재 코드의 개선 증거로 단정하지 않는다."]
+    lines += ["         새 후보는 같은 ZIP을 재실행해 그날 그 코드의 churn을 직접 잰다."]
     lines += [f"         근거 {result['drift_reference']['source']}", ""]
     lines.append(f"{'항목':<5} {'TP':>9} {'FP':>9} {'FN':>9} {'F1':>21}  바뀐 공고")
     for row in result["items"]:

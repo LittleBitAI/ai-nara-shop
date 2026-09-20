@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-k5_nm8ce/repo",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "47622715ee29a4098750e2f46b66dd0d30f6cccc"
+  ],
+  "cwd": "/content/t1-colab-k5_nm8ce",
+  "started": 1789863791.554419,
+  "returncode": 0,
+  "elapsed_seconds": 0.8366053104400635
+}

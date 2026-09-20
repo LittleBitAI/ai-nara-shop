@@ -39,6 +39,8 @@ class BaselineTests(unittest.TestCase):
                     if items == baseline.SME_ITEMS:
                         return [json.dumps({"v13": {"facts": baseline.empty_sme_facts(),
                                                    "위반여부": 0, "근거문구": None}})] * len(batch)
+                    if items == baseline.COMPANY_SIZE_KEYS:
+                        return super().chat(batch, items)
                     if items is not None:   # 추가 호출은 facts 없이 두 칸만 낸다
                         return [json.dumps({k: {"위반여부": 0, "근거문구": None}
                                             for k in items})] * len(batch)
@@ -54,21 +56,16 @@ class BaselineTests(unittest.TestCase):
                 report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Selective,
                                       limit=4, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
                 # 합동 1회 → v13 추가 호출(선택 공고가 있을 때만) → 켜져 있는 추가 호출.
-                # 순서는 run()이 부르는 순서 그대로다: split → band(항목별) → product.
+                # 순서는 run()이 부르는 순서 그대로다: split → company_size → product.
                 # 시험 입력 4건은 전부 고시금액 미만이라 분할 호출이 4건 모두에 붙는다.
                 expected = [(None, 4)] + [(["v13"], 2)] * bool(positives)
                 if baseline.SPLIT_ITEMS:
                     expected.append((baseline.SPLIT_ITEMS, 4))
-                bands = [(c, n) for c, n in calls if len(c or []) == 1 and c[0] in baseline.BAND_ITEMS]
-                expected += bands
+                if baseline.BAND_ITEMS:
+                    expected.append((baseline.COMPANY_SIZE_KEYS, 4))
                 if baseline.PRODUCT_ITEMS:
                     expected.append((baseline.PRODUCT_ITEMS, 4))
                 self.assertEqual(calls, expected)
-                # 한 공고는 정확히 한 구간에만 들어가므로 구간별 건수의 합이 입력 건수다.
-                if baseline.BAND_ITEMS:
-                    self.assertEqual([c[0] for c, _ in bands],
-                                     sorted((c[0] for c, _ in bands), key=baseline.BAND_ITEMS.index))
-                    self.assertEqual(sum(n for _, n in bands), 4)
                 self.assertEqual(report["sme_selected_count"], len(positives))
                 self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
                 self.assertEqual(report["sme_fallback_count"], 0)
@@ -164,6 +161,8 @@ class BaselineTests(unittest.TestCase):
                 instances.append(self)
             def chat(self, batch, items=None):
                 calls.append(items)
+                if items == baseline.COMPANY_SIZE_KEYS:
+                    return super().chat(batch, items)
                 outputs = []
                 for messages in batch:
                     if items is None:
@@ -193,7 +192,8 @@ class BaselineTests(unittest.TestCase):
             expected = [None, ["v13"]]
             if baseline.SPLIT_ITEMS:
                 expected.append(baseline.SPLIT_ITEMS)
-            expected += [c for c in calls if c is not None and len(c) == 1 and c[0] in baseline.BAND_ITEMS]
+            if baseline.BAND_ITEMS:
+                expected.append(baseline.COMPANY_SIZE_KEYS)
             if baseline.PRODUCT_ITEMS:
                 expected.append(baseline.PRODUCT_ITEMS)
             # 켜진 추가 호출 말고 다른 항목 목록이 오면 실패한다.
@@ -588,17 +588,37 @@ class BaselineTests(unittest.TestCase):
             self.assertEqual(out["v1"]["위반여부"], 1)  # 다른 항목은 그대로
             return out[item]["위반여부"]
 
-        # v19: 계약 시·낙찰 후 제출만이면 내리고, 입찰 단계 보유 요구가 같이 있으면 둔다.
+        # v19는 인용이 아니라 **공고가 무엇을 요구했는지**를 먼저 본다.
+        # [items](docs/items.md) 확정 해석: 위반은 입찰·투찰 단계에서 확약서를 요구한 경우다.
         self.assertEqual(judged("v19", "계약 시 확약서를 발급받아 제출하여야 합니다."), 0)
         self.assertEqual(judged("v19", "낙찰자 결정 후 협약서를 발급받아야 합니다."), 0)
         self.assertEqual(judged("v19", "확약서를 전자입찰서 제출 마감일 전까지 보유하여야 하고, "
                                        "계약 시 제출해야 합니다."), 1)
-        self.assertEqual(judged("v19", "물품공급 확약서 1부"), 1)
-        # v21: 공동계약 불허나 10% 이상 지분은 내리고, 10% 미만 지분은 둔다.
+        # 제출서류 목록 한 줄만 있고 공고 어디에도 입찰 단계 요구가 없으면 위반이 아니다.
+        # dev 오탐 15건 중 다수가 정확히 이 모양이었다.
+        self.assertEqual(judged("v19", "물품공급 확약서 1부"), 0)
+        # 같은 공고에 입찰 단계 요구가 있으면, 모델이 목록 한 줄을 인용했어도 위반이다.
+        self.assertEqual(judged("v19", "물품공급 확약서 1부",
+                                text="확약서는 전자입찰서 제출 마감일 전일까지 보유하여야 합니다. "
+                                     "제출서류: 물품공급 확약서 1부"), 1)
+        # 요구가 있어도 그 인용이 계약 시 의무만 말하면 그 인용은 근거가 아니다.
+        self.assertEqual(judged("v19", "계약 시 반드시 제출하여야 한다.",
+                                text="확약서는 입찰 전까지 보유하여야 합니다. "
+                                     "계약 시 반드시 제출하여야 한다."), 0)
+        # v21: 공동계약 불허나 하한 이상 지분은 내리고, 하한 미만 지분은 둔다.
         self.assertEqual(judged("v21", "공동수급은 허용하지 않습니다."), 0)
         self.assertEqual(judged("v21", "구성원별 최소지분율은 10% 이상이어야 합니다."), 0)
         self.assertEqual(judged("v21", "구성원별 최소 지분율은 5% 이상으로 하여야 함"), 1)
         self.assertEqual(judged("v21", "업체별 최소 지분율은 2% 이상"), 1)
+        # **하한은 계약법과 공동도급 방식이 정한다.** 항목명 "공동 5% (10%)"가 그것이다.
+        # 지방 집행기준 제6장 제2절 1-나-2)는 5% 이상, 국가 공동계약운용요령 ⑤나는 10% 이상이다.
+        # 하한을 10 하나로 두면 지방의 정상인 5%를 전부 위반으로 남긴다 — dev 오탐 10건의 정체다.
+        local = {"적용계약법": "지방자치단체를 당사자로 하는 계약에 관한 법률"}
+        self.assertEqual(judged("v21", "구성원별 최소 지분율은 5% 이상으로 하여야 함", meta=local), 0)
+        self.assertEqual(judged("v21", "업체별 최소 지분율은 3% 이상", meta=local), 1)
+        # 같은 절 3): 분담이행방식은 최소지분율을 적용하지 않는다.
+        self.assertEqual(judged("v21", "업체별 최소 지분율은 3% 이상",
+                                meta={**local, "공동도급구성방식": "분담이행"}), 0)
         # "단독"만으로는 내리지 않는다(특수관계인 지분 조항 등).
         self.assertEqual(judged("v21", "단독으로 또는 합산하여 발행주식 총수의 100분의 30 이상"), 1)
         # v24: 같은 뜻의 메타 값과 일치할 때만 내린다.

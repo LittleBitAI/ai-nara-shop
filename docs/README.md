@@ -1,5 +1,36 @@
 # 문서 지도
 
+## 과제 한 장 — 무엇이 입력이고 무엇이 기준이고 무엇이 출력인가
+
+이 구분이 문서 여러 곳에 흩어져 있어 실제로 오해가 난 적이 있습니다. 먼저 읽습니다.
+
+| | 무엇 | 어디 |
+| --- | --- | --- |
+| **입력** | 공고 1건의 본문·첨부와 나라장터 등록 정보 | [data D2·D3](data.md) |
+| **기준** | 제공 법령 23개 txt와 중기부고시 CSV. **판정의 근거이지 출력이 아닙니다** | `open/data/법령패키지/`, [items](items.md) |
+| **출력 ①** | `v1`~`v24` 각각 위반 여부 **0/1** | [data D4](data.md) |
+| **출력 ②** | `e1`~`e24` 근거 문구 — **그 공고 문서의 원문에서 그대로** 인용한 연속 부분문자열 | [data D4-4](data.md) |
+
+**근거는 법령 조문이 아니라 공고의 문장입니다.** D4-4가 "법령·meta에서 가져온 값만으로
+대체 금지"라고 못 박습니다. 법령은 *"5%가 위반인가"* 를 정하는 데 쓰고, 제출하는 근거는
+*"이 공고가 5%라고 썼다"* 입니다. 실제 제출 CSV의 근거는 전부 이런 모양입니다.
+
+```
+[PPS-DEV-03] v3  '공고일 기준 5년 이내 공공디자인 용역 실적이 3천만원 이상인 업체'
+```
+
+부재탐지 5항목(v10·v11·v16·v18·v20)은 **v 값과 무관하게 `e`가 항상 빈칸**입니다(D4-5) —
+"없는 것"이 위반이라 인용할 문장이 없습니다.
+`e`는 리더보드 점수에 들어가지 않고 **2차 평가(정량 80% + 정성 20%)**에 씁니다([contest E2](contest.md)).
+
+**라벨은 `open/dev_labels.csv` 200건이 전부입니다.** train 20,000건은 무라벨이고
+자가 라벨 설계도 과제에 포함됩니다([rules](rules.md) A1~A3). 그래서 dev를 안 보고
+시작할 수 없지만, **dev는 어디가 틀렸는지 찾는 데 쓰고 고치는 근거는 법령·고시에서
+가져옵니다** — 그 구분을 안 지킨 규칙이 서버에서 이득의 절반을 잃었습니다
+([workflow W5](workflow.md#w5-실험검증)의 무라벨 발화율 규칙).
+
+---
+
 항상 읽는 규칙은 짧게 유지하고, 작업에 필요한 계약만 추가로 읽습니다.
 각 규칙은 한 문서가 소유합니다. 다른 문서에서는 링크와 규칙 ID로 참조합니다.
 
@@ -48,7 +79,7 @@
 | 과거 실행 대조·결과 공유 | [실행 기록](runs.md) | `reports/runs/<run-id>/`의 manifest·CSV·로그, `reports/team-score-audit/history.json` |
 | 새 결과 ZIP 등록 | [실행 기록의 등록 절차](runs.md#등록-절차) | `artifacts/inbox/`의 결과·제출 ZIP 한 쌍, `tools/register_run.py` |
 | 0점 항목이 막힌 단계 찾기 | [항목 진단 전용 회차](colab.md#항목-진단-전용-회차-선택) | `tools/diagnose_items.py`, 노트북 `diagnose` 셀, `reports/team-score-audit/recall-check.csv`의 양성 ID |
-| 다음 GPU 회차에 무엇을 돌릴지 | [GPU 회차 대기열](tasks/gpu-run-queue.md) | 남은 회차 12·제출 1일 1회·여유 1,008초, 노트북 셀 18의 `RUN_DIAGNOSTIC`·`DIAGNOSE_ITEMS` |
+| 다음 GPU 회차에 무엇을 돌릴지 | [GPU 회차 대기열](tasks/gpu-run-queue.md) | 회차 제한 없음(2026-09-20~)·제출 1일 1회·여유 2,919초, 노트북 셀 18의 `RUN_DIAGNOSTIC`·`DIAGNOSE_ITEMS` |
 | 후보가 정말 나아졌는지 판정 | [workflow W5](workflow.md#w5-실험검증), [회차 간 비결정성](../reports/runs/reproducibility.md) | `tools/compare_runs.py`로 항목별 TP/FP/FN과 대상 밖 회귀·churn 범위 |
 | 프롬프트·스키마 후보를 Colab 없이 몇 건만 확인 | [workflow W5](workflow.md#w5-실험검증) | `tools/api_run.py`. 키가 있으면 API의 `gemma-4-26b-a4b-it`, 없으면 mock. 분당 입력 토큰 16,000 상한이라 표본용이고 전량 dev는 Colab 회차 |
 | 모델 뒤 단계 후보를 GPU 없이 측정 | [workflow W5](workflow.md#w5-실험검증) | `tools/replay_run.py`와 보관된 원응답 `reports/runs/colab-1789655036303880754/dev-debug/`. `--verify`는 보관 응답 무결성 검사(회차 커밋 코드)이고, 비교 기준은 HEAD 재생 CSV |

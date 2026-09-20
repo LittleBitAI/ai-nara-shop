@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/t1-colab-oxy9s1au/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/t1-colab-oxy9s1au",
+  "started": 1789859003.771067,
+  "returncode": 0,
+  "elapsed_seconds": 0.3738117218017578
+}

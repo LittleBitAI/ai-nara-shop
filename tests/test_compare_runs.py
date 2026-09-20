@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("compare_runs", ROOT / "tools/compare_runs.py")
@@ -115,15 +116,34 @@ class CompareRunsTests(unittest.TestCase):
     def test_drift_constants_match_the_table_that_owns_them(self):
         """상수는 reproducibility.md의 churn 표에서 온다. 한쪽만 고치면 여기서 걸린다."""
         rows = drift_table_rows(compare_runs.ROOT / "reports/runs/reproducibility.md")
-        self.assertEqual(len(rows), 13, "churn 표의 행 수가 달라졌다. 아래 기대값을 함께 고친다")
+        self.assertEqual(len(rows), 16, "churn 표의 행 수가 달라졌다. 아래 기대값을 함께 고친다")
         same = [(cells, delta) for _, code, cells, delta in rows if code == "같음"]
         self.assertEqual(len(same), compare_runs.DRIFT_PAIRS, "코드가 같은 쌍 수와 DRIFT_PAIRS가 다르다")
         self.assertEqual((min(c for c, _ in same), max(c for c, _ in same)), compare_runs.DRIFT_CELLS)
         self.assertAlmostEqual(min(d for _, d in same), compare_runs.DRIFT_MIN, places=12)
         self.assertAlmostEqual(max(d for _, d in same), compare_runs.DRIFT_MAX, places=12)
-        # 코드가 다른 쌍은 표에 남지만 상수에는 안 들어간다. 섞이면 하한이 내려간다.
+        # 코드가 다른 쌍은 표에 남지만 상수에는 안 들어간다. 그 행이 사라지지 않았는지만 본다.
+        #
+        # **섞였는지를 수치로 가리는 검사는 뺐다.** 2026-09-20까지는 "섞으면 셀 하한이
+        # 29에서 25로 내려간다"가 근거였는데, 같은 코드 쌍이 17셀을 내면서 하한이 다른 코드
+        # 쌍의 최소(25)보다 낮아져 그 근거가 뒤집혔다. 지금은 셀로도 delta로도 두 무리가
+        # 겹쳐서 구분되지 않는다. 못 가리는 것을 가리는 척하지 않는다 —
+        # 위 세 줄이 "같음" 행만으로 계산한 값과 상수의 일치를 이미 지킨다.
         other = [cells for _, code, cells, _ in rows if code != "같음"]
-        self.assertTrue(other and min(other) < compare_runs.DRIFT_CELLS[0])
+        self.assertTrue(other, "코드가 다른 쌍이 표에서 사라졌다")
+
+    def test_drift_boundary_uses_the_recorded_twelve_decimal_places(self):
+        same = write_csv(self.dir / "boundary.csv", {i: {} for i in ids(10)})
+        truth, _ = SCORE.load_csv(self.truth)
+        pred, _ = SCORE.load_csv(same)
+        metrics, errors = SCORE.calculate(truth, pred)
+        for excess, expected in ((1e-13, True), (1e-10, False)):
+            with patch.object(SCORE, "calculate", side_effect=[
+                (dict(metrics, macro_f1=0), errors),
+                (dict(metrics, macro_f1=compare_runs.DRIFT_MAX + excess), errors),
+            ]):
+                result = compare_runs.compare(SCORE, self.truth, same, same)
+            self.assertEqual(result["drift_reference"]["below_observed_max"], expected)
 
     def test_rejects_mismatched_ids_and_unknown_items(self):
         before = write_csv(self.dir / "b3.csv", {i: {} for i in ids(10)})

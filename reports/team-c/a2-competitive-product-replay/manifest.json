@@ -1,0 +1,12 @@
+{
+  "purpose": "cpu_replay_only",
+  "model_called": false,
+  "case": "reports/runs/colab-1789719173182820657/dev-debug",
+  "candidate": null,
+  "matches_original": false,
+  "original_sha256": "e5185227c28cbde8f920b3a6777d6025bc65c90ce677d0dded6c64d310cd84b5",
+  "replayed_sha256": "a714c90c32504351b437e424729b61050609c2eec1c4f88f6b15a14747596f51",
+  "notices": 200,
+  "created_at": "2026-09-19T22:04:53.429027+00:00",
+  "note": "저장된 원응답으로 모델 뒤 단계만 다시 돌렸다. 새 모델 실행이 아니다."
+}

@@ -1,0 +1,129 @@
+{
+  "run_id": "colab-1789866561858326417",
+  "archive": "colab-results-1789866561858326417.zip",
+  "zip_sha256": {
+    "results": "28c7202b67d6f0d63667003428131829d99e46a2101e8c1111b842ee22796c4b",
+    "submit": "668f74ce5857cdd0142ab201b974ffd837c78e3b8f28b7ed45026c32c154908a"
+  },
+  "registered_at": "2026-09-20T01:11:25.857797+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "47622715ee29a4098750e2f46b66dd0d30f6cccc",
+    "commit": "47622715ee29a4098750e2f46b66dd0d30f6cccc",
+    "given_commit": "4762271"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "dev-debug": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 186.8,
+        "baseline_inference": 362.4,
+        "extra_inference": 109.4,
+        "inference_total": 679.8,
+        "run_total": 870.859,
+        "wall_clock": 874.7875790596008
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 108,
+        "extra_selected": 108,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 28,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 164,
+        "evidence_dropped_not_verbatim": 66,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "dev": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 216.7,
+        "baseline_inference": 360.9,
+        "extra_inference": 106.9,
+        "inference_total": 675.8,
+        "run_total": 896.723,
+        "wall_clock": 901.4269618988037
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 106,
+        "extra_selected": 106,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 29,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 170,
+        "evidence_dropped_not_verbatim": 70,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.431856102622693
+    },
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 485.1,
+        "baseline_inference": 35.4,
+        "extra_inference": 10.3,
+        "inference_total": 59.9,
+        "run_total": 545.365,
+        "wall_clock": 550.3500807285309
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 6,
+        "extra_selected": 6,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 8,
+        "evidence_dropped_not_verbatim": 6,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.431856102622693,
+    "baseline_macro_f1_same_run": 0.3633159260118642,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": true,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1789866561858326417.zip",
+    "submit": "artifacts/inbox/submit.zip"
+  }
+}
