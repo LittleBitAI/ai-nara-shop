@@ -44,6 +44,39 @@ Colab 왼쪽 열쇠 아이콘 → `HF_TOKEN` 등록 → **노트북 접근 허�
 
 나오는 것: 지금 코드의 실제 GPU 점수와 `submit.zip`. **이게 제출 후보다.**
 
+`RUN_DIAGNOSTIC` 은 이제 기본이 `True` 다(회차 제한이 없어졌다). 셀 18 을 안 건드려도
+원응답이 보관되고, 그래야 그 프롬프트의 후처리 후보가 전부 GPU 0초가 된다.
+
+### main 이 아닌 커밋을 돌릴 때 — 브랜치 이름 말고 SHA 를 쓴다
+
+```python
+# 셀 1 — 이 줄만 바꾼다
+REPO_REF = "<40자리 커밋 SHA>"
+```
+
+브랜치는 움직인다. SHA 를 쓰면 **그 회차가 무엇을 돌렸는지가 고정된다** —
+`source.json` 의 `requested_ref` 와 `commit` 이 같아진다. 한 번 어긋나서 등록이
+`코드 커밋이 로그와 다르다` 로 막힌 적이 있다.
+
+### 돌리기 전에 GPU 없이 밟아 볼 수 있는 것
+
+회차 하나를 날리기 전에 죽을 자리를 먼저 밟는다. 넷 다 로컬에서 몇 초다.
+
+```powershell
+# ① 셀 3 이 하는 일 그대로 — clone · fetch · checkout · package
+git clone --depth 1 --branch main https://github.com/LittleBitAI/ai-nara-shop.git repo
+git -C repo fetch --depth 1 origin <SHA>; git -C repo checkout --detach FETCH_HEAD
+cd repo; python -X utf8 tools/package.py --output ..\submit.zip
+
+# ② dev 200건 mock — 49열·자가검증과 함께, 기본/최종 CSV 가 허용 밖 열을 바꾸는지 본다
+python -X utf8 script.py --mock --input open/dev.jsonl
+```
+
+②가 특히 중요하다. `check_live` 는 `settings["extra_call_items"]` 로 **무엇이 갈려도
+되는지**를 정하는데, `postprocess` 안의 규칙은 기본 CSV 와 최종 CSV **양쪽에** 들어가므로
+차이를 안 만든다. 그 전제가 깨지면 회차가 샘플 10건에서 죽는다 — 아래 절의 사고가 그것이다.
+두 CSV 를 열 단위로 대조해 **허용 밖 변경이 0** 인지 확인하고 돌린다.
+
 ### 노트북은 clone 대상이 아니다 — 열어 둔 사본이 돈다
 
 `REPO_REF` 가 받아 오는 것은 `script.py` 뿐이다. **노트북 자체는 당신이 Colab 에서 연
