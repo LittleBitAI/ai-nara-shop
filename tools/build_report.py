@@ -166,17 +166,24 @@ def build(score, run_id, entries, source_path):
             i for i in pred
             if pred[i] == debug_pred.get(i) and quotes[i] == debug_quotes.get(i)
         }
+        # 49열이 같아도 **같은 응답은 아니다.** 일치하는 180건의 response 이벤트 451개 중
+        # 31개는 길이가 다르다 — PPS-DEV-08/baseline 이 dev 1033자 · dev-debug 1079자다.
+        # 그래서 dev 슬롯에 섞지 않고 `debug` 묶음으로 따로 싣는다. 원응답과 그 통계가
+        # 한 묶음에 있어야 화면이 "이건 다른 추론의 것" 이라고 말할 수 있다.
         per_id, _ = parse_diagnostics(entries.get("dev-debug/diagnostics.jsonl", b""))
         for identifier in same:
             slot = per_id.get(identifier)
             if slot and "raw" in slot:
-                trace.setdefault(identifier, {})["raw"] = slot["raw"]
+                trace.setdefault(identifier, {})["debug"] = {
+                    "raw": slot["raw"],
+                    "responses": slot.get("responses", []),
+                }
         skipped = len(pred) - len(same)
         if skipped:
             raw_note = (f"dev-debug 의 49열이 dev 와 다른 공고 {skipped}건에는 원응답을 안 붙였다. "
                         "같은 ZIP 이어도 별도 추론이라 그 칸들의 판정·근거가 어긋난다")
 
-    has_raw = any("raw" in slot for slot in trace.values())
+    has_raw = any("debug" in slot for slot in trace.values())
 
     grid, evidence = {}, {}
     for identifier in sorted(truth):

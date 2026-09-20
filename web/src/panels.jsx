@@ -170,7 +170,7 @@ export function Detail({ run, corpus, item, id, absence }) {
   const active = tab ?? Math.max(0, holds.indexOf(true))
   const doc = row.docs[active]
   const trace = run.trace?.[id] ?? {}
-  const raw = trace.raw ?? []
+  const debug = trace.debug ?? null // 별도 추론의 원응답. dev 통계와 섞지 않는다
 
   // 둘이 같은 문자열이면 한 조각만 남는다. 그때 `truth` 로만 칠하면 모델이
   // 정확히 맞혔다는 사실이 화면에서 사라지므로 합친 표시를 쓴다.
@@ -264,12 +264,7 @@ export function Detail({ run, corpus, item, id, absence }) {
       <div className="doc" ref={boxRef} tabIndex={0}>{mark(doc.text, pieces)}</div>
 
       <details className="model">
-        <summary>
-          모델 판정
-          {!raw.length && (
-            <span className="dim"> — {run.raw_note ?? '원응답 미보관 회차, 판정 흔적만 남았다'}</span>
-          )}
-        </summary>
+        <summary>모델 판정 <span className="dim">— 채점된 이 회차(dev)의 흔적</span></summary>
         {trace.company_size && (
           <pre>company_size_verified {JSON.stringify(trace.company_size, null, 1)}</pre>
         )}
@@ -279,12 +274,29 @@ export function Detail({ run, corpus, item, id, absence }) {
             {r.phase} · {r.status} · {r.response_chars}자 · {r.output_tokens}토큰 · {r.finish_reason}
           </p>
         ))}
-        {raw.map((r, i) => (
-          <pre key={i} className="raw">{r.phase}\n{r.text}</pre>
-        ))}
         {!trace.company_size && !trace.sme && !trace.responses && (
           <p className="dim">이 회차의 diagnostics 에 이 건의 흔적이 없다.</p>
         )}
+      </details>
+
+      {/* 원응답은 dev-debug 의 것이고 그건 별도 추론이다. 49열이 같아도 응답 길이가 다른
+          경우가 있어(451개 중 31개) 위 통계와 한 묶음으로 두면 같은 실행처럼 읽힌다. */}
+      <details className="model debug">
+        <summary>
+          dev-debug 원응답
+          {debug
+            ? <span className="dim"> — <b>별도 추론</b>이다. 49열 출력만 이 회차와 같다</span>
+            : <span className="dim"> — {run.raw_note ?? '이 회차엔 보관된 원응답이 없다'}</span>}
+        </summary>
+        {debug?.responses?.map((r, i) => (
+          <p key={i} className="dim mono">
+            {r.phase} · {r.status} · {r.response_chars}자 · {r.output_tokens}토큰 · {r.finish_reason}
+            <span className="warn-inline"> (dev-debug 측정값)</span>
+          </p>
+        ))}
+        {debug?.raw.map((r, i) => (
+          <pre key={i} className="raw">{r.phase}{'\n'}{r.text}</pre>
+        ))}
       </details>
     </div>
   )

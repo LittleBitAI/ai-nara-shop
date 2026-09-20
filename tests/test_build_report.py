@@ -126,9 +126,9 @@ class BuildReportTests(unittest.TestCase):
         self.assertTrue(differing, "두 CSV 가 같으면 이 검사는 아무것도 안 지킨다")
 
         for identifier in differing:
-            self.assertNotIn("raw", report["trace"].get(identifier, {}),
-                             f"{identifier}: 24칸이 다른데 원응답이 붙었다")
-        attached = {i for i, slot in report["trace"].items() if "raw" in slot}
+            self.assertNotIn("debug", report["trace"].get(identifier, {}),
+                             f"{identifier}: 49열이 다른데 원응답이 붙었다")
+        attached = {i for i, slot in report["trace"].items() if "debug" in slot}
         self.assertTrue(attached, "일치하는 공고에는 원응답이 붙어야 한다")
         self.assertFalse(attached & differing)
         self.assertIn(str(len(differing)), report["raw_note"])
@@ -154,11 +154,13 @@ class BuildReportTests(unittest.TestCase):
 
         report = build_report.build(self.score, "colab-0", entries, base)
         for identifier in v_same_e_differs:
-            self.assertNotIn("raw", report["trace"].get(identifier, {}),
+            self.assertNotIn("debug", report["trace"].get(identifier, {}),
                              f"{identifier}: v는 같지만 e가 달라 다른 추론인데 원응답이 붙었다")
 
-    def test_dev_stats_are_not_overwritten_by_the_debug_run(self):
-        """일치하는 공고라도 토큰 수·응답 길이는 그 추론의 것이다. dev 것을 덮으면 안 된다."""
+    def test_debug_responses_stay_in_their_own_bundle(self):
+        """49열이 같아도 같은 응답은 아니다. 일치하는 180건의 response 451개 중 31개는 길이가
+        다르고 PPS-DEV-08/baseline 은 dev 1033자 · dev-debug 1079자다. 원응답과 그 통계는
+        `debug` 묶음에 따로 있어야 화면이 출처를 말할 수 있다 — 라운드 3 P1."""
         base = ROOT / "reports/runs/colab-1789902969401579900"
         if not (base / "dev-debug/diagnostics.jsonl").is_file():
             self.skipTest("dev-debug 가 있는 회차가 없다")
@@ -168,9 +170,30 @@ class BuildReportTests(unittest.TestCase):
         }
         report = build_report.build(self.score, "colab-0", entries, base)
         dev_only, _ = build_report.parse_diagnostics(entries["dev/diagnostics.jsonl"])
+        debug_only, _ = build_report.parse_diagnostics(entries["dev-debug/diagnostics.jsonl"])
+
+        bundles = 0
         for identifier, slot in report["trace"].items():
+            # dev 통계는 절대 안 덮인다
             if "responses" in slot:
                 self.assertEqual(slot["responses"], dev_only[identifier]["responses"], identifier)
+            # 원응답은 dev 슬롯에 없고, debug 묶음은 제 통계를 데리고 다닌다
+            self.assertNotIn("raw", slot, f"{identifier}: 원응답이 dev 슬롯에 섞였다")
+            if "debug" in slot:
+                bundles += 1
+                self.assertEqual(slot["debug"]["responses"],
+                                 debug_only[identifier].get("responses", []), identifier)
+                self.assertEqual(slot["debug"]["raw"], debug_only[identifier]["raw"], identifier)
+        self.assertTrue(bundles, "49열이 같은 공고에는 debug 묶음이 있어야 한다")
+
+        # 길이가 실제로 갈리는 공고가 있어야 이 검사가 무언가를 지킨다
+        split = [
+            i for i, slot in report["trace"].items()
+            if "debug" in slot and "responses" in slot
+            and [r["response_chars"] for r in slot["responses"]]
+            != [r["response_chars"] for r in slot["debug"]["responses"]]
+        ]
+        self.assertTrue(split, "두 추론의 응답 길이가 전부 같으면 이 분리는 아무것도 안 지킨다")
 
     def test_open_is_served_by_allowlist_not_by_path_check(self):
         """문자열 접두사 검사는 정션·심볼릭 링크의 실제 대상을 안 본다. `open/leak` 를 저장소

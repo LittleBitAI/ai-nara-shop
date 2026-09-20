@@ -363,6 +363,9 @@ mark.both, .swatch.mk.both {
 mark.find, .swatch.mk.find { background: var(--find); }
 
 .model { margin-top: 14px; font: var(--t-aux); }
+/* 별도 추론의 묶음. 위 dev 흔적과 같은 실행으로 읽히지 않게 왼쪽에 선을 긋는다 */
+.model.debug { border-left: 3px solid var(--warn); padding-left: 10px; }
+.warn-inline { color: var(--warn); }
 .model summary { cursor: pointer; font: var(--t-label); }
 .model pre {
   white-space: pre-wrap; background: var(--sunken); border: 1px solid var(--line);
