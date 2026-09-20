@@ -14,9 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 # 셀 수로는 구분되지 않는다 — 29셀이 0.0020, 30셀이 0.0026을 내고 41셀이 0.000008을 냈다.
 # 같은 `script.py`가 dev Macro F1 0.2182를 세 번, 0.2208을 한 번, 0.2202를 한 번 냈다.
 DRIFT_MIN = 0.000007917373
-DRIFT_MAX = 0.003128882280
+DRIFT_MAX = 0.004689228990  # run11 dev↔dev-debug, 36셀. 보편적인 상한이 아니다.
 DRIFT_CELLS = (29, 45)
-DRIFT_PAIRS = 10
+DRIFT_PAIRS = 11
 
 
 def load_score():
@@ -62,7 +62,7 @@ def compare(score, truth_path, before_path, after_path, focus=()):
         # churn은 임계값이 아니다. 관측 범위만 적고 판정은 사람이 한다.
         "drift_reference": {
             "macro_f1_min": DRIFT_MIN, "macro_f1_max": DRIFT_MAX, "cells": list(DRIFT_CELLS),
-            "pairs": DRIFT_PAIRS, "below_observed_max": abs(delta) <= DRIFT_MAX,
+            "pairs": DRIFT_PAIRS, "below_observed_max": round(abs(delta), 12) <= DRIFT_MAX,
             "source": "reports/runs/reproducibility.md"},
         "items": items,
     }
@@ -82,14 +82,15 @@ def render(result, show_all=False):
         "",
     ]
     lines += [
-        f"churn    회차 간 실측 {DRIFT_CELLS[0]}~{DRIFT_CELLS[1]}셀, 그 Macro F1 영향"
+        f"churn    과거 코드의 회차 간 실측 {DRIFT_CELLS[0]}~{DRIFT_CELLS[1]}셀, 그 Macro F1 영향"
         f" {DRIFT_MIN:.6f}~{DRIFT_MAX:.6f} ({DRIFT_PAIRS}쌍)",
     ]
     if result["drift_reference"]["below_observed_max"]:
-        lines += ["         이번 차이는 그 범위 안이다. Macro F1만으로는 아무것도 말할 수 없다.",
+        lines += ["         이번 차이는 과거 관측 범위 안이다. 현재 코드의 churn 판정은 아니다.",
                   "         대상 항목의 TP/FP/FN이 가설대로 움직였는지로 판단한다."]
     else:
-        lines += ["         이번 차이는 관측 범위를 넘는다. 그래도 항목별 변화를 함께 확인한다."]
+        lines += ["         이번 차이는 과거 관측 범위를 넘는다. 현재 코드의 개선 증거로 단정하지 않는다."]
+    lines += ["         새 후보는 같은 ZIP을 재실행해 그날 그 코드의 churn을 직접 잰다."]
     lines += [f"         근거 {result['drift_reference']['source']}", ""]
     lines.append(f"{'항목':<5} {'TP':>9} {'FP':>9} {'FN':>9} {'F1':>21}  바뀐 공고")
     for row in result["items"]:

@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("compare_runs", ROOT / "tools/compare_runs.py")
@@ -115,7 +116,7 @@ class CompareRunsTests(unittest.TestCase):
     def test_drift_constants_match_the_table_that_owns_them(self):
         """상수는 reproducibility.md의 churn 표에서 온다. 한쪽만 고치면 여기서 걸린다."""
         rows = drift_table_rows(compare_runs.ROOT / "reports/runs/reproducibility.md")
-        self.assertEqual(len(rows), 13, "churn 표의 행 수가 달라졌다. 아래 기대값을 함께 고친다")
+        self.assertEqual(len(rows), 14, "churn 표의 행 수가 달라졌다. 아래 기대값을 함께 고친다")
         same = [(cells, delta) for _, code, cells, delta in rows if code == "같음"]
         self.assertEqual(len(same), compare_runs.DRIFT_PAIRS, "코드가 같은 쌍 수와 DRIFT_PAIRS가 다르다")
         self.assertEqual((min(c for c, _ in same), max(c for c, _ in same)), compare_runs.DRIFT_CELLS)
@@ -124,6 +125,19 @@ class CompareRunsTests(unittest.TestCase):
         # 코드가 다른 쌍은 표에 남지만 상수에는 안 들어간다. 섞이면 하한이 내려간다.
         other = [cells for _, code, cells, _ in rows if code != "같음"]
         self.assertTrue(other and min(other) < compare_runs.DRIFT_CELLS[0])
+
+    def test_drift_boundary_uses_the_recorded_twelve_decimal_places(self):
+        same = write_csv(self.dir / "boundary.csv", {i: {} for i in ids(10)})
+        truth, _ = SCORE.load_csv(self.truth)
+        pred, _ = SCORE.load_csv(same)
+        metrics, errors = SCORE.calculate(truth, pred)
+        for excess, expected in ((1e-13, True), (1e-10, False)):
+            with patch.object(SCORE, "calculate", side_effect=[
+                (dict(metrics, macro_f1=0), errors),
+                (dict(metrics, macro_f1=compare_runs.DRIFT_MAX + excess), errors),
+            ]):
+                result = compare_runs.compare(SCORE, self.truth, same, same)
+            self.assertEqual(result["drift_reference"]["below_observed_max"], expected)
 
     def test_rejects_mismatched_ids_and_unknown_items(self):
         before = write_csv(self.dir / "b3.csv", {i: {} for i in ids(10)})
