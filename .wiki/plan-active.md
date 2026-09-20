@@ -33,8 +33,8 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
   N1·N2·N3 통합분이 들어왔고, 지금 `SPLIT_ITEMS=["v16","v18"]`만 켜져 있으며
   `BAND_ITEMS`·`PRODUCT_ITEMS`는 빈 리스트다. 제출 후보로 올리기 전에 회차 A가 필요하다.
 - **한 쌍의 회차에서 나온 Macro F1 차이는 신호가 아니다.** 같은 조건인데 24항목 판정이 회차마다
-  4,800셀 중 29~45개 바뀌고, 그 churn의 Macro F1 영향이 같은 코드 열 쌍에서 **0.000008~0.003129**로
-  400배 벌어졌다. **같은 `script.py`가 dev 0.2182를 세 번, 0.2208과 0.2202를 한 번씩 냈다**
+  4,800셀 중 29~45개 바뀌고, 그 churn의 Macro F1 영향이 같은 코드 열한 쌍에서 **0.000008~0.004689**로
+  590배 벌어졌다. **같은 `script.py`가 dev 0.2182를 세 번, 0.2208과 0.2202를 한 번씩 냈다**
   ([근거](../reports/runs/reproducibility.md)).
   쓸 수 있는 신호는 대상 항목의 TP/FP/FN이다 — `tools/compare_runs.py`가 낸다.
   노트북 `quality_pass`도 믿지 않는다. 같은 `script.py`인데 run4는 과거 기준선을

@@ -82,7 +82,7 @@ v15 3/3을 냈다. Gemma는 6회 실행 내내 이 셋에서 TP=0이다
 ### 2. Macro F1 한 쌍의 차이는 신호가 아니다
 
 같은 코드가 dev Macro F1 0.2182를 세 번, 0.2208과 0.2202를 한 번씩 냈다. 회차 churn의 영향이
-0.000008~0.003129로 400배 벌어진다([근거](../../reports/runs/reproducibility.md)).
+0.000008~0.004689로 590배 벌어진다([근거](../../reports/runs/reproducibility.md)).
 **보고할 숫자는 v8·v14·v15의 TP/FP/FN이다.** `tools/compare_runs.py`가 낸다. 손으로 세지 않는다.
 
 ### 3. 오염 분리 — 이것이 실제 저울이다
