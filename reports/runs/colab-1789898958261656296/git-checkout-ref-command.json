@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-86pt0yi8/repo",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/t1-colab-86pt0yi8",
+  "started": 1789896170.8712323,
+  "returncode": 0,
+  "elapsed_seconds": 0.33418774604797363
+}

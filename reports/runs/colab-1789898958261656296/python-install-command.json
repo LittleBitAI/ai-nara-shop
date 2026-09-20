@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "uv",
+    "venv",
+    "--python",
+    "3.12.13",
+    "--seed",
+    "/content/t1-colab-86pt0yi8/venv"
+  ],
+  "cwd": "/content/t1-colab-86pt0yi8",
+  "started": 1789896176.7055907,
+  "returncode": 0,
+  "elapsed_seconds": 1.816941261291504
+}
