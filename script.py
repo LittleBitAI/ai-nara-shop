@@ -1063,6 +1063,15 @@ V24_AMOUNT = re.compile(r"(\d{1,3}(?:,\d{3})+|\d{5,})\s*원")
 V24_REGION = re.compile(r"지역제한\s*\(([^)]*)\)")
 V24_TITLE_TAG = re.compile(r"\((일반경쟁|제한경쟁|지명경쟁)\s*[·ㆍ]\s*(\d+)\s*(억|천만)원\s*미만\)")
 V24_UNIT = {"억": 100_000_000, "천만": 10_000_000}
+# v21의 최소지분율 하한은 **계약법과 공동도급 방식이 정한다.** 항목명 "공동 5% (10%)"가 그것이다.
+#   지방: 「지방자치단체 입찰 및 계약 집행기준」제6장 제2절 1-나-2) — 5% 이상.
+#         같은 절 3) 분담이행방식·업종 간 공동수급체는 **최소지분율을 적용하지 않는다.**
+#   국가: 「(계약예규) 공동계약운용요령」⑤ 나 — 공동이행방식 5인 이하, **10% 이상**.
+# 하한을 10 하나로 두면 지방의 정상인 5%를 전부 위반으로 남긴다 — 그것이 오탐 10건의 정체였다.
+# 실측(A1 회차 원응답 재생): F1 0.400(4/10/2) → 0.571(4/4/2). 인용에 지분율이 있는 8건이
+# 전부 정확히 갈린다 — 지방 5%는 음성, 지방 3%·2%와 국가 5%는 양성이다.
+V21_FLOOR_LOCAL = 5.0
+V21_FLOOR_NATIONAL = 10.0
 V21_PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
 V21_JOINT_BARRED = re.compile(
     r"공동\s*(?:수급|계약|도급|참여|이행)[^.。]*?(?:불허|불가|허용하지\s*않|금지)")
@@ -1102,6 +1111,15 @@ def v24_consistent_with_meta(evidence: str, meta: Dict[str, Any]) -> bool:
     return checked
 
 
+def v21_minimum_share(rec: Dict[str, Any]) -> Optional[float]:
+    """이 공고에 적용되는 구성원별 계약참여 최소지분율(%). 적용 대상이 아니면 None."""
+    meta = rec.get("meta") or {}
+    if "분담" in str(meta.get("공동도급구성방식") or ""):
+        return None                         # 지방 제6장 제2절 1-나-3): 분담이행은 미적용
+    return (V21_FLOOR_LOCAL if "지방" in str(meta.get("적용계약법") or "")
+            else V21_FLOOR_NATIONAL)
+
+
 def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
     """공고가 입찰·투찰 단계에서 확약서를 요구했는가. 확약서 언급 주변만 본다.
 
@@ -1131,7 +1149,8 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
     if item == "v21":
         shares = [float(x) for x in V21_PERCENT.findall(evidence)]
         if shares:
-            return all(share >= 10 for share in shares)
+            floor = v21_minimum_share(rec)
+            return floor is None or all(share >= floor for share in shares)
         return bool(V21_JOINT_BARRED.search(evidence))
     if item == "v9":
         if V9_SPEC_FLOOR.search(evidence):
