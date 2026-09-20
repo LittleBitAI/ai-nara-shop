@@ -188,6 +188,24 @@ class PackageTests(unittest.TestCase):
             original_baseline = baseline_path.read_bytes()
             with baseline_path.open(encoding="utf-8") as stream:
                 rows = list(csv.DictReader(stream))
+            # Synthetic CSV changes exercise the live gate, not model accuracy.
+            # v13 is zero: A1 may still change each of its own value/evidence columns.
+            for item in ("v14", "v15", "v16", "v17", "v18"):
+                changed_rows = [dict(row) for row in rows]
+                changed_rows[0][item] = "1"
+                changed_rows[0]["e" + item[1:]] = "" if item in ("v16", "v18") else "기업등급 제한"
+                with baseline_path.open("w", encoding="utf-8", newline="") as stream:
+                    writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
+                    writer.writeheader()
+                    writer.writerows(changed_rows)
+                namespace["check_live"]("dev", 200)
+            owned = report["reproduction"]["settings"].pop("extra_call_items")
+            write()
+            with self.assertRaisesRegex(RuntimeError, "대상 밖"):
+                namespace["check_live"]("dev", 200)
+            report["reproduction"]["settings"]["extra_call_items"] = owned
+            write()
+            baseline_path.write_bytes(original_baseline)
             rows[0]["v13"] = "1"
             def write_baseline():
                 with baseline_path.open("w", encoding="utf-8", newline="") as stream:
@@ -234,24 +252,9 @@ class PackageTests(unittest.TestCase):
                 writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
                 writer.writeheader()
                 writer.writerows(rows)
-            # e1은 어느 추가 호출 단계의 항목도 아니므로 여전히 거부돼야 한다.
             with self.assertRaisesRegex(RuntimeError, "대상 밖"):
                 namespace["check_live"]("dev", 200)
             baseline_path.write_bytes(original_baseline)
-            # 반대로 켜진 단계의 항목이 갈리는 것은 설계다. N1이 켜진 채로 v16이 달라도
-            # 통과해야 한다 — 이것을 막던 낡은 불변식이 실제 회차를 샘플 10건에서 죽였다.
-            enabled = set().union(*report["reproduction"]["settings"]["extra_call_items"].values())
-            if enabled:
-                item = sorted(enabled)[0]
-                with baseline_path.open(encoding="utf-8") as stream:
-                    rows = list(csv.DictReader(stream))
-                rows[0][item] = "1" if rows[0][item] == "0" else "0"
-                with baseline_path.open("w", encoding="utf-8", newline="") as stream:
-                    writer = csv.DictWriter(stream, fieldnames=rows[0].keys())
-                    writer.writeheader()
-                    writer.writerows(rows)
-                namespace["check_live"]("dev", 200)
-                baseline_path.write_bytes(original_baseline)
             downloaded = []
             colab.files.download = downloaded.append
             # Real scoring of mock CSVs must not export a non-improving ZIP.
@@ -300,11 +303,11 @@ class PackageTests(unittest.TestCase):
                 exec(compile(CELLS["upload"], "colab-upload", "exec"), namespace)
             self.assertFalse((tmp / "escape.txt").exists())
 
-    def test_diagnostic_run_is_opt_in_and_refuses_a_silent_no_op(self):
-        """진단 회차는 기본으로 꺼져 있고, 원응답이 안 켜지면 통과하면 안 된다."""
-        self.assertIn("RUN_DIAGNOSTIC = False", CELLS["diagnose"])
+    def test_diagnostic_run_is_on_by_default_and_refuses_a_silent_no_op(self):
+        """기본 셀 그대로 원응답을 보존하고, 실제 옵션/본문이 누락되면 실패한다."""
+        self.assertIn("RUN_DIAGNOSTIC = True", CELLS["diagnose"])
         self.assertNotIn("check_live", CELLS["diagnose"])  # 진단 회차는 검증 통과로 세지 않는다.
-        source = CELLS["diagnose"].replace("RUN_DIAGNOSTIC = False", "RUN_DIAGNOSTIC = True")
+        source = CELLS["diagnose"]
         with tempfile.TemporaryDirectory() as tmp:
             results = Path(tmp) / "results"
             (results / "dev-debug").mkdir(parents=True)
@@ -340,6 +343,7 @@ class PackageTests(unittest.TestCase):
         """항목 진단은 제출물이 아닌 tools/diagnose_items.py를 부르고 기본으로 꺼져 있다."""
         self.assertIn('DIAGNOSE_ITEMS = ""', CELLS["diagnose"])
         source = CELLS["diagnose"].replace('DIAGNOSE_ITEMS = ""', 'DIAGNOSE_ITEMS = "v16,v18,v20"')
+        source = source.replace("RUN_DIAGNOSTIC = True", "RUN_DIAGNOSTIC = False")
         with tempfile.TemporaryDirectory() as tmp:
             work = Path(tmp)
             results = work / "results"

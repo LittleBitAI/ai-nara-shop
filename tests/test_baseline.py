@@ -39,6 +39,8 @@ class BaselineTests(unittest.TestCase):
                     if items == baseline.SME_ITEMS:
                         return [json.dumps({"v13": {"facts": baseline.empty_sme_facts(),
                                                    "위반여부": 0, "근거문구": None}})] * len(batch)
+                    if items == baseline.COMPANY_SIZE_KEYS:
+                        return super().chat(batch, items)
                     if items is not None:   # 추가 호출은 facts 없이 두 칸만 낸다
                         return [json.dumps({k: {"위반여부": 0, "근거문구": None}
                                             for k in items})] * len(batch)
@@ -54,21 +56,16 @@ class BaselineTests(unittest.TestCase):
                 report = baseline.run(str(ROOT / "open/data/test.jsonl.gz"), str(out), Selective,
                                       limit=4, chunk=128, max_chars=16000, data_dir=str(ROOT / "open/data"))
                 # 합동 1회 → v13 추가 호출(선택 공고가 있을 때만) → 켜져 있는 추가 호출.
-                # 순서는 run()이 부르는 순서 그대로다: split → band(항목별) → product.
+                # 순서는 run()이 부르는 순서 그대로다: split → company_size → product.
                 # 시험 입력 4건은 전부 고시금액 미만이라 분할 호출이 4건 모두에 붙는다.
                 expected = [(None, 4)] + [(["v13"], 2)] * bool(positives)
                 if baseline.SPLIT_ITEMS:
                     expected.append((baseline.SPLIT_ITEMS, 4))
-                bands = [(c, n) for c, n in calls if len(c or []) == 1 and c[0] in baseline.BAND_ITEMS]
-                expected += bands
+                if baseline.BAND_ITEMS:
+                    expected.append((baseline.COMPANY_SIZE_KEYS, 4))
                 if baseline.PRODUCT_ITEMS:
                     expected.append((baseline.PRODUCT_ITEMS, 4))
                 self.assertEqual(calls, expected)
-                # 한 공고는 정확히 한 구간에만 들어가므로 구간별 건수의 합이 입력 건수다.
-                if baseline.BAND_ITEMS:
-                    self.assertEqual([c[0] for c, _ in bands],
-                                     sorted((c[0] for c, _ in bands), key=baseline.BAND_ITEMS.index))
-                    self.assertEqual(sum(n for _, n in bands), 4)
                 self.assertEqual(report["sme_selected_count"], len(positives))
                 self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
                 self.assertEqual(report["sme_fallback_count"], 0)
@@ -164,6 +161,8 @@ class BaselineTests(unittest.TestCase):
                 instances.append(self)
             def chat(self, batch, items=None):
                 calls.append(items)
+                if items == baseline.COMPANY_SIZE_KEYS:
+                    return super().chat(batch, items)
                 outputs = []
                 for messages in batch:
                     if items is None:
@@ -193,7 +192,8 @@ class BaselineTests(unittest.TestCase):
             expected = [None, ["v13"]]
             if baseline.SPLIT_ITEMS:
                 expected.append(baseline.SPLIT_ITEMS)
-            expected += [c for c in calls if c is not None and len(c) == 1 and c[0] in baseline.BAND_ITEMS]
+            if baseline.BAND_ITEMS:
+                expected.append(baseline.COMPANY_SIZE_KEYS)
             if baseline.PRODUCT_ITEMS:
                 expected.append(baseline.PRODUCT_ITEMS)
             # 켜진 추가 호출 말고 다른 항목 목록이 오면 실패한다.

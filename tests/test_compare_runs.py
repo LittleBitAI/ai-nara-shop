@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("compare_runs", ROOT / "tools/compare_runs.py")
@@ -124,6 +125,19 @@ class CompareRunsTests(unittest.TestCase):
         # 코드가 다른 쌍은 표에 남지만 상수에는 안 들어간다. 섞이면 하한이 내려간다.
         other = [cells for _, code, cells, _ in rows if code != "같음"]
         self.assertTrue(other and min(other) < compare_runs.DRIFT_CELLS[0])
+
+    def test_drift_boundary_uses_the_recorded_twelve_decimal_places(self):
+        same = write_csv(self.dir / "boundary.csv", {i: {} for i in ids(10)})
+        truth, _ = SCORE.load_csv(self.truth)
+        pred, _ = SCORE.load_csv(same)
+        metrics, errors = SCORE.calculate(truth, pred)
+        for excess, expected in ((1e-13, True), (1e-10, False)):
+            with patch.object(SCORE, "calculate", side_effect=[
+                (dict(metrics, macro_f1=0), errors),
+                (dict(metrics, macro_f1=compare_runs.DRIFT_MAX + excess), errors),
+            ]):
+                result = compare_runs.compare(SCORE, self.truth, same, same)
+            self.assertEqual(result["drift_reference"]["below_observed_max"], expected)
 
     def test_rejects_mismatched_ids_and_unknown_items(self):
         before = write_csv(self.dir / "b3.csv", {i: {} for i in ids(10)})

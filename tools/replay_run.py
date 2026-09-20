@@ -86,17 +86,21 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
     verify_sme = verify_sme or script.verify_sme
 
     texts = saved_responses(case_dir)
-    # 이 제출 코드가 추가 호출 단계를 아는가. 회차 커밋이 오래됐으면 모른다.
-    phases = (script.extra_call_items()
-              if hasattr(script, "extra_call_items") and hasattr(script, "merge_extra_call")
-              else None)
-    if phases is None:
-        stored = {name for name, by_id in texts.items()
-                  if by_id and name not in ("baseline", "sme")}
-        if stored:
-            # 모르는 채로 얹지 않으면 회차 CSV를 조용히 못 맞춘다. 소리를 낸다.
-            raise ValueError(f"이 회차에는 {sorted(stored)} 단계 원응답이 있는데 "
-                             "그 코드는 재생할 줄 모른다. 더 최신 --script 로 재생한다")
+    # 이 제출 코드가 모르는 단계의 원응답이 있으면 조용히 건너뛰지 않는다. 건너뛰면
+    # 그 단계가 바꾼 판정이 빠진 CSV를 근거로 쓰게 된다 — 실제로 한 번 그렇게 어긋났다.
+    known = {"baseline", "sme", *getattr(script, "VERDICT_PHASES", ()), "company_size"}
+    unknown = sorted(name for name, by_id in texts.items() if by_id and name not in known)
+    if unknown:
+        raise ValueError(f"이 회차에는 {unknown} 단계 원응답이 있는데 "
+                         "그 코드는 재생할 줄 모른다. 더 최신 --script 로 재생한다")
+    # A1은 건별 실제 문서 예산을 저장한다. 이를 빼면 보이지 않았던 인용을 재생에서 승인하게 된다.
+    company_chars = {}
+    for line in (case_dir / "diagnostics.jsonl").read_text(encoding="utf-8").splitlines():
+        event = json.loads(line)
+        if event.get("event") == "company_size_input":
+            company_chars[event["id"]] = event["max_chars"]
+    if report.get("company_size_response_count", 0) != len(texts.get("company_size", {})):
+        raise ValueError("기업규모 원응답 건수가 실행 기록과 다르다")
     _, products = script.load_sme_reference(str(data_dir))
     rows, baseline_rows, reasons = [], [], {}
     for rec in script.iter_records(str(input_path)):
@@ -105,20 +109,25 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             raise ValueError(f"{rec['id']}: 저장된 기본 응답이 없다")
         parsed, _ = script.parse_judgment(text)
         baseline_rows.append(script.to_row(rec["id"], script.postprocess(parsed, rec)))
-        # 추가 호출 단계를 회차와 같은 순서·같은 코드로 얹는다. 전에는 이 줄이 없어
+        # 판정 스키마 단계(split·product)를 회차와 같은 코드로 얹는다. 전에는 이 줄이 없어
         # N1이 켜진 회차의 재생이 회차 CSV를 재현하지 못했다(v16 13건·v18 37건).
-        # `--verify`는 회차 커밋의 코드로 도는데 옛 회차에는 이 두 함수가 없다.
-        # 그때는 얹지 않는다 — 그 코드에는 sme 말고 얹을 단계가 없었다.
-        if phases is not None:
-            for phase, items in phases.items():
-                script.merge_extra_call(parsed, rec, phase, items,
-                                        texts.get(phase, {}).get(rec["id"]))
+        for phase in getattr(script, "VERDICT_PHASES", ()):
+            script.merge_extra_call(parsed, rec, phase, script.extra_call_items().get(phase) or (),
+                                    texts.get(phase, {}).get(rec["id"]))
         sme_text = texts["sme"].get(rec["id"])
         if sme_text is not None:
             focused, _ = script.parse_judgment(sme_text, expected_items=script.SME_ITEMS, sme=True)
             verified, rejected = verify_sme(focused, rec, products, max_chars)
             reasons[rec["id"]] = rejected
             parsed.update(verified)
+        company_text = texts.get("company_size", {}).get(rec["id"])
+        if company_text is not None:
+            if rec["id"] not in company_chars:
+                raise ValueError("기업규모 입력의 문서 예산 기록이 없다")
+            focused, _ = script.parse_judgment(company_text, expected_items=script.COMPANY_SIZE_KEYS)
+            verified, reason = script.verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
+            parsed.update(verified)
+            reasons.setdefault(rec["id"], {})["company_size"] = reason
         rows.append(script.to_row(rec["id"], postprocess(parsed, rec)))
     if len(rows) != report["건수"]:
         raise ValueError(f"입력 건수가 회차와 다르다: {len(rows)} != {report['건수']}")
