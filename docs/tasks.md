@@ -27,6 +27,23 @@
 
 ## 첫 작업 큐
 
+`a5-label-definition-wall / GPU 사실 수집`: 실행본 준비, GPU 미실행.
+[실행 안내](../reports/team-c/a5-label-definition/run-request.md): 기존 company_size로
+dev 200 + 무라벨 1,000건씩 Drive 재개. 전체 20,000건 발화율을 재기 위한 진단 회차이며
+제출 파이프라인 추가 호출은 0이다. 사용자 승인 범위는 커밋·push·PR까지, 머지하지 않는다.
+
+`a5-label-definition-wall / H2`: CPU 검증 완료·채택 보류.
+[결과](../reports/team-c/a5-label-definition/h2-absence.md): 명시적 기업규모 제한 부재를 v11에
+연결해 TP 2→4, FP 3→4, FN 4→2. 다른 23항목 변화 0, CPU 재생 Macro 0.602504174073.
+무라벨 모델 원응답이 없어 H2 발화율은 미측정이다. 새 모델·운영 코드 변경 없음.
+
+`a5-label-definition-wall`: in_progress. 2026-09-21 사용자 지정 `a5-label-wall` 작업.
+입력·출력·범위·통과선은 [작업서](tasks/a5-label-definition-wall.md), 1차 결과는
+[A5 진단](../reports/team-c/a5-label-definition/README.md)이 소유한다.
+시간 예산 선계산 완료(추가 dev 추론 92.193초 한도), 원응답 200건 재생 동일.
+H1은 대상 TP 변화 0·v12 FP +1로 기각. 무라벨 20,000건 규칙 발화율 측정 완료.
+v13 조회 배선·v24 익명화 분기의 인수인계 전제를 정정했다. 실제 모델·서버는 미실행, 채택 없음.
+
 `a3-zero-items / H4`: in_progress. 기준 `49475c3`, [회차 4](../reports/team-c/a3-zero-items/run4-facts.md).
 H3는 v10 4/7/3·v18 0/2/7·v20 1/4/4로 동시 TP>0 미달이다. 다음은 기업등급보다 먼저
 자격 문장의 역할을 출력하는 실험이다. v10/v20 소비·scope·A1 결정표·A2는 유지한다.

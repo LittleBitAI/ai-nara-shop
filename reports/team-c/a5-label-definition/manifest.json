@@ -1,0 +1,25 @@
+{
+  "status": "draft",
+  "reviewer": null,
+  "model": null,
+  "head": "734b4ec112da1d49b6833c794aa0c023073a78d3",
+  "command": "python -X utf8 reports/team-c/a5-label-definition/audit.py",
+  "sha256": {
+    "script.py": "1691e8cc2e3a94c7af8a7dec703e58616dcc05337e633283630318ee69ac2a5b",
+    "reports/team-c/a5-label-definition/audit.py": "f7a604dd60da06b47127e27801eac11992db1a11066c15e270cf7ffd5fd2861f",
+    "experiments/a5_dp_certificate_candidate.py": "9a2a0e2e19d5dfa3f835b8d12bb69bdd2cd5678c8b87a1663a30de870a8a47a9",
+    "open/dev.jsonl": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+    "open/dev_labels.csv": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
+    "open/train_unlabeled.jsonl": "f46449fb84f980a5ddf868d66f5daff2bcf0991135d9b81da5656dd607275698",
+    "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl": "c1772af588e86d4850d6484a69aa62e2ca8183626ffcff6002cad5f5b85e4ed7",
+    "open/data/법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv": "445257e4821c9d533f0c4b481e0ead89e85244ed6a6bf13d838510eb60fdbecd",
+    "docs/tasks/a5-label-definition-wall.md": "39578df7abbb21bd6ad358305fc17db3559bbe3b74911cfe0b89d420f2118eda",
+    "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행규칙.txt": "3b1e2f282771ebf80eee8b2e7be53d2277d3bfa6d2c15f9e0535ca2a37ed7486",
+    "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt": "1070092cca07468b755fa1e0fb13658d4c9ea72c48b555109c8fc4f87046cabb",
+    "open/data/법령패키지/법령/중소기업제품 구매촉진 및 판로지원에 관한 법률.txt": "a4390e91cb991ce75bde7389c9297c6e4f6a947afd1a26cb9397e34aa4e9a445",
+    "open/data/법령패키지/법령/국가를 당사자로 하는 계약에 관한 법률 시행령.txt": "881148a5ba39d7112ffdbb08ac4d721928d5f1b6a5fc2fe0e164fdc26423fafa",
+    "open/data/법령패키지/법령/지방자치단체를 당사자로 하는 계약에 관한 법률 시행령.txt": "597f6d74015af351383d251f136c3cf54b8ba21867e4bce31affd00c421ee7bd"
+  },
+  "task_source_ref": "origin/feat/a4-scope-gate",
+  "task_source_commit": "c81644ddb47199dc2fa3ba14c5033c8a3194b114"
+}

@@ -1,0 +1,320 @@
+{
+  "purpose": "cpu_replay_only",
+  "cases": [
+    {
+      "id": "PPS-DEV-040",
+      "v11_truth": 0,
+      "fires": true,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "2026년 모범이장 해외 선진지연수 용역",
+        "qualification_role": "none",
+        "qualification_quote": "4. 입찰참가자격 가. 「지방자치단체를 당사자로 하는 계약에 관한 법률」 시행령 제13조 및 같은 법 시행규칙 제14조 규정에 의한 자격을 갖춘 업체로서 다음 각 호의 자격을 모두 갖추어야 합니다.",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "yes",
+        "direct_production_quote": null,
+        "software_business": "no",
+        "software_business_quote": null,
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "dropped_doc_counts": {}
+    },
+    {
+      "id": "PPS-DEV-041",
+      "v11_truth": 0,
+      "fires": false,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "제31회 부산국제영화제 굿즈숍 및 관객라운지 공간 조성 용역",
+        "qualification_role": "checklist",
+        "qualification_quote": "❍ 본 제안 사업의 수행이 가능한 업체로서 아래 요건을 모두 갖춘 사업자",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "yes",
+        "direct_production_quote": null,
+        "software_business": "no",
+        "software_business_quote": null,
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "dropped_doc_counts": {}
+    },
+    {
+      "id": "PPS-DEV-061",
+      "v11_truth": 1,
+      "fires": true,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "2026년 상반기 HOT! 생생 라이브공연 행사대행 용역",
+        "qualification_role": "none",
+        "qualification_quote": "3. 지방자치단체를 당사자로 하는 계약에 관한 법률 시행령제31조 및 동법 시행령 제92조에 의한 부정당업체로 제재를 받지 않은 경기도 [지역:r1|단위=기초|광역=경기도] 지역 업체",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "yes",
+        "direct_production_quote": null,
+        "software_business": "no",
+        "software_business_quote": null,
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "dropped_doc_counts": {}
+    },
+    {
+      "id": "PPS-DEV-062",
+      "v11_truth": 1,
+      "fires": true,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "2026 [지역:r1|단위=기초|광역=전라남도]밤바다 낭만버스킹 거리문화공연 대행 용역",
+        "qualification_role": "none",
+        "qualification_quote": "3. 입찰 참가자격 가. 「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」제13조 및 동법 시행규칙 제14조의 규정에 의한 자격을 갖춘 사업자로 다음 각항의 요건을 구비해야 합니다. (개인은 제안서를 제출할 수 없습니다.)",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "yes",
+        "direct_production_quote": null,
+        "software_business": "no",
+        "software_business_quote": null,
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "dropped_doc_counts": {}
+    },
+    {
+      "id": "PPS-DEV-099",
+      "v11_truth": 0,
+      "fires": false,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "공공기관 산악관광 명소화 브랜딩 전략 수립 용역(일반경쟁·3억원미만)",
+        "qualification_role": "none",
+        "qualification_quote": "「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」 제13조 및 동법 시행규칙 제14조에 따른 자격을 갖추고, 동법 시행령 제92조의 규정에 따라 부정당업자로 제재 처분 중에 있지 않으며, 제안서 접수 마감 전일까지 조달청 나라장터(G2B)에 경쟁입찰참가 등록을 필한 업체로 아래의 조건을 모두 충족하는 업체이어야 합니다.",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "yes",
+        "direct_production_quote": null,
+        "software_business": "no",
+        "software_business_quote": null,
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "dropped_doc_counts": {}
+    },
+    {
+      "id": "PPS-DEV-119",
+      "v11_truth": 0,
+      "fires": false,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "제13회 횡성더덕축제 공연기획 운영 대행 용역",
+        "qualification_role": "none",
+        "qualification_quote": "입찰 참가자격 : 가. 「지방자치단체를 당사자로 하는 계약에 관한 법률 시행령」제13조 및 동법 시행규칙 제14조의 자격요건을 구비하고",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "yes",
+        "direct_production_quote": null,
+        "software_business": "no",
+        "software_business_quote": null,
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "dropped_doc_counts": {}
+    },
+    {
+      "id": "PPS-DEV-131",
+      "v11_truth": 0,
+      "fires": false,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "천리안위성 5호의 운영과 관측 데이터 수신, 처리, 배포를 수행하는 관제 및 전처리시스템 소프트웨어의 설계 및 개발",
+        "qualification_role": "checklist",
+        "qualification_quote": "③ 입찰마감일 전일까지 나라장터(G2B)에 소프트웨어사업자(컴퓨터관련서비스사업, 업종코드 1468)을 등록한 자",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "unknown",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "no",
+        "direct_production_quote": null,
+        "software_business": "yes",
+        "software_business_quote": "천리안위성 5호의 운영과 관측 데이터 수신, 처리, 배포를 수행하는 관제 및 전처리시스템 소프트웨어의 설계 및 개발",
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": false,
+        "완전관측": false
+      },
+      "dropped_doc_counts": {
+        "제안요청서": 1
+      }
+    },
+    {
+      "id": "PPS-DEV-134",
+      "v11_truth": 0,
+      "fires": false,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "공공기관 차세대 경영정보시스템 구축(일반경쟁·50억원미만)",
+        "qualification_role": "checklist",
+        "qualification_quote": "⑤ 「소프트웨어진흥법」제58조에 의한 소프트웨어사업자(컴퓨터관련서비스사업)로 등록되어 있는 업체",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "no",
+        "direct_production_quote": null,
+        "software_business": "yes",
+        "software_business_quote": "공공기관 차세대 경영정보시스템 구축",
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": false,
+        "완전관측": false
+      },
+      "dropped_doc_counts": {
+        "제안요청서": 1
+      }
+    },
+    {
+      "id": "PPS-DEV-162",
+      "v11_truth": 0,
+      "fires": false,
+      "max_chars": 16000,
+      "facts": {
+        "scope": "competitive",
+        "scope_quote": "혈소판성분채혈키트 공동구매 및 기기 임차 계약",
+        "qualification_role": "checklist",
+        "qualification_quote": "◦ 국가를당사자로하는계약에관한법률 시행령 제12조 및 동법 시행규칙 제14조에 의한 자격요건을 구비한 자",
+        "qualification_complete": "yes",
+        "qualification": "unrestricted",
+        "priority_exception": "no",
+        "priority_exception_quote": null,
+        "size_exception": "none",
+        "size_exception_quote": null,
+        "requirements_complete": "yes",
+        "direct_production_quote": null,
+        "software_business": "no",
+        "software_business_quote": null,
+        "software_participation_quote": null
+      },
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "dropped_doc_counts": {}
+    }
+  ],
+  "dev_firing_count": 3,
+  "dev_firing_rate": 0.015,
+  "unlabeled_notices": 20000,
+  "unlabeled_firing_count": null,
+  "unlabeled_firing_rate": null,
+  "unlabeled_to_dev_ratio": null,
+  "missing": "무라벨 company_size 모델 원응답이 저장소에 없어 H2 조건 발화율 미측정. H1 정규식 발화율로 대체하지 않는다.",
+  "timings_seconds": {
+    "head": [
+      1.0669050000142306,
+      1.095616800012067,
+      1.1234840999823064,
+      1.1208992000902072,
+      1.120629199896939
+    ],
+    "candidate": [
+      1.0937738999491557,
+      1.0997587000019848,
+      1.1441871999995783,
+      1.1062849999871105,
+      1.1053132000379264
+    ]
+  },
+  "median_seconds": {
+    "head": 1.120629199896939,
+    "candidate": 1.1053132000379264,
+    "difference": -0.015315999859012663
+  },
+  "additional_model_calls": 0,
+  "additional_model_inference_seconds": 0,
+  "server_baseline_seconds": 6380,
+  "server_limit_seconds": 7200,
+  "headroom_seconds": 820,
+  "time_note": "현재 호스트 CPU 재생 5쌍이며 서버 CPU 또는 GPU 총시간 측정이 아니다. 추가 모델 호출 0회; 모델 시간 환산식에 CPU 재생 초를 넣지 않는다.",
+  "sha256": {
+    "script.py": "1691e8cc2e3a94c7af8a7dec703e58616dcc05337e633283630318ee69ac2a5b",
+    "experiments/a5_v11_absence_candidate.py": "5515c631cc585705722c664940f4ee0b2f95b46a4fc6268decf43261b37b0a7d",
+    "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl": "c1772af588e86d4850d6484a69aa62e2ca8183626ffcff6002cad5f5b85e4ed7",
+    "open/dev.jsonl": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+    "open/dev_labels.csv": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35"
+  }
+}

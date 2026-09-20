@@ -1,0 +1,15 @@
+{
+  "head": "734b4ec112da1d49b6833c794aa0c023073a78d3",
+  "source": "reports/runs/colab-1789902969401579900/dev/run_report.json",
+  "dev_count": 200,
+  "inference_seconds": 716.485,
+  "server_factor": 8.894400000000001,
+  "predicted_baseline_seconds": 6372.704184,
+  "measured_baseline_seconds": 6380,
+  "headroom_seconds": 820,
+  "additional_dev_seconds_max": 92.19284043892786,
+  "brief_full_extra_call_seconds": 1637,
+  "full_extra_call_total_seconds": 8017,
+  "same_company_size_cost_extra_total": 8576.783384,
+  "decision": "새 전건 호출 추가 불가. 후처리 진단부터 수행. 같은 호출의 필드 변경도 토큰·실제 추론 증가시간은 별도 측정 필요."
+}
