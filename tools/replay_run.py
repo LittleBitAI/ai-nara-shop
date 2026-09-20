@@ -128,7 +128,12 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
         if company_text is not None:
             if rec["id"] not in company_chars:
                 raise ValueError("기업규모 입력의 문서 예산 기록이 없다")
-            focused, _ = script.parse_judgment(company_text, expected_items=script.COMPANY_SIZE_KEYS)
+            # 새 live 파싱은 확장 필드를 요구한다. 보관된 구 스키마만 명시적으로 구분한다.
+            legacy = ({"company_size_legacy": True}
+                      if hasattr(script, "DOCUMENT_CHECK_ITEMS")
+                      and not settings.get("company_size_document_checks") else {})
+            focused, _ = script.parse_judgment(company_text, expected_items=script.COMPANY_SIZE_KEYS,
+                                               **legacy)
             verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
             parsed.update(verified)
             reasons.setdefault(rec["id"], {})["company_size"] = reason

@@ -45,6 +45,7 @@ def measured(case, recs, records_sha256):
     if response_count + report.get("company_size_fallback_count", 0) != n:
         raise ValueError("기업규모 호출 성공/실패 건수 불일치")
     ids = [r["id"] for r in recs]
+    items = report["reproduction"]["settings"].get("extra_call_items", {}).get("company_size", script.BAND_ITEMS)
     expected_ids = set(ids)
     counts = {}
     for name in ("submission.csv", "company_size_baseline_submission.csv"):
@@ -54,7 +55,7 @@ def measured(case, recs, records_sha256):
             raise ValueError(str(errors))
         with path.open(encoding="utf-8", newline="") as stream:
             rows = list(csv.DictReader(stream))
-        counts[name] = {v: sum(row[v] == "1" for row in rows) for v in script.BAND_ITEMS}
+        counts[name] = {v: sum(row[v] == "1" for row in rows) for v in items}
     firings, seen = Counter(), set()
     with (case / "diagnostics.jsonl").open(encoding="utf-8") as stream:
         for line in stream:
@@ -69,8 +70,8 @@ def measured(case, recs, records_sha256):
         raise ValueError("기업규모 판정 진단 건수 불일치")
     return report, {"count": n, "fallback_count": report["company_size_fallback_count"],
                     "decisions": report["company_size_decisions"], "csv_positive_counts": counts,
-                    "firings": {v: firings[v] for v in script.BAND_ITEMS},
-                    "firing_rates": {v: firings[v] / n for v in script.BAND_ITEMS}}
+                    "firings": {v: firings[v] for v in items},
+                    "firing_rates": {v: firings[v] / n for v in items}}
 
 
 def main(argv=None):
@@ -95,19 +96,21 @@ def main(argv=None):
         ur, um = measured(args.unlabeled_case, unlabeled, up["records_sha256"])
         if dr["code_sha256"] != ur["code_sha256"] or dr["code_sha256"] != result["script_sha256"]:
             raise ValueError("두 회차/현재 코드가 다르다")
-        keys = ("company_size_items", "split_items", "product_items", "seed", "quant", "max_chars", "max_tokens")
+        keys = ("company_size_items", "split_items", "product_items", "seed", "quant", "max_chars", "max_tokens",
+                "extra_call_items", "company_size_document_checks")
         ds, us = dr["reproduction"]["settings"], ur["reproduction"]["settings"]
-        if any(ds[k] != us[k] for k in keys):
+        if any(ds.get(k) != us.get(k) for k in keys):
             raise ValueError("dev/무라벨 실행 설정이 다르다")
         if ds["split_items"] or ds["product_items"] or ds["company_size_items"] != script.BAND_ITEMS:
-            raise ValueError("A1 외 실험이 섞여 있다")
+            raise ValueError("기업규모 단일 추가 호출 외 실험이 섞여 있다")
+        items = list(dm["firings"])
         result.update(status="live_outputs_measured", dev_measurement=dm, unlabeled_measurement=um,
                       firing_rate_ratio={v: um["firing_rates"][v] / dm["firing_rates"][v]
-                                         if dm["firing_rates"][v] else None for v in script.BAND_ITEMS})
+                                         if dm["firing_rates"][v] else None for v in items})
         result["paired_comparison"] = compare_runs.compare(
             compare_runs.load_score(), ROOT / "open/dev_labels.csv",
             args.dev_case / "company_size_baseline_submission.csv", args.dev_case / "submission.csv",
-            script.BAND_ITEMS)
+            items)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("x", encoding="utf-8", newline="\n") as stream:
         json.dump(result, stream, ensure_ascii=False, indent=2, allow_nan=False)
