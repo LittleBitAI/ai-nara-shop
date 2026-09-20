@@ -1,0 +1,129 @@
+{
+  "run_id": "colab-1789894949866134428",
+  "archive": "colab-results-1789894949866134428.zip",
+  "zip_sha256": {
+    "results": "1839ac77d566767d9d672d956e9bdf2afa4b7f2662b746dc13370a77b0d83f22",
+    "submit": "e94d0a5c71f8f27d79c241e0099ad94240a9796044c7fea732181c6cae3fa2aa"
+  },
+  "registered_at": "2026-09-20T09:03:55.135917+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "cc7c9719b60b84f1fe6a713969ca886044066d75",
+    "commit": "cc7c9719b60b84f1fe6a713969ca886044066d75",
+    "given_commit": "cc7c9719b60b84f1fe6a713969ca886044066d75"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "dev-debug": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 181.4,
+        "baseline_inference": 363.1,
+        "extra_inference": 109.8,
+        "inference_total": 722.2,
+        "run_total": 908.181,
+        "wall_clock": 912.0681080818176
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 109,
+        "extra_selected": 109,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 27,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 145,
+        "evidence_dropped_not_verbatim": 86,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "dev": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 196.4,
+        "baseline_inference": 360.0,
+        "extra_inference": 108.5,
+        "inference_total": 718.0,
+        "run_total": 919.077,
+        "wall_clock": 923.9724907875061
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 107,
+        "extra_selected": 107,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 27,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 144,
+        "evidence_dropped_not_verbatim": 87,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.5360273051061809
+    },
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 448.3,
+        "baseline_inference": 31.9,
+        "extra_inference": 12.2,
+        "inference_total": 59.4,
+        "run_total": 508.102,
+        "wall_clock": 513.0521109104156
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 6,
+        "extra_selected": 6,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 7,
+        "evidence_dropped_not_verbatim": 6,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.5360273051061809,
+    "baseline_macro_f1_same_run": 0.40717802024161376,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": true,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1789894949866134428.zip",
+    "submit": "candidate.json"
+  }
+}

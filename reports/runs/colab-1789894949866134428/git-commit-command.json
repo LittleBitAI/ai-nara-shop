@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-528innum/repo",
+    "rev-parse",
+    "HEAD"
+  ],
+  "cwd": "/content/t1-colab-528innum",
+  "started": 1789892137.9634683,
+  "returncode": 0,
+  "elapsed_seconds": 0.0042188167572021484
+}

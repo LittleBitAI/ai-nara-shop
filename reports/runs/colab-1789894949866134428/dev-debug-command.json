@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/content/t1-colab-528innum/venv/bin/python",
+    "script.py",
+    "--debug-responses"
+  ],
+  "cwd": "/content/t1-colab-528innum/cases/dev-debug",
+  "started": 1789894037.7767916,
+  "returncode": 0,
+  "elapsed_seconds": 912.0681080818176
+}

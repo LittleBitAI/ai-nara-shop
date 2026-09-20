@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/t1-colab-528innum/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/t1-colab-528innum/submission/requirements.txt"
+  ],
+  "cwd": "/content/t1-colab-528innum",
+  "started": 1789892351.3800504,
+  "returncode": 0,
+  "elapsed_seconds": 0.6110360622406006
+}
