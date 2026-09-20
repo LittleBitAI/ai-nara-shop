@@ -1,0 +1,25 @@
+{
+  "mode": "package_validation_mock",
+  "live_verified": false,
+  "server_submitted": false,
+  "script_sha256": "1691e8cc2e3a94c7af8a7dec703e58616dcc05337e633283630318ee69ac2a5b",
+  "archive": {
+    "path": "artifacts/a3-zero-items/1691e8cc2e3a/submit.zip",
+    "bytes": 44100,
+    "sha256": "046bc22052929e4ed41319e7e7e9cfca5eae668279f7a67e12874f05766d2fb8"
+  },
+  "checks": {
+    "root_allowlist": [
+      "script.py",
+      "requirements.txt"
+    ],
+    "extracted_mock_rows": 10,
+    "columns": 49,
+    "utf8_no_bom_lf": true,
+    "default_requires_model": true
+  },
+  "colab_bundle": {
+    "path": "artifacts/a3-zero-items/1691e8cc2e3a/colab-bundle.zip",
+    "sha256": "d50c484c0de91e6120296e172eb681c5c372cbdfd31b72b1d5019eb506c72004"
+  }
+}

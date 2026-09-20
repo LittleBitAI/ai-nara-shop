@@ -27,6 +27,12 @@
 
 ## 첫 작업 큐
 
+`a3-zero-items / H4`: in_progress. 기준 `49475c3`, [회차 4](../reports/team-c/a3-zero-items/run4-facts.md).
+H3는 v10 4/7/3·v18 0/2/7·v20 1/4/4로 동시 TP>0 미달이다. 다음은 기업등급보다 먼저
+자격 문장의 역할을 출력하는 실험이다. v10/v20 소비·scope·A1 결정표·A2는 유지한다.
+[작업서](tasks/a3-zero-items.md), [H4 보고서](../reports/team-c/a3-zero-items/h4-qualification-role.md).
+실제 모델 효과·동일 ZIP 별도 반복·무라벨·시간은 미측정이며 아래 H3/H2/H1은 이력이다.
+
 `a3-zero-items / H3`: in_progress. 기준 `c370aa2`, [회차 3](../reports/team-c/a3-zero-items/run3-facts.md).
 v18 첫 TP 1건, v10·v20 TP=0으로 H2는 동시 통과 실패. 다음은 기존 company_size 출력에서
 법적 필요 여부 상태를 제거하고 조항 원문/null을 추출하는 실험이다. SW 적용 대상은 짧은 원문을 쓴다.

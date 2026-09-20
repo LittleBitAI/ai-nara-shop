@@ -30,12 +30,40 @@ def facts(qualification="small_only"):
               "sme_allowed": "중소기업자로서 확인서를 소지한 업체.",
               "unrestricted": "사업자등록 업체 누구나 참가 가능.", "unknown": None}
     return dict(script.empty_company_size(), scope="general", scope_quote="일반 의료기기 구매.",
+                qualification_role="none" if qualification == "unrestricted" else "eligibility",
                 qualification=qualification, qualification_quote=quotes[qualification],
                 qualification_complete="yes", priority_exception="no", priority_exception_quote=None,
                 size_exception="none", size_exception_quote=None)
 
 
 class CompanySizeTests(unittest.TestCase):
+    def test_qualification_role_never_turns_a_checklist_into_a_restriction(self):
+        rec = notice(50_000_000)
+        rec["docs"][0]["text"] = (
+            "일반 의료기기 구매. 입찰참가자격: 사업자등록 업체 누구나 참가 가능. "
+            "제출서류: 중소기업확인서 1부.")
+        f = dict(facts("unrestricted"), qualification_role="checklist")
+        parsed, _ = script.parse_judgment(json.dumps({"company_size": f}), script.COMPANY_SIZE_KEYS)
+        self.assertEqual(parsed["company_size"]["qualification_role"], "checklist")
+        self.assertEqual(script.verify_company_size(f, rec, 16000)[0]["v18"]["위반여부"], 1)
+        for role in ("eligibility", "unknown"):
+            self.assertNotIn("v18", script.verify_company_size(dict(f, qualification_role=role), rec, 16000)[0])
+        # 등급과 역할이 모순이면 보류한다. 체크리스트를 unrestricted로 강제 변환하지 않는다.
+        f.update(qualification="sme_allowed", qualification_quote="중소기업확인서 1부.")
+        out, _ = script.verify_company_size(f, rec, 16000)
+        self.assertFalse(set(out) & {"v17", "v18"})
+        independent = dict(f, scope="competitive", requirements_complete="yes", software_business="yes",
+                           software_business_quote="일반 의료기기 구매.")
+        out, _ = script.verify_company_size(independent, rec, 16000)
+        self.assertEqual([out[v]["위반여부"] for v in ("v10", "v20")], [1, 1])
+        # 옛 스키마는 역할을 추측하지 않고 그대로 재생한다. 새 응답은 필드가 필수다.
+        del f["qualification_role"]
+        with self.assertRaisesRegex(ValueError, "필드 결손"):
+            script.parse_judgment(json.dumps({"company_size": f}), script.COMPANY_SIZE_KEYS)
+        old, _ = script.parse_judgment(json.dumps({"company_size": f}), script.COMPANY_SIZE_KEYS,
+                                      company_size_qualification_role=False)
+        self.assertEqual(script.verify_company_size(old["company_size"], rec, 16000)[0]["v17"]["위반여부"], 1)
+
     def test_clause_quotes_separate_observation_from_applicability(self):
         rec, f = notice(50_000_000), facts("unrestricted")
         rec["docs"][0]["text"] = "정보시스템 개발 용역. 사업자등록 업체 누구나 참가 가능."
@@ -78,6 +106,7 @@ class CompanySizeTests(unittest.TestCase):
             report = script.run(str(source), str(output), QuotesRunner, None, 128, 16000, str(data),
                                 debug_responses=True)
             self.assertTrue(report["reproduction"]["settings"]["company_size_clause_quotes"])
+            self.assertTrue(report["reproduction"]["settings"]["company_size_qualification_role"])
             replayed = replay_run.replay(script, output.parent, input_path=source, data_dir=data)
             self.assertEqual(replay_run.to_csv_bytes(script, replayed["rows"]), output.read_bytes())
             self.assertEqual([replayed["rows"][0][v] for v in ("v10", "v20")], [1, 1])

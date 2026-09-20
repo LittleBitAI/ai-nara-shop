@@ -9,6 +9,14 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 ## 바로 답할 내용
 
+**2026-09-20 A3 회차 4·H4:** `49475c3`의 [회차 4 사실](../reports/team-c/a3-zero-items/run4-facts.md)을
+반영했다. H3는 dev 0.5743735227782543, v10 4/7/3·v18 0/2/7·v20 1/4/4로 동시 TP>0 미달이다.
+dev-debug 0.573802514249의 기준 재생 대비 +0.025817476175·52셀은 과거 churn 범위를 넘지만,
+같은 ZIP 별도 반복은 남는다. [H4](../reports/team-c/a3-zero-items/h4-qualification-role.md)는
+기업등급보다 문장 역할을 먼저 출력하고 모순을 보류한다. 카탈로그 True 강제는 TP도 없애므로
+적용하지 않는다. v10/v20 소비자·scope·금액 결정표·A2는 유지한다. 새 실제 TP는 미측정이다.
+아래 H3/H2 착수 기록은 이력이며 최신 성능 상태를 대신하지 않는다.
+
 **2026-09-20 A3 회차 3·H3:** `c370aa2`의 [회차 3 사실](../reports/team-c/a3-zero-items/run3-facts.md)을
 반영했다. H2는 v18 첫 TP(1/2/6)를 얻었으나 v10 0/1/7·v20 0/0/5로 미채택이다.
 다음 [H3](../reports/team-c/a3-zero-items/h3-observed-clauses.md)는 두 요건의 상태 필드를 없애고

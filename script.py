@@ -79,6 +79,7 @@ BAND_ITEMS = ["v14", "v15", "v16", "v17", "v18"]
 SCOPE_ITEMS = ["v12", "v13"]
 DOCUMENT_CHECK_ITEMS = ["v10", "v20"]  # A3: 같은 호출에서 본문 요건의 존재/부재를 읽는다.
 CLAUSE_QUOTE_MAX = 120  # 적용 대상은 품목표를 재조립하지 않고 짧은 원문 한 구간으로 확인한다.
+QUALIFICATION_ROLES = ["eligibility", "checklist", "legal_reference", "none", "unknown"]
 COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 항목이 아니다.
 
 # ----- N3: 경쟁제품 카탈로그를 v10·v11·v12에도 준다 -----
@@ -471,8 +472,22 @@ Return one JSON object with key company_size and these fields:
   other includes construction, 엔지니어링사업, 건설엔지니어링 and software subject to separate
   소프트웨어사업자 size rules. Use unknown when the purchased scope cannot be resolved.
 - scope_quote: exact notice quotation identifying the purchased goods/service.
-- qualification: small_only/sme_allowed/unrestricted/unknown. First identify the source and role
-  of each size-related statement, then read what enterprise category can actually bid.
+- qualification_role: classify the role of the enterprise-size statements BEFORE selecting a
+  category. eligibility = an operative clause connects an enterprise category to permission to
+  bid, including an explicit size-limited competition heading or a certificate explicitly made
+  an eligibility requirement. checklist = size appears only as documents to submit, with no
+  operative size condition. legal_reference = size appears only in cited laws/exclusions, with
+  no operative size condition. none = no size statement in the observed qualifications.
+  unknown = unobserved or conflicting qualifications. An actual eligibility condition takes
+  precedence over incidental checklists or citations elsewhere; when only both incidental roles
+  occur, use checklist. Merely requiring all listed documents to be submitted does not turn each
+  certificate name into an express enterprise-category condition.
+  Then quote the operative size clause; if there is none, quote the observed bidder-qualification
+  section instead. Finally classify qualification from that observation. For checklist,
+  legal_reference or none, use unrestricted ONLY when the complete qualifications were observed
+  and no operative size restriction was found; otherwise unknown. Never infer small_only or
+  sme_allowed from an incidental role. A role label alone does not prove unrestricted eligibility.
+- qualification: small_only/sme_allowed/unrestricted/unknown. Read what enterprise category can bid.
   Use [Notice documents] for this fact. 나라장터 metadata, including 조항호내용, describes registered
   fields or legal grounds; it cannot supply a missing bidder condition or qualification quotation.
   In the documents, distinguish an operative eligibility condition from a submission checklist,
@@ -547,7 +562,7 @@ All quotations must be one contiguous span from a notice document, at most 500 c
 Use null for an unobserved quotation. Do not invent absent facts. No preamble or explanation."""
 
 
-def company_size_schema(*, legacy=False, clause_quotes=True):
+def company_size_schema(*, legacy=False, clause_quotes=True, qualification_role=True):
     quote = {"type": ["string", "null"], "maxLength": EVIDENCE_MAX}
     props = {
         "scope": {"type": "string", "enum": ["general", "competitive", "other", "unknown"]},
@@ -560,6 +575,12 @@ def company_size_schema(*, legacy=False, clause_quotes=True):
         "size_exception": {"type": "string", "enum": ["none", "broaden_sme", "joint_small", "unknown"]},
         "size_exception_quote": quote,
     }
+    if qualification_role and not legacy:
+        # 역할·원문 관측을 기업등급보다 먼저 출력한다. 구 회차에는 새 사실을 소급하지 않는다.
+        props = {"scope": props.pop("scope"), "scope_quote": props.pop("scope_quote"),
+                 "qualification_role": {"type": "string", "enum": QUALIFICATION_ROLES},
+                 "qualification_quote": props.pop("qualification_quote"),
+                 "qualification_complete": props.pop("qualification_complete"), **props}
     if not legacy:
         props.update({
             "requirements_complete": {"type": "string", "enum": ["yes", "no"]},
@@ -657,6 +678,12 @@ def verify_company_size(facts, rec, max_chars):
     # 무라벨 카나리는 조건 비율 dev 98.0% vs 무라벨 98.7%(1.007배)다.
     visible = build_context(rec, max_chars)
     facts = dict(facts)
+    if "qualification_role" in facts:
+        role = facts["qualification_role"]
+        allowed = ("small_only", "sme_allowed") if role == "eligibility" else (
+            ("unrestricted",) if role in ("checklist", "legal_reference", "none") else ())
+        if facts.get("qualification") not in allowed:
+            facts["qualification"] = "unknown"
     for key in ("scope_quote", "qualification_quote"):
         fixed = restore_spacing(facts.get(key), rec, visible)
         if fixed is not None:
@@ -1142,7 +1169,8 @@ def extract_json(text: str) -> Optional[Any]:
 
 
 def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_legacy=False,
-                   company_size_clause_quotes=True) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+                   company_size_clause_quotes=True,
+                   company_size_qualification_role=True) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
     """동등한 이진값을 정규화하고 추가 필드는 버린다. 필수 판정 결손은 복구 대상으로 남긴다."""
     obj = extract_json(text)
     if obj is None:
@@ -1155,7 +1183,8 @@ def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_le
     if expected == COMPANY_SIZE_KEYS:
         facts = obj["company_size"]
         properties = company_size_schema(legacy=company_size_legacy,
-                                          clause_quotes=company_size_clause_quotes)["properties"]
+                                          clause_quotes=company_size_clause_quotes,
+                                          qualification_role=company_size_qualification_role)["properties"]
         if not isinstance(facts, dict) or not set(properties) <= set(facts):
             raise ValueError("company_size: 사실 필드 결손")
         for key, spec in properties.items():
@@ -2007,6 +2036,7 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                              "extra_call_items": extra_call_items(),
                              "company_size_items": BAND_ITEMS, "company_size_document_checks": True,
                              "company_size_clause_quotes": True,
+                             "company_size_qualification_role": True,
                              "split_items": SPLIT_ITEMS,
                              "product_items": PRODUCT_ITEMS,
                              "prompt_language": "en_with_ko_legal_terms", "sme_facts": True, **settings,
