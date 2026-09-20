@@ -76,6 +76,7 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `colab-1789866561858326417` | `4762271` | 0.431856102622693 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1789866561858326417/](../reports/runs/colab-1789866561858326417/) |
 | `colab-1789872032146524122` | `0a172a2` | 0.4780515523487083 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1789872032146524122/](../reports/runs/colab-1789872032146524122/) |
 | `colab-1789880471715651259` | `0a8459a` | 0.5053824949205384 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1789880471715651259/](../reports/runs/colab-1789880471715651259/) |
+| `colab-1789886517580784653` | `b7ac265` |  | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1789886517580784653/](../reports/runs/colab-1789886517580784653/) |
 
 `미보관`은 그 실행의 ZIP을 이 규약으로 등록하기 전이라는 뜻입니다. 없었다는 뜻이 아닙니다.
 점수만 [history.json](../reports/team-score-audit/history.json)에 남아 있고 실행 환경·원응답 여부는

@@ -1,0 +1,9 @@
+{
+  "mode": "saved_csv_gate_check",
+  "model_called": false,
+  "old_reproduced": true,
+  "notebooks": {
+    "colab-baseline.ipynb": "saved_csv_checks_pass",
+    "exp-a3-source-role.ipynb": "saved_csv_checks_pass"
+  }
+}
