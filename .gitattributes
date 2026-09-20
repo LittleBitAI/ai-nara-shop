@@ -1,0 +1,19 @@
+* text=auto eol=lf
+
+README.md text eol=lf
+CLAUDE.md text eol=lf
+AGENTS.md text eol=lf
+
+# Preserve archived source bytes, including original line endings.
+/archive/contest/** -text
+
+# Preserve run-log bytes as the run produced them, including trailing spaces.
+/reports/runs/** whitespace=-trailing-space
+
+# compare_runs 가 낸 대조 기록도 도구가 만든 바이트다. 표의 열 정렬이 뒤 공백을 쓴다.
+**/compare/comparison.md whitespace=-trailing-space
+
+# Patch files must keep their bytes or they stop applying. A diff's context line
+# for a blank source line is a single space, which is not a whitespace error.
+*.diff whitespace=-trailing-space
+*.patch whitespace=-trailing-space
