@@ -13,7 +13,8 @@ H2는 같은 H4 원응답 CPU 재생에서 v11 TP +2·FP +1, 다른 23항목 변
 - 노트북: [colab-a5-facts.ipynb](../../../notebooks/colab-a5-facts.ipynb).
 - 수집기: [a5_collect_facts.py](../../../experiments/a5_collect_facts.py).
 - 가설: [H2 결과](h2-absence.md), [후보](../../../experiments/a5_v11_absence_candidate.py).
-- 코드: 노트북 `REPO_REF`의 **40자리 SHA**. `main`이나 움직이는 브랜치로 실행하지 않는다.
+- 실행 코드: **`c24f20865cdc00ae6e01f2efac170bcfacef0436`**.
+  노트북 `REPO_REF`에 이미 고정했다. `main`이나 움직이는 브랜치로 바꾸지 않는다.
 
 ## Colab에서 실행
 
