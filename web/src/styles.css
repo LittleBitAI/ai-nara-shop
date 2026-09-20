@@ -228,7 +228,7 @@ html, body, #root { height: 100%; }
 .swatch.fn, .seg.fn, .cell.fn, .pill.fn { background: var(--fn); }
 .swatch.tn, .cell.tn, .pill.tn { background: var(--tn); }
 .swatch.ln.macro { background: var(--seq); }
-.swatch.ln.item { background: var(--fp); }
+.swatch.ln.focus { background: var(--fp); }
 
 /* 누적 막대 — 칸 사이 2px 는 바탕색으로 벌린다 */
 .stack { display: flex; flex-direction: column; gap: 2px; margin-top: 10px; }
@@ -261,13 +261,13 @@ html, body, #root { height: 100%; }
 .tick { fill: var(--ink-3); font: var(--m-sm); }
 .trendline { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .trendline.macro { stroke: var(--seq); }
-.trendline.item { stroke: var(--fp); }
+.trendline.focus { stroke: var(--fp); }
 .dot { stroke: var(--raised); stroke-width: 1.5; }
 .dot.macro { fill: var(--seq); }
-.dot.item { fill: var(--fp); }
+.dot.focus { fill: var(--fp); }
 .endlabel { font: var(--m-md); }
 .endlabel.macro { fill: var(--seq); }
-.endlabel.item { fill: var(--fp); }
+.endlabel.focus { fill: var(--fp); }
 .mark { stroke-width: 2; }
 .mark.cur { stroke: var(--ink-3); }
 .mark.cmp { stroke: var(--line-strong); stroke-dasharray: 3 3; }

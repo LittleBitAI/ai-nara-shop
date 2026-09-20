@@ -158,8 +158,14 @@ def build(score, run_id, entries, source_path):
     raw_note = None
     debug_csv = entries.get("dev-debug/submission.csv")
     if debug_csv is not None:
-        debug_pred, _, _ = read_pred(score, debug_csv)
-        same = {i for i in pred if pred[i] == debug_pred.get(i)}
+        debug_pred, debug_quotes, _ = read_pred(score, debug_csv)
+        # v값 24칸만 보면 모자란다. 같은 회차의 v값이 같은 183건 중 3칸의 e열이 다르고,
+        # PPS-DEV-050/e24 는 **dev 가 빈칸인데 dev-debug 에는 개찰 문구가 들어 있다** —
+        # "근거 없음" 진단 아래에 그와 모순되는 원응답이 붙는다. 49열 전체가 같아야 붙인다.
+        same = {
+            i for i in pred
+            if pred[i] == debug_pred.get(i) and quotes[i] == debug_quotes.get(i)
+        }
         per_id, _ = parse_diagnostics(entries.get("dev-debug/diagnostics.jsonl", b""))
         for identifier in same:
             slot = per_id.get(identifier)
@@ -167,8 +173,8 @@ def build(score, run_id, entries, source_path):
                 trace.setdefault(identifier, {})["raw"] = slot["raw"]
         skipped = len(pred) - len(same)
         if skipped:
-            raw_note = (f"dev-debug 의 24칸이 dev 와 다른 공고 {skipped}건에는 원응답을 안 붙였다. "
-                        "같은 ZIP 이어도 별도 추론이라 그 칸들의 판정이 어긋난다")
+            raw_note = (f"dev-debug 의 49열이 dev 와 다른 공고 {skipped}건에는 원응답을 안 붙였다. "
+                        "같은 ZIP 이어도 별도 추론이라 그 칸들의 판정·근거가 어긋난다")
 
     has_raw = any("raw" in slot for slot in trace.values())
 

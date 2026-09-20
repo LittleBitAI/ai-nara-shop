@@ -89,8 +89,10 @@ export default function App() {
 
   // 연 공고가 필터 밖으로 나가면 닫는다. 안 닫으면 위는 부분집합인데 아래 드릴다운만
   // 필터에 안 걸린 공고를 계속 보여 준다.
+  // `ids.length` 로 0건을 빼 두면 안 된다 — 0건을 내는 조합이 실제로 셋 있고(예:
+  // 1억~고시금액 + 지방 + 결손), 하필 그때가 위는 0건인데 아래만 남는 그 상태다.
   useEffect(() => {
-    if (picked && ids.length && !ids.includes(picked)) setPicked(null)
+    if (picked && !ids.includes(picked)) setPicked(null)
   }, [ids, picked])
   const byItem = useMemo(() => Object.fromEntries(rows.map((r) => [r.item, r])), [rows])
 
@@ -211,8 +213,14 @@ export default function App() {
                     TP {current.tp} · FP {current.fp} · FN {current.fn} · 지지 {current.support} · F1 {fmt(current.f1)}
                   </span>
                 </div>
-                <Strip run={run} item={item} ids={ids} picked={picked} onPick={setPicked}
-                       flipped={diff?.flipped} />
+                {ids.length ? (
+                  <Strip run={run} item={item} ids={ids} picked={picked} onPick={setPicked}
+                         flipped={diff?.flipped} />
+                ) : (
+                  <p className="note">
+                    이 필터에 걸리는 공고가 <b>한 건도 없다.</b> 필터를 풀거나 다른 조합을 고른다.
+                  </p>
+                )}
               </>
             )}
           </div>

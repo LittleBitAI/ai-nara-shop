@@ -119,9 +119,10 @@ class BuildReportTests(unittest.TestCase):
         }
         report = build_report.build(self.score, "colab-0", entries, base)
 
-        dev, _, _ = build_report.read_pred(self.score, entries["dev/submission.csv"])
-        debug, _, _ = build_report.read_pred(self.score, entries["dev-debug/submission.csv"])
-        differing = {i for i in dev if dev[i] != debug.get(i)}
+        dev, dev_q, _ = build_report.read_pred(self.score, entries["dev/submission.csv"])
+        debug, debug_q, _ = build_report.read_pred(self.score, entries["dev-debug/submission.csv"])
+        # 49열 전체로 센다. v값만 보면 e가 다른 3건을 놓쳐 raw_note 의 수와도 안 맞는다.
+        differing = {i for i in dev if dev[i] != debug.get(i) or dev_q[i] != debug_q.get(i)}
         self.assertTrue(differing, "두 CSV 가 같으면 이 검사는 아무것도 안 지킨다")
 
         for identifier in differing:
@@ -131,6 +132,30 @@ class BuildReportTests(unittest.TestCase):
         self.assertTrue(attached, "일치하는 공고에는 원응답이 붙어야 한다")
         self.assertFalse(attached & differing)
         self.assertIn(str(len(differing)), report["raw_note"])
+
+    def test_raw_needs_the_whole_row_not_just_the_v_values(self):
+        """v값 24칸이 같아도 e열이 다르면 다른 추론이다. colab-1789902969401579900 은 v가
+        같은 183건 중 3칸의 e가 다르고, PPS-DEV-050/e24 는 dev 가 빈칸인데 dev-debug 에는
+        개찰 문구가 들어 있다 — "근거 없음" 아래에 모순되는 원응답이 붙었다. 라운드 2 P1."""
+        base = ROOT / "reports/runs/colab-1789902969401579900"
+        if not (base / "dev-debug/submission.csv").is_file():
+            self.skipTest("dev-debug 가 있는 회차가 없다")
+        entries = {
+            path.relative_to(base).as_posix(): path.read_bytes()
+            for part in ("dev", "dev-debug") for path in (base / part).glob("*")
+        }
+        dev, dev_q, _ = build_report.read_pred(self.score, entries["dev/submission.csv"])
+        debug, debug_q, _ = build_report.read_pred(self.score, entries["dev-debug/submission.csv"])
+        v_same_e_differs = {
+            i for i in dev
+            if dev[i] == debug.get(i) and dev_q[i] != debug_q.get(i)
+        }
+        self.assertTrue(v_same_e_differs, "이 회차에 그런 공고가 없으면 검사가 아무것도 안 지킨다")
+
+        report = build_report.build(self.score, "colab-0", entries, base)
+        for identifier in v_same_e_differs:
+            self.assertNotIn("raw", report["trace"].get(identifier, {}),
+                             f"{identifier}: v는 같지만 e가 달라 다른 추론인데 원응답이 붙었다")
 
     def test_dev_stats_are_not_overwritten_by_the_debug_run(self):
         """일치하는 공고라도 토큰 수·응답 길이는 그 추론의 것이다. dev 것을 덮으면 안 된다."""

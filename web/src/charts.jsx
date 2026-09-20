@@ -86,7 +86,9 @@ export function Trend({ history, item, itemName, current, compare, onPick }) {
       key: item,
       label: `${item} ${itemName ?? ''}`.trim(),
       get: (run) => run.items_f1?.[item] ?? 0,
-      cls: 'item',
+      // `item` 을 쓰면 왼쪽 목록의 `.item` 규칙이 차트 요소 21개에 걸린다. 실제로 범례가
+      // padding 5px 6px 를 먹어 14×3 이어야 할 것이 14×10 이 됐다.
+      cls: 'focus',
     },
   ].filter(Boolean)
 
