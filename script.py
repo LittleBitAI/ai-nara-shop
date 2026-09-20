@@ -78,6 +78,7 @@ BAND_ITEMS = ["v14", "v15", "v16", "v17", "v18"]
 # 이 단계가 덮어쓰는 CSV 열이므로 `extra_call_items()`가 둘을 합쳐 보호 가드에 알린다.
 SCOPE_ITEMS = ["v12", "v13"]
 DOCUMENT_CHECK_ITEMS = ["v10", "v20"]  # A3: 같은 호출에서 본문 요건의 존재/부재를 읽는다.
+CLAUSE_QUOTE_MAX = 120  # 적용 대상은 품목표를 재조립하지 않고 짧은 원문 한 구간으로 확인한다.
 COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 항목이 아니다.
 
 # ----- N3: 경쟁제품 카탈로그를 v10·v11·v12에도 준다 -----
@@ -516,37 +517,37 @@ Return one JSON object with key company_size and these fields:
   qualification/participation provisions. A missing requirement in a fully observed document
   is absent, NOT an unobserved document. A missing/truncated notice or RFP means no; truncation
   of an unrelated technical specification alone does not hide the notice/RFP provisions.
-- direct_production: present/absent/not_required/unknown. Check the purchased catalogue subject's
-  operative direct-production condition, separately from enterprise size. present includes a
-  required 직접생산확인증명서 or explicit verification via 구매정보망; a law title alone is not present.
-  Under provided 판로지원법 제9조 and 시행령 제10조, confirmation applies to 중소기업자간 경쟁
-  procurement and the specified competitive-product 수의계약 (추정가격 1천만원 이상).
-  not_required means the subject/procedure is outside that obligation; unknown means applicability
-  or observation cannot be resolved. absent means the obligation applies but the observed notice
-  contains no operative requirement. Do not infer presence from catalogue designation or metadata.
-- direct_production_quote: exact operative requirement for present; exact exclusion grounds for
-  not_required when stated. null for absent/unknown. This is distinct from qualification_quote.
+- direct_production_quote: search the visible documents for an operative direct-production
+  requirement, including a required 직접생산확인증명서 or explicit verification via 구매정보망.
+  Copy one exact clause if found; otherwise return null. A law title or a certificate name in an
+  unconnected checklist alone is not an operative requirement. Keep production and size separate.
+  This is a document search, independent of scope and whether the law requires that condition.
+  Search even for a general subject. For a competitive subject with no clause, also return null;
+  do not replace the missing clause with a judgment that it is not required for this service.
 - software_business: yes/no/unknown. Independently identify the actual purchased deliverable.
   Provided 소프트웨어 진흥법 제2조 covers software development, production, distribution, operation,
   maintenance and related services. yes requires software itself or its development/operation/
   maintenance as a contracted deliverable. Merely using software/tools to perform an unrelated
   service, or mentioning software in a generic equipment specification, does not establish this.
   Do not require a pre-existing participation restriction to recognize a software business.
-- software_business_quote: exact notice/RFP span establishing the purchased deliverable.
-- software_participation: present/absent/unknown. Provided 중소 소프트웨어사업자의 사업 참여 지원에
-  관한 지침 제3조제2항 requires the notice or RFP to state whether the 대기업 참여제한 하한제도
-  applies, including its grounds. present requires an operative participation clause with grounds,
-  including a stated applicable exception. Equivalent wording counts; no exact phrase is required.
-  A generic 사업자등록 requirement, size certificate checklist, or bare law title is not this clause.
-  absent means software_business=yes and the fully observed notice/RFP omits that disclosure.
-  unknown means the business or relevant documents cannot be observed. Absence of the disclosure
-  itself is NOT a reason to use unknown. Do not invent thresholds or an exception from silence.
-- software_participation_quote: exact disclosure/exception with grounds for present; otherwise null.
+- software_business_quote: one short exact notice/RFP span identifying the purchased deliverable,
+  at most 120 characters. Prefer a title or one operative phrase; never join separate table rows,
+  add punctuation, enumerate multiple products, or paraphrase the source. null if unobserved.
+- software_participation_quote: search the visible notice/RFP for a clause stating whether the
+  대기업 참여제한 하한제도 applies, including its grounds, as specified by provided 중소 소프트웨어사업자의
+  사업 참여 지원에 관한 지침 제3조제2항. Copy one exact disclosure/exception clause if found;
+  otherwise return null. Equivalent wording counts; no exact phrase is required. A generic
+  사업자등록 condition, size certificate checklist, or bare law title is not this disclosure.
+  Search independently of software_business. For a software business with no such clause, return
+  null rather than inventing a participation rule or deciding that its legal status is unknown.
+These two clause quotations report only what the documents say. Do not output separate
+direct_production or software_participation state labels. Applicability and observation completeness
+are checked separately; null alone does not decide a violation. Report incomplete documents honestly.
 All quotations must be one contiguous span from a notice document, at most 500 characters.
 Use null for an unobserved quotation. Do not invent absent facts. No preamble or explanation."""
 
 
-def company_size_schema(*, legacy=False):
+def company_size_schema(*, legacy=False, clause_quotes=True):
     quote = {"type": ["string", "null"], "maxLength": EVIDENCE_MAX}
     props = {
         "scope": {"type": "string", "enum": ["general", "competitive", "other", "unknown"]},
@@ -569,6 +570,9 @@ def company_size_schema(*, legacy=False):
             "software_participation": {"type": "string", "enum": ["present", "absent", "unknown"]},
             "software_participation_quote": quote,
         })
+        if clause_quotes:
+            del props["direct_production"], props["software_participation"]
+            props["software_business_quote"] = {"type": ["string", "null"], "maxLength": CLAUSE_QUOTE_MAX}
     return {"type": "object", "additionalProperties": False, "required": list(props), "properties": props}
 
 
@@ -692,9 +696,11 @@ def verify_document_requirements(facts, rec, visible):
     }
     out = {}
     for item, (applicable, field) in checks.items():
-        if not applicable:
+        if not applicable or field + "_quote" not in facts:
             continue
-        state, quote = facts.get(field), facts.get(field + "_quote")
+        quote = facts[field + "_quote"]
+        # H3는 조항 원문/null을 관측한다. H2의 unknown/not_required는 그대로 보류한다.
+        state = facts.get(field, "absent" if quote is None else "present")
         if state == "present" and quoted(quote):
             out[item] = {"위반여부": 0, "근거문구": None}
         elif state == "absent" and quote is None and (software_complete if item == "v20" else complete):
@@ -1135,7 +1141,8 @@ def extract_json(text: str) -> Optional[Any]:
     return None
 
 
-def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_legacy=False) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_legacy=False,
+                   company_size_clause_quotes=True) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
     """동등한 이진값을 정규화하고 추가 필드는 버린다. 필수 판정 결손은 복구 대상으로 남긴다."""
     obj = extract_json(text)
     if obj is None:
@@ -1147,7 +1154,8 @@ def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_le
         raise ValueError(f"정상 {len(expected)}항목 JSON이 아니다")
     if expected == COMPANY_SIZE_KEYS:
         facts = obj["company_size"]
-        properties = company_size_schema(legacy=company_size_legacy)["properties"]
+        properties = company_size_schema(legacy=company_size_legacy,
+                                          clause_quotes=company_size_clause_quotes)["properties"]
         if not isinstance(facts, dict) or not set(properties) <= set(facts):
             raise ValueError("company_size: 사실 필드 결손")
         for key, spec in properties.items():
@@ -1998,6 +2006,7 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                              "sme_selection": "baseline_v13_positive",
                              "extra_call_items": extra_call_items(),
                              "company_size_items": BAND_ITEMS, "company_size_document_checks": True,
+                             "company_size_clause_quotes": True,
                              "split_items": SPLIT_ITEMS,
                              "product_items": PRODUCT_ITEMS,
                              "prompt_language": "en_with_ko_legal_terms", "sme_facts": True, **settings,

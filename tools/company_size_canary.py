@@ -97,7 +97,7 @@ def main(argv=None):
         if dr["code_sha256"] != ur["code_sha256"] or dr["code_sha256"] != result["script_sha256"]:
             raise ValueError("두 회차/현재 코드가 다르다")
         keys = ("company_size_items", "split_items", "product_items", "seed", "quant", "max_chars", "max_tokens",
-                "extra_call_items", "company_size_document_checks")
+                "extra_call_items", "company_size_document_checks", "company_size_clause_quotes")
         ds, us = dr["reproduction"]["settings"], ur["reproduction"]["settings"]
         if any(ds.get(k) != us.get(k) for k in keys):
             raise ValueError("dev/무라벨 실행 설정이 다르다")

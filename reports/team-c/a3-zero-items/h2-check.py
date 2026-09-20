@@ -1,5 +1,6 @@
-"""H2 보호 범위·구 원응답 재생 검사. 실제 모델 성능 측정이 아니다."""
+"""A3 보호 범위·구 원응답 재생 검사. 기본값은 H2 감사이며 실제 모델 성능 측정이 아니다."""
 
+import argparse
 import ast
 import hashlib
 import json
@@ -15,7 +16,11 @@ from tools import replay_run  # noqa: E402
 
 
 def main():
-    before = subprocess.check_output(["git", "show", "6738328:script.py"], cwd=ROOT)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--base", default="6738328")
+    parser.add_argument("--case", action="append")
+    args = parser.parse_args()
+    before = subprocess.check_output(["git", "show", f"{args.base}:script.py"], cwd=ROOT)
     after = (ROOT / "script.py").read_bytes()
     trees = [ast.parse(source.decode("utf-8")) for source in (before, after)]
     allowed = {"extra_call_items", "company_size_schema", "empty_company_size", "verify_company_size",
@@ -32,7 +37,7 @@ def main():
         path = Path(temporary) / "baseline.py"
         path.write_bytes(before)
         baseline = replay_run.load_module(path, "a3_h2_baseline")
-        for case in ("colab-1789880471715651259", "colab-1789889904147841755"):
+        for case in args.case or ("colab-1789880471715651259", "colab-1789889904147841755"):
             source = ROOT / "reports/runs" / case / "dev-debug"
             results = [replay_run.replay(module, source, input_path=ROOT / "open/dev.jsonl",
                                          data_dir=ROOT / "open/data") for module in (baseline, script)]
@@ -47,7 +52,7 @@ def main():
     sources = {f"open/data/법령패키지/법령/{name}":
                hashlib.sha256((ROOT / "open/data/법령패키지/법령" / name).read_bytes()).hexdigest()
                for name in laws}
-    result = {"status": "cpu_contracts_only", "model_called": False, "base_commit": "6738328",
+    result = {"status": "cpu_contracts_only", "model_called": False, "base_commit": args.base,
               "script_sha256": hashlib.sha256(after).hexdigest(), "protected_functions_unchanged": True,
               "old_response_replays": replay_checks, "source_sha256": sources,
               "extra_call_items": script.extra_call_items(),

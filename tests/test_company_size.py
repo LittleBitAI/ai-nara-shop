@@ -36,6 +36,55 @@ def facts(qualification="small_only"):
 
 
 class CompanySizeTests(unittest.TestCase):
+    def test_clause_quotes_separate_observation_from_applicability(self):
+        rec, f = notice(50_000_000), facts("unrestricted")
+        rec["docs"][0]["text"] = "정보시스템 개발 용역. 사업자등록 업체 누구나 참가 가능."
+        f.update(scope="competitive", scope_quote="정보시스템 개발 용역.", requirements_complete="yes",
+                 direct_production_quote=None, software_business="yes",
+                 software_business_quote="정보시스템 개발 용역.", software_participation_quote=None)
+        for field in ("direct_production", "software_participation"):
+            f.pop(field, None)
+        out, _ = script.verify_company_size(f, rec, 16000)
+        self.assertEqual([out.get(v, {}).get("위반여부") for v in ("v10", "v20")], [1, 1])
+        # 옛 unknown/not_required를 새 부재 관측으로 바꾸면 과거 회차를 조작하게 된다.
+        old = dict(f, direct_production="not_required", software_participation="unknown")
+        out, _ = script.verify_company_size(old, rec, 16000)
+        self.assertFalse(set(out) & {"v10", "v20"})
+        obj = {"company_size": f}
+        parsed, _ = script.parse_judgment(json.dumps(obj), script.COMPANY_SIZE_KEYS)
+        self.assertEqual(parsed, obj)
+        self.assertFalse({"direct_production", "software_participation"}
+                         & script.company_size_schema()["properties"].keys())
+        long_quote = {"company_size": dict(f, software_business_quote="a" * 121)}
+        with self.assertRaisesRegex(ValueError, "software_business_quote"):
+            script.parse_judgment(json.dumps(long_quote), script.COMPANY_SIZE_KEYS)
+        archived = {"company_size": dict(long_quote["company_size"], direct_production="not_required",
+                                        software_participation="unknown")}
+        archived_parsed, _ = script.parse_judgment(json.dumps(archived), script.COMPANY_SIZE_KEYS,
+                                                  company_size_clause_quotes=False)
+        self.assertEqual(archived_parsed, archived)
+
+        from tools import replay_run
+        class QuotesRunner(script.MockRunner):
+            def chat(self, batch, items=None):
+                if items == script.COMPANY_SIZE_KEYS:
+                    return [json.dumps({"company_size": f}) for _ in batch]
+                return super().chat(batch, items)
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / "input.jsonl"
+            source.write_text(json.dumps(rec, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+            output = Path(tmp) / "run/submission.csv"
+            data = Path(__file__).resolve().parents[1] / "open/data"
+            report = script.run(str(source), str(output), QuotesRunner, None, 128, 16000, str(data),
+                                debug_responses=True)
+            self.assertTrue(report["reproduction"]["settings"]["company_size_clause_quotes"])
+            replayed = replay_run.replay(script, output.parent, input_path=source, data_dir=data)
+            self.assertEqual(replay_run.to_csv_bytes(script, replayed["rows"]), output.read_bytes())
+            self.assertEqual([replayed["rows"][0][v] for v in ("v10", "v20")], [1, 1])
+        del obj["company_size"]["software_participation_quote"]
+        with self.assertRaisesRegex(ValueError, "필드 결손"):
+            script.parse_judgment(json.dumps(obj), script.COMPANY_SIZE_KEYS)
+
     def test_document_absence_reaches_csv_without_inventing_unseen_facts(self):
         rec = notice(50_000_000)
         rec["docs"][0]["text"] = (
