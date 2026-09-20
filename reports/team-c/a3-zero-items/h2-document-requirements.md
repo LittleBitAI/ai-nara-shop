@@ -43,6 +43,11 @@ v18 0/1/7, v20 0/0/5이며, 같은 ZIP churn은 16셀·Macro 0.005077299914다.
 
 세 항목의 출력 경로와 관측 경계 검사를 먼저 추가했다. 수정 전 v10·v20 출력이 없어
 실패했고 수정 후 통과했다. 합성 모델 응답 검사이며 TP 측정이 아니다.
+관련 unittest **45개 통과(30.629초)**, Ruff 통과. 압축 해제 mock 10건·49열,
+모델 없는 기본 진입 실패도 확인했다([패키지 검사](h2-package-check.json)).
+노트북 수정 뒤 package 검사 7개(22.306초)와 확장한 TP 관문 검사(7.633초)를 통과했다.
+FP가 있어도 TP가 0인 경우와 셋 중 하나만 TP=0인 경우를 모두 목표 미달로 기록한다.
+노트북 코드 셀 컴파일과 고정 SHA의 script 바이트 일치도 확인했다.
 
 ```powershell
 python -X utf8 -m unittest tests.test_company_size tests.test_baseline tests.test_replay_run tests.test_package
@@ -59,6 +64,8 @@ python -m ruff check script.py tools/replay_run.py tools/company_size_canary.py 
 ## 실행과 통과 판단
 
 저장소의 [A3 전용 노트북](../../../notebooks/exp-a3-source-role.ipynb)을 이 후보로 고정한다.
+추론 후보는 `cc7c9719b60b84f1fe6a713969ca886044066d75`, script SHA-256은
+`0f96dbb675cb942172bb8e0744ba13e69d96aea592764871f369f761e3f74d57`이다.
 런타임이 종료됐다면 새 A100급 런타임에서 첫 셀부터 실행한다. HF_TOKEN 접근만 준비하고,
 고정된 REPO_REF·SOURCE_MODE·RUN_DIAGNOSTIC·DIAGNOSE_ITEMS는 수정하지 않는다.
 노트북은 세 항목 TP/FP/FN을 출력하며, 하나라도 TP=0이면 목표 미달로 기록한다.

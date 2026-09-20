@@ -312,6 +312,19 @@ class PackageTests(unittest.TestCase):
                 with patch.dict(sys.modules, {"google.colab": colab}), patch("builtins.print"):
                     exec(compile(tail, "colab-quality-gate", "exec"), namespace)
                 self.assertEqual(bool(downloaded), allowed)
+            a3 = json.loads((ROOT / "notebooks/exp-a3-source-role.ipynb").read_text(encoding="utf-8"))
+            score = next("".join(c["source"]) for c in a3["cells"] if c.get("id") == "score")
+            a3_tail = score[score.index("baseline_f1 ="):]
+            for tps in ((0, 0, 0), (1, 0, 1), (1, 1, 1)):
+                for item, tp in zip(("v10", "v18", "v20"), tps):
+                    namespace["metrics"]["items"][item].update(tp=tp, fp=10)
+                downloaded.clear()
+                with patch.dict(sys.modules, {"google.colab": colab}), patch("builtins.print"):
+                    exec(compile(a3_tail, "a3-tp-gate", "exec"), namespace)
+                check = json.loads((results / "a3-target-check.json").read_text(encoding="utf-8"))
+                self.assertEqual(check["all_target_tp_positive"], all(tps))
+                self.assertEqual(bool(downloaded), all(tps))
+                self.assertFalse(check["performance_accepted"])
             report["reproduction"]["settings"]["max_tokens"] = 4096
             write()
             with self.assertRaisesRegex(RuntimeError, "기본 추론 설정"):
