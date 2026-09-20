@@ -27,6 +27,10 @@
 
 ## 첫 작업 큐
 
+`a1-scope`: in_progress. 합본 `0a172a2`를 고정하고 기업규모 scope 질문만 바꾸는 후속 실험.
+검색·qualification·스키마·결정표는 유지한다. [단일변수 계약](tasks/a1-company-size.md#후속--scope-단일변수-실험-2026-09-20).
+실제 모델 성과·무라벨 발화율은 미측정이며 A1 단독 브랜치 ZIP과 합본을 비교하지 않는다.
+
 `a1-company-size`: in_progress. 사용자 지정 `merganser` 구현 세션이 기업등급 세로축과
 v14~v18 결정표를 맡는다. [입력·출력·수정 범위·통과선](tasks/a1-company-size.md).
 서버 기준선은 `57761ff` 0.2978624361 / 4,281초이며 새 A1 모델 회차는 아직 없다.
