@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-k5_nm8ce/repo",
+    "rev-parse",
+    "HEAD"
+  ],
+  "cwd": "/content/t1-colab-k5_nm8ce",
+  "started": 1789863792.6269958,
+  "returncode": 0,
+  "elapsed_seconds": 0.004556417465209961
+}
