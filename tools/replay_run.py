@@ -132,6 +132,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             legacy = ({"company_size_legacy": True}
                       if hasattr(script, "DOCUMENT_CHECK_ITEMS")
                       and not settings.get("company_size_document_checks") else {})
+            if hasattr(script, "CLAUSE_QUOTE_MAX"):
+                legacy["company_size_clause_quotes"] = bool(settings.get("company_size_clause_quotes"))
             focused, _ = script.parse_judgment(company_text, expected_items=script.COMPANY_SIZE_KEYS,
                                                **legacy)
             verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])

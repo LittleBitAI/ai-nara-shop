@@ -9,6 +9,13 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 ## 바로 답할 내용
 
+**2026-09-20 A3 회차 3·H3:** `c370aa2`의 [회차 3 사실](../reports/team-c/a3-zero-items/run3-facts.md)을
+반영했다. H2는 v18 첫 TP(1/2/6)를 얻었으나 v10 0/1/7·v20 0/0/5로 미채택이다.
+다음 [H3](../reports/team-c/a3-zero-items/h3-observed-clauses.md)는 두 요건의 상태 필드를 없애고
+본문 조항 원문/null을 추출한다. 기존 적용 대상·완전관측·원문 검증, v18 결정표·A2는 유지한다.
+H2 원응답 200건 재생은 CSV 바이트 동일이다. 새 실제 모델 TP·반복·무라벨·시간은 미측정이다.
+H2 dev 0.536027305106과 dev-debug 비교값 0.544041527881을 구분한다. 아래 H2 착수는 이력이다.
+
 **2026-09-20 A3 회차 2·H2:** `6738328`의 [회차 2 사실](../reports/team-c/a3-zero-items/run2-facts.md)을
 반영했다. H1 두 회차 모두 v10·v18·v20 TP=0으로 미채택이며 같은 ZIP churn은 16셀·0.005077이다.
 다음 [H2 후보](../reports/team-c/a3-zero-items/h2-document-requirements.md)는 기존 company_size

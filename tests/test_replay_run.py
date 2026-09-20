@@ -138,6 +138,11 @@ class ReplayRunTests(unittest.TestCase):
         result = replay_run.replay(SCRIPT, CASE, input_path=ROOT / "open/dev.jsonl",
                                    data_dir=ROOT / "open/data")
         self.assertEqual(replay_run.to_csv_bytes(SCRIPT, result["rows"]), HEAD_REPLAY.read_bytes())
+        # H3의 null 조항 해석을 H2의 unknown/not_required 원응답에 소급하지 않는다.
+        h2 = ROOT / "reports/runs/colab-1789894949866134428/dev-debug"
+        replayed = replay_run.replay(SCRIPT, h2, input_path=ROOT / "open/dev.jsonl",
+                                     data_dir=ROOT / "open/data")
+        self.assertEqual(replay_run.to_csv_bytes(SCRIPT, replayed["rows"]), (h2 / "submission.csv").read_bytes())
 
     def test_candidate_replaces_only_the_stage_it_defines(self):
         with tempfile.TemporaryDirectory() as tmp:

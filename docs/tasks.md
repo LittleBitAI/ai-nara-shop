@@ -27,6 +27,13 @@
 
 ## 첫 작업 큐
 
+`a3-zero-items / H3`: in_progress. 기준 `c370aa2`, [회차 3](../reports/team-c/a3-zero-items/run3-facts.md).
+v18 첫 TP 1건, v10·v20 TP=0으로 H2는 동시 통과 실패. 다음은 기존 company_size 출력에서
+법적 필요 여부 상태를 제거하고 조항 원문/null을 추출하는 실험이다. SW 적용 대상은 짧은 원문을 쓴다.
+입력·출력·범위·통과 조건은 [작업서](tasks/a3-zero-items.md), 결과는
+[H3 보고서](../reports/team-c/a3-zero-items/h3-observed-clauses.md)가 소유한다. 실제 모델 미측정.
+아래 H2/H1 항목은 이력이다.
+
 `a3-zero-items / H2`: in_progress. `6738328`의 회차 2 기록을 반영한다.
 H1 두 회차 모두 v10·v18·v20 TP=0. 기존 company_size 호출에서 등록 제한값과 본문 요건을
 분리하고 v10·v20의 존재/부재 사실을 확장한다. v18 결정표·A2는 유지한다.
