@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-gvosnksw/repo",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/t1-colab-gvosnksw",
+  "started": 1789900217.137124,
+  "returncode": 0,
+  "elapsed_seconds": 0.34570932388305664
+}

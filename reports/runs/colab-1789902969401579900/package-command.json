@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-X",
+    "utf8",
+    "/content/t1-colab-gvosnksw/repo/tools/package.py",
+    "--output",
+    "/content/t1-colab-gvosnksw/candidate-submit.zip",
+    "--colab-output",
+    "/content/t1-colab-gvosnksw/candidate-colab-bundle.zip"
+  ],
+  "cwd": "/content/t1-colab-gvosnksw/repo",
+  "started": 1789900217.4874926,
+  "returncode": 0,
+  "elapsed_seconds": 1.0951728820800781
+}

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/t1-colab-gvosnksw/venv/bin/python",
+    "-c",
+    "\nfrom huggingface_hub import snapshot_download\nfrom pathlib import Path\nimport os\nimport sys\nmodel_dir = snapshot_download(repo_id=sys.argv[1], revision=sys.argv[2], token=os.environ[\"HF_TOKEN\"],\n    allow_patterns=[\"*.safetensors\", \"*.json\", \"*.jinja\", \"*.model\"])\nif Path(model_dir).name != sys.argv[2]:\n    raise RuntimeError(\"고정 snapshot 경로 불일치\")\nPath(sys.argv[3]).write_text(model_dir, encoding=\"utf-8\")\n",
+    "google/gemma-4-26B-A4B-it",
+    "4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "/content/t1-colab-gvosnksw/model-path.txt"
+  ],
+  "cwd": "/content/t1-colab-gvosnksw",
+  "started": 1789900507.2924411,
+  "returncode": 0,
+  "elapsed_seconds": 144.00931811332703
+}

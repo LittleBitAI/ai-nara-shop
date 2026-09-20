@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "--branch",
+    "main",
+    "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "/content/t1-colab-gvosnksw/repo"
+  ],
+  "cwd": "/content/t1-colab-gvosnksw",
+  "started": 1789900214.534894,
+  "returncode": 0,
+  "elapsed_seconds": 1.7626640796661377
+}
