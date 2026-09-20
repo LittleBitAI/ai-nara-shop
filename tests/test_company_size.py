@@ -169,7 +169,11 @@ class CompanySizeTests(unittest.TestCase):
                                 str(Path(__file__).resolve().parents[1] / "open/data"), debug_responses=True)
             self.assertEqual(calls, [None, script.COMPANY_SIZE_KEYS])
             self.assertEqual(report["reproduction"]["settings"]["extra_call_items"], script.extra_call_items())
-            self.assertEqual(script.extra_call_items()["company_size"], script.BAND_ITEMS)
+            # 이 단계가 덮어쓸 수 있는 열을 그대로 신고해야 노트북 보호 가드가 맞는 것을 지킨다.
+            # 금액·등급 축(BAND_ITEMS)과 scope 축(SCOPE_ITEMS) 둘 다 이 한 호출에서 나온다.
+            self.assertEqual(script.extra_call_items()["company_size"],
+                             script.BAND_ITEMS + script.SCOPE_ITEMS)
+            self.assertFalse(set(script.BAND_ITEMS) & set(script.SCOPE_ITEMS))
             self.assertEqual(report["company_size_selected_count"], 3)
             self.assertEqual(report["company_size_fallback_count"], 0)
             self.assertEqual(report["company_size_model_success_count"], 0)

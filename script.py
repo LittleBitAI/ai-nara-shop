@@ -74,6 +74,9 @@ SPLIT_BANDS = {"v16": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),   # 1억 이상 ~
 # 합동 24항목 프롬프트/스키마는 유지한다. 새 모델 성능은 아직 미측정인 실험 후보다.
 # 근거·예외별 적용 범위: reports/team-c/a1-company-size/result.md.
 BAND_ITEMS = ["v14", "v15", "v16", "v17", "v18"]
+# 같은 company_size 호출의 `scope` 축이 올리는 항목. 금액·등급 축(BAND_ITEMS)과 독립이다.
+# 이 단계가 덮어쓰는 CSV 열이므로 `extra_call_items()`가 둘을 합쳐 보호 가드에 알린다.
+SCOPE_ITEMS = ["v12", "v13"]
 COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 항목이 아니다.
 
 # ----- N3: 경쟁제품 카탈로그를 v10·v11·v12에도 준다 -----
@@ -99,7 +102,8 @@ def extra_call_items() -> Dict[str, List[str]]:
     따로 들고 있었고, N1을 켜면서 한쪽이 빠져 노트북 `check_live`가 "v13만 바뀔 수 있다"는
     낡은 불변식으로 회차를 샘플 10건에서 죽였다.
     """
-    return {"split": SPLIT_ITEMS, "product": PRODUCT_ITEMS, "company_size": BAND_ITEMS}
+    return {"split": SPLIT_ITEMS, "product": PRODUCT_ITEMS,
+            "company_size": BAND_ITEMS + SCOPE_ITEMS}
 
 
 # 판정 스키마로 답하는 단계. `company_size`는 사실 스키마라 여기 없다 —
@@ -558,21 +562,65 @@ def restore_spacing(quote, rec, visible):
     return best
 
 
-def verify_company_size(facts, rec, max_chars):
-    """A1 결정표. {}는 미확인으로 기본 판정 보존, 0 다섯 개는 확인된 비해당이다.
+def company_size_products(facts, rec):
+    """검증된 `scope`가 v12·v13에 대해 말하는 것. v14~v18의 금액·등급 축과 독립이다.
 
-    A2는 같은 company_size 사실의 qualification/qualification_quote를 재사용한다.
-    여기서는 v13을 수정하지 않는다. 예외는 해당 칸에만 적용한다.
+    왜 여기인가. `scope` 절을 고친 뒤 모델의 `competitive`가 0건 → 76건이 됐고, 확실한
+    경쟁제품 15건이 전부 열렸다(`reports/team-c/merged-candidate/result.md`). 그런데 그 값을
+    읽는 곳이 아래 한 자리뿐이라 v12·v13은 한 셀도 안 움직였다. 그 배선이 이 함수다.
+
+    항목명이 그대로 조건이다 — v12는 "**일반제품** 직생 제한", v13은 "**중기간 경쟁제품**
+    소기업·소상공인 제한"이다. 앞은 `general`, 뒤는 `competitive`에서만 설 수 있다.
+
+    v13에 카탈로그 대조를 한 번 더 요구한다. 모델의 `competitive`만으로는 오탐 19건이고,
+    카탈로그가 동의하는 것만 남기면 **7건**이 된다(TP 5→3, F1 0.333→0.375).
+    v11은 잇지 않는다 — 재 보니 F1 0.400 → 0.385로 손해다.
+
+    실측(같은 원응답 재생): v12 F1 0.444→0.727(TP 2→4), v13 0.167→0.375(FP 5→7, TP 1→3).
     """
-    visible = build_context(rec, max_chars)
-    # 인용의 공백 표기만 원문으로 되돌린 뒤 검증한다. 실측(같은 원응답 재생, churn 0):
+    out = {}
+    demand, codes = direct_production_demand(rec)
+    if facts["scope"] == "general" and demand is not None:
+        out["v12"] = {"위반여부": 1, "근거문구": demand}
+    elif (facts["scope"] == "competitive" and facts.get("qualification") == "small_only"
+            and competitive_product(rec, codes) is True):
+        out["v13"] = {"위반여부": 1, "근거문구": facts.get("qualification_quote")}
+    return out
+
+
+def verify_company_size(facts, rec, max_chars):
+    """A1 결정표에 scope 축의 v12·v13을 얹어 돌려준다.
+
+    두 축을 한 함수에 섞지 않으려고 감싼다. 아래 `_company_size_bands`가 금액·등급 축으로
+    v14~v18을 정하고 그 반환 지점을 그대로 둔다. v12·v13은 검증된 `scope`만 보므로
+    밴드 쪽이 `{}`(미확인으로 기본 판정 보존)를 돌려줘도 독립적으로 설 수 있다.
+    `scope` 자체가 미확인이면(`unverified_scope`) 둘 다 올리지 않는다.
+    """
+    # 인용의 공백 표기만 원문으로 되돌린 뒤 두 축이 같은 사실을 본다. 실측(재생, churn 0):
     # 12셀 · 대상 밖 0셀 · v17 F1 0.320→0.500(FP 15→9) · v14·v15·v17 TP 각 +1.
     # 무라벨 카나리는 조건 비율 dev 98.0% vs 무라벨 98.7%(1.007배)다.
+    visible = build_context(rec, max_chars)
     facts = dict(facts)
     for key in ("scope_quote", "qualification_quote"):
         fixed = restore_spacing(facts.get(key), rec, visible)
         if fixed is not None:
             facts[key] = fixed
+    bands, reason = _company_size_bands(facts, rec, max_chars)
+    if reason == "unverified_scope":
+        return bands, reason
+    out = dict(bands)
+    out.update(company_size_products(facts, rec))
+    return out, reason
+
+
+def _company_size_bands(facts, rec, max_chars):
+    """A1 결정표. {}는 미확인으로 기본 판정 보존, 0 다섯 개는 확인된 비해당이다.
+
+    A2는 같은 company_size 사실의 qualification/qualification_quote를 재사용한다.
+    여기서 v12·v13은 정하지 않는다 — 위 `verify_company_size`가 scope 축으로 따로 올린다.
+    예외는 해당 칸에만 적용한다.
+    """
+    visible = build_context(rec, max_chars)
     def quoted(value):
         return bool(value and value.strip() and value in visible
                     and any(value in d["text"] for d in rec["docs"]))
