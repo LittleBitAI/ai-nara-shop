@@ -107,6 +107,56 @@ class BuildReportTests(unittest.TestCase):
                               capture_output=True, text=True).stdout
         self.assertTrue(mode.startswith("100755"), f"실행 비트가 없다: {mode.strip()!r}")
 
+    def test_raw_responses_only_attach_where_both_runs_agree(self):
+        """dev-debug 는 별도 추론이다. 24칸이 다른 공고에 그 원응답을 붙이면 채점된 칸을
+        열었을 때 다른 추론의 판정을 보게 된다 — 리뷰 라운드 1 P1."""
+        base = ROOT / "reports/runs/colab-1789902969401579900"
+        if not (base / "dev-debug/submission.csv").is_file():
+            self.skipTest("dev-debug 가 있는 회차가 없다")
+        entries = {
+            path.relative_to(base).as_posix(): path.read_bytes()
+            for part in ("dev", "dev-debug") for path in (base / part).glob("*")
+        }
+        report = build_report.build(self.score, "colab-0", entries, base)
+
+        dev, _, _ = build_report.read_pred(self.score, entries["dev/submission.csv"])
+        debug, _, _ = build_report.read_pred(self.score, entries["dev-debug/submission.csv"])
+        differing = {i for i in dev if dev[i] != debug.get(i)}
+        self.assertTrue(differing, "두 CSV 가 같으면 이 검사는 아무것도 안 지킨다")
+
+        for identifier in differing:
+            self.assertNotIn("raw", report["trace"].get(identifier, {}),
+                             f"{identifier}: 24칸이 다른데 원응답이 붙었다")
+        attached = {i for i, slot in report["trace"].items() if "raw" in slot}
+        self.assertTrue(attached, "일치하는 공고에는 원응답이 붙어야 한다")
+        self.assertFalse(attached & differing)
+        self.assertIn(str(len(differing)), report["raw_note"])
+
+    def test_dev_stats_are_not_overwritten_by_the_debug_run(self):
+        """일치하는 공고라도 토큰 수·응답 길이는 그 추론의 것이다. dev 것을 덮으면 안 된다."""
+        base = ROOT / "reports/runs/colab-1789902969401579900"
+        if not (base / "dev-debug/diagnostics.jsonl").is_file():
+            self.skipTest("dev-debug 가 있는 회차가 없다")
+        entries = {
+            path.relative_to(base).as_posix(): path.read_bytes()
+            for part in ("dev", "dev-debug") for path in (base / part).glob("*")
+        }
+        report = build_report.build(self.score, "colab-0", entries, base)
+        dev_only, _ = build_report.parse_diagnostics(entries["dev/diagnostics.jsonl"])
+        for identifier, slot in report["trace"].items():
+            if "responses" in slot:
+                self.assertEqual(slot["responses"], dev_only[identifier]["responses"], identifier)
+
+    def test_open_is_served_by_allowlist_not_by_path_check(self):
+        """문자열 접두사 검사는 정션·심볼릭 링크의 실제 대상을 안 본다. `open/leak` 를 저장소
+        밖으로 건 정션으로 밖의 파일이 실제로 새어 나왔다 — 리뷰 라운드 1 P0."""
+        config = (ROOT / "web/vite.config.js").read_text(encoding="utf-8")
+        self.assertIn("SERVED", config)
+        self.assertIn("dev.jsonl", config)
+        self.assertIn("dev_labels.csv", config)
+        self.assertNotIn("startsWith(OPEN", config, "경로 접두사 검사로 되돌아갔다")
+        self.assertNotIn("normalize(join(OPEN", config, "경로를 받아 정규화하는 방식으로 되돌아갔다")
+
     def test_zip_slip_is_refused(self):
         for name in ("../escape.csv", "/abs.csv", "dev/../../out.csv"):
             with self.assertRaises(ValueError):

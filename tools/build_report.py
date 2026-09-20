@@ -147,12 +147,29 @@ def build(score, run_id, entries, source_path):
     metrics, _ = score.calculate(truth, pred)
 
     trace, settings = {}, None
-    for name in ("dev/diagnostics.jsonl", "dev-debug/diagnostics.jsonl"):
-        if name in entries:
-            per_id, found = parse_diagnostics(entries[name])
-            settings = settings or found
-            for identifier, slot in per_id.items():
-                trace.setdefault(identifier, {}).update(slot)
+    if "dev/diagnostics.jsonl" in entries:
+        trace, settings = parse_diagnostics(entries["dev/diagnostics.jsonl"])
+
+    # 원응답은 dev-debug 에만 남는데 그건 **별도 추론**이다. colab-1789902969401579900 은
+    # 두 CSV 가 18셀 다르고 PPS-DEV-03/v3 은 dev 0 · dev-debug 1 이다. 통째로 합치면 채점된
+    # 칸을 열었을 때 다른 추론의 판정을 보게 되고, 통째로 막으면 멀쩡한 199건까지 잃는다.
+    # 그래서 **24칸이 같은 공고에만** 붙이고, 거기서도 원응답만 가져온다 — 토큰 수·응답 길이는
+    # 그 추론의 것이라 dev 것을 덮으면 안 된다.
+    raw_note = None
+    debug_csv = entries.get("dev-debug/submission.csv")
+    if debug_csv is not None:
+        debug_pred, _, _ = read_pred(score, debug_csv)
+        same = {i for i in pred if pred[i] == debug_pred.get(i)}
+        per_id, _ = parse_diagnostics(entries.get("dev-debug/diagnostics.jsonl", b""))
+        for identifier in same:
+            slot = per_id.get(identifier)
+            if slot and "raw" in slot:
+                trace.setdefault(identifier, {})["raw"] = slot["raw"]
+        skipped = len(pred) - len(same)
+        if skipped:
+            raw_note = (f"dev-debug 의 24칸이 dev 와 다른 공고 {skipped}건에는 원응답을 안 붙였다. "
+                        "같은 ZIP 이어도 별도 추론이라 그 칸들의 판정이 어긋난다")
+
     has_raw = any("raw" in slot for slot in trace.values())
 
     grid, evidence = {}, {}
@@ -178,6 +195,7 @@ def build(score, run_id, entries, source_path):
         "evidence": evidence,
         "trace": trace,
         "has_raw": has_raw,
+        "raw_note": raw_note,
     }
 
 

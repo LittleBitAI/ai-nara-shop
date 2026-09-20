@@ -41,7 +41,11 @@ export default function App() {
   const [theme, setTheme] = useTheme()
 
   // 늦게 온 결과가 아직 이 화면의 것인가. 회차를 바꾸면 세대가 올라가고 옛 응답은 버린다.
-  const generation = useRef(0)
+  // 현재 회차와 비교 회차는 **세대를 따로 센다.** 하나로 묶으면 비교를 부르는 중에 현재를
+  // 바꿨을 때 비교 응답이 버려지는데 compareId 는 새 값인 채 다시 안 불러, 옛 회차를
+  // 새 회차 이름표로 비교하게 된다. 반대 순서에서는 run 이 계속 null 로 남는다.
+  const runGen = useRef(0)
+  const compareGen = useRef(0)
   // 다른 항목·다른 공고를 열면 아래 칸은 맨 위부터 읽는다. 앞의 것이 내려 둔 자리를 물려받지 않는다.
   const paneScroll = useRef(null)
   useEffect(() => { paneScroll.current?.scrollTo(0, 0) }, [item, picked, runId])
@@ -58,19 +62,21 @@ export default function App() {
 
   useEffect(() => {
     if (!runId) return
-    const mine = (generation.current += 1)
+    const mine = (runGen.current += 1)
     setRun(null)
     loadRun(runId)
-      .then((loaded) => { if (mine === generation.current) setRun(loaded) })
-      .catch((cause) => { if (mine === generation.current) setError(cause.message) })
+      .then((loaded) => { if (mine === runGen.current) setRun(loaded) })
+      .catch((cause) => { if (mine === runGen.current) setError(cause.message) })
   }, [runId])
 
   useEffect(() => {
+    const mine = (compareGen.current += 1)
     if (!compareId) { setCompareRun(null); return }
-    const mine = (generation.current += 1)
+    // 부르는 동안에는 옛 비교 회차를 남기지 않는다. 남기면 새 이름표로 옛 값을 본다.
+    setCompareRun(null)
     loadRun(compareId)
-      .then((loaded) => { if (mine === generation.current) setCompareRun(loaded) })
-      .catch(() => { if (mine === generation.current) setCompareRun(null) })
+      .then((loaded) => { if (mine === compareGen.current) setCompareRun(loaded) })
+      .catch(() => { if (mine === compareGen.current) setCompareRun(null) })
   }, [compareId])
 
   const groups = useMemo(() => (corpus ? buildFilters(corpus.bands) : []), [corpus])
@@ -80,6 +86,12 @@ export default function App() {
   )
   const filtered = ids.length !== run?.ids.length
   const rows = useMemo(() => (run ? tally(run, ids) : []), [run, ids])
+
+  // 연 공고가 필터 밖으로 나가면 닫는다. 안 닫으면 위는 부분집합인데 아래 드릴다운만
+  // 필터에 안 걸린 공고를 계속 보여 준다.
+  useEffect(() => {
+    if (picked && ids.length && !ids.includes(picked)) setPicked(null)
+  }, [ids, picked])
   const byItem = useMemo(() => Object.fromEntries(rows.map((r) => [r.item, r])), [rows])
 
   const diff = useMemo(() => {

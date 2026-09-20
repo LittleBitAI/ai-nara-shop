@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  KIND, KIND_ORDER, TN, FN, FP, TP, ITEMS, quoteInDoc, docText, tally, macroF1,
+  KIND, KIND_ORDER, TN, FN, FP, TP, ITEMS, quoteInDoc, docText, tally, macroF1, labelGaps,
 } from './data.js'
 
 const fmt = (n) => n.toFixed(3)
@@ -161,6 +161,8 @@ export function Detail({ run, corpus, item, id, absence }) {
   const kind = run.grid[id][index]
   const predQuote = run.evidence?.[id]?.[item] ?? ''
   const truthQuote = corpus.truth[id]?.evidence?.[item] ?? ''
+  const truthPositive = corpus.truth[id]?.values[index] === 1
+  const gaps = labelGaps(corpus)
 
   // 근거가 든 문서를 먼저 편다. 검증은 문서 전체를 보는데 칠하기는 보이는 탭만 보므로,
   // 공고문을 고정으로 열면 `원문에 있음` 이라고 해 놓고 아무 데도 안 칠해진 화면이 나온다.
@@ -213,10 +215,13 @@ export function Detail({ run, corpus, item, id, absence }) {
         <>
           <Quote title="제출 근거 (e열)" text={predQuote}
                  verdict={predQuote ? quoteInDoc(predQuote, row) : undefined} />
-          <Quote title="정답 근거" text={truthQuote} />
-          {!truthQuote && !absence && (
+          {truthPositive && <Quote title="정답 근거" text={truthQuote} />}
+          {/* 정답이 0인 칸(TN·FP)에는 애초에 근거가 없는 게 맞다. 안내는 정답이 1일 때만.
+              수치는 박지 않고 라벨에서 센다 — 전에 적힌 "153칸 중 68칸"은 밑이 섞인 말이었다. */}
+          {truthPositive && !truthQuote && (
             <p className="note dim">
-              정답 라벨에 근거가 없는 칸이다 (양성 153칸 중 68칸이 그렇다). 아래에서 직접 찾는다.
+              정답 라벨에 근거가 없는 칸이다 (부재탐지 제외 양성 {gaps.positives}칸 중 {gaps.missing}칸).
+              아래에서 직접 찾는다.
             </p>
           )}
         </>
@@ -261,7 +266,9 @@ export function Detail({ run, corpus, item, id, absence }) {
       <details className="model">
         <summary>
           모델 판정
-          {!raw.length && <span className="dim"> — 원응답 미보관 회차, 판정 흔적만 남았다</span>}
+          {!raw.length && (
+            <span className="dim"> — {run.raw_note ?? '원응답 미보관 회차, 판정 흔적만 남았다'}</span>
+          )}
         </summary>
         {trace.company_size && (
           <pre>company_size_verified {JSON.stringify(trace.company_size, null, 1)}</pre>
@@ -283,18 +290,28 @@ export function Detail({ run, corpus, item, id, absence }) {
   )
 }
 
-/** 제출 근거가 원문의 연속 부분문자열이 아닌 것만. 리더보드엔 안 보이고 2차에서 터진다. */
+/** 제출 근거가 원문의 연속 부분문자열이 아닌 것만. 리더보드엔 안 보이고 2차에서 터진다.
+ *
+ *  분모는 `evidence` 에 실린 것이 아니라 **grid 의 부재탐지 아닌 양성 예측 전부**다.
+ *  실린 것만 세면 e열을 아예 안 낸 칸이 검사 대상에서 통째로 빠져, 최신 회차에서 빈 45칸이
+ *  없는 것처럼 보였다(181 중 136 만 셌다). 빈 e열은 통과가 아니라 실패다. */
 export function EvidenceAudit({ run, corpus, ids, onOpen }) {
-  const bad = useMemo(() => {
-    const out = []
+  const audit = useMemo(() => {
+    const missing = []
+    const wrong = []
     let checked = 0
     for (const id of ids) {
-      for (const [item, quote] of Object.entries(run.evidence?.[id] ?? {})) {
+      for (const [index, cell] of [...run.grid[id]].entries()) {
+        const item = ITEMS[index]
+        if (cell !== TP && cell !== FP) continue
+        if (corpus.items[item]?.absence) continue // 규약상 e가 빈칸이다
         checked += 1
-        if (!quoteInDoc(quote, corpus.docs[id])) out.push({ id, item, quote })
+        const quote = run.evidence?.[id]?.[item] ?? ''
+        if (!quote) missing.push({ id, item, quote: '', why: '빈칸' })
+        else if (!quoteInDoc(quote, corpus.docs[id])) wrong.push({ id, item, quote, why: '원문에 없음' })
       }
     }
-    return { out, checked }
+    return { checked, missing, wrong, bad: [...missing, ...wrong] }
   }, [run, corpus, ids])
 
   return (
@@ -303,17 +320,21 @@ export function EvidenceAudit({ run, corpus, ids, onOpen }) {
         근거 검증 <span className="dim">— 제출 e열이 공고 원문의 연속 부분문자열인가</span>
       </figcaption>
       <p className="auditline">
-        <b className="ok">✓ {bad.checked - bad.out.length}</b>
-        <b className="no">✘ {bad.out.length}</b>
-        <span className="dim">양성 예측 {bad.checked}칸 중. score.py 는 이걸 미검증으로 둔다</span>
+        <b className="ok">✓ {audit.checked - audit.bad.length}</b>
+        <b className={audit.missing.length ? 'no' : 'ok'}>빈칸 {audit.missing.length}</b>
+        <b className={audit.wrong.length ? 'no' : 'ok'}>원문에 없음 {audit.wrong.length}</b>
+        <span className="dim">
+          부재탐지 제외 양성 예측 {audit.checked}칸 중. score.py 는 이걸 미검증으로 둔다
+        </span>
       </p>
-      {bad.out.length > 0 && (
+      {audit.bad.length > 0 && (
         <ul className="auditlist">
-          {bad.out.slice(0, 40).map((miss) => (
+          {audit.bad.slice(0, 40).map((miss) => (
             <li key={`${miss.id}${miss.item}`}>
               <button className="linkish mono" onClick={() => onOpen(miss.item, miss.id)}>
                 {shortId(miss.id)} {miss.item}
               </button>
+              <span className="no">{miss.why}</span>
               <q>{miss.quote.slice(0, 80)}</q>
             </li>
           ))}

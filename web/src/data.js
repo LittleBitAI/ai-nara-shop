@@ -103,6 +103,25 @@ export const macroF1 = (rows) => rows.reduce((sum, r) => sum + r.f1, 0) / rows.l
 
 export const docText = (row) => (row?.docs ?? []).map((d) => d.text).join('\n')
 
+let gapsCache = null
+/** 정답 라벨에서 **부재탐지 아닌** 양성 중 근거가 빈 칸. 화면이 수치를 박지 않게 여기서 센다.
+ *  부재탐지 5항목은 규약상 e가 항상 빈칸이라 결손이 아니므로 분모에서 뺀다. */
+export function labelGaps(corpus) {
+  if (gapsCache) return gapsCache
+  let positives = 0
+  let missing = 0
+  for (const row of Object.values(corpus.truth)) {
+    row.values.forEach((value, index) => {
+      const item = ITEMS[index]
+      if (value !== 1 || corpus.items[item]?.absence) return
+      positives += 1
+      if (!row.evidence[item]) missing += 1
+    })
+  }
+  gapsCache = { positives, missing }
+  return gapsCache
+}
+
 /** 제출 근거가 공고 원문의 연속 부분문자열인가. score.py 는 이걸 미검증으로 둔다. */
 export function quoteInDoc(quote, row) {
   if (!quote) return null
