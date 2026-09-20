@@ -101,11 +101,31 @@ git diff --check
 
 ## 실행할 번들
 
+### 권장: 커밋이 고정된 clone 노트북
+
+[A3 실행 노트북](../../../notebooks/exp-a3-source-role.ipynb)은 아래 값을 미리 넣었다.
+GPU 런타임·Colab 보안 비밀 `HF_TOKEN`과 모델 읽기 권한을 준비하면 **값 수정 없이 실행**한다.
+
+```python
+SOURCE_MODE = "clone"
+REPO_REF = "b7ac2650eccd0d8a6ae41919260b158987fd30ff"
+RUN_DIAGNOSTIC = True
+DIAGNOSE_ITEMS = ""
+```
+
+일반 `colab-baseline.ipynb`를 사용한다면 `REPO_REF`를 위 전체 SHA로 바꿔야 한다.
+모델 ID·리비전·seed·토큰 예산은 바꾸지 않는다. 무라벨 6,000건은 이 노트북 회차에 포함되지 않는다.
+후보 커밋의 ZIP은 아래 로컬 업로드 후보와 script·submit ZIP SHA-256이 같다.
+전용 노트북은 공용판과 코드 셀의 `REPO_REF`만 다르다. 고정 커밋 clone→번들 생성에서
+동일 ZIP을 확인했고, 전용 노트북에 기존 패키징 검사 **7개를 적용해 모두 통과**했다.
+[노트북 검사 기록](notebook-check.json). 모델을 호출한 검증은 아니다.
+
+### 기존 로컬 업로드 방식
+
 로컬 경로: `artifacts/a3-zero-items/0e432eacf041/`.
 그 안의 **colab-baseline.ipynb**를 열고 **colab-bundle.zip**을 업로드한다.
 `SOURCE_MODE="upload"`, `RUN_DIAGNOSTIC=True`, `DIAGNOSE_ITEMS=""`로 준비했다.
-아직 커밋·push하지 않은 후보이므로 현재 HEAD를 clone하면 이 프롬프트를 받지 못한다.
-clone으로 전환할 때는 게시된 **후보의 전체 40자 SHA**를 사용한다.
+이 업로드 사본은 그대로 쓸 수 있지만 ZIP 선택이 필요하다. 위 전용 clone 노트북은 업로드가 없다.
 
 - script SHA-256: `0e432eacf0416bbf8d478fca5b3c8fe78d0c454dcd5ccb6ee7a6871375831b89`
 - submit ZIP SHA-256: `1da28ce977e944ddab264576589ed14f7be7bcd92f53187ed804246bc2206d1a`

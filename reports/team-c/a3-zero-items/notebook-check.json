@@ -1,0 +1,10 @@
+{
+  "mode": "notebook_cpu_validation",
+  "model_called": false,
+  "repo_ref": "b7ac2650eccd0d8a6ae41919260b158987fd30ff",
+  "only_repo_ref_changed_in_code_cells": true,
+  "clone_commit_matches": true,
+  "submit_sha256": "1da28ce977e944ddab264576589ed14f7be7bcd92f53187ed804246bc2206d1a",
+  "tests_run": 7,
+  "tests_passed": true
+}
