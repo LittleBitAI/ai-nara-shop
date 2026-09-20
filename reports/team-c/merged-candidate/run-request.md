@@ -23,10 +23,15 @@
 ```
 SOURCE_MODE = "clone"
 REPO_URL    = "https://github.com/LittleBitAI/ai-nara-shop.git"   # 기본값 그대로
-REPO_REF    = "0a8459a"        # 이것만 바꾼다
+REPO_REF    = "0a8459a538cb55a02d2029b48b226f163224ce4d"          # 이것만 바꾼다
 RUN_DIAGNOSTIC = True           # 기본값
 DIAGNOSE_ITEMS = ""             # 기본값
 ```
+
+**40자 전체 SHA 여야 한다.** 노트북은 `REPO_REF` 를 `git fetch origin <ref>` 에 그대로 넘기고
+GitHub 은 임의 SHA fetch 를 전체 길이로만 받는다. 약칭 `0a8459a` 를 넣은 회차
+`colab-1789877198887063146` 이 `fatal: couldn't find remote ref 0a8459a` 로 죽었다.
+브랜치 이름 `feat/a1-a2-integrate` 도 되지만, 브랜치는 움직이므로 SHA 로 고정한다.
 
 `MODEL_ID`·`REVISION`·seed·토큰 예산·양자화는 건드리지 않는다.
 N1(`split`)·N3(`product`) 별도 호출은 꺼져 있고 A1(`company_size`)만 켜져 있다 —
