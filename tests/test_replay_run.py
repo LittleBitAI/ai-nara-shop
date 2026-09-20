@@ -28,6 +28,8 @@ RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
 # 14셀이 움직였고 대상 밖 변화는 0이다 — v19 오탐 15→3.
 # 2026-09-20 재고정(sha256 8b154af0…): v21 하한이 계약법·공동도급 방식을 따른다.
 # 6셀이 움직였고 대상 밖 변화는 0이다 — v21 오탐 10→4.
+# 2026-09-20 재고정(sha256 3a0df088…): v5가 고시금액 미만 구간에서 발화하지 않는다.
+# 5셀이 움직였고 대상 밖 변화는 0이다 — v5 오탐 6→1.
 # 근거는 reports/team-b/b1-v19-bid-stage/README.md.
 HEAD_REPLAY = ROOT / "reports/team-b/b5-port-replay/submission.csv"
 

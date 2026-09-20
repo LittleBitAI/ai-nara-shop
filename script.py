@@ -1148,6 +1148,16 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
     """근거 원문이 해당 항목의 위반 조건을 스스로 부정하는가(v9·v19·v21·v24)."""
     if not evidence:
         return False
+    if item == "v5":
+        # v5는 **고시금액 이상** 지역제한이다. 추정가격이 그 미만이면 이 항목이 아니라
+        # v6·v7(고시금액 미만)의 영역이다. 금액은 meta에 그대로 있고 경계는 조문이 정한다.
+        # dev 양성 7건이 **전부** 고시금액 이상 구간이다. 실측: F1 0.556(5/6/2) → 0.769(5/1/2).
+        #
+        # **이 게이트를 다른 금액 항목에 함께 걸면 손해다.** 같은 방식을 항목명에 금액이
+        # 적힌 다섯(v2·v4·v5·v6·v7)에 일괄 적용하면 합계 −0.219다 — v4는 양성 6건 중
+        # 2건만 구간 안이고(0.800 → 0.444), v7도 TP를 하나 잃는다. v5만 건다.
+        price = estimated_price(rec)
+        return price is not None and price < NOTICE_AMOUNT_WON
     if item == "v19":
         if not v19_demanded_at_bid_stage(rec):
             return True                     # 공고가 입찰 단계에서 요구한 적이 없다
