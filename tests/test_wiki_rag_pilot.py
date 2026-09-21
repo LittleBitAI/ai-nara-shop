@@ -413,8 +413,11 @@ class NotebookTests(unittest.TestCase):
         self.assertIn('--episode', code[13])
         self.assertIn('experiments/wiki-rag/sources.json', code[3])
         self.assertIn('reports/wiki-rag-pilot/inputs.json', code[5])
-        # The notebook must not be runnable until it is pinned to a pushed commit.
-        self.assertIn('"0" * 40', code[1])
+        # The notebook runs one pushed commit, and the report names the same one.
+        pinned = json.loads((wiki.ROOT/'reports/wiki-rag-pilot/cpu-checks.json')
+                            .read_text(encoding='utf-8'))['pinned_code_commit']
+        self.assertRegex(pinned or '', r'^[0-9a-f]{40}$')
+        self.assertIn('REPO_REF = "' + pinned + '"', code[1])
 
     def test_input_bundle_is_verified_and_results_survive_a_failure(self):
         notebook = self.notebook()
