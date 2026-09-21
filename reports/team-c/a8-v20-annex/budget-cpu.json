@@ -1,0 +1,4227 @@
+{
+  "records": 200,
+  "max_chars": 16000,
+  "prompt_budget": 15296,
+  "output_reserved": 1024,
+  "submission_prompt_budget": 14272,
+  "submission_max_tokens": 2048,
+  "model_revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+  "token_count_kind": "actual",
+  "headroom_over_worst_control": 1014,
+  "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+  "reference_chars": 1568,
+  "reference_sha256": "c0d6fcb3c25b62092c96e5afddb195796df79708acf1c185d13d1c2aa3a0cd28",
+  "added_tokens_min": 586,
+  "added_tokens_max": 586,
+  "additional_shrink": [],
+  "visible_differs": [],
+  "control_truncated": [],
+  "candidate_truncated": [],
+  "conditions_pass": true,
+  "budget_safety_evidence": true,
+  "note": "Prompt-only injection. Token counts come from this runner; a non-actual count is not budget evidence and no character estimate substitutes for it.",
+  "rows": [
+    {
+      "id": "PPS-DEV-01",
+      "control": {
+        "prompt_tokens": 12644,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0b5916cd7760029e506934f0d42bae25277d275d2735f5b32633bf086189e595",
+        "messages_sha256": "01d5cc1d157dedc9d3cd3e6a3c3e1fa8cf8fee9ac9a6172d53576fb4c09bd87f"
+      },
+      "candidate": {
+        "prompt_tokens": 13230,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0b5916cd7760029e506934f0d42bae25277d275d2735f5b32633bf086189e595",
+        "messages_sha256": "2fa193ac727a461618f5e255325cbe0704f36c45b71c032c8998c537690edc88"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-02",
+      "control": {
+        "prompt_tokens": 4586,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0ee2c5d79891ab6e33ea19f6b614e2464858766fe5ab03213fe2455cb4449696",
+        "messages_sha256": "30ec035f3a929ef1ebcd4e6f99215707db01ef9fa49cc2342691afd7baadf402"
+      },
+      "candidate": {
+        "prompt_tokens": 5172,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0ee2c5d79891ab6e33ea19f6b614e2464858766fe5ab03213fe2455cb4449696",
+        "messages_sha256": "54e72853435aa11d890f52da19181dbecf1bd694d64e24546374e1a007cd71ae"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-03",
+      "control": {
+        "prompt_tokens": 13158,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4ba117536a30ac9bc998b458403cf8b449d655ebb219cbf75cef54c255ecaecd",
+        "messages_sha256": "3999a27c9111920f4e14ff22d67284ddefdcdac3c25f636021bdc5b8eca8e408"
+      },
+      "candidate": {
+        "prompt_tokens": 13744,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4ba117536a30ac9bc998b458403cf8b449d655ebb219cbf75cef54c255ecaecd",
+        "messages_sha256": "fc378e5ce5d2bbcf20d97f7ccb6266371b5bb26df4bbd9f10e14be2ac6beabd5"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-04",
+      "control": {
+        "prompt_tokens": 13594,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "3672553c9e257cd6537b7472b9851e8bd1fb04c51cee963d2ebbd6b7096ea7d9",
+        "messages_sha256": "7016b640efaadaa138aaa8beb4a85e22a09bebae2158be6e4208cecd8ed943d9"
+      },
+      "candidate": {
+        "prompt_tokens": 14180,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "3672553c9e257cd6537b7472b9851e8bd1fb04c51cee963d2ebbd6b7096ea7d9",
+        "messages_sha256": "b1a3599e677d29283a014eeb4e47e8c9309ede6fb757cc462f0c9287dd8cb85c"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-05",
+      "control": {
+        "prompt_tokens": 13614,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6979a8ba404382e1ea053f63ba180db79b038eb2dddeb1b85190a1de5d93b7c8",
+        "messages_sha256": "9d231b6bcc592ad7a6aa3f312e68854eb302aaa8064188aa6423822e9f741db5"
+      },
+      "candidate": {
+        "prompt_tokens": 14200,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6979a8ba404382e1ea053f63ba180db79b038eb2dddeb1b85190a1de5d93b7c8",
+        "messages_sha256": "a3553a61847007748b3cbd9f6f436d0b6ecdbd0718b4629580352856f4acfbc0"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-06",
+      "control": {
+        "prompt_tokens": 12676,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7d335d22a2b4a9770c591193e9af360d3147ffe8c964ab643c2e54ba9337da37",
+        "messages_sha256": "8a7928f2250fc8eaa37acba342408e3037e4540b67219b387387413c5ec69475"
+      },
+      "candidate": {
+        "prompt_tokens": 13262,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7d335d22a2b4a9770c591193e9af360d3147ffe8c964ab643c2e54ba9337da37",
+        "messages_sha256": "6f8441bb4c506a167fdc541623ab9dbee7abb042da5f4df7a814bf0c481ea825"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-07",
+      "control": {
+        "prompt_tokens": 13720,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ccf603d40dbf056c68ed7e0be03ad88f830ab6393a94a60c6ecdad9f05652641",
+        "messages_sha256": "98e65e4bf89b45c33410370fb393cc244b061c8439a5be3a9420eadbfb8b5d0f"
+      },
+      "candidate": {
+        "prompt_tokens": 14306,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ccf603d40dbf056c68ed7e0be03ad88f830ab6393a94a60c6ecdad9f05652641",
+        "messages_sha256": "9f75a24fbcb9656f4ad8d3636018e7cad7e90dab9b15d19c69af1f678e5fd0cf"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-08",
+      "control": {
+        "prompt_tokens": 13700,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e1d4cef0f43bdaabdd3daf9adccb56e83ec6a10a155fe9ed6a67ef606af511c6",
+        "messages_sha256": "94143c1f38d1cc789ac4dc0980dabb56a5b61f4301e67c9fe4a993437960d104"
+      },
+      "candidate": {
+        "prompt_tokens": 14286,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e1d4cef0f43bdaabdd3daf9adccb56e83ec6a10a155fe9ed6a67ef606af511c6",
+        "messages_sha256": "815d660aaf569c4d222e632b71e7e8461cc3f0a1333532b1618b1bf70baa634c"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-09",
+      "control": {
+        "prompt_tokens": 9152,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "d66e4d45e16838ebebba41158dcaf5f44d9098c9036f8942ca9f2989932a6b8e",
+        "messages_sha256": "f12f0bb904923ee1bfd4d574c08be3f8c4f42e231cb0afbd7027accf94783e09"
+      },
+      "candidate": {
+        "prompt_tokens": 9738,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "d66e4d45e16838ebebba41158dcaf5f44d9098c9036f8942ca9f2989932a6b8e",
+        "messages_sha256": "db77793d3847a4c8655deb8f34f98a43a9c9e0d5d0f0d0e7c3a71b85cbc9c84e"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-10",
+      "control": {
+        "prompt_tokens": 13077,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1a23b53b821b2a750b9dc9a0387c1f61a269bf579c023e7bb71f0f9c58ed2776",
+        "messages_sha256": "4c8a3f73190e0bd823f04e158a2a184fa6ca3f6714e74bba5d49c192abd0ed23"
+      },
+      "candidate": {
+        "prompt_tokens": 13663,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1a23b53b821b2a750b9dc9a0387c1f61a269bf579c023e7bb71f0f9c58ed2776",
+        "messages_sha256": "4de796b40e07a4b2036b4305dbd47d3f8576abc1fc2c9dd0a0d52a333804945a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-11",
+      "control": {
+        "prompt_tokens": 12623,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1791313b5ace6d2fb727069dc4971b83d9f6a4b4d3664821bcab9b0002af177f",
+        "messages_sha256": "3c971e2f86a2bb63259267cc6fd1b62913bd0431335c63fad39cd8fbbd77d2c4"
+      },
+      "candidate": {
+        "prompt_tokens": 13209,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1791313b5ace6d2fb727069dc4971b83d9f6a4b4d3664821bcab9b0002af177f",
+        "messages_sha256": "4e29118120fbd011df4cfca08ab02e894f0e40b0b398fb24a92e4f47f167bbc7"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-12",
+      "control": {
+        "prompt_tokens": 10574,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "69442bf6e7f2b074f5ab392a5dc4ab4745faf4bb9a62640fd7bb48cce7e5308b",
+        "messages_sha256": "12777b1c5fe4880c589b34d00c435441a1fb21845cb4f861ee046699107c9c19"
+      },
+      "candidate": {
+        "prompt_tokens": 11160,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "69442bf6e7f2b074f5ab392a5dc4ab4745faf4bb9a62640fd7bb48cce7e5308b",
+        "messages_sha256": "f33bb1db80e86f42ed2fbfbd83d90e82d59a6fe918b07fc7e236e2800dc48acd"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-13",
+      "control": {
+        "prompt_tokens": 11799,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "27044b4ca56ba77c64e5bae6c2c638fe085a7cb8f1eb1733b6f70e476150c33a",
+        "messages_sha256": "9535ac329e97a5b71d5f44cd22f7dc018b8db211c09e04ea20b5d7396d2f1393"
+      },
+      "candidate": {
+        "prompt_tokens": 12385,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "27044b4ca56ba77c64e5bae6c2c638fe085a7cb8f1eb1733b6f70e476150c33a",
+        "messages_sha256": "4e130c643a81259638c2773f2037c205b505cbdda6d5aaa60c6c66edf2166c7a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-14",
+      "control": {
+        "prompt_tokens": 9378,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b38eb7ce7c4aafe2fa749bc877bf8c81c11eb0028d3a7313a7489e63c19db7c6",
+        "messages_sha256": "911518aca340b827bd2fdeb796c082392527f3afc4f1bf803023fa979841cd72"
+      },
+      "candidate": {
+        "prompt_tokens": 9964,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b38eb7ce7c4aafe2fa749bc877bf8c81c11eb0028d3a7313a7489e63c19db7c6",
+        "messages_sha256": "c745819e226e6f309c9f8549c70fa407ad4ed03051a1ff524aeb68d74997f3c0"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-15",
+      "control": {
+        "prompt_tokens": 12931,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e63a93162f5cfc9133137f5f65d3013827091c866b9d480d66aa4c2bac74befb",
+        "messages_sha256": "07bfeb5deab02d927db982b0d6a68fa16f825ea6b7ef5f69b2be5205a16e8bb8"
+      },
+      "candidate": {
+        "prompt_tokens": 13517,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e63a93162f5cfc9133137f5f65d3013827091c866b9d480d66aa4c2bac74befb",
+        "messages_sha256": "1cdd65408b77998bb5c9c60d931286b69955785e0fa6cd79c29c4e5f9c1394a2"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-16",
+      "control": {
+        "prompt_tokens": 9718,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "007541b65615c727663a0a9e95b2892402b715f71916243bcb6111b613b64e44",
+        "messages_sha256": "32d539ebd7c1a590ee7c2a508d3d09607277bc93ba293bda45d38b59a0e1b2fb"
+      },
+      "candidate": {
+        "prompt_tokens": 10304,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "007541b65615c727663a0a9e95b2892402b715f71916243bcb6111b613b64e44",
+        "messages_sha256": "7cf3168c6b7e8db170b607d8af3a39dcffaf230f0ff853033ccb93ca95516bc2"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-17",
+      "control": {
+        "prompt_tokens": 13546,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "aa0182710d68bc389643509285698f3c98c12a9bc3853bd9f98b8d56857d2a1a",
+        "messages_sha256": "386027b4790b57bbb68c6539a19fc85682ee4f5fbf065ef15b4ec43b0193475e"
+      },
+      "candidate": {
+        "prompt_tokens": 14132,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "aa0182710d68bc389643509285698f3c98c12a9bc3853bd9f98b8d56857d2a1a",
+        "messages_sha256": "1356c6907bb0c2e27e71c7ec1558f163e1ca51f43ecfeea52ffa296a53a17dfd"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-18",
+      "control": {
+        "prompt_tokens": 7330,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "413f33d4cce3ee7f938e4480687d2959ad94f44b7790ec68a67c1291ee16cc0e",
+        "messages_sha256": "68a74d770ce1c7a84c9d4ff51c80d13329260b3c7ada92dfe45c7fd05618a592"
+      },
+      "candidate": {
+        "prompt_tokens": 7916,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "413f33d4cce3ee7f938e4480687d2959ad94f44b7790ec68a67c1291ee16cc0e",
+        "messages_sha256": "838ca4b93fa46fcea2a0f5abdfca23cfc99647d54255d98692321ca6c1cdffbd"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-19",
+      "control": {
+        "prompt_tokens": 11861,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "d2f12c90c2444ac726bae3facc007ab4b9075e9223cfe8809b03769c4a6abb0c",
+        "messages_sha256": "ed3175824ae42203320eef65ae90f028906df6962aefb722153fda11a9a445d1"
+      },
+      "candidate": {
+        "prompt_tokens": 12447,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "d2f12c90c2444ac726bae3facc007ab4b9075e9223cfe8809b03769c4a6abb0c",
+        "messages_sha256": "c2f9bd7faa0564f4955e0b66cc1a2311fa16be63ddfcd2053118ff818c768568"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-20",
+      "control": {
+        "prompt_tokens": 13442,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9fb2774ecf4419a4e44f7a656b870a234a6ec19798214811cbeed1cddf55e06d",
+        "messages_sha256": "b4dfc50cabba5d5e6b0b865a60b15c9b2406950119307b05a85351a334dd130d"
+      },
+      "candidate": {
+        "prompt_tokens": 14028,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9fb2774ecf4419a4e44f7a656b870a234a6ec19798214811cbeed1cddf55e06d",
+        "messages_sha256": "c0a1cfa6289280f54fcbeab0dca40b16c3e8696f225ebcf489fa67dcefdc14cf"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-21",
+      "control": {
+        "prompt_tokens": 7414,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b3ecaf06844606121dcd0574af76a5f7de128679c2926403bfbee406f3dcb182",
+        "messages_sha256": "0d5fd79bd091f71ce2a745032e42e4456f5fd490814e8c581582e7c97e7b3dbe"
+      },
+      "candidate": {
+        "prompt_tokens": 8000,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b3ecaf06844606121dcd0574af76a5f7de128679c2926403bfbee406f3dcb182",
+        "messages_sha256": "434c7837739afcc66eca7696898aedcd4d7b6ef6c2d812efaf55aae24124d0a5"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-22",
+      "control": {
+        "prompt_tokens": 12621,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c15ab6d4bc60fc4124b57ab098f021149f17700081e2cb295063f534de34ff29",
+        "messages_sha256": "593f71be21de2ae3d041957938390b2a53aee86ca4a20d450203c2af2cf0978d"
+      },
+      "candidate": {
+        "prompt_tokens": 13207,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c15ab6d4bc60fc4124b57ab098f021149f17700081e2cb295063f534de34ff29",
+        "messages_sha256": "a140ff0068959497675dd47b561aff1b6482bcb246020f983ffd790520af4c2a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-23",
+      "control": {
+        "prompt_tokens": 12194,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4527d2f9ac78078add03bc8658a33dc88796f1c300127342ae0038e77be76b79",
+        "messages_sha256": "f4bae021ac0aa641399c5d234bb4d44ef7d63bd1d5f82e9b4a5aba2dbb92c4ef"
+      },
+      "candidate": {
+        "prompt_tokens": 12780,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4527d2f9ac78078add03bc8658a33dc88796f1c300127342ae0038e77be76b79",
+        "messages_sha256": "702741705d1881a2383be318ad3561d4760ead95c99b2206fba17a46ad43cd96"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-24",
+      "control": {
+        "prompt_tokens": 9801,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a2c10103350f1fbfeee8fa19db3d6807dc9e7aaa319a50f7f89d72a21540bd83",
+        "messages_sha256": "2ec1ed147cb1a74954ab1843ffb5f505a071da945ff54c8fef3b13c285ebd815"
+      },
+      "candidate": {
+        "prompt_tokens": 10387,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a2c10103350f1fbfeee8fa19db3d6807dc9e7aaa319a50f7f89d72a21540bd83",
+        "messages_sha256": "1d3100138a35d80149c337755657effc24c5543db88ea94f54f8db8802f29df3"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-25",
+      "control": {
+        "prompt_tokens": 13448,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4286a18d30e8bc838b3531c0561750b078609fb28320af6583d75f5abd87605d",
+        "messages_sha256": "f38179442932ab968f7615c7ac7f4730b2fa768f038a796f9a6bda785081faac"
+      },
+      "candidate": {
+        "prompt_tokens": 14034,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4286a18d30e8bc838b3531c0561750b078609fb28320af6583d75f5abd87605d",
+        "messages_sha256": "bd5daa0f7f30b474df0be0c4348c645f1bd68025e573814bda46a28dc6e4e75c"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-26",
+      "control": {
+        "prompt_tokens": 13595,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5b226b39417a5b0a331b03116215e610ce71f67a25d89530aebda81e831da83a",
+        "messages_sha256": "e71b93d5e551d9d17c13c6112df46d51558fc052567fb7be2eca862a5d551be8"
+      },
+      "candidate": {
+        "prompt_tokens": 14181,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5b226b39417a5b0a331b03116215e610ce71f67a25d89530aebda81e831da83a",
+        "messages_sha256": "688827ec7b5be0c52490b363ceccf2ecd455e91d0fa35b6fa442b4efbd03dfc3"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-27",
+      "control": {
+        "prompt_tokens": 13334,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7f89455d1b363114166cdb94b833c0e4d78339ca747d0cdb2e8fcb12a956ccb5",
+        "messages_sha256": "e8e08008ef01da5bd59c42306969af3090d16a00f15171b0fcb27a7dd023a815"
+      },
+      "candidate": {
+        "prompt_tokens": 13920,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7f89455d1b363114166cdb94b833c0e4d78339ca747d0cdb2e8fcb12a956ccb5",
+        "messages_sha256": "7ae1b127d4befd66700e9d56e2debad9cd449c911c1a441e08b582ef8b1a3f68"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-28",
+      "control": {
+        "prompt_tokens": 13418,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0f89cadd26b46e9ff9515d7bd958a7ff84c4c1d29a8e781d139d783da74ef9ba",
+        "messages_sha256": "9f2cd4b4e8e8fea06b2e56de34df3df416c677ff3f010271c48beab5c4a63a7d"
+      },
+      "candidate": {
+        "prompt_tokens": 14004,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0f89cadd26b46e9ff9515d7bd958a7ff84c4c1d29a8e781d139d783da74ef9ba",
+        "messages_sha256": "69971321846fc2a1b7d0df356e234049646d43c56756872e4ebb05414030e24f"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-29",
+      "control": {
+        "prompt_tokens": 6782,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "82af5ee2c305b9e51018d3901fa5a4ddcebb5d4821437e699195741812c2fefa",
+        "messages_sha256": "b4c0b33e8e3ffdcb60919b98ade199cb3e49224d9fd723d6ac845502f03e38d7"
+      },
+      "candidate": {
+        "prompt_tokens": 7368,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "82af5ee2c305b9e51018d3901fa5a4ddcebb5d4821437e699195741812c2fefa",
+        "messages_sha256": "af360a3a0fd05741ae645cb6f3e00703889c5e413b76b4514a05171ebdaaa8de"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-30",
+      "control": {
+        "prompt_tokens": 13932,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a0e3715df2497cd97bef710d4789019bb979863d4be07fda947e9aea5617bc2c",
+        "messages_sha256": "3c45c4ad395d1d0551565a1e0ff8e92f8826cfc1a1b3b46d27c4fe5f9141f20a"
+      },
+      "candidate": {
+        "prompt_tokens": 14518,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a0e3715df2497cd97bef710d4789019bb979863d4be07fda947e9aea5617bc2c",
+        "messages_sha256": "ff5049a5f5714d43607042378958a65baae1977df406790070237355eb3e0665"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-31",
+      "control": {
+        "prompt_tokens": 9382,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "20ad59beee4467dd2819921c5ba5fe3a524823625f75d5dce6009a8023fdae25",
+        "messages_sha256": "7104cf18cde3860485aa27ce876f90efa7da17ef528d3e89edd887a871a65707"
+      },
+      "candidate": {
+        "prompt_tokens": 9968,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "20ad59beee4467dd2819921c5ba5fe3a524823625f75d5dce6009a8023fdae25",
+        "messages_sha256": "fb9a2b1c116968c38c196506d25acff878549ebf5e261d59ae2e209e835e74bc"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-32",
+      "control": {
+        "prompt_tokens": 13010,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "629b3749e683d5a114b1f0ca274ea821156d5e97ccc5bdd14dfbee7182ded9aa",
+        "messages_sha256": "a78c88e74971299cd2c8cb4076ad52a5f408cc6dc4f4b3ba7e14331b189196b8"
+      },
+      "candidate": {
+        "prompt_tokens": 13596,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "629b3749e683d5a114b1f0ca274ea821156d5e97ccc5bdd14dfbee7182ded9aa",
+        "messages_sha256": "5a12073be5501f9f5d88335b7ab7a980eb5480d871afec475d7223a72525e79a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-033",
+      "control": {
+        "prompt_tokens": 7139,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f08dc1cb5ba12f74bb282286ee034effb1f256e4da7727e4277b590a33b4bb8f",
+        "messages_sha256": "303ccc45157dbd3b74191c49eb21ff68e960cbe06fc7a7967662141a9edde669"
+      },
+      "candidate": {
+        "prompt_tokens": 7725,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f08dc1cb5ba12f74bb282286ee034effb1f256e4da7727e4277b590a33b4bb8f",
+        "messages_sha256": "ba016300941a8447a931606502aa154381c2a205b5223f43d1cf7de9c6600b68"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-034",
+      "control": {
+        "prompt_tokens": 12843,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "119aa704baaa29690269dc7ddb75e8628025bbc9a7257e1391c920d83f6140a8",
+        "messages_sha256": "989c21d171cf019f4ff2871020d541bcddeb7b95ba9672d3c2c4db7c48c60539"
+      },
+      "candidate": {
+        "prompt_tokens": 13429,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "119aa704baaa29690269dc7ddb75e8628025bbc9a7257e1391c920d83f6140a8",
+        "messages_sha256": "a146fbe49c7932c74903c4b8937a8fa695326dc67c6376348529e7f43cb6bf27"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-035",
+      "control": {
+        "prompt_tokens": 5063,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "07037c64fc9ed8df2d22eefd50c0d3027d88e56c3380e76c4a590f6bc85fa632",
+        "messages_sha256": "d44d8471b6d0f83fe33b45e9fb9984fe79052c357ee0c02053015a728e1a243a"
+      },
+      "candidate": {
+        "prompt_tokens": 5649,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "07037c64fc9ed8df2d22eefd50c0d3027d88e56c3380e76c4a590f6bc85fa632",
+        "messages_sha256": "e864c49e2d800544f2d5f6ebec125fe5d2aa05b4ac5a8ee9e36e8a8b67ce9f08"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-036",
+      "control": {
+        "prompt_tokens": 6413,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bdf8344854815b0eae12cfa4545262daf56b6c24cafa037f48dd4a9ce619862c",
+        "messages_sha256": "d5564c74b70464a38384ad9f9b5b18060069644f6052c401e0c1e7d75f939ed9"
+      },
+      "candidate": {
+        "prompt_tokens": 6999,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bdf8344854815b0eae12cfa4545262daf56b6c24cafa037f48dd4a9ce619862c",
+        "messages_sha256": "f5f097567d7e83080d6e6e432b6c1f94a7ca20f44f631ddd4c10d0616148aac8"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-037",
+      "control": {
+        "prompt_tokens": 10106,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "fe87504a636b8c16f3350176bfdd598d16dcb6b8fd09f0dfe9a17385b2d8d426",
+        "messages_sha256": "572d2b64b80aea4055cb935aa5d3c8be2455f869d04f4180fb1021ba5b99e051"
+      },
+      "candidate": {
+        "prompt_tokens": 10692,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "fe87504a636b8c16f3350176bfdd598d16dcb6b8fd09f0dfe9a17385b2d8d426",
+        "messages_sha256": "acb2085b29e98881c06da6f99aafcb9388aaaf73e0fdff4a37b23d6ce8fc3359"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-038",
+      "control": {
+        "prompt_tokens": 8507,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ca91d86d69d46af9a91cf0fdd104532c4112b2cbf05a0a3a9a8ed1377aaddd50",
+        "messages_sha256": "7ad77d5f7659680af3986cf5c864844ce663a3c0ccc76f6607fc36c60603e7ac"
+      },
+      "candidate": {
+        "prompt_tokens": 9093,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ca91d86d69d46af9a91cf0fdd104532c4112b2cbf05a0a3a9a8ed1377aaddd50",
+        "messages_sha256": "daee3163f0478dc3706260280598e819a5031fcfeed3d3c3bcb79b7acd23b19f"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-039",
+      "control": {
+        "prompt_tokens": 10749,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "cf582802537c5407066bd1d9975e7643935abae0122dcab9ad4652a19879d1d0",
+        "messages_sha256": "c0c815bc30c0cde21b187eda4f7ade1e01908d2eb5cffdef41859c07886bfd03"
+      },
+      "candidate": {
+        "prompt_tokens": 11335,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "cf582802537c5407066bd1d9975e7643935abae0122dcab9ad4652a19879d1d0",
+        "messages_sha256": "57fac1964e20e43ed1da357e1e5b6be63fb29f47e974c3da5378934d39c486c1"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-040",
+      "control": {
+        "prompt_tokens": 7094,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2df255ff66417580f13f201ce61506afa8883ee7da4ad675b4240bfddb2f53a0",
+        "messages_sha256": "295eedf972e96636b8e6cceb95228c8f9b3ece41913c8cf54b8bd3431b7c3c70"
+      },
+      "candidate": {
+        "prompt_tokens": 7680,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2df255ff66417580f13f201ce61506afa8883ee7da4ad675b4240bfddb2f53a0",
+        "messages_sha256": "a4d5bbeec18f6fc489360668c5b1096f42288ed6f962a707b85682170ac4aa65"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-041",
+      "control": {
+        "prompt_tokens": 6250,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "637101029332d076bdcd34724c66af4c984f5e40948d944da7a795f1e0605c03",
+        "messages_sha256": "d24addf9d95fe31d3514df511a39cf4d488512691a692fbc422e08717ecc90b8"
+      },
+      "candidate": {
+        "prompt_tokens": 6836,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "637101029332d076bdcd34724c66af4c984f5e40948d944da7a795f1e0605c03",
+        "messages_sha256": "67243d389f32f7227b03ce6d8fcf0d3dbc44e4cc0fc38dad5fbf18cd381816e8"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-042",
+      "control": {
+        "prompt_tokens": 8697,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "af9bb4ccac590e5175547546c19ee8f9270244991c43a9e4690aa05effeaf49f",
+        "messages_sha256": "8361ed5779f4b2de78077393428ecc7a28bfc75631b5848580e2b2cc6be1d2c5"
+      },
+      "candidate": {
+        "prompt_tokens": 9283,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "af9bb4ccac590e5175547546c19ee8f9270244991c43a9e4690aa05effeaf49f",
+        "messages_sha256": "14330a419d1db4b462048f3d4fedf7b002ff9833a26066bddba911b5969b9b71"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-043",
+      "control": {
+        "prompt_tokens": 8494,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4ad6e5ec21a16f6249278743643e5fb56dab359949bd8805873a901d47c6fe09",
+        "messages_sha256": "a9a48da75daf2cdb33f31789a8f8da2cbfc2e13871bf1e446474e121a1c5520d"
+      },
+      "candidate": {
+        "prompt_tokens": 9080,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4ad6e5ec21a16f6249278743643e5fb56dab359949bd8805873a901d47c6fe09",
+        "messages_sha256": "eb93a90685806ae681ca90d8e7ed40d23d574eb93fc7134acc69a6b158fae588"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-044",
+      "control": {
+        "prompt_tokens": 12548,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f4b8221e21806a53a1f10d57666deb97a24c5c3895a5bef5a9f26a68a94735ba",
+        "messages_sha256": "61b87c1c28c2bd57ef1bf81ffd99b5893a9e3c6a53ddbd00634da1cbdec58ca8"
+      },
+      "candidate": {
+        "prompt_tokens": 13134,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f4b8221e21806a53a1f10d57666deb97a24c5c3895a5bef5a9f26a68a94735ba",
+        "messages_sha256": "8b35d7f1de977785fbec8d95e163f9739eed6d311a0bbb4359af7d8ba12119cf"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-045",
+      "control": {
+        "prompt_tokens": 12430,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "775018ef112c750463f9d1fe618c0a6c175f05a396d2ca51e328fc42b9d83e1e",
+        "messages_sha256": "f9fa51958682d67bf84c073070081057d25be1cd4c5164bda31301e79dfb84e5"
+      },
+      "candidate": {
+        "prompt_tokens": 13016,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "775018ef112c750463f9d1fe618c0a6c175f05a396d2ca51e328fc42b9d83e1e",
+        "messages_sha256": "5a627840f16b4ca99f5917b939441f9323f1262cad9af5dcf7e906399668342b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-046",
+      "control": {
+        "prompt_tokens": 7197,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "79537c7c3af7a6ed87f39c284cb95cdbee4be82cabd45bb142c2f8d23d0612bc",
+        "messages_sha256": "8270788d5876ca0aa961f6c4e2ed61cd71ee031e60e95316f33d0a32fc60c008"
+      },
+      "candidate": {
+        "prompt_tokens": 7783,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "79537c7c3af7a6ed87f39c284cb95cdbee4be82cabd45bb142c2f8d23d0612bc",
+        "messages_sha256": "e26757600f752dffd8f02783f434cc8da5628621f8363c2da4d059d4b0fa96e2"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-047",
+      "control": {
+        "prompt_tokens": 7203,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "81d9d125eca3e63251ad34bdeeb89438cc600b18a7a30c62ce46a81d1a2003fa",
+        "messages_sha256": "0682c06b12ce405b8161cf699e76e26d4e19b65c6e374cc45d877d8e5b9e239b"
+      },
+      "candidate": {
+        "prompt_tokens": 7789,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "81d9d125eca3e63251ad34bdeeb89438cc600b18a7a30c62ce46a81d1a2003fa",
+        "messages_sha256": "08e15af3988b5310bb5dc6663d13faac391a5d63a793b664a51ff98cee604f68"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-048",
+      "control": {
+        "prompt_tokens": 5861,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "adf11cfd62e9053a20f8f5cd329bb721d52bab8a12206005561e781aec733b00",
+        "messages_sha256": "62e48988ad36a747ebb3b99a0c05ccf9ec8fb72d0ee0c013a15948f9b38089f8"
+      },
+      "candidate": {
+        "prompt_tokens": 6447,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "adf11cfd62e9053a20f8f5cd329bb721d52bab8a12206005561e781aec733b00",
+        "messages_sha256": "0e75ef5464b914c26035fb596f4c05e7a0ac118282d14b80f03504537013b936"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-049",
+      "control": {
+        "prompt_tokens": 10064,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "10564fc327b9832fafd78f7e2646f124e14bb17901a0709e5ee12e0d9dd2aca1",
+        "messages_sha256": "dfaeb123965357fdad57e3d243dec4fee67a1397c0549138a9ec52165499918b"
+      },
+      "candidate": {
+        "prompt_tokens": 10650,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "10564fc327b9832fafd78f7e2646f124e14bb17901a0709e5ee12e0d9dd2aca1",
+        "messages_sha256": "5a12157580cb0e80ef5c9e4b305e5952fcf389dc967174ddc8c82c85a3c2d05d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-050",
+      "control": {
+        "prompt_tokens": 10525,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0f8aa5ce23582658047a8c445704c54ede69793552adeefc07adaacca4284c33",
+        "messages_sha256": "176455afab066b20edca39e98255c0bbe0e10cea56e76d6e77cde74dc49a53c9"
+      },
+      "candidate": {
+        "prompt_tokens": 11111,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0f8aa5ce23582658047a8c445704c54ede69793552adeefc07adaacca4284c33",
+        "messages_sha256": "e6a1f0f3365f7add7ba04d6d6ea9680d5e7250a23bdce20de726b638de00ca1a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-051",
+      "control": {
+        "prompt_tokens": 8547,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f3dc047c574e420ebaa5bedff4b5c5992d6dc37533641c4e50ddc0fe167b4362",
+        "messages_sha256": "dd73faae26840971c01c1dfcc2db7db6cfc2cbbd0463d6a17c05c72392bf3fb4"
+      },
+      "candidate": {
+        "prompt_tokens": 9133,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f3dc047c574e420ebaa5bedff4b5c5992d6dc37533641c4e50ddc0fe167b4362",
+        "messages_sha256": "968f17d25c8a20cf5d8f40af47a20c5e121799b34589caa1c506f7e78022f818"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-052",
+      "control": {
+        "prompt_tokens": 11008,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f0a17569bffa0e7e540a94d0d9bb862b27d8dd5bcd619947d975a32eb8b99562",
+        "messages_sha256": "e83047ac56c56b76f85c1526a7bf046a36feb27dfbfba042f69fae9141d479a1"
+      },
+      "candidate": {
+        "prompt_tokens": 11594,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f0a17569bffa0e7e540a94d0d9bb862b27d8dd5bcd619947d975a32eb8b99562",
+        "messages_sha256": "0a72b55d0b26202c534184d1de49427f776eed318ec558b8630ee1e7736e7360"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-053",
+      "control": {
+        "prompt_tokens": 10191,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "841d570ee1a396839e72741f711d3737a47fe59d40eef9a8f0bbb65b00c6089e",
+        "messages_sha256": "cb017e6076ee54ef5e22142f12ecda7037756e149b4bbe7298f7e9ee8c132822"
+      },
+      "candidate": {
+        "prompt_tokens": 10777,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "841d570ee1a396839e72741f711d3737a47fe59d40eef9a8f0bbb65b00c6089e",
+        "messages_sha256": "720f329bf09def063be193a594f61137f57986fde3516452fa7f2b469fd1bd24"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-054",
+      "control": {
+        "prompt_tokens": 5220,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "332d3f28bdbfd81ffe61b143cbdaf6b98057d939f41508c5f373b2dd21b628ff",
+        "messages_sha256": "d979c8be5801dad48812f842fd5b4be32b253aeed0472871421757628942f5f7"
+      },
+      "candidate": {
+        "prompt_tokens": 5806,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "332d3f28bdbfd81ffe61b143cbdaf6b98057d939f41508c5f373b2dd21b628ff",
+        "messages_sha256": "4a1fdb3ce8cad9d9a62e0f9da73a0f8b3eaa124d09ef29062f604e6d0e9196f8"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-055",
+      "control": {
+        "prompt_tokens": 10702,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2749768b5ea1ddc25d8e4b7648d8f146e452a431aff87d3bfd8520679c6ec16d",
+        "messages_sha256": "b17f85ff2f2a852aa600f64d82c3d9672c5c9c325a3b49ccb17075e72cf38bd2"
+      },
+      "candidate": {
+        "prompt_tokens": 11288,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2749768b5ea1ddc25d8e4b7648d8f146e452a431aff87d3bfd8520679c6ec16d",
+        "messages_sha256": "52e21109f0b34e5ae50f1d8efc92de6910e8f9cbdcccf59e8a5158e166029604"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-056",
+      "control": {
+        "prompt_tokens": 9734,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "232f11474803214d649217651dfef27b8422ea949f8a29e2fc831d36b7941f6f",
+        "messages_sha256": "cf1509b328435150c263a2144736eed09458b34dafd619faf3fd99b88ea61401"
+      },
+      "candidate": {
+        "prompt_tokens": 10320,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "232f11474803214d649217651dfef27b8422ea949f8a29e2fc831d36b7941f6f",
+        "messages_sha256": "87bb0163364f8a06de0017cea8c5f740a60cf1ac3981dbe5ac163adce003000e"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-057",
+      "control": {
+        "prompt_tokens": 5472,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "758c588867b81ef33efac032e6e932f4a011632de7f78d35c1f8f041662a0411",
+        "messages_sha256": "8ae389b3d9ec57cd43dee3cec50f6314a193215f4cba77ea7e60ee7078426f24"
+      },
+      "candidate": {
+        "prompt_tokens": 6058,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "758c588867b81ef33efac032e6e932f4a011632de7f78d35c1f8f041662a0411",
+        "messages_sha256": "25438177406e62c7a15a51d6338e3f7f3d1ab8992698bc1fffdcca0364e17877"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-058",
+      "control": {
+        "prompt_tokens": 8701,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "25e5d91367dd101b2dd01610830d34fafa9405eb7b25be1b5f3a860118309237",
+        "messages_sha256": "5e9f3258c95ac8cd5e5c0da41f0bad980af39b75edaff041f52e495ed17a1849"
+      },
+      "candidate": {
+        "prompt_tokens": 9287,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "25e5d91367dd101b2dd01610830d34fafa9405eb7b25be1b5f3a860118309237",
+        "messages_sha256": "160d0173c6b2be3b3b765fb4f8ba1e39a0f848c18fa3ba97632385801d76ceac"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-059",
+      "control": {
+        "prompt_tokens": 7300,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "38aaff9e76d5d85459dfb56058671c81081aca652a4cd061c65ccad2763eeb03",
+        "messages_sha256": "939f084418fb8681805e1fc375042e52d4a031b00e929e983ebb8eb1e5ee939a"
+      },
+      "candidate": {
+        "prompt_tokens": 7886,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "38aaff9e76d5d85459dfb56058671c81081aca652a4cd061c65ccad2763eeb03",
+        "messages_sha256": "2f95e7c6ac2b4fafddba95c1f3d354779b150c502a17bdb4f1f706212dd0bb5e"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-060",
+      "control": {
+        "prompt_tokens": 5160,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "51fd56758dddad02dc308ffca85db67b1e42fa7a878c000ec9355d0a0bd78b70",
+        "messages_sha256": "4797c35f918b987b09aa967c20237ebb30dc74ab94fb5afa5258f7529ed1e463"
+      },
+      "candidate": {
+        "prompt_tokens": 5746,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "51fd56758dddad02dc308ffca85db67b1e42fa7a878c000ec9355d0a0bd78b70",
+        "messages_sha256": "3a6faaadd310fac046b309b8f3ae92df55d2cba9410af63d473ab111348dd408"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-061",
+      "control": {
+        "prompt_tokens": 5688,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c20a8b7dcd81575026d37939e21202f882226745220f912773985c4aa6219385",
+        "messages_sha256": "b4503231f395f423967b8ff0c6ba350c01ca145f2c61ea9448347191b848f1a5"
+      },
+      "candidate": {
+        "prompt_tokens": 6274,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c20a8b7dcd81575026d37939e21202f882226745220f912773985c4aa6219385",
+        "messages_sha256": "a568951e336b78b3757e7755ef85f5b24e8c8841354dcd29f6f9faf6882dc455"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-062",
+      "control": {
+        "prompt_tokens": 5714,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "571b744902df9280924aae28df6c81334219ae9c2a553549b08078cbf89d8cba",
+        "messages_sha256": "32fc0925ea29c4a94ea88a8bdb2d0f298a3ff1ad52d749c673082fadb8251e99"
+      },
+      "candidate": {
+        "prompt_tokens": 6300,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "571b744902df9280924aae28df6c81334219ae9c2a553549b08078cbf89d8cba",
+        "messages_sha256": "c157439fa413dd9d774fbd18d9f95d577d03430c72922812f587635c740c9902"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-063",
+      "control": {
+        "prompt_tokens": 12732,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "aa715d4f2dc8b8037e64299e3a46fdb9483d7aaf5c5e1b819a3fd4b3b4bb3c88",
+        "messages_sha256": "57ebdc36260b774411a3ae69e53522c47eb00c0458a000429d28d750fbc8731d"
+      },
+      "candidate": {
+        "prompt_tokens": 13318,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "aa715d4f2dc8b8037e64299e3a46fdb9483d7aaf5c5e1b819a3fd4b3b4bb3c88",
+        "messages_sha256": "0b4b41df3c2b2b390a9197285f2ed1fdf059d823880899590f207c67edc552b6"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-064",
+      "control": {
+        "prompt_tokens": 10466,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "cd1342668200a5d20b6f87c7c465905ecc1b9a8c9f13099dfdb0a27d6d5a1957",
+        "messages_sha256": "d0b70cef3ab1cc177b6524f9b0387ba5fd64885f10b463efed5bf1f5185be1df"
+      },
+      "candidate": {
+        "prompt_tokens": 11052,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "cd1342668200a5d20b6f87c7c465905ecc1b9a8c9f13099dfdb0a27d6d5a1957",
+        "messages_sha256": "4d178036bd869d5788ac83bb61f0cfcc4f00a4184f543da5f371ddef556b51e6"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-065",
+      "control": {
+        "prompt_tokens": 6673,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a53cabf8f7e1cb4cf2242e248112f79e78c75d0bb08b1bc89d964214cf9f8bb0",
+        "messages_sha256": "61440438ffbf311ea465341414ee38626a85cb2354e08a094a020a24b760d454"
+      },
+      "candidate": {
+        "prompt_tokens": 7259,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a53cabf8f7e1cb4cf2242e248112f79e78c75d0bb08b1bc89d964214cf9f8bb0",
+        "messages_sha256": "e5281f9f3dfd6feae229e738b693da9828d761beccbd45249b6c6bf52401da81"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-066",
+      "control": {
+        "prompt_tokens": 13841,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bf7cc58709b64d70da4fab1c31d7567bbcbd1568c57cd20574e982fd80c46b3e",
+        "messages_sha256": "0c0080628f8c2d91e3258d99e44e9a878f8a4a401d157bbfa1027c7383606192"
+      },
+      "candidate": {
+        "prompt_tokens": 14427,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bf7cc58709b64d70da4fab1c31d7567bbcbd1568c57cd20574e982fd80c46b3e",
+        "messages_sha256": "d201d96d82fb6440349bc8968f3d32b94261771b2137254385f33528adec1257"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-067",
+      "control": {
+        "prompt_tokens": 8536,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "67d887b56e958305c675fd8079caf2c3e513664941b97b95546fc30ed87ef759",
+        "messages_sha256": "c1229affb328bb2fbfef0084ad896a92da959860576963f70ea4f5e7455b2c46"
+      },
+      "candidate": {
+        "prompt_tokens": 9122,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "67d887b56e958305c675fd8079caf2c3e513664941b97b95546fc30ed87ef759",
+        "messages_sha256": "2696ef57d25e4ebc9db22545f7807bdba4a84c953d3a1822d87435d1c08c26e2"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-068",
+      "control": {
+        "prompt_tokens": 8499,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8e47e5310bdf9d249e81073c8486a34188d9c04cfc114db5dbd52bcd30351205",
+        "messages_sha256": "296ad6ac99bd6706321a27973c2c9ccf4899fe6fd5e8d94ce0121aad2415c76e"
+      },
+      "candidate": {
+        "prompt_tokens": 9085,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8e47e5310bdf9d249e81073c8486a34188d9c04cfc114db5dbd52bcd30351205",
+        "messages_sha256": "857dd291d67a466ef8295b7e0f647edca59065abb12d4428daec4938434225e4"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-069",
+      "control": {
+        "prompt_tokens": 12532,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a19a4744b7a2b48f5643738b79872afeeb715669c897c18ad0b70f14bf699e2b",
+        "messages_sha256": "de8f21db3f60a78943cfdbb590e4a97e40acd8068df0685c5d4e9de5ea2946cb"
+      },
+      "candidate": {
+        "prompt_tokens": 13118,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a19a4744b7a2b48f5643738b79872afeeb715669c897c18ad0b70f14bf699e2b",
+        "messages_sha256": "975d3f1bf608f6b2b4fd8b66b6583961bcf7012cc31ce20925f71907d23a1c9d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-070",
+      "control": {
+        "prompt_tokens": 4798,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "17ee58521584dda2050552730ba20441f08db0761d8c12aa460e491e2baad579",
+        "messages_sha256": "311717060051493d9531c40afdd3a014e283cf0a34bbde61f3849faf963d5d11"
+      },
+      "candidate": {
+        "prompt_tokens": 5384,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "17ee58521584dda2050552730ba20441f08db0761d8c12aa460e491e2baad579",
+        "messages_sha256": "ebe2a3ff8a95f7409072d67652d54ce33cc37c0434cb19598473c2f64a6bd24b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-071",
+      "control": {
+        "prompt_tokens": 6106,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a7f32b0524b5a76e27a14f7f4d018a7c973f961c6b76b790b24bb75dd61b5a45",
+        "messages_sha256": "ce65a35c19210acd5a76c43fedf3957d9b7133b4d0bf4b1db6906f868afc85bb"
+      },
+      "candidate": {
+        "prompt_tokens": 6692,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a7f32b0524b5a76e27a14f7f4d018a7c973f961c6b76b790b24bb75dd61b5a45",
+        "messages_sha256": "4659dcf5dc1527a126339247afe993d235c26808e0bcd6d6e0941096be6f31f3"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-072",
+      "control": {
+        "prompt_tokens": 7602,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "87457c6db4d47b47c95af49d973db80474174c30fc5bd077e0730c9d1e9a0956",
+        "messages_sha256": "ec38607cd7baa5d5aa0fe4db032e2d160e29e361cd977d4b6b2a338c82b7f9f1"
+      },
+      "candidate": {
+        "prompt_tokens": 8188,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "87457c6db4d47b47c95af49d973db80474174c30fc5bd077e0730c9d1e9a0956",
+        "messages_sha256": "ccaeeba6dcfa433ef3271078587f1715f82306e81e336ff40dc3ebfa0c588981"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-073",
+      "control": {
+        "prompt_tokens": 11621,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "715a2cf059ec0e807ce88c126193d9af44cf6a4c8282b299cd520b68dac3bcf8",
+        "messages_sha256": "fef39ce80333a12957d84525187140c4751a87f7cb32b378d64ce482acc138d0"
+      },
+      "candidate": {
+        "prompt_tokens": 12207,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "715a2cf059ec0e807ce88c126193d9af44cf6a4c8282b299cd520b68dac3bcf8",
+        "messages_sha256": "c02e5b561aad214e0aa35c8e70035d6906b5960467769b022f2de7cc88de8a84"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-074",
+      "control": {
+        "prompt_tokens": 7891,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ddf8c3937c632e955394494043de6c3449a3cea53cc12beeef6260cd50f46849",
+        "messages_sha256": "0c659c4e6d0be4042f1822c1639d1dd3bb7f460776951f9d2ed429a758b5e044"
+      },
+      "candidate": {
+        "prompt_tokens": 8477,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ddf8c3937c632e955394494043de6c3449a3cea53cc12beeef6260cd50f46849",
+        "messages_sha256": "02a90a4fe8bdd2b99202a1575704529bcdd5e02889e8e0afeab0904aa549519b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-075",
+      "control": {
+        "prompt_tokens": 8280,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7ed71d6f5990488a7507766b2422db512d2d7fec34fa09a6fdfc1d5fffea46ed",
+        "messages_sha256": "814a969aff15d50b8fdf315dd93c4b40c19ed0188b858d5d89c2e37998859b69"
+      },
+      "candidate": {
+        "prompt_tokens": 8866,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7ed71d6f5990488a7507766b2422db512d2d7fec34fa09a6fdfc1d5fffea46ed",
+        "messages_sha256": "56ebda04463a1fa3a21b98581d868e4063ce675fedabf963ef190c51689372f3"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-076",
+      "control": {
+        "prompt_tokens": 12790,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4de4dba83171825a15c0613c69ba86b3b827eb245bf4bb2b0dac702506d63456",
+        "messages_sha256": "3c64f60075328cef23235f6fd5d3fd7cd89ac296061515e2040218a82d2575b0"
+      },
+      "candidate": {
+        "prompt_tokens": 13376,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4de4dba83171825a15c0613c69ba86b3b827eb245bf4bb2b0dac702506d63456",
+        "messages_sha256": "bc5b9bec76193cbf0aed029ee73758259d1e53c7f391cfd5c1d65efca8f0e44d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-077",
+      "control": {
+        "prompt_tokens": 5542,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e05551e59fa3fcb2bfad93fb1b562ae2b64d17102d29d6e8fc0599f6b211cbdf",
+        "messages_sha256": "63ca449a9cd3a17bdf415cd818b2ac7b288728c08d28c06a58035df7c55e8544"
+      },
+      "candidate": {
+        "prompt_tokens": 6128,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e05551e59fa3fcb2bfad93fb1b562ae2b64d17102d29d6e8fc0599f6b211cbdf",
+        "messages_sha256": "2cfeb5a87782e566af83396636f4c8bdd86bc38d252da275d14e725f4af78dde"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-078",
+      "control": {
+        "prompt_tokens": 7581,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f3a1e03aed3a910efd73e535f814fb2e2827d6d0a7fbac6ecf77f71de2645923",
+        "messages_sha256": "89741716427e1f9037fe48928b74077867705470c077210649441c26574d0b1a"
+      },
+      "candidate": {
+        "prompt_tokens": 8167,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f3a1e03aed3a910efd73e535f814fb2e2827d6d0a7fbac6ecf77f71de2645923",
+        "messages_sha256": "205d61399db9666081f6902fe23bf4820433d64dd1d996f1b98fd64018e736fc"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-079",
+      "control": {
+        "prompt_tokens": 7148,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8ed99053b8e1570e1216305dff34744cae71a7ca444fb7210514df1b63fae039",
+        "messages_sha256": "784158cdd621e5ddc8c6eb526ecaa600a2c88ffe78d66366416836d9bf68917b"
+      },
+      "candidate": {
+        "prompt_tokens": 7734,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8ed99053b8e1570e1216305dff34744cae71a7ca444fb7210514df1b63fae039",
+        "messages_sha256": "4d1bfe7f95ab7ecd35b09dd27b8fa785fd0b4d8ed0593da15b52f199cea0193c"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-080",
+      "control": {
+        "prompt_tokens": 6507,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5c3a6b194c5998da77ec59f94cc92ba917ecb45e9f408ce79422e9019a828820",
+        "messages_sha256": "820a088b8edde2b62e62447f596a1d51a9da189c716353282eba4bdab1937de0"
+      },
+      "candidate": {
+        "prompt_tokens": 7093,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5c3a6b194c5998da77ec59f94cc92ba917ecb45e9f408ce79422e9019a828820",
+        "messages_sha256": "147613982c7f352508a660e835eace36e97546f933d783da23f284dab2b1ceeb"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-081",
+      "control": {
+        "prompt_tokens": 13459,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0abbae50b16515488ea76fdb91799bc8b42e781b654a88d619bbc9432575c499",
+        "messages_sha256": "49b8ec2847551ba908503d8be3b5bc31e9f39c4851419d83f85489c562b0583b"
+      },
+      "candidate": {
+        "prompt_tokens": 14045,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0abbae50b16515488ea76fdb91799bc8b42e781b654a88d619bbc9432575c499",
+        "messages_sha256": "f5e9ffc070b45f58dc215a652691c3b05296ae70de07010a52b5c1dfa1d1ff67"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-082",
+      "control": {
+        "prompt_tokens": 12346,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a7f9a7f8deb4b0c22a815e07e22737599c10a0cf50283433971b4b8736261967",
+        "messages_sha256": "5ab1a16cbe2fb83300ea47865081895e40ccb02b53c440b74e02692ee5076f89"
+      },
+      "candidate": {
+        "prompt_tokens": 12932,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a7f9a7f8deb4b0c22a815e07e22737599c10a0cf50283433971b4b8736261967",
+        "messages_sha256": "c99fed94f43014b2cb46e0e02bd388e4b9328d363981926c4601f07055123a46"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-083",
+      "control": {
+        "prompt_tokens": 9200,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4f8d4e757f12e9084aec6550d493647665efa5d5244bde0e6e214f7c76243bdc",
+        "messages_sha256": "8ebb3cd2bd3e2e6c007d8f6d23ac807741ec1a641d44decb347ffb095b6e779c"
+      },
+      "candidate": {
+        "prompt_tokens": 9786,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4f8d4e757f12e9084aec6550d493647665efa5d5244bde0e6e214f7c76243bdc",
+        "messages_sha256": "6650b87eb72c8136c9f357a9b5139f9aa3d1b02eb4a0ffd5d06217c2333bc956"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-084",
+      "control": {
+        "prompt_tokens": 8669,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7ff736fb42f18abbce2ffad1026015b2e1ad800e5371874d251263bd70ec742e",
+        "messages_sha256": "24a6d85cd3bb8eff3d21ad59f88b47ee29754c9a59d689910e23000ed2ca21c2"
+      },
+      "candidate": {
+        "prompt_tokens": 9255,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7ff736fb42f18abbce2ffad1026015b2e1ad800e5371874d251263bd70ec742e",
+        "messages_sha256": "e6676aa871d1528b364eba8b3ddb8e3909dbee965556cb55a6d0d48b6495476d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-085",
+      "control": {
+        "prompt_tokens": 12515,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "089a6043964e0cde7951e5a0e7fc7691324a28d71d895946fd9b946df300e9b6",
+        "messages_sha256": "75b2818e11f9ebf720d62d99fd80c7562ca80b3f2767bba1a2053fc185198094"
+      },
+      "candidate": {
+        "prompt_tokens": 13101,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "089a6043964e0cde7951e5a0e7fc7691324a28d71d895946fd9b946df300e9b6",
+        "messages_sha256": "13ceafd5b81de304a2a358630477c1278e7f7c949dfed5849236cadfe353edc7"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-086",
+      "control": {
+        "prompt_tokens": 11979,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "36b18f20e490ca2a13674d0cf3bbab6a2629703afe1c0d3483c3e0680747f9fd",
+        "messages_sha256": "6887fe886248a04e1b26ef05d5d29062e4bd6272ac10b9bdb197e35a5a61d736"
+      },
+      "candidate": {
+        "prompt_tokens": 12565,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "36b18f20e490ca2a13674d0cf3bbab6a2629703afe1c0d3483c3e0680747f9fd",
+        "messages_sha256": "0de574666017b9618f4b1b78e707d7eabbbd23c80b7a3252e04466ea095e7242"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-087",
+      "control": {
+        "prompt_tokens": 12692,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4178399446beb7aaa3310531bf45857a966b5ad6810dbca98b89fe262bffb15d",
+        "messages_sha256": "716359d82a9a59b4a66034bea7b7f3d0335b0dcfbcedeadf62f4363ab66d2bb5"
+      },
+      "candidate": {
+        "prompt_tokens": 13278,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4178399446beb7aaa3310531bf45857a966b5ad6810dbca98b89fe262bffb15d",
+        "messages_sha256": "003e8d0078f68381996d4b5d9d1f808968e25eabb42dde1e652239b7aa429f03"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-088",
+      "control": {
+        "prompt_tokens": 12378,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "791fd84ff2d40bf0fbe8ee775779bf67fd34296346bcdc0740591e0061e15924",
+        "messages_sha256": "c316fb4a1880b86ffe336324acb1469c3d0259dd601f08328a8d22ca23573119"
+      },
+      "candidate": {
+        "prompt_tokens": 12964,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "791fd84ff2d40bf0fbe8ee775779bf67fd34296346bcdc0740591e0061e15924",
+        "messages_sha256": "df1d97d356a6da0e350e0ec43d2da037d5ac981342debcb0b3a20b6947bfad42"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-089",
+      "control": {
+        "prompt_tokens": 10694,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1a8ed8f35b28b63bd9bdfe2d83b1b6152f4787e243d7545d26e99ac9a7df80cb",
+        "messages_sha256": "d0844d2683493dbb750e57857ae936b27efc2e02bff01987ea21c0ce88f35e63"
+      },
+      "candidate": {
+        "prompt_tokens": 11280,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1a8ed8f35b28b63bd9bdfe2d83b1b6152f4787e243d7545d26e99ac9a7df80cb",
+        "messages_sha256": "f5bcd1e7021019b3febceea7000851d032dc2fc3295279af66d1336784d0eeeb"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-090",
+      "control": {
+        "prompt_tokens": 12191,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7ef36e4e5d53591c5d87bf3ee895412c51424f36e9ae62611b8b57692075d696",
+        "messages_sha256": "4cc531ec453546631d8acfd8aa71c4bc8802c5f2d5b7673e7fbae9273111998e"
+      },
+      "candidate": {
+        "prompt_tokens": 12777,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7ef36e4e5d53591c5d87bf3ee895412c51424f36e9ae62611b8b57692075d696",
+        "messages_sha256": "83ea6d0095bbc45b246c1189f1b9de7f72c4b7af02c08a5652ad88b75895dc6c"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-091",
+      "control": {
+        "prompt_tokens": 14250,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "17b20fd1ec21ebf5543a4ccce2ed5d1ee8b4654e083222edfef492f30bd7d745",
+        "messages_sha256": "8b0158ded80a66ac3ccc1b4b191525fba2c9b23120b5c79b4456e0ea692a14b9"
+      },
+      "candidate": {
+        "prompt_tokens": 14836,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "17b20fd1ec21ebf5543a4ccce2ed5d1ee8b4654e083222edfef492f30bd7d745",
+        "messages_sha256": "38da72fd084c0d424f97c6009e0f8df81ae21ec74af7b16c74bbc2ef7fc249c8"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-092",
+      "control": {
+        "prompt_tokens": 8517,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6a32810cc5c73f4979eb90fd108a2f41c19ceb5ed0cea706761dc2454d4fcb07",
+        "messages_sha256": "181e90ef0d98f1d24073c5d6327a67d2a9286dedc1cb82022440792e37a9eddd"
+      },
+      "candidate": {
+        "prompt_tokens": 9103,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6a32810cc5c73f4979eb90fd108a2f41c19ceb5ed0cea706761dc2454d4fcb07",
+        "messages_sha256": "a28bbdde053974d326dba1e48f4aabae241461a1524c233c93bd0abcad13c9ac"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-093",
+      "control": {
+        "prompt_tokens": 11810,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f1bd52c1c464533ad806292567654cad6362fcd3bb4c5874d2cdd79ebff9c207",
+        "messages_sha256": "88ef48622bdba1ec3b5fc88566b03ee8a11f28b2ec039eeeb4d9fed4ecdfbb61"
+      },
+      "candidate": {
+        "prompt_tokens": 12396,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f1bd52c1c464533ad806292567654cad6362fcd3bb4c5874d2cdd79ebff9c207",
+        "messages_sha256": "866f0e6a4fc9daaf63841d346fc95eb80ea825fc135634e20c6b1a30256d4708"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-094",
+      "control": {
+        "prompt_tokens": 5219,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7acaf6831e2b89390c9e8d490ddeade361f6dc080c3927c810fe420b12300c2b",
+        "messages_sha256": "e4a71a02b606b0f4a826a42a997d0abbf16ffe2ccadea17f828586f328791c4f"
+      },
+      "candidate": {
+        "prompt_tokens": 5805,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7acaf6831e2b89390c9e8d490ddeade361f6dc080c3927c810fe420b12300c2b",
+        "messages_sha256": "76e09c4047d1c8720fe1d664b1a072f48f3ee1214c23b2739d51d06138329393"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-095",
+      "control": {
+        "prompt_tokens": 11587,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0537932cb854be728c3e53823cd463ebb5f56704b02387f053fbcab1238cb064",
+        "messages_sha256": "ac8ca769bed70f12d884269ca663204295a36bb19c9194dd0e6dda3cee8427c3"
+      },
+      "candidate": {
+        "prompt_tokens": 12173,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0537932cb854be728c3e53823cd463ebb5f56704b02387f053fbcab1238cb064",
+        "messages_sha256": "51f9c0d36f3d93dc70dc17ab18966ac837772af3d1c06d2624558ff8ce731949"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-096",
+      "control": {
+        "prompt_tokens": 11769,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "81fe48b29bc99fd539d375582313e483fab335d36dddbf7a950154bc10e7fe04",
+        "messages_sha256": "3844265aa80ae5a4d472179af3e937e1829af4d8a902839d3969720f858cc6de"
+      },
+      "candidate": {
+        "prompt_tokens": 12355,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "81fe48b29bc99fd539d375582313e483fab335d36dddbf7a950154bc10e7fe04",
+        "messages_sha256": "7f5f8c41d6fd7f254b9387d7c87d882ec566693e3970be9caa400ae788132d04"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-097",
+      "control": {
+        "prompt_tokens": 12513,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1f1f1075f6ab1e1d360efe0cfc67ebb1ef91694670474515d23880df45c2e31b",
+        "messages_sha256": "7566906c0f7c3488fd8f4235a1c13a783ba339ed8f009fc02db3a0042e1d3a9d"
+      },
+      "candidate": {
+        "prompt_tokens": 13099,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1f1f1075f6ab1e1d360efe0cfc67ebb1ef91694670474515d23880df45c2e31b",
+        "messages_sha256": "6cfecec8e43319838922bf377d1abafa80916a21bad7b455fbb24d96db6f130f"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-098",
+      "control": {
+        "prompt_tokens": 8370,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "30e138baad0ac2ab780cb23265b488002c88db9a001e9858dbfe8b074acd0cba",
+        "messages_sha256": "ecde687e3e87b6c52458564b54b6732a9737e89502cefe8e479033004b9f6433"
+      },
+      "candidate": {
+        "prompt_tokens": 8956,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "30e138baad0ac2ab780cb23265b488002c88db9a001e9858dbfe8b074acd0cba",
+        "messages_sha256": "a742f131e605576e58aaeae5d988b2e20d8a59a5a10b965bce91afe4e85b818a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-099",
+      "control": {
+        "prompt_tokens": 13568,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a20c40e8be8db5cfac4434e8887505f0600f290c3e4831980f5b3f1cdc0b0328",
+        "messages_sha256": "73a95872a2f9160f3dc42725017cc134b69ae6d7b8a92ef8f565df15a88eb797"
+      },
+      "candidate": {
+        "prompt_tokens": 14154,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a20c40e8be8db5cfac4434e8887505f0600f290c3e4831980f5b3f1cdc0b0328",
+        "messages_sha256": "c11dc56dbe6b51c0c4971ce4be7325d1d596e9386a0520c8a77279ed23abd4cc"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-100",
+      "control": {
+        "prompt_tokens": 12044,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e2c1aea5264e4bd191c0f3771617763cfc1bbccafc2a2f97786bfb14e60f76fc",
+        "messages_sha256": "dc8a0080abfdb5b1969f10947adf5b6e3d2809b3298092ee54d9c5f0ef702e37"
+      },
+      "candidate": {
+        "prompt_tokens": 12630,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e2c1aea5264e4bd191c0f3771617763cfc1bbccafc2a2f97786bfb14e60f76fc",
+        "messages_sha256": "3616d2010c681884b86530173949fc8a59f35923866cd1c4fb3f4dd89cf6cae5"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-101",
+      "control": {
+        "prompt_tokens": 13378,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "37b8ccec3d2c37a5a5720e38f8c4e890d26ac8c0cf65f7ed085efdeb65966ae1",
+        "messages_sha256": "3f23907511172cbce7abddd4b33aa791b4cb64907637d03fad58219bd28e9651"
+      },
+      "candidate": {
+        "prompt_tokens": 13964,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "37b8ccec3d2c37a5a5720e38f8c4e890d26ac8c0cf65f7ed085efdeb65966ae1",
+        "messages_sha256": "aacb1c969dd507e864605c178c6c8154be2bafe11996b70524cbb966cbd7a2af"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-102",
+      "control": {
+        "prompt_tokens": 11003,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c0798f365809bac23d9099c14913d582d7884a3115b212d5ab551d5edcfa694d",
+        "messages_sha256": "3de793d38b33ca8740df883aa1ae26643bfc8102a93d76dc8ffb6fce0050e715"
+      },
+      "candidate": {
+        "prompt_tokens": 11589,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c0798f365809bac23d9099c14913d582d7884a3115b212d5ab551d5edcfa694d",
+        "messages_sha256": "d18450a972ec2e6186d274606c30c24edd52f36d30faad7ece44a0587802cb43"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-103",
+      "control": {
+        "prompt_tokens": 12393,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0f1052985406f69db5809c165875d198160dfbfa7788fdd696f327748bfa5a29",
+        "messages_sha256": "20004e535f518382042b7ca522c168132917a6edc32cd21c114ff938272d9f49"
+      },
+      "candidate": {
+        "prompt_tokens": 12979,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0f1052985406f69db5809c165875d198160dfbfa7788fdd696f327748bfa5a29",
+        "messages_sha256": "7b1e4356a1f71aa117f56bcc1b3142f756216ad1c6effa8320635154d1baaf43"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-104",
+      "control": {
+        "prompt_tokens": 7673,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f67365a0c06686ad15c76a7bac623b43d3fe18386b4c51e1f6c3aff0326e7b4a",
+        "messages_sha256": "76c74323a2d632dab7ecc5f35e25c6d102a90aec2d3f89b2d608129e434dcaf9"
+      },
+      "candidate": {
+        "prompt_tokens": 8259,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f67365a0c06686ad15c76a7bac623b43d3fe18386b4c51e1f6c3aff0326e7b4a",
+        "messages_sha256": "1b2029f7b95b3d2164c1c696ff751090c9e6f73f8a524d6faf4589a70b829d8a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-105",
+      "control": {
+        "prompt_tokens": 13153,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "417decffc5028a964ded9912b20414d9d269449175e126a49f3d662a23972341",
+        "messages_sha256": "3d2d049caa9eb5b860d2dc8b15decc90caf69e654ab642eedc328e856d40af8d"
+      },
+      "candidate": {
+        "prompt_tokens": 13739,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "417decffc5028a964ded9912b20414d9d269449175e126a49f3d662a23972341",
+        "messages_sha256": "b32bccfb5719edea035eed56d2d665e97b3d3a3b6c1817afca81eacefe59d19a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-106",
+      "control": {
+        "prompt_tokens": 13230,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b42e051a39b07109d58e67967b850f028bead5e6c580a713b3e0a2ae13177e2b",
+        "messages_sha256": "3150abfc21c0a83052e92c989a7a0a0883da5caf7edb00fc24c4fdb4448ff5c4"
+      },
+      "candidate": {
+        "prompt_tokens": 13816,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b42e051a39b07109d58e67967b850f028bead5e6c580a713b3e0a2ae13177e2b",
+        "messages_sha256": "35d0629fc4b9cefae8eff8077c34243ae6d569c7ad89ad05ec97f37d74df4b07"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-107",
+      "control": {
+        "prompt_tokens": 9504,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c989b6f17f41741a39fcd396e3e217393dc70ab68fe3e06f4b45e265b91dfa5a",
+        "messages_sha256": "4a42a6266748ead624f7bc1aa793526be5d965a73b8daad5c029317a4004b87c"
+      },
+      "candidate": {
+        "prompt_tokens": 10090,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c989b6f17f41741a39fcd396e3e217393dc70ab68fe3e06f4b45e265b91dfa5a",
+        "messages_sha256": "3f4908ceb047d672f8f906265d2575cd4924c467d12ea9d326add200e154a0d4"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-108",
+      "control": {
+        "prompt_tokens": 8140,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ec6cbb0507dcc9ed89cb58ac88fe28974af097fbef825d915e30e429cb73ee19",
+        "messages_sha256": "673b852119e88c0c09a0125c1bd43d5de1cdc92e4592781d5b924a02058f68f9"
+      },
+      "candidate": {
+        "prompt_tokens": 8726,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ec6cbb0507dcc9ed89cb58ac88fe28974af097fbef825d915e30e429cb73ee19",
+        "messages_sha256": "da1d3d05f42b12b33fd7b27baa9fb1e21e2267af206e8be042509490ab48f571"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-109",
+      "control": {
+        "prompt_tokens": 13073,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "27bc4820d54fd9fc3aad8db9f56e8e716c6ff9f493988cbc632ac52c05ee52f2",
+        "messages_sha256": "0c564029e560280eb275fa7fabb43ed2f295ac629143aacd51bd8849af6b93a5"
+      },
+      "candidate": {
+        "prompt_tokens": 13659,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "27bc4820d54fd9fc3aad8db9f56e8e716c6ff9f493988cbc632ac52c05ee52f2",
+        "messages_sha256": "ee49565c29db9e6c9da53af4a3e69c0a92889a541d4bd26e9dcd58d8114b5bef"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-110",
+      "control": {
+        "prompt_tokens": 9019,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "460494ddc3d92adc5cb18503a271f6295f76f77b69351c3b00168eb038771587",
+        "messages_sha256": "c6cad3711b0696748b7b4ad67c7d613cd2f46638110e512297250eadb2a2cecb"
+      },
+      "candidate": {
+        "prompt_tokens": 9605,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "460494ddc3d92adc5cb18503a271f6295f76f77b69351c3b00168eb038771587",
+        "messages_sha256": "3350b3db40a351b9021837fba981f4f484154bded3d0921e195218befb2b2cb1"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-111",
+      "control": {
+        "prompt_tokens": 11494,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "448618a532546596bf1e7c1c71257e92c7fb37396bd5f257d4741e10bae6f73e",
+        "messages_sha256": "6fc336ff3d876cd8b93c392773276a61f8ca8688b23a17b75bfcbd9434b79f24"
+      },
+      "candidate": {
+        "prompt_tokens": 12080,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "448618a532546596bf1e7c1c71257e92c7fb37396bd5f257d4741e10bae6f73e",
+        "messages_sha256": "024070b78cda81bc21fb4055db78710da3eca91b30ddc59cf41206a17b325236"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-112",
+      "control": {
+        "prompt_tokens": 12293,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9b15c9558b51e46f627ca0f01a503aa2d2c1cd08063c50fb6a5d71f2c1cf0b2d",
+        "messages_sha256": "793174be10a28b77a74dfea9882fa3c5ce64e9c83d0149c74569e0a9ab34acd6"
+      },
+      "candidate": {
+        "prompt_tokens": 12879,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9b15c9558b51e46f627ca0f01a503aa2d2c1cd08063c50fb6a5d71f2c1cf0b2d",
+        "messages_sha256": "cb9945998dadcc6d402bc051755691838d4bcade86de23d19157d2bf1f266de3"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-113",
+      "control": {
+        "prompt_tokens": 7039,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a25d13688369f0fb55fcb356f9aef69a534c0276b55b4845411f106867b38765",
+        "messages_sha256": "1848cf58f48b86ecd4bbc55a797e22bc05b7c71feccff5cd3e5de2201ddd3d98"
+      },
+      "candidate": {
+        "prompt_tokens": 7625,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a25d13688369f0fb55fcb356f9aef69a534c0276b55b4845411f106867b38765",
+        "messages_sha256": "10d6bcbb8a36bdda150f4578fadced8123d058538d7f9b1f6737dd0929b3ee22"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-114",
+      "control": {
+        "prompt_tokens": 5722,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7d72fc2afda89d246a434e72f6bbfbd810a320c739ca7ed2a0aee7da03380f0c",
+        "messages_sha256": "739709ac3a259f38a06668ecdf2af649e421cb7939245119516eb219016f57b7"
+      },
+      "candidate": {
+        "prompt_tokens": 6308,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7d72fc2afda89d246a434e72f6bbfbd810a320c739ca7ed2a0aee7da03380f0c",
+        "messages_sha256": "28c17a5e71ac7df0b17274b800ee62cfea75d23f75958bca9a1f116edb785599"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-115",
+      "control": {
+        "prompt_tokens": 8443,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ac2104e5f1c9a82ac92c13de5b334bc24160a6efe9de09fe0c6da20d582a2be3",
+        "messages_sha256": "199f8ee3ccd56b1db5cacfa3f24f26c61451de32172f53e1f0e54f306dc77359"
+      },
+      "candidate": {
+        "prompt_tokens": 9029,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ac2104e5f1c9a82ac92c13de5b334bc24160a6efe9de09fe0c6da20d582a2be3",
+        "messages_sha256": "6d5544347bd2017dec014bf9b04014e4df17ad2f3f0b73b893384293db902c87"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-116",
+      "control": {
+        "prompt_tokens": 8438,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1554d8d402a5bcf8625b676901579c77301e15591e723a4eb855d6c7badd6c5c",
+        "messages_sha256": "8357c9b9bf1b1d3f01f7f825a8e23be4c2f91815c3b0864be3aca173db870538"
+      },
+      "candidate": {
+        "prompt_tokens": 9024,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1554d8d402a5bcf8625b676901579c77301e15591e723a4eb855d6c7badd6c5c",
+        "messages_sha256": "e336a0f36dafe02c95f3b05fc36c0094173e0f89b561e2c834b66e4cf2c8d7fb"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-117",
+      "control": {
+        "prompt_tokens": 12641,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c1010a9b78bbdb834a4b78f480127d2bca6ec9156036ed25e5732a7c9635c921",
+        "messages_sha256": "ed7a783b9af59008c238054d19b8b94cbc98d435da107e5018e0ffcd1e530575"
+      },
+      "candidate": {
+        "prompt_tokens": 13227,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c1010a9b78bbdb834a4b78f480127d2bca6ec9156036ed25e5732a7c9635c921",
+        "messages_sha256": "018371f7efbba39a74a5a9d2ed4b7fd5d9b927da6cb23d2ada8a0ea67708213f"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-118",
+      "control": {
+        "prompt_tokens": 7177,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "fcceda40a1b37a0860fb039104eec40bca6400570d3cd4204ab2402d251394a6",
+        "messages_sha256": "3422731d312681bcf82aa5a104dfcdf54eb9a4bc93faffc2f06f96a32c722d74"
+      },
+      "candidate": {
+        "prompt_tokens": 7763,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "fcceda40a1b37a0860fb039104eec40bca6400570d3cd4204ab2402d251394a6",
+        "messages_sha256": "709ff4ece77f7652691e8329ead5e9dbf80ddc75fb3ee5d63dea07d5893f0336"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-119",
+      "control": {
+        "prompt_tokens": 14020,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "34747ec90ec7f136c2bf32850a315fd16148ce0bbbaf3443ed594c0a5199adc5",
+        "messages_sha256": "66d44d1f0fae450df1eb9cbf8784981d759cd0096907b90c5d39518a3ab79948"
+      },
+      "candidate": {
+        "prompt_tokens": 14606,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "34747ec90ec7f136c2bf32850a315fd16148ce0bbbaf3443ed594c0a5199adc5",
+        "messages_sha256": "ec4641226fdf9941bbd1fef9d93998ff5b6f41a5cdddae3f8897fcae3f87b2ce"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-120",
+      "control": {
+        "prompt_tokens": 5246,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9a81464152b281b4c4afd80853f63681322cc02dbb4ab5af0485e47c7ef1dcbb",
+        "messages_sha256": "1e3eedeceb835a08c63b746991037629144c1844cb8c6d5693cb59c474cc65bb"
+      },
+      "candidate": {
+        "prompt_tokens": 5832,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9a81464152b281b4c4afd80853f63681322cc02dbb4ab5af0485e47c7ef1dcbb",
+        "messages_sha256": "99ab7445230866617041c7179dfbdfc9b8e84615fbff0fe986f6b837243b3a7b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-121",
+      "control": {
+        "prompt_tokens": 14120,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bba39bcbea0ca6811b1192ba64d8b73b88a576a4c785572c6ebb1cf42146d284",
+        "messages_sha256": "782bddaeffc3aed37a1c1c676768d3e229e16006f9899238f61a5dd115588622"
+      },
+      "candidate": {
+        "prompt_tokens": 14706,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bba39bcbea0ca6811b1192ba64d8b73b88a576a4c785572c6ebb1cf42146d284",
+        "messages_sha256": "9b2ce392debf9e97b02a6b7c814fb8264fd21d88c690a4cb5a473cbaf3aa5233"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-122",
+      "control": {
+        "prompt_tokens": 13356,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0267dcac9977d3e493eb7922d53a1b42c134e0856540dd16ebf2f342ca9e1e45",
+        "messages_sha256": "a1ad5cf741698850e0af1b612a65a9faca25a0da19f673acd6d2abbe5b40fecb"
+      },
+      "candidate": {
+        "prompt_tokens": 13942,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0267dcac9977d3e493eb7922d53a1b42c134e0856540dd16ebf2f342ca9e1e45",
+        "messages_sha256": "6cfd3842abb3480a4c9dcfc413dd1efcac672958ec1436dda38e82a570e631f8"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-123",
+      "control": {
+        "prompt_tokens": 8942,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6f09b34b53bb8bb26288e581fa98ab695d99b734fe2abbf372bcc899a74825d4",
+        "messages_sha256": "ae65e30dabbcf8d6ee215ed01e2307402d752c6749e0b16b95174e36c349e6ad"
+      },
+      "candidate": {
+        "prompt_tokens": 9528,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6f09b34b53bb8bb26288e581fa98ab695d99b734fe2abbf372bcc899a74825d4",
+        "messages_sha256": "bc2dd805a458b955d5f9c3b87cbfd3073c09f73b07b8db1b18dbfabf571abe6d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-124",
+      "control": {
+        "prompt_tokens": 8598,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "3c037541f6e6b26beb76520a01f3b260a561ea60305af70e05a57b817e75bf8e",
+        "messages_sha256": "0afaad1ea45750266576ae5ea240550caf7a9c282132604e461fbc7ed603044d"
+      },
+      "candidate": {
+        "prompt_tokens": 9184,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "3c037541f6e6b26beb76520a01f3b260a561ea60305af70e05a57b817e75bf8e",
+        "messages_sha256": "04a868a5c52bec65e3f16f0ea304e79ee6da401c7d3495cea5b2dbd81e0a17c9"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-125",
+      "control": {
+        "prompt_tokens": 13520,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b9e0a4c6784463d4c05e9ea033a5f7ad9f35454a41c6a3e72e3d08ef11795abf",
+        "messages_sha256": "80a3d3d109c130d604c30d4d6bbf8017f31b3930ccc1dd7ec1acbd828def7124"
+      },
+      "candidate": {
+        "prompt_tokens": 14106,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b9e0a4c6784463d4c05e9ea033a5f7ad9f35454a41c6a3e72e3d08ef11795abf",
+        "messages_sha256": "e64f2212fb6dab7ac1263374541ca2383c01db48b3a3ccc7cad6c3420056cd6d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-126",
+      "control": {
+        "prompt_tokens": 9377,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bed1ff949bcbaec370b5f926d39b23a6365ba36bbfa966fae50c7be47353da45",
+        "messages_sha256": "5e5da08e29777c35b8e2eafa4d33ecf58e144c4c0802aa68abb27b68da3929d9"
+      },
+      "candidate": {
+        "prompt_tokens": 9963,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bed1ff949bcbaec370b5f926d39b23a6365ba36bbfa966fae50c7be47353da45",
+        "messages_sha256": "1e667492512813599ec4c07d62262a95a0e617d16330596d17612cf08b0c30f0"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-127",
+      "control": {
+        "prompt_tokens": 12489,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ca3b718a3b31cc9f396de0165c30e79db098fd9a016c962716a6f27f017235a7",
+        "messages_sha256": "38a6d2723f370f3f16f1eb1a5d674e792c0604aaa1cfc5597756aaff16266ed6"
+      },
+      "candidate": {
+        "prompt_tokens": 13075,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "ca3b718a3b31cc9f396de0165c30e79db098fd9a016c962716a6f27f017235a7",
+        "messages_sha256": "3662a68c57a02e1bcd699ac8ac956572f1f15645be7fb6f824124380939b9225"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-128",
+      "control": {
+        "prompt_tokens": 7546,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b8b30e01fe96374b283575703dfc44ae65cf55775a4ba073b23eb2d97e55b1c9",
+        "messages_sha256": "1ead97386f7020b5b5163ffc44cd793a5a1983536ec05c872abb1dec14fbaa27"
+      },
+      "candidate": {
+        "prompt_tokens": 8132,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b8b30e01fe96374b283575703dfc44ae65cf55775a4ba073b23eb2d97e55b1c9",
+        "messages_sha256": "7c72b9e1bf694ee0b8cc354243cda347c1a8882912e1e6f7422f0506b63893de"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-129",
+      "control": {
+        "prompt_tokens": 13204,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "67384a67b8a999821bfc57a879fdb7f8cd5a8ad395a0d9bf0101de4a087a75a0",
+        "messages_sha256": "98b46c7a18e0396a3e4722cf76754004c4f49b6cabf91240769a7fed81bc087f"
+      },
+      "candidate": {
+        "prompt_tokens": 13790,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "67384a67b8a999821bfc57a879fdb7f8cd5a8ad395a0d9bf0101de4a087a75a0",
+        "messages_sha256": "958ae4eec7f1645014c5faa18b8551db2057aeedb1289ffbba461b9f469b958a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-130",
+      "control": {
+        "prompt_tokens": 6067,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "92b32b94974ab4b12ebe4e0b929626cf00ed9e49211f8fe67879f918806ec1be",
+        "messages_sha256": "f484e36a03c03a95b6e353e73d7ec7b244a2d41f68d77271e8a3242886e639d5"
+      },
+      "candidate": {
+        "prompt_tokens": 6653,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "92b32b94974ab4b12ebe4e0b929626cf00ed9e49211f8fe67879f918806ec1be",
+        "messages_sha256": "4c460d785019ebcc7e3b3da6f08d0361da98c6788b21b879543e80ec5ac9c700"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-131",
+      "control": {
+        "prompt_tokens": 7508,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8429c7d30a57c6a2a49492b7822b77edac517ab823aca15923f1dad1ac01c997",
+        "messages_sha256": "329633080e1fca76aede3cdb9e182b3ca7fd6b05ed83f79a4556cd8e079821da"
+      },
+      "candidate": {
+        "prompt_tokens": 8094,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8429c7d30a57c6a2a49492b7822b77edac517ab823aca15923f1dad1ac01c997",
+        "messages_sha256": "b6eff3d0cb7c6761985e96a731fbdb18795db651616247040dc346a4f3200102"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-132",
+      "control": {
+        "prompt_tokens": 13301,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2e1e3fadfdbd5e9f7acfab9ad6863f143da67c6964ba81e28eec73e7d2937206",
+        "messages_sha256": "ecfc5f942d285f8b505e0e0ed1d0467a688b13184c0ddd4bb06c402ca9984e90"
+      },
+      "candidate": {
+        "prompt_tokens": 13887,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2e1e3fadfdbd5e9f7acfab9ad6863f143da67c6964ba81e28eec73e7d2937206",
+        "messages_sha256": "662403bbed101c08c07b225a270ef0185cb32a9b7fee09a7c616dcda61796e11"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-133",
+      "control": {
+        "prompt_tokens": 12121,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "37b18ae246b54d07ce61fcbac3df6e1bd1b442ba2c585aefbce9ef5bae7cd5cf",
+        "messages_sha256": "554d9b4b5551dd0f3c41def8f8e86119602819301401d0540db74136a50c7d30"
+      },
+      "candidate": {
+        "prompt_tokens": 12707,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "37b18ae246b54d07ce61fcbac3df6e1bd1b442ba2c585aefbce9ef5bae7cd5cf",
+        "messages_sha256": "4d923daca56f62bd611808532c978fdd37427c517ec00e70510b6050f9618d55"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-134",
+      "control": {
+        "prompt_tokens": 9276,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "903a20eb3a9f65cfc99dbe116c030dfdb8ddfbded8feeef4361f07e5df1ace98",
+        "messages_sha256": "fed6904e484c37073eabef7f82b458033d83ee643ff8b8e640f8c5921c2023de"
+      },
+      "candidate": {
+        "prompt_tokens": 9862,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "903a20eb3a9f65cfc99dbe116c030dfdb8ddfbded8feeef4361f07e5df1ace98",
+        "messages_sha256": "5ada3b79c13c7c87b27b18c9fadbb3c080a61cf31d7dc0f518350db1f8d6807a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-135",
+      "control": {
+        "prompt_tokens": 13639,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a0e16c612e7be66f58acea874d0f07f86601e30a1509ac35ef4d4cbd646fee36",
+        "messages_sha256": "49bdde8ce5f45c0bd3c748b7019583231a5e014d496e725b29fcda25698341e1"
+      },
+      "candidate": {
+        "prompt_tokens": 14225,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a0e16c612e7be66f58acea874d0f07f86601e30a1509ac35ef4d4cbd646fee36",
+        "messages_sha256": "934906b82d4ca3d8210efb753ba179e39d083ec3f1a78fbafba60eab3b107570"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-136",
+      "control": {
+        "prompt_tokens": 13649,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bbae726cec3a2d831c55de6f270a5c59507aa4c35e6424801ddde01a3fb0d2b6",
+        "messages_sha256": "2f9c5c1aa8c30e157f14f84b658262ccbbbde1aa0eba5153e7e5fe8f1df8bc71"
+      },
+      "candidate": {
+        "prompt_tokens": 14235,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bbae726cec3a2d831c55de6f270a5c59507aa4c35e6424801ddde01a3fb0d2b6",
+        "messages_sha256": "286f258c12e601c66b0cf6e3fbde6863f05944ed5a2da28a03d474b5e4e0476d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-137",
+      "control": {
+        "prompt_tokens": 13279,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c730650464a35115edea0f0a3ef278468ffbe9b1dc2abc5c38fee77fc595d377",
+        "messages_sha256": "5e68603c022c864035829b4e9a8a743381bba7c23c836b5a3055d451408cd520"
+      },
+      "candidate": {
+        "prompt_tokens": 13865,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c730650464a35115edea0f0a3ef278468ffbe9b1dc2abc5c38fee77fc595d377",
+        "messages_sha256": "33e0b1ae96edb71c4537bd8b353751b7f903f772495b693a8def81271482b5e8"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-138",
+      "control": {
+        "prompt_tokens": 11909,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "da7cd00a7406fbb37f078d19fa200cb4809863784c467346eaa8c8c09d382965",
+        "messages_sha256": "332448508229a888614b9079ea933fff27c6e643067877f078dad7d332359dfe"
+      },
+      "candidate": {
+        "prompt_tokens": 12495,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "da7cd00a7406fbb37f078d19fa200cb4809863784c467346eaa8c8c09d382965",
+        "messages_sha256": "03c711cd3f3ce12efce7119b36d277c6a9283ab73e188db008cd4c141a41ce06"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-139",
+      "control": {
+        "prompt_tokens": 10804,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2654f5b774116ac6ba2779622f0116f2da32428ec983e5b67d6c37435ac83c2c",
+        "messages_sha256": "bfdd19d3ab2f79ce9c150187f2bfc658a49e4a6bfb6d81713e88e8cf40e5cb9e"
+      },
+      "candidate": {
+        "prompt_tokens": 11390,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2654f5b774116ac6ba2779622f0116f2da32428ec983e5b67d6c37435ac83c2c",
+        "messages_sha256": "3f3614e724e9c25fdfa4b80b78f8f9698fc55a7cbfa6a43ce29b9302142d2ebd"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-140",
+      "control": {
+        "prompt_tokens": 13729,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1b049a96f5044543827e95b093b3351d737036ba3673ae6604b483cca81e6fe4",
+        "messages_sha256": "fa09092a5f40b4fcdc41271e9ab492247988425203bf3c7c7320d6c5b3f33b2a"
+      },
+      "candidate": {
+        "prompt_tokens": 14315,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1b049a96f5044543827e95b093b3351d737036ba3673ae6604b483cca81e6fe4",
+        "messages_sha256": "8616074e0920ca4ceaef3c11c3149c63d0a650643a6edb646607b0347e49a49e"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-141",
+      "control": {
+        "prompt_tokens": 9241,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f835c8da7ce33b97a85259e87943eac20891bc50d588b6e8908b887139f12069",
+        "messages_sha256": "ea30247448714a99e1f7329ebc1a7e0ff2df40cedc131fbb62d3754332ce0fc7"
+      },
+      "candidate": {
+        "prompt_tokens": 9827,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f835c8da7ce33b97a85259e87943eac20891bc50d588b6e8908b887139f12069",
+        "messages_sha256": "7cf07179b5214eb05069fda75741bcab826969c225217741efd61f30131af52b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": false
+    },
+    {
+      "id": "PPS-DEV-142",
+      "control": {
+        "prompt_tokens": 5217,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c2c5c1b343cba6d42133350b96bacaa3ba5b0faae17a872beba1a27691a8c4ec",
+        "messages_sha256": "a1c3093d67a3306ef54d72021ce109050fae3cb7afd50e57e91828c69f95ab78"
+      },
+      "candidate": {
+        "prompt_tokens": 5803,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "c2c5c1b343cba6d42133350b96bacaa3ba5b0faae17a872beba1a27691a8c4ec",
+        "messages_sha256": "b31e25cda70dbafbbd26d662222f39c0a63ddc31fbdd0377a3b955710cbd12f5"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-143",
+      "control": {
+        "prompt_tokens": 13049,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bbfcaa66b30169b1f3c5fe48afe01168dd4c2217cb8923f76daa5cf4fe0ca982",
+        "messages_sha256": "0f3cc0062f71ebb3e5742c2fc68bb518f1d0d925de9fc82f027cd37da85d58c4"
+      },
+      "candidate": {
+        "prompt_tokens": 13635,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "bbfcaa66b30169b1f3c5fe48afe01168dd4c2217cb8923f76daa5cf4fe0ca982",
+        "messages_sha256": "9790cd6f531578b362d54864e3d4734a014d287327f3f3a114ee9f219ad8b998"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-144",
+      "control": {
+        "prompt_tokens": 8378,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6d1622e7da152023e94fd31b797f6f27f87616eea5f26c256d1a8d244a17ba7a",
+        "messages_sha256": "26c50d23015aed6b7eae810e8f8993f2574ef150e95084bc19f7aab7a1939c82"
+      },
+      "candidate": {
+        "prompt_tokens": 8964,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "6d1622e7da152023e94fd31b797f6f27f87616eea5f26c256d1a8d244a17ba7a",
+        "messages_sha256": "71c60fcdd88dea281b0b503fbad85324a55be740b5eb38f05091aff03f928465"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-145",
+      "control": {
+        "prompt_tokens": 12611,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "114f9b0c31a3adc9fc51070544701197f29671c43c6100767a383dca6a5e97eb",
+        "messages_sha256": "7fde284ffb040d7df80350216dfc66e036b05325002b7c2071b13cfda2584ebb"
+      },
+      "candidate": {
+        "prompt_tokens": 13197,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "114f9b0c31a3adc9fc51070544701197f29671c43c6100767a383dca6a5e97eb",
+        "messages_sha256": "76c6cc7822761f164e87b33827d2c0c06b6a749da868ac1380b28b26e48d0097"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-146",
+      "control": {
+        "prompt_tokens": 8772,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "88274e2e9cedbfbd9bf10c55e51a2cdaa416168485b16a2296c88d5e95cd2aeb",
+        "messages_sha256": "d31eb03d1070f9fd07d8761f5f01ebd80e39e4054a081d6ef3af563f77aa19df"
+      },
+      "candidate": {
+        "prompt_tokens": 9358,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "88274e2e9cedbfbd9bf10c55e51a2cdaa416168485b16a2296c88d5e95cd2aeb",
+        "messages_sha256": "cc56b34e07ffaa05cc42149a40418386ee5b67acc3d8956f6947831c28a2a299"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-147",
+      "control": {
+        "prompt_tokens": 12226,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1a0a6dbb2c2189cb8f6acac609211650862f1eb31ede917664889179afd77c2d",
+        "messages_sha256": "3371c1cb2bf1a1d33a399c46f5069219fbab616d3e9dffa5e054a295f29fab45"
+      },
+      "candidate": {
+        "prompt_tokens": 12812,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "1a0a6dbb2c2189cb8f6acac609211650862f1eb31ede917664889179afd77c2d",
+        "messages_sha256": "6cc01e557ed9740dd8ccb3f689ce300397e2687bdea122295213d22b03f56c84"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-148",
+      "control": {
+        "prompt_tokens": 8584,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "41f2cf9f6cbdd35c3106cc251419a33233fc725b88a7729d01a0de73f46bb9be",
+        "messages_sha256": "e046cae938403e70660c8fe6638875abc7298737b561467b7f027efe4a076f58"
+      },
+      "candidate": {
+        "prompt_tokens": 9170,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "41f2cf9f6cbdd35c3106cc251419a33233fc725b88a7729d01a0de73f46bb9be",
+        "messages_sha256": "d78ea1a364528976deacf32d04777df558352373a714ac1cc207ca6be71d24e4"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-149",
+      "control": {
+        "prompt_tokens": 11693,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e7f7ef689f03a5830b17bfb3c8c274243cc16a270590f76cd5ae0e6fcb9a1b3f",
+        "messages_sha256": "e7c3cc9e6b6ada1d9a4eb33761fdb270e4e66196896bbab7b394b7ad5471ebcb"
+      },
+      "candidate": {
+        "prompt_tokens": 12279,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e7f7ef689f03a5830b17bfb3c8c274243cc16a270590f76cd5ae0e6fcb9a1b3f",
+        "messages_sha256": "52ff69816343d2823e9dc3fdff03aebc2f07814f926e418a1e3c554281bfe269"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-150",
+      "control": {
+        "prompt_tokens": 5212,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "27327d79b47a64bc6e5f73e98d0a499a1cabd0023d8e5f0d558ca511d1860841",
+        "messages_sha256": "2200f203e9997c3a3ef6faabfcc009acde6236cf6f1a276786b22ac74dd2dde5"
+      },
+      "candidate": {
+        "prompt_tokens": 5798,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "27327d79b47a64bc6e5f73e98d0a499a1cabd0023d8e5f0d558ca511d1860841",
+        "messages_sha256": "3a80ee8de5c32f26fbadeb30dc0c7eb85fd4a2bdcc48a6d61ad3289bd697e1a2"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-151",
+      "control": {
+        "prompt_tokens": 12726,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "701f1d5b1f0df1362ca7202579e4005a6ac9095a5a8f9a343355f7d575b1daef",
+        "messages_sha256": "cec774ed91dd45c4cd8548dcd1c20f000addc872e911c28e9f9aae4c4ab61fc8"
+      },
+      "candidate": {
+        "prompt_tokens": 13312,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "701f1d5b1f0df1362ca7202579e4005a6ac9095a5a8f9a343355f7d575b1daef",
+        "messages_sha256": "2ab8e9b2ece0832117fa63889ca53692a0d35830baef172ba9364bea92323458"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-152",
+      "control": {
+        "prompt_tokens": 9081,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "76d1e5351d6c5bba22f697d27a0de8290204eb91cf7159e5f59a007e0478152b",
+        "messages_sha256": "bcd6bdd9f4cd7936754c256ec1bb0e181f8d1e106e392f32117ac544acac6b36"
+      },
+      "candidate": {
+        "prompt_tokens": 9667,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "76d1e5351d6c5bba22f697d27a0de8290204eb91cf7159e5f59a007e0478152b",
+        "messages_sha256": "edb3c952f1276f8358c717db68f7147b1952df9c3c93571e2b2daacfbb97943b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-153",
+      "control": {
+        "prompt_tokens": 13686,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "89914696ae5d124f455f5a7067b88aed6b35b7d92f243ec50e297345fc280847",
+        "messages_sha256": "1140c5163462129672c60b6cc93b3bff3240cdcfcb9a3bb48168e1f2a8dc1d79"
+      },
+      "candidate": {
+        "prompt_tokens": 14272,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "89914696ae5d124f455f5a7067b88aed6b35b7d92f243ec50e297345fc280847",
+        "messages_sha256": "ecce5e600a9115f0d0435728abad5c6e46e6c073a80fc5e5abf59f42148f972a"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-154",
+      "control": {
+        "prompt_tokens": 7587,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2f97e93ff1436ba89fecf243efc127554dd2de6b3ea8e9ea4cb318e1d350076e",
+        "messages_sha256": "180a8eee3417390bf55042be3e841d292a5750c2fdb0dcc3c0a898f48f2664b2"
+      },
+      "candidate": {
+        "prompt_tokens": 8173,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2f97e93ff1436ba89fecf243efc127554dd2de6b3ea8e9ea4cb318e1d350076e",
+        "messages_sha256": "c1ce49512eeeb9ac0f8cc27739575b5a95a75abdeb1ac5126bd61cdd970b9548"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-155",
+      "control": {
+        "prompt_tokens": 12698,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f7d2c79e08bcada67cfdf0ae4d55c83674bc1128b8741506bd4a8d28668a8cb5",
+        "messages_sha256": "60127a8f63aa804c7a82bee3f0ea990a5a3de5d214af39530e08178e7fc538af"
+      },
+      "candidate": {
+        "prompt_tokens": 13284,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f7d2c79e08bcada67cfdf0ae4d55c83674bc1128b8741506bd4a8d28668a8cb5",
+        "messages_sha256": "94e4b2907b23adfef004d29d48b910026279eee900ec77adb175935b3426a366"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-156",
+      "control": {
+        "prompt_tokens": 6477,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "53b7f009182a6065ea067011ac52e16b73c1b9d1ed497b89422a3a70499ef455",
+        "messages_sha256": "98a5a69b67fa561c98b4b1b8dd0af6dd6da29bf7d8af3b67e88a36b0d5caf77f"
+      },
+      "candidate": {
+        "prompt_tokens": 7063,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "53b7f009182a6065ea067011ac52e16b73c1b9d1ed497b89422a3a70499ef455",
+        "messages_sha256": "925aca9b5310963b145e7e8d70184e5bbb0c54ce2e1b6f9e305759dd6e055b3b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-157",
+      "control": {
+        "prompt_tokens": 13865,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "73b50ce07d8f348f91f73812ace0687b0463df7bd767ae0abc0eb72297f998f5",
+        "messages_sha256": "a68b9ffe8be3b7b3176842acc30b6cc5a0b566978d0ba68c8679dc23d299c7b9"
+      },
+      "candidate": {
+        "prompt_tokens": 14451,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "73b50ce07d8f348f91f73812ace0687b0463df7bd767ae0abc0eb72297f998f5",
+        "messages_sha256": "843dce1284ac24c7e8e890e1abe7b4edf93710e28164494d8636ab25c8f43a77"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-158",
+      "control": {
+        "prompt_tokens": 12064,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7a157f61a3935e42f26448ee20e9d710d46e5ef378e8a110bf671e8d90f42035",
+        "messages_sha256": "f8ef4ec592e57535f3ec83038317b161c5a2bcd41ab05508d89f9e9f994df422"
+      },
+      "candidate": {
+        "prompt_tokens": 12650,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7a157f61a3935e42f26448ee20e9d710d46e5ef378e8a110bf671e8d90f42035",
+        "messages_sha256": "18f856c30385d3b7d3c1e63b72c97931e050fcd1bc249474eda86478ccd8066e"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-159",
+      "control": {
+        "prompt_tokens": 13436,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "02a0b3fe01319ba0edfcd992dea98e741a755e91aedba53d3902f4564d0bbdb7",
+        "messages_sha256": "9d5084f281541b04dd23538e50c374d5946e886df950f76ae6bb9164fc28fa57"
+      },
+      "candidate": {
+        "prompt_tokens": 14022,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "02a0b3fe01319ba0edfcd992dea98e741a755e91aedba53d3902f4564d0bbdb7",
+        "messages_sha256": "6e93c1fd9b4894687b42c885156ab5ab35cc3d6360d53fcb46919dfad7d780d4"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-160",
+      "control": {
+        "prompt_tokens": 7725,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e145964288e3daf274368c89dd062d5d5d02755970114cd643a64f561d13cfd9",
+        "messages_sha256": "b79cd565441cab3fde473da804d795700eeabb24851c3624d8af29847c7bac5d"
+      },
+      "candidate": {
+        "prompt_tokens": 8311,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e145964288e3daf274368c89dd062d5d5d02755970114cd643a64f561d13cfd9",
+        "messages_sha256": "d4bbfb476b1eea2c5282ffa8f866e86c5702b16da271a4cd3dd857df2d4ef20d"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-161",
+      "control": {
+        "prompt_tokens": 13494,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "20ba59de3e6141c120053404867a4a73d1ca6ce1bc687cdcd3bf218dd5245428",
+        "messages_sha256": "8411c991d47bbd181815be4f6c4dc3fbea66a1b8a0a29fde95cdb1c68443dee9"
+      },
+      "candidate": {
+        "prompt_tokens": 14080,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "20ba59de3e6141c120053404867a4a73d1ca6ce1bc687cdcd3bf218dd5245428",
+        "messages_sha256": "93b15068fce2932adea422af17b4e6f420ee47aafe265719ec2ad680fadc6bc7"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-162",
+      "control": {
+        "prompt_tokens": 12368,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9f11d9ad9ca3af1bd34f8944ee2d85a3b198e029b6663b6a6fe6d90c760f8d74",
+        "messages_sha256": "f32d5d135300c8ff69fe2736daefdec3c3c08a7174732394413ef3cecf711189"
+      },
+      "candidate": {
+        "prompt_tokens": 12954,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9f11d9ad9ca3af1bd34f8944ee2d85a3b198e029b6663b6a6fe6d90c760f8d74",
+        "messages_sha256": "d7a55580c658c941ab7c2f23d734a7fecd398ab96091097610a70e95bf612396"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-163",
+      "control": {
+        "prompt_tokens": 14206,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "840267930eed1a8a73d5ed754599c1f34d09d93136f566a80fc7a464caafbc32",
+        "messages_sha256": "fa0d1ea84e25f6bfb70208dfa2ca813eeb87be7834c1fca2864435d5acd3294e"
+      },
+      "candidate": {
+        "prompt_tokens": 14792,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "840267930eed1a8a73d5ed754599c1f34d09d93136f566a80fc7a464caafbc32",
+        "messages_sha256": "5b034585e75ee648118142611ae257240de189d3c15cca621af42442ff8e1b62"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-164",
+      "control": {
+        "prompt_tokens": 7120,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f82c7cdea72bc0947f9a9341d3d4b38bb19ae233e6c5afc595c1b3f565ab4336",
+        "messages_sha256": "9e7e4fb874b33320c2b3ce9864ff45f00300b46a7dcd6901544abff578f64efc"
+      },
+      "candidate": {
+        "prompt_tokens": 7706,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f82c7cdea72bc0947f9a9341d3d4b38bb19ae233e6c5afc595c1b3f565ab4336",
+        "messages_sha256": "fff82cc3b5e1ad33d893f5c4f1b4cd9ba2361ed483d0afa19fc2b787ad74d1a4"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-165",
+      "control": {
+        "prompt_tokens": 13490,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "540ea85cc210e362143a2a26d17aa53831ea2e4efcca21332cce911896668f36",
+        "messages_sha256": "33ba433d97c58830eb4ed14ff883480251b9544d7d9c1b17f9fc012e170a1e1d"
+      },
+      "candidate": {
+        "prompt_tokens": 14076,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "540ea85cc210e362143a2a26d17aa53831ea2e4efcca21332cce911896668f36",
+        "messages_sha256": "e0a2fd14063564f0a342d2fc4c932fd944b186ecccc08ae02262946c69f643ec"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-166",
+      "control": {
+        "prompt_tokens": 5575,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "37b48c96b6f9ff1b4c28041c6a52ec0470a740125e184307e9aa60590a465a3f",
+        "messages_sha256": "27772a37adc151fae76bf00c4854bef69c57cef5e8881d3dffc84048196de936"
+      },
+      "candidate": {
+        "prompt_tokens": 6161,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "37b48c96b6f9ff1b4c28041c6a52ec0470a740125e184307e9aa60590a465a3f",
+        "messages_sha256": "75af180e4bfab079a2091c996dc2ea0bc090461b8f784d9f262b548a63020c42"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-167",
+      "control": {
+        "prompt_tokens": 8383,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7a06b63263e38812b9e0bc1b0f9f8f5555ca8901fd34863928916cfd406a2ece",
+        "messages_sha256": "ca6df20395b288e037b04630e05f6c1145d7cdaf39bae2033634d96e9e0bb55f"
+      },
+      "candidate": {
+        "prompt_tokens": 8969,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7a06b63263e38812b9e0bc1b0f9f8f5555ca8901fd34863928916cfd406a2ece",
+        "messages_sha256": "f0dae6ca88e06c37ac73f0564259007b6fc52ee8d8e59c444f33fa48ae12e433"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-168",
+      "control": {
+        "prompt_tokens": 6520,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8b1300d2b5a787d58e68590108d7f445bb2af7a9a15556c498a87e3829f711a5",
+        "messages_sha256": "25afe24cd92430d2a3b1d3aabdab332588a59885093e9d386d2a59196fed1850"
+      },
+      "candidate": {
+        "prompt_tokens": 7106,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "8b1300d2b5a787d58e68590108d7f445bb2af7a9a15556c498a87e3829f711a5",
+        "messages_sha256": "3847f21a4ed1d7007ee9f86d4ba38ff082da9bd46c322453c8d4f640c86b4871"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-169",
+      "control": {
+        "prompt_tokens": 12909,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "70ad2b77619ae5cfc75b3b33230bc7f1f2e466fb7c34d6b0e84154fb82baeb80",
+        "messages_sha256": "9ffb2ef89d70017b6b857b1c2e690bbe3c23ab09c71003b81a1542ff31a72ae0"
+      },
+      "candidate": {
+        "prompt_tokens": 13495,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "70ad2b77619ae5cfc75b3b33230bc7f1f2e466fb7c34d6b0e84154fb82baeb80",
+        "messages_sha256": "1a2702e0aaa3b7ed23386983d31aa507b77b851105a881266f50f1a3a0994b49"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-170",
+      "control": {
+        "prompt_tokens": 12107,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "3a2338c17555bcb2ad3a8d0dab49832efeabcfc3958dc9168e1ff183cf440216",
+        "messages_sha256": "4588b33299c8ce70ca0ec2cf03e2b0516c476685906fe676480a5b91e3f3536c"
+      },
+      "candidate": {
+        "prompt_tokens": 12693,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "3a2338c17555bcb2ad3a8d0dab49832efeabcfc3958dc9168e1ff183cf440216",
+        "messages_sha256": "a77147014de449893a449fc45cdbfbdc3f13e8b4549802cec286a7eedbfe1527"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-171",
+      "control": {
+        "prompt_tokens": 11655,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a573880afe9f6a006e6db4bff9933e6715a6682b784b54d456edb6e111620f26",
+        "messages_sha256": "4428b92455312c733b9c175d019de62b3203bd2196ac5b57771ea989bd62e689"
+      },
+      "candidate": {
+        "prompt_tokens": 12241,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "a573880afe9f6a006e6db4bff9933e6715a6682b784b54d456edb6e111620f26",
+        "messages_sha256": "8747d1f27b54719e1a3d830bae58dea054201ab6a8833ba189cb78a3fc55c446"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-172",
+      "control": {
+        "prompt_tokens": 11607,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "873e9e89c905760236037c9a8797068b0c0f33853b63607c4b7690829ce21e73",
+        "messages_sha256": "87af506cce55e3a8976697b794f3b84bee7b693f101a0f89ed31edecf11f15e3"
+      },
+      "candidate": {
+        "prompt_tokens": 12193,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "873e9e89c905760236037c9a8797068b0c0f33853b63607c4b7690829ce21e73",
+        "messages_sha256": "8064b2e9e1c944bc566b98b0dfb1edd45fdfa7228937b8b576091262df9f3972"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-173",
+      "control": {
+        "prompt_tokens": 13581,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "38b163655739594af4634c90503dfcc265a9bc093657c485bde37f97461b55f0",
+        "messages_sha256": "2399eca56a76af4affe34c66b8557c5c59c6f59a07dcca304e4227bc32396c64"
+      },
+      "candidate": {
+        "prompt_tokens": 14167,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "38b163655739594af4634c90503dfcc265a9bc093657c485bde37f97461b55f0",
+        "messages_sha256": "c23bceee1c23c11a7d4374e6168eb89e3c60a0112453bb61d911e4235f904396"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-174",
+      "control": {
+        "prompt_tokens": 5661,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2d648ef0beb4724abd6e05656031b6e51cc5dc958cf2ae8ae0892a0dde85f131",
+        "messages_sha256": "aae296489d1537bf6d3e3e7b56eac4568eb3c546594dd1f1dcf851687989b774"
+      },
+      "candidate": {
+        "prompt_tokens": 6247,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2d648ef0beb4724abd6e05656031b6e51cc5dc958cf2ae8ae0892a0dde85f131",
+        "messages_sha256": "e690b9f7922cd816a5c8d8d9c5b332757529be4587ee8c5ef4fb24bc2acaf7d1"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-175",
+      "control": {
+        "prompt_tokens": 14116,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b10e576d8093933f23ba4f1242623ac8299c37165434a34c5803182e6d80de64",
+        "messages_sha256": "a3a72990398163c62eb61a955c31fcf33013338d170e625fcb297c608ea18f75"
+      },
+      "candidate": {
+        "prompt_tokens": 14702,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b10e576d8093933f23ba4f1242623ac8299c37165434a34c5803182e6d80de64",
+        "messages_sha256": "baa59929cef011990f756a6cfc57ee8fddadc494c0d5eda315bcd41ca1e3e6bc"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-176",
+      "control": {
+        "prompt_tokens": 10879,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "701450b50f1dfd15c9b65948f05b7a05bc1c2989ca12c5ebe770af17d6d2a317",
+        "messages_sha256": "ff394f408f04633db6b0390e352a9eb0f92cec3a17000162c32e60efb05d78a1"
+      },
+      "candidate": {
+        "prompt_tokens": 11465,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "701450b50f1dfd15c9b65948f05b7a05bc1c2989ca12c5ebe770af17d6d2a317",
+        "messages_sha256": "0b6cfc2fac60503cbd464332585fa06606817ee2bd2bdb05153a568a91f42f48"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-177",
+      "control": {
+        "prompt_tokens": 8710,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "58d3b744b0b57b3c1f0b69015fbeaa8170a2310568212c3046c0fd96e7fbe1c5",
+        "messages_sha256": "e7c16aa326c22304810b89d0d8a6931bfc8a4e0682394a92fdd7e7c1bf9dbdd7"
+      },
+      "candidate": {
+        "prompt_tokens": 9296,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "58d3b744b0b57b3c1f0b69015fbeaa8170a2310568212c3046c0fd96e7fbe1c5",
+        "messages_sha256": "d45619925c945a0f93154559b9e19d56d57e40471ed8caf48ce172337e843b8b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-178",
+      "control": {
+        "prompt_tokens": 12480,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b3c38f1b72d393b939aef661a0f94cd1cedb868bb0509d3f650f4e8630f5038e",
+        "messages_sha256": "c570f64710980af81d32303819aaf70e3c046a0014a7c497dbb25c4a205663f4"
+      },
+      "candidate": {
+        "prompt_tokens": 13066,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "b3c38f1b72d393b939aef661a0f94cd1cedb868bb0509d3f650f4e8630f5038e",
+        "messages_sha256": "34730b2193f1a0ab5e0ce84c7b3519b0a9063d8f1c7bb1ce6a74da83fb0b3411"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-179",
+      "control": {
+        "prompt_tokens": 4866,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "35fa3ddaf6a9ad83138f97a0fc8ad5868bd7604abd760a8ff13493cf7001434e",
+        "messages_sha256": "5bbc7a6e575efead5fa78586e652a1d494c25cf7dff3b2d4a17567c8593c1833"
+      },
+      "candidate": {
+        "prompt_tokens": 5452,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "35fa3ddaf6a9ad83138f97a0fc8ad5868bd7604abd760a8ff13493cf7001434e",
+        "messages_sha256": "6209b54e097413032e8dabb53ca5cad7263d5670ef1ff82e8f6d46dd473d48e7"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-180",
+      "control": {
+        "prompt_tokens": 12347,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5f19eb53530599bbd27aa6dbfe8d1b37da7d61ef0760db8ad8def0c8472b4588",
+        "messages_sha256": "4b29a6ebeca04de38f87576c736143fa3df083fe71c3e3c37cfa38667b87d906"
+      },
+      "candidate": {
+        "prompt_tokens": 12933,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5f19eb53530599bbd27aa6dbfe8d1b37da7d61ef0760db8ad8def0c8472b4588",
+        "messages_sha256": "74a83ef821581495356c1a7e1f729d13cb116119fce213d7608250ee1b2cb451"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-181",
+      "control": {
+        "prompt_tokens": 12721,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "61b0fd4690c827d3a3236982eb5a7d12efc63cf2038e11389aea1a616b0673c5",
+        "messages_sha256": "af8069f3c9c1784b7cf37f70e3d322c04f9024f19166469431328b238f3c74ec"
+      },
+      "candidate": {
+        "prompt_tokens": 13307,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "61b0fd4690c827d3a3236982eb5a7d12efc63cf2038e11389aea1a616b0673c5",
+        "messages_sha256": "471aa7acc4b0b86244eb94aea3fe1af603b008983eab982ecafd23b3017a26af"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-182",
+      "control": {
+        "prompt_tokens": 5986,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e38b371eb00c7f7e266c33cd215224829576050262d4a76cffdd910dde4dd07a",
+        "messages_sha256": "230369c4d645db9d66e022ce34c12174dccc373544c488508e7ad1abe56ab7ad"
+      },
+      "candidate": {
+        "prompt_tokens": 6572,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "e38b371eb00c7f7e266c33cd215224829576050262d4a76cffdd910dde4dd07a",
+        "messages_sha256": "2f2b74200ca1f68e077521d1a617f883f92f18553b0985bdbeb96564fbfa56db"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-183",
+      "control": {
+        "prompt_tokens": 13732,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "31c3b406908fbad18363b622518aa5a4aca21b844290afa351de05d35d4b7c0e",
+        "messages_sha256": "ab7cc276b330ed4438d2c2056020d375d4fdefaad15f00321c8fbe67fc5528c0"
+      },
+      "candidate": {
+        "prompt_tokens": 14318,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "31c3b406908fbad18363b622518aa5a4aca21b844290afa351de05d35d4b7c0e",
+        "messages_sha256": "e9b680eade72586540108f1fb3655954ddf5163dd600806b6d3ecbd5e1b03133"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-184",
+      "control": {
+        "prompt_tokens": 7731,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "09ef5e089755331af24029cb31e5a83d630be1d18fcbe9fbad6323adacfaf0b4",
+        "messages_sha256": "b54036670e0ecae67685e1d220eab56400cfe0c6854f986b41004051d97a7fbf"
+      },
+      "candidate": {
+        "prompt_tokens": 8317,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "09ef5e089755331af24029cb31e5a83d630be1d18fcbe9fbad6323adacfaf0b4",
+        "messages_sha256": "ac26f72aeda3699c53d39e91bc854db3f32b764270cec431576602928da7fad4"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-185",
+      "control": {
+        "prompt_tokens": 13156,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "de1ad250153fc352420e6cbcffefa628aac077cef21611aad30bba950ab94b11",
+        "messages_sha256": "54e04446ba27fa652bf6a32f1993753437f4250c5843466824ceb01163497606"
+      },
+      "candidate": {
+        "prompt_tokens": 13742,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "de1ad250153fc352420e6cbcffefa628aac077cef21611aad30bba950ab94b11",
+        "messages_sha256": "ae227cc81028fbaafbf82f61d235fd64f70cb5f4cc1a1b07cd01d163a7e1524b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-186",
+      "control": {
+        "prompt_tokens": 10223,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4ecbc0a11e76a954b573f010f7e32272b1b7649ac11fbbb3bf1fc88b9f3b0764",
+        "messages_sha256": "e62ff447ac6201541113bdb09a168e421db99aaa40ea6baeba71897f997ed981"
+      },
+      "candidate": {
+        "prompt_tokens": 10809,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "4ecbc0a11e76a954b573f010f7e32272b1b7649ac11fbbb3bf1fc88b9f3b0764",
+        "messages_sha256": "aa9c9bd247866b42719aae8d7d1022cc01c1c6796e3f1522145aba45df43c392"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-187",
+      "control": {
+        "prompt_tokens": 9087,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7f08d17a1cf086d8f8cc300eee2c2834a33bc224cfd63743463a651e79b00dde",
+        "messages_sha256": "614410802e32bebb9fd73f09889b402047a8fc827a0ae9a4887dab645e803d75"
+      },
+      "candidate": {
+        "prompt_tokens": 9673,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7f08d17a1cf086d8f8cc300eee2c2834a33bc224cfd63743463a651e79b00dde",
+        "messages_sha256": "c26934c157cccdc3be0895f15d282f414cd7ec65c237d9f0cd52ce3b197cdffb"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-188",
+      "control": {
+        "prompt_tokens": 11961,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "61f15a3899bc3ed32f2ee18a9a6fc267a45d5eae8d232e2fee1da5b77be20004",
+        "messages_sha256": "5707810dfbb17da4fa08e7cadda5bcc65c234d06bea6040dbdfc1014fdb51ff3"
+      },
+      "candidate": {
+        "prompt_tokens": 12547,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "61f15a3899bc3ed32f2ee18a9a6fc267a45d5eae8d232e2fee1da5b77be20004",
+        "messages_sha256": "47547811302173336779fd8cad5adcb919b375d8d3203d6fad5baa9bfba75485"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-189",
+      "control": {
+        "prompt_tokens": 14282,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7d252ab6ba16baf63c831379a2ea5df8a3afcc16569c6e6c94c16e647232fcc1",
+        "messages_sha256": "ab50f1dc2c77a9287c2ea9bc447d6823499803b35dd8ed5c9c3ed27f6fece337"
+      },
+      "candidate": {
+        "prompt_tokens": 14868,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "7d252ab6ba16baf63c831379a2ea5df8a3afcc16569c6e6c94c16e647232fcc1",
+        "messages_sha256": "7118fbf6a3a7d45db892744d151fc970fa91dd95984a8c40490610be5ef76c84"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-190",
+      "control": {
+        "prompt_tokens": 10296,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f8a27cc2ed9704571f03c0428d6454bb4a93b187ba59fa852ec60789320a114a",
+        "messages_sha256": "1f041d32170aff6771039f875d2ffc200082dd001d532b9b58560a9c4e875654"
+      },
+      "candidate": {
+        "prompt_tokens": 10882,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "f8a27cc2ed9704571f03c0428d6454bb4a93b187ba59fa852ec60789320a114a",
+        "messages_sha256": "707e99db3cdc2435f16e62d79656837e47f9099e9b76b690b88bde8a439083d1"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-191",
+      "control": {
+        "prompt_tokens": 13784,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "d177f1eae9422648573998ad72b779019a8f71807f890f3cb8eda1da1dacc6fd",
+        "messages_sha256": "8b7fa1468808d2755db8bdc16631324900c9204f7cc4ef6cbcde7a371c617685"
+      },
+      "candidate": {
+        "prompt_tokens": 14370,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "d177f1eae9422648573998ad72b779019a8f71807f890f3cb8eda1da1dacc6fd",
+        "messages_sha256": "691da2b3063ef93d0de473b7350995d2861e1dcd836fa920111fffbaf0afe5cc"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-192",
+      "control": {
+        "prompt_tokens": 8599,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "18e46044a13cd6fec1b5b66c0088305dbcc85da9ce1b38a48e170d14201b2342",
+        "messages_sha256": "6f3f21202c237807b7ac712172abb5a13cd7b919cb2c914d3a2f26e9c491b91c"
+      },
+      "candidate": {
+        "prompt_tokens": 9185,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "18e46044a13cd6fec1b5b66c0088305dbcc85da9ce1b38a48e170d14201b2342",
+        "messages_sha256": "0d43330464a7ccdbe6d94674cd75099171893f8937640fbb31a886fb6e704a7b"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-193",
+      "control": {
+        "prompt_tokens": 12325,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0d661d3aeea3c5eb4ad35df2b4a6d047adca518e55506ebbe95d53b0846ea4f4",
+        "messages_sha256": "168fb3d14a91877f3d3c13a638ed360f6c36de83fcc4076d52bd1f58a4eabbb5"
+      },
+      "candidate": {
+        "prompt_tokens": 12911,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "0d661d3aeea3c5eb4ad35df2b4a6d047adca518e55506ebbe95d53b0846ea4f4",
+        "messages_sha256": "cef92ba12d8d81973b823e9760281191c6fd6a87b712dff0235c890383f4c981"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-194",
+      "control": {
+        "prompt_tokens": 12323,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9e9a878dc53429dc6436b6b87dea2100eb014458e42f8fd3e6204a0f9cd36219",
+        "messages_sha256": "79e96d82e73555ae8412a0e0e0d06b97e28d07bd457fb0c0c133c56d545f557f"
+      },
+      "candidate": {
+        "prompt_tokens": 12909,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9e9a878dc53429dc6436b6b87dea2100eb014458e42f8fd3e6204a0f9cd36219",
+        "messages_sha256": "90dfd646a21a8839071804c8cbe575665f11f3a99c995e26c05a8b0ed3013312"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-195",
+      "control": {
+        "prompt_tokens": 13462,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "13a889ff97030ffedbe2192e04b2ed647510f270ebce47eca5c8db26d547b59c",
+        "messages_sha256": "62e71ea6abcb0936663a5345129d958011860f964edf57f19f283adaa4e7073f"
+      },
+      "candidate": {
+        "prompt_tokens": 14048,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "13a889ff97030ffedbe2192e04b2ed647510f270ebce47eca5c8db26d547b59c",
+        "messages_sha256": "b06a176cb207726250f24710a4d6d20ff70739c4371942301b128ee02683a1c0"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-196",
+      "control": {
+        "prompt_tokens": 10460,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9b092c119deed60bec44469d98272191c809ab25f273e357203c8ed8410b8413",
+        "messages_sha256": "c319bb8f38bb4241b363c9b42d3c6c568548d770b8e6a5b900c92748e5c0d403"
+      },
+      "candidate": {
+        "prompt_tokens": 11046,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "9b092c119deed60bec44469d98272191c809ab25f273e357203c8ed8410b8413",
+        "messages_sha256": "a3d7ff371b282143a556a15c8d171d6d66e8245598f6ebc2815409daa9db45c7"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-197",
+      "control": {
+        "prompt_tokens": 12993,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5ac2ab7f162f7869fc5ac580de657ed2eae005b4886ef19e0237e6d06d51da56",
+        "messages_sha256": "254e40f72d8a4365a1613bcc429f6aac0c918285548b005d1ea878631afea228"
+      },
+      "candidate": {
+        "prompt_tokens": 13579,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "5ac2ab7f162f7869fc5ac580de657ed2eae005b4886ef19e0237e6d06d51da56",
+        "messages_sha256": "ae7b6f146e7243b22ca196f56d39d12c8fed908f36e635cfc4e6a35e4d44f817"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-198",
+      "control": {
+        "prompt_tokens": 7341,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2a5bb81aa0ec2ac1b7fc8e2c7ffdce91c07405b240379d6213d99e19fe06385d",
+        "messages_sha256": "b321a55fb2cbba13785d83c1b54b6e28a1e07eeef0cce47d7c3a033feac15ee9"
+      },
+      "candidate": {
+        "prompt_tokens": 7927,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "2a5bb81aa0ec2ac1b7fc8e2c7ffdce91c07405b240379d6213d99e19fe06385d",
+        "messages_sha256": "194f532e13e80a00a60d9d6bc25968a21f3a71e88324d2af439c0c2a55208b90"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-199",
+      "control": {
+        "prompt_tokens": 12438,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "061f0d456557596be1221fbca74c9e868b54e9ac7c04d85610cd47617e974f9f",
+        "messages_sha256": "07b29da7309296ce9bbb71f57a83d3b8f1e7dbecc609ae894e92e927ebedfddc"
+      },
+      "candidate": {
+        "prompt_tokens": 13024,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "061f0d456557596be1221fbca74c9e868b54e9ac7c04d85610cd47617e974f9f",
+        "messages_sha256": "370747382713f1fdb02160ce02b06cc97f5032fa75019f11b7390f03fa5b1043"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    },
+    {
+      "id": "PPS-DEV-200",
+      "control": {
+        "prompt_tokens": 9176,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "136b8dacea96aceb86a0589931c1f159dc3b6e2274c3d680d0af859243617a7c",
+        "messages_sha256": "ca5de3a646257aaa313ab0ecc11b15b3436880959b4dde0cc939e0afa96fe7c3"
+      },
+      "candidate": {
+        "prompt_tokens": 9762,
+        "max_chars": 16000,
+        "shrunk": false,
+        "visible_sha256": "136b8dacea96aceb86a0589931c1f159dc3b6e2274c3d680d0af859243617a7c",
+        "messages_sha256": "1fcd8a6efaf535238aadd3d407b8a8ebcf1db1ba71077c27ad662774cbbe5820"
+      },
+      "additional_shrink": false,
+      "same_visible": true,
+      "added_tokens": 586,
+      "complete_observation": true
+    }
+  ],
+  "measured_by": "TokenizerRunner (pinned snapshot, transformers 5.14.1, no generation)",
+  "block_tokens": 586
+}

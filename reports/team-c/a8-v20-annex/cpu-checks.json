@@ -108,12 +108,36 @@
     "h4_company_output_tokens": {"min": 142, "median": 269.5, "p95": 389, "max": 494,
                                  "finish_reason": {"stop": 200}},
     "headroom_at_submission_budget": 22,
-    "allowed_block_tokens_at_decision": 1046,
     "output_margin_over_observed_max": 2.07,
     "h4_truncated_record_unblocked": "PPS-DEV-189",
     "applies_to": "both arms of the a8 pilot only",
-    "block_tokens_measured": false,
-    "note": "블록 실제 토큰은 미측정이다. 1,046을 넘으면 예약을 960으로 내리거나 블록을 줄인다. 사전 등록 조건(추가 축소 0/200)은 낮추지 않았다."
+    "note": "사전 등록 조건(추가 축소 0/200)을 낮춘 것이 아니라 만족시키는 방법이다."
+  },
+  "block_tokens": {
+    "measured": 586,
+    "measured_by": "TokenizerRunner: 고정 리비전 tokenizer + 제출 chat template, transformers 5.14.1, 생성 0회",
+    "parts": {"header_english": 145, "제2조": 187, "별표 1": 253, "boundary": 1},
+    "chars_per_token": {"header_english": 4.34, "제2조": 1.63, "별표 1": 2.49},
+    "estimate_before_measuring": "730~1,000 (과대 추정이었다)",
+    "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "allowed_block_tokens_at_decision": 1014,
+    "worst_record": {"id": "PPS-DEV-189", "control": 14282, "candidate": 14868, "spare": 428}
+  },
+  "cpu_budget_check": {
+    "file": "budget-cpu.json",
+    "records": 200,
+    "token_count_kind": "actual",
+    "added_tokens_min": 586,
+    "added_tokens_max": 586,
+    "additional_shrink": 0,
+    "visible_differs": 0,
+    "candidate_truncated": 0,
+    "conditions_pass": true,
+    "budget_safety_evidence": true,
+    "same_check_at_submission_budget": {"prompt_budget": 14272, "additional_shrink": 13,
+                                        "visible_differs": 13, "control_truncated": ["PPS-DEV-189"],
+                                        "conditions_pass": false},
+    "not_evidence_of": "모델이 블록을 어떻게 쓰는지. 생성 호출은 0회다."
   },
   "time_budget": {
     "server_measured_seconds": 6380,
@@ -158,6 +182,12 @@
       "skipped": 1,
       "seconds": 105.18,
       "phase": "출력 예약 배선 후. 실패·오류는 아래 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 17,
+      "seconds": 18.88,
+      "phase": "CPU 실측 대조 검사 추가 후. 블록 글자가 바뀌면 이 검사가 먼저 깨진다"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",

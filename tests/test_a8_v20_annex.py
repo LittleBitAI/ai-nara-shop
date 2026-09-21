@@ -4,6 +4,7 @@
 """
 import csv
 from copy import deepcopy
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -161,6 +162,36 @@ class ReservationTests(unittest.TestCase):
         for experiment in ('h3', 'v18'):
             self.assertEqual(pilot.output_reserved(experiment), script.MAX_TOKENS)
             self.assertEqual(pilot.prompt_budget(experiment), script.PROMPT_BUDGET)
+
+
+class MeasuredBudgetTests(unittest.TestCase):
+    """기록된 CPU 실측이 지금 코드의 블록·예산과 같은 것을 재고 있는지 본다."""
+
+    def test_recorded_measurement_matches_this_block_and_passes(self):
+        measured = json.loads((pilot.ROOT/'reports/team-c/a8-v20-annex/budget-cpu.json')
+                              .read_text(encoding='utf-8'))
+        # 블록 글자가 바뀌면 이 검사가 먼저 깨진다. 낡은 실측으로 GPU 를 돌리지 않는다.
+        self.assertEqual(measured['reference_sha256'],
+                         hashlib.sha256(candidate.block().encode('utf-8')).hexdigest())
+        self.assertEqual(measured['reference_chars'], len(candidate.block()))
+        self.assertEqual(measured['prompt_budget'], candidate.PROMPT_BUDGET)
+        self.assertEqual(measured['output_reserved'], candidate.OUTPUT_RESERVED)
+        self.assertEqual(measured['token_count_kind'], 'actual')
+        self.assertEqual(measured['model_revision'], script.MODEL_REVISION)
+        self.assertEqual(measured['records'], 200)
+        # 블록은 공고마다 같은 값이어야 한다. 다르면 문서가 깎인 것이다.
+        block_tokens = measured['block_tokens']
+        self.assertEqual((measured['added_tokens_min'], measured['added_tokens_max']),
+                         (block_tokens, block_tokens))
+        self.assertEqual(measured['additional_shrink'], [])
+        self.assertEqual(measured['visible_differs'], [])
+        self.assertEqual(measured['candidate_truncated'], [])
+        self.assertTrue(measured['conditions_pass'])
+        self.assertTrue(measured['budget_safety_evidence'])
+        worst = max(row['candidate']['prompt_tokens'] for row in measured['rows'])
+        self.assertLessEqual(worst, candidate.PROMPT_BUDGET)
+        # 분할 재시도까지 포함한 여유. 관측 최대 출력 494 보다 커야 한다.
+        self.assertGreater(script.MAX_MODEL_LEN - worst - 64, 494)
 
 
 class LawQuotationTests(unittest.TestCase):

@@ -35,10 +35,10 @@ DATA_DIR = str(ROOT / "open/data")
 # 운영 `MAX_TOKENS=2048`은 H4 company 응답 실측(200건 전부 `stop`, max 494 · p95 389 토큰)의
 # **4.15배**를 예약하고, 그 여유 때문에 프롬프트 예산이 14,272로 내려가 최대 공고 14,250에
 # **22토큰**만 남는다. 그 자리에 블록을 넣으면 후보만 문서가 깎여 비교가 교란된다.
-# 1,024는 관측 최댓값의 2.07배를 남기면서 예산을 15,296으로 올린다 — 블록 1,046토큰까지
-# 추가 축소 0/200이다. 분할 재시도도 살아 있다(14,250+1,046 프롬프트에서 출력 1,024 확보).
-# control의 프롬프트는 이미 예산 안이라 이 값과 무관하게 같다. 예외는 H4에서 13,600자로
-# 절단됐던 `PPS-DEV-189` 하나이며, 두 군 모두 절단이 풀려 H4와 달라진다 — 기록한다.
+# 1,024는 관측 최댓값의 2.07배를 남기면서 예산을 15,296으로 올린다. **실측(고정 토크나이저):
+# 블록은 200건 전부 586토큰이고, 최대 공고는 `PPS-DEV-189`의 후보 14,868 — 여유 428로
+# 추가 축소 0/200이다.** H4에서 13,600자로 절단됐던 그 공고가 늘어난 예산에서 두 군 모두
+# 절단이 풀려 control도 H4와 달라진다 — 기록한다. 나머지 199건의 control은 그대로다.
 # 이 값은 파일럿 한정이다. 운영 채택은 단계별 예약이 필요해 `script.py` 수정이 따르며 별건이다.
 OUTPUT_RESERVED = 1024
 PROMPT_BUDGET = script.MAX_MODEL_LEN - OUTPUT_RESERVED - 64
@@ -88,6 +88,46 @@ def activate(data_dir: str = DATA_DIR):
     """company_size 프롬프트만 임시로 교체한다. 예외·종료 시 원본으로 복원한다."""
     with patch.object(script, "COMPANY_SIZE_PROMPT", script.COMPANY_SIZE_PROMPT + block(data_dir)):
         yield
+
+
+class TokenizerRunner:
+    """고정 리비전의 토크나이저와 제출 chat template만으로 토큰을 센다. 생성하지 않는다.
+
+    `VLLMRunner.count_tokens`와 같은 호출이다. 가중치도 GPU도 필요 없으므로 착수서 §4.3의
+    CPU 경로가 된다. `chat_template_sha256`을 같이 남겨 GPU 회차의 환경 기록과 대조한다.
+
+    **서버 고정 `transformers` 5.14.1이 필요하다.** 4.x는 이 모델의 `tokenizer_config.json`을
+    못 읽고 `_set_model_specific_special_tokens`에서 터진다. torch는 필요 없다.
+    """
+
+    MODE = "tokenizer_only"
+    TOKEN_COUNT = "actual"
+    load_seconds = 0.0
+
+    def __init__(self, tokenizer_dir: str):
+        from transformers import AutoTokenizer  # 지연 import — 검사·수집 경로는 필요 없다.
+        if Path(tokenizer_dir).name != script.MODEL_REVISION:
+            raise ValueError("고정 리비전 snapshot 디렉터리가 아니다: " + tokenizer_dir)
+        self.tok = AutoTokenizer.from_pretrained(tokenizer_dir)
+        self.environment = {"tokenizer_dir": Path(tokenizer_dir).name,
+                            "transformers": __import__("transformers").__version__,
+                            "chat_template_sha256": hashlib.sha256(
+                                str(self.tok.chat_template).encode("utf-8")).hexdigest()}
+
+    def count_tokens(self, messages):
+        ids = self.tok.apply_chat_template(messages, add_generation_prompt=True, tokenize=True,
+                                           enable_thinking=False)
+        if hasattr(ids, "keys") and "input_ids" in ids:
+            ids = ids["input_ids"]
+        return len(ids)
+
+    def block_tokens(self, data_dir: str = DATA_DIR) -> int:
+        """참조 블록만의 토큰 비용. 같은 user 메시지에서 두 system 프롬프트의 차이로 센다."""
+        empty = [{"role": "system", "content": script.COMPANY_SIZE_PROMPT},
+                 {"role": "user", "content": ""}]
+        with_block = [{"role": "system", "content": script.COMPANY_SIZE_PROMPT + block(data_dir)},
+                      {"role": "user", "content": ""}]
+        return self.count_tokens(with_block) - self.count_tokens(empty)
 
 
 def _visible_sha256(rec, max_chars: int) -> str:
