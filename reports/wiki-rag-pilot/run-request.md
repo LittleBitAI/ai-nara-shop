@@ -3,14 +3,16 @@
 상태: **실행 전**. 준비물은 갖췄고 GPU 회차는 아직 한 번도 돌지 않았다.
 [README](README.md)의 공통 예산 손실을 먼저 읽고 돌릴지 결정한다.
 
-## 먼저 해야 하는 것 — 코드 고정
+## 고정 코드
 
-노트북 `notebooks/colab-wiki-rag-pilot.ipynb`의 첫 셀에 `REPO_REF = "0" * 40`이 들어 있다.
-**그대로 실행하면 clone 셀이 멈춘다.** 이 브랜치를 push한 뒤 그 40자리 커밋 SHA로 바꾸고,
-아래 두 줄을 이 문서에 적는다. push·PR 권한은 이번 작업에 부여되지 않았다.
-
-- 실행 코드 커밋: (미정)
-- 고정 노트북 커밋: (미정)
+- 실행 코드 커밋 `a9fdd0a86c6c4b1f8c7021561169fddb60cc6223` (노트북의 `REPO_REF`).
+- 고정 노트북 커밋 `629bf101fe4415b28f20b1ea6623590770335434`.
+  노트북은 실행 코드 커밋에서 `REPO_REF` 한 줄만 바꾼 사본이며 모든 코드 셀 컴파일을 통과했다.
+  Colab이 실제로 clone하는 것은 `REPO_REF`이고, 그 커밋의 실행 소스·자산·입력 명세는
+  노트북 커밋과 바이트 동일하다. 두 커밋의 차이는 노트북·검사·기록 세 파일뿐이다.
+- 분기점 `8afae99`. `origin/main`의 조상이지만 PR #81만큼 뒤에 있다.
+  최신 main과의 동기화를 주장하지 않는다.
+- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/629bf101fe4415b28f20b1ea6623590770335434/notebooks/colab-wiki-rag-pilot.ipynb).
 
 ## 입력 준비
 
