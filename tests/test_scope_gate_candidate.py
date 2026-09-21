@@ -25,6 +25,11 @@ def _load(name, path):
 
 
 script = _load("submission", ROOT / "script.py")
+# `submission` 이라는 이름은 후보들이 재생 대상 모듈을 찾는 자리다 —
+# `base = sys.modules.get("submission") or ... or script`. 카탈로그를 안 채운 채 꽂으면
+# **다른 파일의 검사**가 품목 조회를 잃는다. pytest 가 돌리기 전에 모든 모듈을 수집하므로
+# 이 파일이 뒤에 있어도 앞 파일이 오염된 모듈을 본다. `tests/test_replay_run.py` 와 같은 이유다.
+script.load_sme_reference(str(ROOT / "open/data"))
 candidate = _load("scope_gate_candidate", ROOT / "experiments" / "a4_scope_gate_candidate.py")
 
 BASE = ROOT / "reports" / "team-c" / "a4-scope-gate"
