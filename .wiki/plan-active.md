@@ -7,6 +7,15 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
+**2026-09-21 A5 브리프 4 후속 구현 준비:** [새 셀 착수서](../docs/tasks/a5-v18-scope-review.md).
+사용자가 [독립 분석](../reports/team-c/a5-label-definition/five-stuck-analysis.md)과
+[방법](../reports/team-c/a5-label-definition/five-stuck-how.md)을 이 주제의 소유 문서로 정했다.
+다섯 항목 1,000셀 불변, 오답 77셀·65공고이며 낮은 F1의 원인은 하나가 아니다.
+다음은 같은 company 호출의 별도 범위 재검토를 v18에만 소비하는 후보다.
+후보 구현·CPU 검증·Colab 준비·회차 기록·push/PR까지 진행한다. 최신 지시: 머지하지 않는다.
+상한 339.178초/200건, 새 후보 GPU 미실행. H3 자체는 등록 회차에서 이미 실행됐고
+head 혼합 재생 0.598043→0.548378이었다. 아래 H3 “GPU 미측정”은 준비 당시의 이력이다.
+
 **2026-09-21 A5 H3 실행 준비:** [조건 관측 파일럿](../reports/team-c/a5-label-definition/h3-scope-observation.md).
 기존 한 호출의 조건 인용/상태를 먼저 출력하는 후보와 대조군을 dev 200 + 진단 5건씩 잰다.
 Colab 코드 1735330 고정, CPU 검사 5개·기존 CSV 바이트 재현 통과, 실제 GPU 미측정.
