@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/content/wiki-rag-temvm92p/venv/bin/python",
+    "/content/wiki-rag-temvm92p/repo/experiments/wiki_rag_pilot.py",
+    "--output-dir",
+    "/content/drive/MyDrive/wiki-rag/v20-page-a9fdd0a86c6c-a/episode-2",
+    "--model-dir",
+    "/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "--episode",
+    "2"
+  ],
+  "cwd": "/content/wiki-rag-temvm92p/repo",
+  "started": 1789986134.4906213,
+  "returncode": 0,
+  "elapsed_seconds": 1300.5038199424744
+}

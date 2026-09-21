@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/wiki-rag-tx9v4yj0/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/wiki-rag-tx9v4yj0/repo/requirements.txt"
+  ],
+  "cwd": "/content/wiki-rag-tx9v4yj0",
+  "started": 1789984130.362817,
+  "returncode": 0,
+  "elapsed_seconds": 0.6208059787750244
+}

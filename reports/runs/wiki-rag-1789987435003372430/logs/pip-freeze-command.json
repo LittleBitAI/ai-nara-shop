@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/wiki-rag-temvm92p/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/wiki-rag-temvm92p",
+  "started": 1789985973.886557,
+  "returncode": 0,
+  "elapsed_seconds": 0.36582398414611816
+}

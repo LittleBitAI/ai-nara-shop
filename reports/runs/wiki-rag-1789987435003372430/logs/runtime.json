@@ -1,0 +1,13 @@
+{
+  "python": "3.12.13",
+  "cuda": "13.0",
+  "packages": {
+    "torch": "2.11.0+cu130",
+    "vllm": "0.26.0",
+    "transformers": "5.14.1",
+    "xgrammar": "0.2.3"
+  },
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "ninja_path": "/content/wiki-rag-temvm92p/venv/bin/ninja",
+  "ninja_version": "1.13.2.git.kitware.jobserver-pipe-1"
+}

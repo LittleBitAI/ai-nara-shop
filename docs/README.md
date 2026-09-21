@@ -71,6 +71,7 @@
 | 명세·법령 매핑 | [items](items.md), [rules](rules.md), [contracts](contracts.md) | `open/data/항목표.json`, `open/data/법령패키지/` |
 | 라벨·사례 생성 | [rules](rules.md), [contracts](contracts.md) | `open/train_unlabeled.jsonl`, `open/dev.jsonl` |
 | 프롬프트·검색 | [design](design.md), [contracts](contracts.md) | 승인 명세, 항목표, RAG 노트북 |
+| 위키 판정 페이지·RAG 파일럿 | [실제 결과](../reports/wiki-rag-pilot/results.md), [Claude 착수서](tasks/wiki-rag-pilot.md) | v20 현재 방식/원문/페이지 세 군, 동일 공고 입력·기존 소비자. 두 회차 완료·가설 기각·미채택 |
 | 고정 모델·프롬프트 실행 특성 | [Gemma 4 조사](gemma4.md) | 고정 리비전 모델 카드·기술 보고서·thinking/채팅 규약, 검증 전 실험 후보 |
 | 채점·실험 | [data](data.md), [contracts](contracts.md), [roadmap](roadmap.md) | `open/dev_labels.csv` |
 | 패키징·제출 | [rules](rules.md), [design](design.md) | 베이스라인, 제출 직전 공식 평가 탭 |

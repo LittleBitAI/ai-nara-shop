@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/wiki-rag-tx9v4yj0/repo",
+  "started": 1789983804.8271694,
+  "returncode": 0,
+  "elapsed_seconds": 0.46488118171691895
+}

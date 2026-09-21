@@ -1,0 +1,5006 @@
+{
+  "plan": {
+    "PPS-DEV-01": 11560,
+    "PPS-DEV-02": 16000,
+    "PPS-DEV-03": 11288,
+    "PPS-DEV-04": 10994,
+    "PPS-DEV-05": 10981,
+    "PPS-DEV-06": 11560,
+    "PPS-DEV-07": 10912,
+    "PPS-DEV-08": 10925,
+    "PPS-DEV-09": 16000,
+    "PPS-DEV-10": 11344,
+    "PPS-DEV-11": 11560,
+    "PPS-DEV-12": 16000,
+    "PPS-DEV-13": 11560,
+    "PPS-DEV-14": 16000,
+    "PPS-DEV-15": 11446,
+    "PPS-DEV-16": 16000,
+    "PPS-DEV-17": 11026,
+    "PPS-DEV-18": 16000,
+    "PPS-DEV-19": 13600,
+    "PPS-DEV-20": 11095,
+    "PPS-DEV-21": 16000,
+    "PPS-DEV-22": 11560,
+    "PPS-DEV-23": 11560,
+    "PPS-DEV-24": 16000,
+    "PPS-DEV-25": 11090,
+    "PPS-DEV-26": 10993,
+    "PPS-DEV-27": 11167,
+    "PPS-DEV-28": 11111,
+    "PPS-DEV-29": 16000,
+    "PPS-DEV-30": 10777,
+    "PPS-DEV-31": 16000,
+    "PPS-DEV-32": 11390,
+    "PPS-DEV-033": 16000,
+    "PPS-DEV-034": 11509,
+    "PPS-DEV-035": 16000,
+    "PPS-DEV-036": 16000,
+    "PPS-DEV-037": 16000,
+    "PPS-DEV-038": 16000,
+    "PPS-DEV-039": 16000,
+    "PPS-DEV-040": 16000,
+    "PPS-DEV-041": 16000,
+    "PPS-DEV-042": 16000,
+    "PPS-DEV-043": 16000,
+    "PPS-DEV-044": 13600,
+    "PPS-DEV-045": 13600,
+    "PPS-DEV-046": 16000,
+    "PPS-DEV-047": 16000,
+    "PPS-DEV-048": 16000,
+    "PPS-DEV-049": 16000,
+    "PPS-DEV-050": 16000,
+    "PPS-DEV-051": 16000,
+    "PPS-DEV-052": 16000,
+    "PPS-DEV-053": 16000,
+    "PPS-DEV-054": 16000,
+    "PPS-DEV-055": 16000,
+    "PPS-DEV-056": 16000,
+    "PPS-DEV-057": 16000,
+    "PPS-DEV-058": 16000,
+    "PPS-DEV-059": 16000,
+    "PPS-DEV-060": 16000,
+    "PPS-DEV-061": 16000,
+    "PPS-DEV-062": 16000,
+    "PPS-DEV-063": 11560,
+    "PPS-DEV-064": 16000,
+    "PPS-DEV-065": 16000,
+    "PPS-DEV-066": 10834,
+    "PPS-DEV-067": 16000,
+    "PPS-DEV-068": 16000,
+    "PPS-DEV-069": 11560,
+    "PPS-DEV-070": 16000,
+    "PPS-DEV-071": 16000,
+    "PPS-DEV-072": 16000,
+    "PPS-DEV-073": 13600,
+    "PPS-DEV-074": 16000,
+    "PPS-DEV-075": 16000,
+    "PPS-DEV-076": 11548,
+    "PPS-DEV-077": 16000,
+    "PPS-DEV-078": 16000,
+    "PPS-DEV-079": 16000,
+    "PPS-DEV-080": 16000,
+    "PPS-DEV-081": 11084,
+    "PPS-DEV-082": 13600,
+    "PPS-DEV-083": 16000,
+    "PPS-DEV-084": 16000,
+    "PPS-DEV-085": 11560,
+    "PPS-DEV-086": 13600,
+    "PPS-DEV-087": 11560,
+    "PPS-DEV-088": 13600,
+    "PPS-DEV-089": 16000,
+    "PPS-DEV-090": 11560,
+    "PPS-DEV-091": 10580,
+    "PPS-DEV-092": 16000,
+    "PPS-DEV-093": 13600,
+    "PPS-DEV-094": 16000,
+    "PPS-DEV-095": 11560,
+    "PPS-DEV-096": 13600,
+    "PPS-DEV-097": 11560,
+    "PPS-DEV-098": 16000,
+    "PPS-DEV-099": 11011,
+    "PPS-DEV-100": 13600,
+    "PPS-DEV-101": 11137,
+    "PPS-DEV-102": 16000,
+    "PPS-DEV-103": 13600,
+    "PPS-DEV-104": 16000,
+    "PPS-DEV-105": 9520,
+    "PPS-DEV-106": 11238,
+    "PPS-DEV-107": 16000,
+    "PPS-DEV-108": 16000,
+    "PPS-DEV-109": 11346,
+    "PPS-DEV-110": 16000,
+    "PPS-DEV-111": 9826,
+    "PPS-DEV-112": 13600,
+    "PPS-DEV-113": 16000,
+    "PPS-DEV-114": 16000,
+    "PPS-DEV-115": 16000,
+    "PPS-DEV-116": 16000,
+    "PPS-DEV-117": 11560,
+    "PPS-DEV-118": 16000,
+    "PPS-DEV-119": 10721,
+    "PPS-DEV-120": 16000,
+    "PPS-DEV-121": 10659,
+    "PPS-DEV-122": 11152,
+    "PPS-DEV-123": 16000,
+    "PPS-DEV-124": 16000,
+    "PPS-DEV-125": 11043,
+    "PPS-DEV-126": 16000,
+    "PPS-DEV-127": 9826,
+    "PPS-DEV-128": 16000,
+    "PPS-DEV-129": 11256,
+    "PPS-DEV-130": 16000,
+    "PPS-DEV-131": 16000,
+    "PPS-DEV-132": 11190,
+    "PPS-DEV-133": 13600,
+    "PPS-DEV-134": 16000,
+    "PPS-DEV-135": 10965,
+    "PPS-DEV-136": 10958,
+    "PPS-DEV-137": 11204,
+    "PPS-DEV-138": 13600,
+    "PPS-DEV-139": 16000,
+    "PPS-DEV-140": 10906,
+    "PPS-DEV-141": 16000,
+    "PPS-DEV-142": 16000,
+    "PPS-DEV-143": 11363,
+    "PPS-DEV-144": 16000,
+    "PPS-DEV-145": 11560,
+    "PPS-DEV-146": 16000,
+    "PPS-DEV-147": 13600,
+    "PPS-DEV-148": 16000,
+    "PPS-DEV-149": 9826,
+    "PPS-DEV-150": 16000,
+    "PPS-DEV-151": 9826,
+    "PPS-DEV-152": 16000,
+    "PPS-DEV-153": 10934,
+    "PPS-DEV-154": 16000,
+    "PPS-DEV-155": 11560,
+    "PPS-DEV-156": 16000,
+    "PPS-DEV-157": 10819,
+    "PPS-DEV-158": 13600,
+    "PPS-DEV-159": 11099,
+    "PPS-DEV-160": 16000,
+    "PPS-DEV-161": 11060,
+    "PPS-DEV-162": 11560,
+    "PPS-DEV-163": 10607,
+    "PPS-DEV-164": 16000,
+    "PPS-DEV-165": 11062,
+    "PPS-DEV-166": 16000,
+    "PPS-DEV-167": 16000,
+    "PPS-DEV-168": 16000,
+    "PPS-DEV-169": 11462,
+    "PPS-DEV-170": 13600,
+    "PPS-DEV-171": 13600,
+    "PPS-DEV-172": 13600,
+    "PPS-DEV-173": 11003,
+    "PPS-DEV-174": 16000,
+    "PPS-DEV-175": 10662,
+    "PPS-DEV-176": 16000,
+    "PPS-DEV-177": 16000,
+    "PPS-DEV-178": 13600,
+    "PPS-DEV-179": 16000,
+    "PPS-DEV-180": 13600,
+    "PPS-DEV-181": 11560,
+    "PPS-DEV-182": 16000,
+    "PPS-DEV-183": 10904,
+    "PPS-DEV-184": 16000,
+    "PPS-DEV-185": 11288,
+    "PPS-DEV-186": 16000,
+    "PPS-DEV-187": 16000,
+    "PPS-DEV-188": 13600,
+    "PPS-DEV-189": 10561,
+    "PPS-DEV-190": 16000,
+    "PPS-DEV-191": 10871,
+    "PPS-DEV-192": 16000,
+    "PPS-DEV-193": 13600,
+    "PPS-DEV-194": 11560,
+    "PPS-DEV-195": 11081,
+    "PPS-DEV-196": 16000,
+    "PPS-DEV-197": 11402,
+    "PPS-DEV-198": 16000,
+    "PPS-DEV-199": 13600,
+    "PPS-DEV-200": 16000
+  },
+  "notices": {
+    "PPS-DEV-01": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12644,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10053,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12475,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13230,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "4ae1839cb5b180d5c47734098ad07cab47724884613df19d6cdda25d21c4dd90",
+      "usual_context_sha256": "0b5916cd7760029e506934f0d42bae25277d275d2735f5b32633bf086189e595",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-02": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 4586,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 4586,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7008,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 7763,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "0ee2c5d79891ab6e33ea19f6b614e2464858766fe5ab03213fe2455cb4449696",
+      "usual_context_sha256": "0ee2c5d79891ab6e33ea19f6b614e2464858766fe5ab03213fe2455cb4449696",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-03": {
+      "common_max_chars": 11288,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13158,
+      "additional_truncation_chars": 4712,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10240,
+          "max_chars": 11288
+        },
+        "raw": {
+          "prompt_tokens": 12662,
+          "max_chars": 11288
+        },
+        "wiki": {
+          "prompt_tokens": 13417,
+          "max_chars": 11288
+        }
+      },
+      "context_sha256": "57648751431ae88a3120d68972309a34605e5a89ffec045ed98aac8436875bf5",
+      "usual_context_sha256": "4ba117536a30ac9bc998b458403cf8b449d655ebb219cbf75cef54c255ecaecd",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-04": {
+      "common_max_chars": 10994,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13594,
+      "additional_truncation_chars": 5006,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10442,
+          "max_chars": 10994
+        },
+        "raw": {
+          "prompt_tokens": 12864,
+          "max_chars": 10994
+        },
+        "wiki": {
+          "prompt_tokens": 13619,
+          "max_chars": 10994
+        }
+      },
+      "context_sha256": "a410ae56180c30805a12e835f783eb6de732d92e9ee7267d089e560785ab5059",
+      "usual_context_sha256": "3672553c9e257cd6537b7472b9851e8bd1fb04c51cee963d2ebbd6b7096ea7d9",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-05": {
+      "common_max_chars": 10981,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13614,
+      "additional_truncation_chars": 5019,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10590,
+          "max_chars": 10981
+        },
+        "raw": {
+          "prompt_tokens": 13012,
+          "max_chars": 10981
+        },
+        "wiki": {
+          "prompt_tokens": 13767,
+          "max_chars": 10981
+        }
+      },
+      "context_sha256": "6fe301b39d0cbfbc3cb135d825ff9db1a4bcbc0c40f8f4ff9bdf891ebc8e1ac9",
+      "usual_context_sha256": "6979a8ba404382e1ea053f63ba180db79b038eb2dddeb1b85190a1de5d93b7c8",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-06": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12676,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9964,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12386,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13141,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "5321da208f580c6676dcad84d96d5255604936f05fecff5fa10bb7cc903fc51e",
+      "usual_context_sha256": "7d335d22a2b4a9770c591193e9af360d3147ffe8c964ab643c2e54ba9337da37",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-07": {
+      "common_max_chars": 10912,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13720,
+      "additional_truncation_chars": 5088,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10450,
+          "max_chars": 10912
+        },
+        "raw": {
+          "prompt_tokens": 12872,
+          "max_chars": 10912
+        },
+        "wiki": {
+          "prompt_tokens": 13627,
+          "max_chars": 10912
+        }
+      },
+      "context_sha256": "1601d2cbdb5f3ea1cb89c9701f4fe873a2a90e182f434d49dd9980d35ba10e3f",
+      "usual_context_sha256": "ccf603d40dbf056c68ed7e0be03ad88f830ab6393a94a60c6ecdad9f05652641",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-08": {
+      "common_max_chars": 10925,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13700,
+      "additional_truncation_chars": 5075,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10486,
+          "max_chars": 10925
+        },
+        "raw": {
+          "prompt_tokens": 12908,
+          "max_chars": 10925
+        },
+        "wiki": {
+          "prompt_tokens": 13663,
+          "max_chars": 10925
+        }
+      },
+      "context_sha256": "f16a8ffee8129499a45dd02370d11eedf0a658cec8d83b6f11f66833e98920c9",
+      "usual_context_sha256": "e1d4cef0f43bdaabdd3daf9adccb56e83ec6a10a155fe9ed6a67ef606af511c6",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-09": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9152,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9152,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11574,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12329,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "d66e4d45e16838ebebba41158dcaf5f44d9098c9036f8942ca9f2989932a6b8e",
+      "usual_context_sha256": "d66e4d45e16838ebebba41158dcaf5f44d9098c9036f8942ca9f2989932a6b8e",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-10": {
+      "common_max_chars": 11344,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13077,
+      "additional_truncation_chars": 4656,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10261,
+          "max_chars": 11344
+        },
+        "raw": {
+          "prompt_tokens": 12683,
+          "max_chars": 11344
+        },
+        "wiki": {
+          "prompt_tokens": 13438,
+          "max_chars": 11344
+        }
+      },
+      "context_sha256": "b8d48a9bef9aab555cf28ca489e8b8e6fbea6d3630e704397db59a536234ab29",
+      "usual_context_sha256": "1a23b53b821b2a750b9dc9a0387c1f61a269bf579c023e7bb71f0f9c58ed2776",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-11": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12623,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10012,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12434,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13189,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "8ed54018419cc6f4759318ca6c511df4a57fa18423325bda18ed43ccb3a130c2",
+      "usual_context_sha256": "1791313b5ace6d2fb727069dc4971b83d9f6a4b4d3664821bcab9b0002af177f",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-12": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10574,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10574,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12996,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13751,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "69442bf6e7f2b074f5ab392a5dc4ab4745faf4bb9a62640fd7bb48cce7e5308b",
+      "usual_context_sha256": "69442bf6e7f2b074f5ab392a5dc4ab4745faf4bb9a62640fd7bb48cce7e5308b",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-13": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11799,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10238,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12660,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13415,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "b1077d6f2214419f2807b7df46bdc29ce514aee885808ade501faaa2dc4fd89a",
+      "usual_context_sha256": "27044b4ca56ba77c64e5bae6c2c638fe085a7cb8f1eb1733b6f70e476150c33a",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-14": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9378,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9378,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11800,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12555,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "b38eb7ce7c4aafe2fa749bc877bf8c81c11eb0028d3a7313a7489e63c19db7c6",
+      "usual_context_sha256": "b38eb7ce7c4aafe2fa749bc877bf8c81c11eb0028d3a7313a7489e63c19db7c6",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-15": {
+      "common_max_chars": 11446,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12931,
+      "additional_truncation_chars": 4554,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9870,
+          "max_chars": 11446
+        },
+        "raw": {
+          "prompt_tokens": 12292,
+          "max_chars": 11446
+        },
+        "wiki": {
+          "prompt_tokens": 13047,
+          "max_chars": 11446
+        }
+      },
+      "context_sha256": "7333b795cdbcf32bf938a99d46e2c66ebb4eec01ceb6e0b9ad6a5e929b892c32",
+      "usual_context_sha256": "e63a93162f5cfc9133137f5f65d3013827091c866b9d480d66aa4c2bac74befb",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-16": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9718,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9718,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12140,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12895,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "007541b65615c727663a0a9e95b2892402b715f71916243bcb6111b613b64e44",
+      "usual_context_sha256": "007541b65615c727663a0a9e95b2892402b715f71916243bcb6111b613b64e44",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-17": {
+      "common_max_chars": 11026,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13546,
+      "additional_truncation_chars": 4974,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10520,
+          "max_chars": 11026
+        },
+        "raw": {
+          "prompt_tokens": 12942,
+          "max_chars": 11026
+        },
+        "wiki": {
+          "prompt_tokens": 13697,
+          "max_chars": 11026
+        }
+      },
+      "context_sha256": "43a5e849cc21cf05bd39ecdce0de7cb0a744f935f468eae85b4a6915717bf884",
+      "usual_context_sha256": "aa0182710d68bc389643509285698f3c98c12a9bc3853bd9f98b8d56857d2a1a",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-18": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7330,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7330,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9752,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10507,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "413f33d4cce3ee7f938e4480687d2959ad94f44b7790ec68a67c1291ee16cc0e",
+      "usual_context_sha256": "413f33d4cce3ee7f938e4480687d2959ad94f44b7790ec68a67c1291ee16cc0e",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-19": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11861,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10388,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12810,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13565,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "53d2aa718c60034f3b8cd1db5287e0e952a8373ffc31e214ebd2a6516b134d22",
+      "usual_context_sha256": "d2f12c90c2444ac726bae3facc007ab4b9075e9223cfe8809b03769c4a6abb0c",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-20": {
+      "common_max_chars": 11095,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13442,
+      "additional_truncation_chars": 4905,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10586,
+          "max_chars": 11095
+        },
+        "raw": {
+          "prompt_tokens": 13008,
+          "max_chars": 11095
+        },
+        "wiki": {
+          "prompt_tokens": 13763,
+          "max_chars": 11095
+        }
+      },
+      "context_sha256": "447a308aa1375150e792004b66da973e39a73dc0aba8b7506f384f0616b384c7",
+      "usual_context_sha256": "9fb2774ecf4419a4e44f7a656b870a234a6ec19798214811cbeed1cddf55e06d",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-21": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7414,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7414,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9836,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10591,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "b3ecaf06844606121dcd0574af76a5f7de128679c2926403bfbee406f3dcb182",
+      "usual_context_sha256": "b3ecaf06844606121dcd0574af76a5f7de128679c2926403bfbee406f3dcb182",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-22": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12621,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9824,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12246,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13001,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "5602076d49dad797224556051f3f22eaa0d17e2364521fade5327c99edf5bd1d",
+      "usual_context_sha256": "c15ab6d4bc60fc4124b57ab098f021149f17700081e2cb295063f534de34ff29",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-23": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12194,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10141,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12563,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13318,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "193b66bfc74126c70805996cbde426313dda604463406cb15f0089e14d7cc5ca",
+      "usual_context_sha256": "4527d2f9ac78078add03bc8658a33dc88796f1c300127342ae0038e77be76b79",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-24": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9801,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9801,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12223,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12978,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "a2c10103350f1fbfeee8fa19db3d6807dc9e7aaa319a50f7f89d72a21540bd83",
+      "usual_context_sha256": "a2c10103350f1fbfeee8fa19db3d6807dc9e7aaa319a50f7f89d72a21540bd83",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-25": {
+      "common_max_chars": 11090,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13448,
+      "additional_truncation_chars": 4910,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10494,
+          "max_chars": 11090
+        },
+        "raw": {
+          "prompt_tokens": 12916,
+          "max_chars": 11090
+        },
+        "wiki": {
+          "prompt_tokens": 13671,
+          "max_chars": 11090
+        }
+      },
+      "context_sha256": "23554c70b53496d365d336dfacdb875c77178716f0d599be75810b8b2ba5a933",
+      "usual_context_sha256": "4286a18d30e8bc838b3531c0561750b078609fb28320af6583d75f5abd87605d",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-26": {
+      "common_max_chars": 10993,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13595,
+      "additional_truncation_chars": 5007,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10487,
+          "max_chars": 10993
+        },
+        "raw": {
+          "prompt_tokens": 12909,
+          "max_chars": 10993
+        },
+        "wiki": {
+          "prompt_tokens": 13664,
+          "max_chars": 10993
+        }
+      },
+      "context_sha256": "d7126b36cb5a535b1197a867fbce0f3d9f97fd31d3b30945fdd9b4bdffa4e88e",
+      "usual_context_sha256": "5b226b39417a5b0a331b03116215e610ce71f67a25d89530aebda81e831da83a",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-27": {
+      "common_max_chars": 11167,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13334,
+      "additional_truncation_chars": 4833,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10514,
+          "max_chars": 11167
+        },
+        "raw": {
+          "prompt_tokens": 12936,
+          "max_chars": 11167
+        },
+        "wiki": {
+          "prompt_tokens": 13691,
+          "max_chars": 11167
+        }
+      },
+      "context_sha256": "29e63c2d3ddac84db64ad2d041ca24bc79c8b8abc5a6e83e65ffe9cbff7c09e4",
+      "usual_context_sha256": "7f89455d1b363114166cdb94b833c0e4d78339ca747d0cdb2e8fcb12a956ccb5",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-28": {
+      "common_max_chars": 11111,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13418,
+      "additional_truncation_chars": 4889,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10484,
+          "max_chars": 11111
+        },
+        "raw": {
+          "prompt_tokens": 12906,
+          "max_chars": 11111
+        },
+        "wiki": {
+          "prompt_tokens": 13661,
+          "max_chars": 11111
+        }
+      },
+      "context_sha256": "3f60b04fcf8b5ba80126c838f84d35665582332937c3682bc18d0e1ee56c487d",
+      "usual_context_sha256": "0f89cadd26b46e9ff9515d7bd958a7ff84c4c1d29a8e781d139d783da74ef9ba",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-29": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6782,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6782,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9204,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9959,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "82af5ee2c305b9e51018d3901fa5a4ddcebb5d4821437e699195741812c2fefa",
+      "usual_context_sha256": "82af5ee2c305b9e51018d3901fa5a4ddcebb5d4821437e699195741812c2fefa",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-30": {
+      "common_max_chars": 10777,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13932,
+      "additional_truncation_chars": 5223,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10559,
+          "max_chars": 10777
+        },
+        "raw": {
+          "prompt_tokens": 12981,
+          "max_chars": 10777
+        },
+        "wiki": {
+          "prompt_tokens": 13736,
+          "max_chars": 10777
+        }
+      },
+      "context_sha256": "1e02d3224c57bf32600d072917bca6884492dc2a7703de194c7cfd2b4809cfc6",
+      "usual_context_sha256": "a0e3715df2497cd97bef710d4789019bb979863d4be07fda947e9aea5617bc2c",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-31": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9382,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9382,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11804,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12559,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "20ad59beee4467dd2819921c5ba5fe3a524823625f75d5dce6009a8023fdae25",
+      "usual_context_sha256": "20ad59beee4467dd2819921c5ba5fe3a524823625f75d5dce6009a8023fdae25",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-32": {
+      "common_max_chars": 11390,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13010,
+      "additional_truncation_chars": 4610,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10127,
+          "max_chars": 11390
+        },
+        "raw": {
+          "prompt_tokens": 12549,
+          "max_chars": 11390
+        },
+        "wiki": {
+          "prompt_tokens": 13304,
+          "max_chars": 11390
+        }
+      },
+      "context_sha256": "b3e3a81ead012a83f24660098b90282c8ac3f0a0b9845711dcc438cce67146f7",
+      "usual_context_sha256": "629b3749e683d5a114b1f0ca274ea821156d5e97ccc5bdd14dfbee7182ded9aa",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-033": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7139,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7139,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9561,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10316,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f08dc1cb5ba12f74bb282286ee034effb1f256e4da7727e4277b590a33b4bb8f",
+      "usual_context_sha256": "f08dc1cb5ba12f74bb282286ee034effb1f256e4da7727e4277b590a33b4bb8f",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-034": {
+      "common_max_chars": 11509,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12843,
+      "additional_truncation_chars": 4491,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9913,
+          "max_chars": 11509
+        },
+        "raw": {
+          "prompt_tokens": 12335,
+          "max_chars": 11509
+        },
+        "wiki": {
+          "prompt_tokens": 13090,
+          "max_chars": 11509
+        }
+      },
+      "context_sha256": "86149dc59984e7e2443777a42da683ad6d058817ebe8bcee119ee1759253814f",
+      "usual_context_sha256": "119aa704baaa29690269dc7ddb75e8628025bbc9a7257e1391c920d83f6140a8",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-035": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5063,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5063,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7485,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8240,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "07037c64fc9ed8df2d22eefd50c0d3027d88e56c3380e76c4a590f6bc85fa632",
+      "usual_context_sha256": "07037c64fc9ed8df2d22eefd50c0d3027d88e56c3380e76c4a590f6bc85fa632",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-036": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6413,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6413,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8835,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9590,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "bdf8344854815b0eae12cfa4545262daf56b6c24cafa037f48dd4a9ce619862c",
+      "usual_context_sha256": "bdf8344854815b0eae12cfa4545262daf56b6c24cafa037f48dd4a9ce619862c",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-037": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10106,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10106,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12528,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13283,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "fe87504a636b8c16f3350176bfdd598d16dcb6b8fd09f0dfe9a17385b2d8d426",
+      "usual_context_sha256": "fe87504a636b8c16f3350176bfdd598d16dcb6b8fd09f0dfe9a17385b2d8d426",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-038": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8507,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8507,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10929,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11684,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "ca91d86d69d46af9a91cf0fdd104532c4112b2cbf05a0a3a9a8ed1377aaddd50",
+      "usual_context_sha256": "ca91d86d69d46af9a91cf0fdd104532c4112b2cbf05a0a3a9a8ed1377aaddd50",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-039": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10749,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10749,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 13171,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13926,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "cf582802537c5407066bd1d9975e7643935abae0122dcab9ad4652a19879d1d0",
+      "usual_context_sha256": "cf582802537c5407066bd1d9975e7643935abae0122dcab9ad4652a19879d1d0",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-040": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7094,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7094,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9516,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10271,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "2df255ff66417580f13f201ce61506afa8883ee7da4ad675b4240bfddb2f53a0",
+      "usual_context_sha256": "2df255ff66417580f13f201ce61506afa8883ee7da4ad675b4240bfddb2f53a0",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-041": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6250,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6250,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8672,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9427,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "637101029332d076bdcd34724c66af4c984f5e40948d944da7a795f1e0605c03",
+      "usual_context_sha256": "637101029332d076bdcd34724c66af4c984f5e40948d944da7a795f1e0605c03",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-042": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8697,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8697,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11119,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11874,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "af9bb4ccac590e5175547546c19ee8f9270244991c43a9e4690aa05effeaf49f",
+      "usual_context_sha256": "af9bb4ccac590e5175547546c19ee8f9270244991c43a9e4690aa05effeaf49f",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-043": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8494,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8494,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10916,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11671,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "4ad6e5ec21a16f6249278743643e5fb56dab359949bd8805873a901d47c6fe09",
+      "usual_context_sha256": "4ad6e5ec21a16f6249278743643e5fb56dab359949bd8805873a901d47c6fe09",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-044": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12548,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10913,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13335,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14090,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "267fc44bbf21f5c531f7fd817993c06c26b8969c8433073791d6dec6838ccfa6",
+      "usual_context_sha256": "f4b8221e21806a53a1f10d57666deb97a24c5c3895a5bef5a9f26a68a94735ba",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-045": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12430,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10996,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13418,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14173,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "ad2dc412dbd7406245a99a7590f37e96717b49733bb82e0aeea888827c0571f4",
+      "usual_context_sha256": "775018ef112c750463f9d1fe618c0a6c175f05a396d2ca51e328fc42b9d83e1e",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-046": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7197,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7197,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9619,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10374,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "79537c7c3af7a6ed87f39c284cb95cdbee4be82cabd45bb142c2f8d23d0612bc",
+      "usual_context_sha256": "79537c7c3af7a6ed87f39c284cb95cdbee4be82cabd45bb142c2f8d23d0612bc",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-047": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7203,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7203,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9625,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10380,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "81d9d125eca3e63251ad34bdeeb89438cc600b18a7a30c62ce46a81d1a2003fa",
+      "usual_context_sha256": "81d9d125eca3e63251ad34bdeeb89438cc600b18a7a30c62ce46a81d1a2003fa",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-048": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5861,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5861,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8283,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9038,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "adf11cfd62e9053a20f8f5cd329bb721d52bab8a12206005561e781aec733b00",
+      "usual_context_sha256": "adf11cfd62e9053a20f8f5cd329bb721d52bab8a12206005561e781aec733b00",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-049": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10064,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10064,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12486,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13241,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "10564fc327b9832fafd78f7e2646f124e14bb17901a0709e5ee12e0d9dd2aca1",
+      "usual_context_sha256": "10564fc327b9832fafd78f7e2646f124e14bb17901a0709e5ee12e0d9dd2aca1",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-050": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10525,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10525,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12947,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13702,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "0f8aa5ce23582658047a8c445704c54ede69793552adeefc07adaacca4284c33",
+      "usual_context_sha256": "0f8aa5ce23582658047a8c445704c54ede69793552adeefc07adaacca4284c33",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-051": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8547,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8547,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10969,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11724,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f3dc047c574e420ebaa5bedff4b5c5992d6dc37533641c4e50ddc0fe167b4362",
+      "usual_context_sha256": "f3dc047c574e420ebaa5bedff4b5c5992d6dc37533641c4e50ddc0fe167b4362",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-052": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11008,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 11008,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 13430,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 14185,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f0a17569bffa0e7e540a94d0d9bb862b27d8dd5bcd619947d975a32eb8b99562",
+      "usual_context_sha256": "f0a17569bffa0e7e540a94d0d9bb862b27d8dd5bcd619947d975a32eb8b99562",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-053": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10191,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10191,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12613,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13368,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "841d570ee1a396839e72741f711d3737a47fe59d40eef9a8f0bbb65b00c6089e",
+      "usual_context_sha256": "841d570ee1a396839e72741f711d3737a47fe59d40eef9a8f0bbb65b00c6089e",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-054": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5220,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5220,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7642,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8397,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "332d3f28bdbfd81ffe61b143cbdaf6b98057d939f41508c5f373b2dd21b628ff",
+      "usual_context_sha256": "332d3f28bdbfd81ffe61b143cbdaf6b98057d939f41508c5f373b2dd21b628ff",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-055": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10702,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10702,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 13124,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13879,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "2749768b5ea1ddc25d8e4b7648d8f146e452a431aff87d3bfd8520679c6ec16d",
+      "usual_context_sha256": "2749768b5ea1ddc25d8e4b7648d8f146e452a431aff87d3bfd8520679c6ec16d",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-056": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9734,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9734,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12156,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12911,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "232f11474803214d649217651dfef27b8422ea949f8a29e2fc831d36b7941f6f",
+      "usual_context_sha256": "232f11474803214d649217651dfef27b8422ea949f8a29e2fc831d36b7941f6f",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-057": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5472,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5472,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7894,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8649,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "758c588867b81ef33efac032e6e932f4a011632de7f78d35c1f8f041662a0411",
+      "usual_context_sha256": "758c588867b81ef33efac032e6e932f4a011632de7f78d35c1f8f041662a0411",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-058": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8701,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8701,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11123,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11878,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "25e5d91367dd101b2dd01610830d34fafa9405eb7b25be1b5f3a860118309237",
+      "usual_context_sha256": "25e5d91367dd101b2dd01610830d34fafa9405eb7b25be1b5f3a860118309237",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-059": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7300,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7300,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9722,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10477,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "38aaff9e76d5d85459dfb56058671c81081aca652a4cd061c65ccad2763eeb03",
+      "usual_context_sha256": "38aaff9e76d5d85459dfb56058671c81081aca652a4cd061c65ccad2763eeb03",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-060": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5160,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5160,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7582,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8337,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "51fd56758dddad02dc308ffca85db67b1e42fa7a878c000ec9355d0a0bd78b70",
+      "usual_context_sha256": "51fd56758dddad02dc308ffca85db67b1e42fa7a878c000ec9355d0a0bd78b70",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-061": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5688,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5688,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8110,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8865,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "c20a8b7dcd81575026d37939e21202f882226745220f912773985c4aa6219385",
+      "usual_context_sha256": "c20a8b7dcd81575026d37939e21202f882226745220f912773985c4aa6219385",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-062": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5714,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5714,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8136,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8891,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "571b744902df9280924aae28df6c81334219ae9c2a553549b08078cbf89d8cba",
+      "usual_context_sha256": "571b744902df9280924aae28df6c81334219ae9c2a553549b08078cbf89d8cba",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-063": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12732,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9854,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12276,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13031,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "dfcc2c771d626d83081f1bd1035583b125f78b8a1c4267e61c0401f3ae7be081",
+      "usual_context_sha256": "aa715d4f2dc8b8037e64299e3a46fdb9483d7aaf5c5e1b819a3fd4b3b4bb3c88",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-064": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10466,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10466,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12888,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13643,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "cd1342668200a5d20b6f87c7c465905ecc1b9a8c9f13099dfdb0a27d6d5a1957",
+      "usual_context_sha256": "cd1342668200a5d20b6f87c7c465905ecc1b9a8c9f13099dfdb0a27d6d5a1957",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-065": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6673,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6673,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9095,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9850,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "a53cabf8f7e1cb4cf2242e248112f79e78c75d0bb08b1bc89d964214cf9f8bb0",
+      "usual_context_sha256": "a53cabf8f7e1cb4cf2242e248112f79e78c75d0bb08b1bc89d964214cf9f8bb0",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-066": {
+      "common_max_chars": 10834,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13841,
+      "additional_truncation_chars": 5166,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10689,
+          "max_chars": 10834
+        },
+        "raw": {
+          "prompt_tokens": 13111,
+          "max_chars": 10834
+        },
+        "wiki": {
+          "prompt_tokens": 13866,
+          "max_chars": 10834
+        }
+      },
+      "context_sha256": "0dffc2643f6b43428ce6a0be277c746dfa4bbbe759588ebe9bbe2663af8bf0fa",
+      "usual_context_sha256": "bf7cc58709b64d70da4fab1c31d7567bbcbd1568c57cd20574e982fd80c46b3e",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-067": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8536,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8536,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10958,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11713,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "67d887b56e958305c675fd8079caf2c3e513664941b97b95546fc30ed87ef759",
+      "usual_context_sha256": "67d887b56e958305c675fd8079caf2c3e513664941b97b95546fc30ed87ef759",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-068": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8499,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8499,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10921,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11676,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "8e47e5310bdf9d249e81073c8486a34188d9c04cfc114db5dbd52bcd30351205",
+      "usual_context_sha256": "8e47e5310bdf9d249e81073c8486a34188d9c04cfc114db5dbd52bcd30351205",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-069": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12532,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10042,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12464,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13219,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "4b01a5f2d10bb6c62069d42aa8455578b1da4b926481939022f6a1ae6157ef72",
+      "usual_context_sha256": "a19a4744b7a2b48f5643738b79872afeeb715669c897c18ad0b70f14bf699e2b",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-070": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 4798,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 4798,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7220,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 7975,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "17ee58521584dda2050552730ba20441f08db0761d8c12aa460e491e2baad579",
+      "usual_context_sha256": "17ee58521584dda2050552730ba20441f08db0761d8c12aa460e491e2baad579",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-071": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6106,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6106,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8528,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9283,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "a7f32b0524b5a76e27a14f7f4d018a7c973f961c6b76b790b24bb75dd61b5a45",
+      "usual_context_sha256": "a7f32b0524b5a76e27a14f7f4d018a7c973f961c6b76b790b24bb75dd61b5a45",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-072": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7602,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7602,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10024,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10779,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "87457c6db4d47b47c95af49d973db80474174c30fc5bd077e0730c9d1e9a0956",
+      "usual_context_sha256": "87457c6db4d47b47c95af49d973db80474174c30fc5bd077e0730c9d1e9a0956",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-073": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11621,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 11038,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13460,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14215,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "ca848b2b84d7b22032929902df035d04099f044a7463396a167d13999b035dd5",
+      "usual_context_sha256": "715a2cf059ec0e807ce88c126193d9af44cf6a4c8282b299cd520b68dac3bcf8",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-074": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7891,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7891,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10313,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11068,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "ddf8c3937c632e955394494043de6c3449a3cea53cc12beeef6260cd50f46849",
+      "usual_context_sha256": "ddf8c3937c632e955394494043de6c3449a3cea53cc12beeef6260cd50f46849",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-075": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8280,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8280,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10702,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11457,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "7ed71d6f5990488a7507766b2422db512d2d7fec34fa09a6fdfc1d5fffea46ed",
+      "usual_context_sha256": "7ed71d6f5990488a7507766b2422db512d2d7fec34fa09a6fdfc1d5fffea46ed",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-076": {
+      "common_max_chars": 11548,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12790,
+      "additional_truncation_chars": 4452,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9943,
+          "max_chars": 11548
+        },
+        "raw": {
+          "prompt_tokens": 12365,
+          "max_chars": 11548
+        },
+        "wiki": {
+          "prompt_tokens": 13120,
+          "max_chars": 11548
+        }
+      },
+      "context_sha256": "1730524b7bf0be48c4673c5dea854e0e081a1a5093c109bf4f84454f63def731",
+      "usual_context_sha256": "4de4dba83171825a15c0613c69ba86b3b827eb245bf4bb2b0dac702506d63456",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-077": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5542,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5542,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7964,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8719,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "e05551e59fa3fcb2bfad93fb1b562ae2b64d17102d29d6e8fc0599f6b211cbdf",
+      "usual_context_sha256": "e05551e59fa3fcb2bfad93fb1b562ae2b64d17102d29d6e8fc0599f6b211cbdf",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-078": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7581,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7581,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10003,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10758,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f3a1e03aed3a910efd73e535f814fb2e2827d6d0a7fbac6ecf77f71de2645923",
+      "usual_context_sha256": "f3a1e03aed3a910efd73e535f814fb2e2827d6d0a7fbac6ecf77f71de2645923",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-079": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7148,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7148,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9570,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10325,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "8ed99053b8e1570e1216305dff34744cae71a7ca444fb7210514df1b63fae039",
+      "usual_context_sha256": "8ed99053b8e1570e1216305dff34744cae71a7ca444fb7210514df1b63fae039",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-080": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6507,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6507,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8929,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9684,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "5c3a6b194c5998da77ec59f94cc92ba917ecb45e9f408ce79422e9019a828820",
+      "usual_context_sha256": "5c3a6b194c5998da77ec59f94cc92ba917ecb45e9f408ce79422e9019a828820",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-081": {
+      "common_max_chars": 11084,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13459,
+      "additional_truncation_chars": 4916,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10483,
+          "max_chars": 11084
+        },
+        "raw": {
+          "prompt_tokens": 12905,
+          "max_chars": 11084
+        },
+        "wiki": {
+          "prompt_tokens": 13660,
+          "max_chars": 11084
+        }
+      },
+      "context_sha256": "290b16082ab648d35ee56259b105e5b6c74ae3510b0f0990f75b2db4e5f5c8ca",
+      "usual_context_sha256": "0abbae50b16515488ea76fdb91799bc8b42e781b654a88d619bbc9432575c499",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-082": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12346,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10939,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13361,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14116,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "615da24e5ef4a5160f877df01158d88bedd7d0d23508aa022a0e9d4c2ba692b3",
+      "usual_context_sha256": "a7f9a7f8deb4b0c22a815e07e22737599c10a0cf50283433971b4b8736261967",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-083": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9200,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9200,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11622,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12377,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "4f8d4e757f12e9084aec6550d493647665efa5d5244bde0e6e214f7c76243bdc",
+      "usual_context_sha256": "4f8d4e757f12e9084aec6550d493647665efa5d5244bde0e6e214f7c76243bdc",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-084": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8669,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8669,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11091,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11846,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "7ff736fb42f18abbce2ffad1026015b2e1ad800e5371874d251263bd70ec742e",
+      "usual_context_sha256": "7ff736fb42f18abbce2ffad1026015b2e1ad800e5371874d251263bd70ec742e",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-085": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12515,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9979,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12401,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13156,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "be3f2610b1c2740010c984eaef04e44e8fae278e26cf3355794f336ce9ee78ce",
+      "usual_context_sha256": "089a6043964e0cde7951e5a0e7fc7691324a28d71d895946fd9b946df300e9b6",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-086": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11979,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10606,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13028,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13783,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "232c03bdc45f7d58a27132d85e063619cf1f906355f674fc12395f11e9ca6608",
+      "usual_context_sha256": "36b18f20e490ca2a13674d0cf3bbab6a2629703afe1c0d3483c3e0680747f9fd",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-087": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12692,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10136,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12558,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13313,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "6d928487f1ddfac983af745f7b35e66771e2b053296e19bea53fa6f6bb586fd3",
+      "usual_context_sha256": "4178399446beb7aaa3310531bf45857a966b5ad6810dbca98b89fe262bffb15d",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-088": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12378,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10931,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13353,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14108,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "289380bd88b70ade9c352a35ab8223705e947b448f228abc848bcaf49d5da221",
+      "usual_context_sha256": "791fd84ff2d40bf0fbe8ee775779bf67fd34296346bcdc0740591e0061e15924",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-089": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10694,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10694,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 13116,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13871,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "1a8ed8f35b28b63bd9bdfe2d83b1b6152f4787e243d7545d26e99ac9a7df80cb",
+      "usual_context_sha256": "1a8ed8f35b28b63bd9bdfe2d83b1b6152f4787e243d7545d26e99ac9a7df80cb",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-090": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12191,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9859,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12281,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13036,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "3e353aae868a3836a821701fd5465a4a4377a2282559b4e0509420742f4ad6cd",
+      "usual_context_sha256": "7ef36e4e5d53591c5d87bf3ee895412c51424f36e9ae62611b8b57692075d696",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-091": {
+      "common_max_chars": 10580,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 14250,
+      "additional_truncation_chars": 5420,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10717,
+          "max_chars": 10580
+        },
+        "raw": {
+          "prompt_tokens": 13139,
+          "max_chars": 10580
+        },
+        "wiki": {
+          "prompt_tokens": 13894,
+          "max_chars": 10580
+        }
+      },
+      "context_sha256": "f9e479766159bc1b4f6afa8d3f42a5697d6d89b7a89298ff56f2b76fa6007a6f",
+      "usual_context_sha256": "17b20fd1ec21ebf5543a4ccce2ed5d1ee8b4654e083222edfef492f30bd7d745",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-092": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8517,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8517,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10939,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11694,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "6a32810cc5c73f4979eb90fd108a2f41c19ceb5ed0cea706761dc2454d4fcb07",
+      "usual_context_sha256": "6a32810cc5c73f4979eb90fd108a2f41c19ceb5ed0cea706761dc2454d4fcb07",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-093": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11810,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10271,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12693,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13448,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "58edef6c3457dc5ab56d9efb7d6f8286b3fbe85159c06f5d7751b7393ce65530",
+      "usual_context_sha256": "f1bd52c1c464533ad806292567654cad6362fcd3bb4c5874d2cdd79ebff9c207",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-094": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5219,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5219,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7641,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8396,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "7acaf6831e2b89390c9e8d490ddeade361f6dc080c3927c810fe420b12300c2b",
+      "usual_context_sha256": "7acaf6831e2b89390c9e8d490ddeade361f6dc080c3927c810fe420b12300c2b",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-095": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11587,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10889,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 13311,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 14066,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "174fc3a4676ae4067b803bead2ec1f2d78cdbe75251631824d914aede3bca31f",
+      "usual_context_sha256": "0537932cb854be728c3e53823cd463ebb5f56704b02387f053fbcab1238cb064",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-096": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11769,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10429,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12851,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13606,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "aca2f2b626cacf57d9497707c9a211751d0ecbdb50bed798eac108690b52b82d",
+      "usual_context_sha256": "81fe48b29bc99fd539d375582313e483fab335d36dddbf7a950154bc10e7fe04",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-097": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12513,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 11034,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 13456,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 14211,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "1c78db70b7aaa15e58977984bee26981342f95a8239343dc29fdea922f475044",
+      "usual_context_sha256": "1f1f1075f6ab1e1d360efe0cfc67ebb1ef91694670474515d23880df45c2e31b",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-098": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8370,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8370,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10792,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11547,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "30e138baad0ac2ab780cb23265b488002c88db9a001e9858dbfe8b074acd0cba",
+      "usual_context_sha256": "30e138baad0ac2ab780cb23265b488002c88db9a001e9858dbfe8b074acd0cba",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-099": {
+      "common_max_chars": 11011,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13568,
+      "additional_truncation_chars": 4989,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10654,
+          "max_chars": 11011
+        },
+        "raw": {
+          "prompt_tokens": 13076,
+          "max_chars": 11011
+        },
+        "wiki": {
+          "prompt_tokens": 13831,
+          "max_chars": 11011
+        }
+      },
+      "context_sha256": "e0c4102b241ab2136cb1da2e41878387da4609800060984e3c636177e7ea6cb8",
+      "usual_context_sha256": "a20c40e8be8db5cfac4434e8887505f0600f290c3e4831980f5b3f1cdc0b0328",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-100": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12044,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10571,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12993,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13748,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "4badc65b7beab6d30a165fb8b4b7af119b6ce98c14666cc3fe3d72df9d88e625",
+      "usual_context_sha256": "e2c1aea5264e4bd191c0f3771617763cfc1bbccafc2a2f97786bfb14e60f76fc",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-101": {
+      "common_max_chars": 11137,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13378,
+      "additional_truncation_chars": 4863,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10498,
+          "max_chars": 11137
+        },
+        "raw": {
+          "prompt_tokens": 12920,
+          "max_chars": 11137
+        },
+        "wiki": {
+          "prompt_tokens": 13675,
+          "max_chars": 11137
+        }
+      },
+      "context_sha256": "a76bb6ea6ca1083cc3c11134cc27b693bb3e050d9315b151936891a6a42ee6e9",
+      "usual_context_sha256": "37b8ccec3d2c37a5a5720e38f8c4e890d26ac8c0cf65f7ed085efdeb65966ae1",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-102": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11003,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 11003,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 13425,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 14180,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "c0798f365809bac23d9099c14913d582d7884a3115b212d5ab551d5edcfa694d",
+      "usual_context_sha256": "c0798f365809bac23d9099c14913d582d7884a3115b212d5ab551d5edcfa694d",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-103": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12393,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10914,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13336,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14091,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "032d434ffbb2957c0e16a678db9c14e45629e18cd45c9725050016faf6d10b89",
+      "usual_context_sha256": "0f1052985406f69db5809c165875d198160dfbfa7788fdd696f327748bfa5a29",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-104": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7673,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7673,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10095,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10850,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f67365a0c06686ad15c76a7bac623b43d3fe18386b4c51e1f6c3aff0326e7b4a",
+      "usual_context_sha256": "f67365a0c06686ad15c76a7bac623b43d3fe18386b4c51e1f6c3aff0326e7b4a",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-105": {
+      "common_max_chars": 9520,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13153,
+      "additional_truncation_chars": 6480,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9717,
+          "max_chars": 9520
+        },
+        "raw": {
+          "prompt_tokens": 12139,
+          "max_chars": 9520
+        },
+        "wiki": {
+          "prompt_tokens": 12894,
+          "max_chars": 9520
+        }
+      },
+      "context_sha256": "6e847fa870db90ead5f434e5c7e8eeadc0f68943f1809da7f90b9c69b4369c7f",
+      "usual_context_sha256": "417decffc5028a964ded9912b20414d9d269449175e126a49f3d662a23972341",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-106": {
+      "common_max_chars": 11238,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13230,
+      "additional_truncation_chars": 4762,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9659,
+          "max_chars": 11238
+        },
+        "raw": {
+          "prompt_tokens": 12081,
+          "max_chars": 11238
+        },
+        "wiki": {
+          "prompt_tokens": 12836,
+          "max_chars": 11238
+        }
+      },
+      "context_sha256": "4c7668c583a28c56b992d889d7e6470df421e8ce4fb7ffe528ac763c873a92f2",
+      "usual_context_sha256": "b42e051a39b07109d58e67967b850f028bead5e6c580a713b3e0a2ae13177e2b",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-107": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9504,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9504,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11926,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12681,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "c989b6f17f41741a39fcd396e3e217393dc70ab68fe3e06f4b45e265b91dfa5a",
+      "usual_context_sha256": "c989b6f17f41741a39fcd396e3e217393dc70ab68fe3e06f4b45e265b91dfa5a",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-108": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8140,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8140,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10562,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11317,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "ec6cbb0507dcc9ed89cb58ac88fe28974af097fbef825d915e30e429cb73ee19",
+      "usual_context_sha256": "ec6cbb0507dcc9ed89cb58ac88fe28974af097fbef825d915e30e429cb73ee19",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-109": {
+      "common_max_chars": 11346,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13073,
+      "additional_truncation_chars": 4654,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10371,
+          "max_chars": 11346
+        },
+        "raw": {
+          "prompt_tokens": 12793,
+          "max_chars": 11346
+        },
+        "wiki": {
+          "prompt_tokens": 13548,
+          "max_chars": 11346
+        }
+      },
+      "context_sha256": "92e4be7fae9a43c29568d615b6a2973a656dde2efc3be20c6513847e2992e867",
+      "usual_context_sha256": "27bc4820d54fd9fc3aad8db9f56e8e716c6ff9f493988cbc632ac52c05ee52f2",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-110": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9019,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9019,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11441,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12196,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "460494ddc3d92adc5cb18503a271f6295f76f77b69351c3b00168eb038771587",
+      "usual_context_sha256": "460494ddc3d92adc5cb18503a271f6295f76f77b69351c3b00168eb038771587",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-111": {
+      "common_max_chars": 9826,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11494,
+      "additional_truncation_chars": 6174,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10086,
+          "max_chars": 9826
+        },
+        "raw": {
+          "prompt_tokens": 12508,
+          "max_chars": 9826
+        },
+        "wiki": {
+          "prompt_tokens": 13263,
+          "max_chars": 9826
+        }
+      },
+      "context_sha256": "b8f7ba0e61608dc8d9de618fba6516b8475593585283338fa2d122b94de48fb4",
+      "usual_context_sha256": "448618a532546596bf1e7c1c71257e92c7fb37396bd5f257d4741e10bae6f73e",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-112": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12293,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10830,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13252,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14007,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "4ce4c9ec9b748b841d0e25d472270907b6644842be97ab2e0d781d2d23332b2a",
+      "usual_context_sha256": "9b15c9558b51e46f627ca0f01a503aa2d2c1cd08063c50fb6a5d71f2c1cf0b2d",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-113": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7039,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7039,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9461,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10216,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "a25d13688369f0fb55fcb356f9aef69a534c0276b55b4845411f106867b38765",
+      "usual_context_sha256": "a25d13688369f0fb55fcb356f9aef69a534c0276b55b4845411f106867b38765",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-114": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5722,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5722,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8144,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8899,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "7d72fc2afda89d246a434e72f6bbfbd810a320c739ca7ed2a0aee7da03380f0c",
+      "usual_context_sha256": "7d72fc2afda89d246a434e72f6bbfbd810a320c739ca7ed2a0aee7da03380f0c",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-115": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8443,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8443,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10865,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11620,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "ac2104e5f1c9a82ac92c13de5b334bc24160a6efe9de09fe0c6da20d582a2be3",
+      "usual_context_sha256": "ac2104e5f1c9a82ac92c13de5b334bc24160a6efe9de09fe0c6da20d582a2be3",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-116": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8438,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8438,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10860,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11615,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "1554d8d402a5bcf8625b676901579c77301e15591e723a4eb855d6c7badd6c5c",
+      "usual_context_sha256": "1554d8d402a5bcf8625b676901579c77301e15591e723a4eb855d6c7badd6c5c",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-117": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12641,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9869,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12291,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13046,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "85056a3bac5d48f92ed6a9bd2874d00976ffe5a92161138befcbd13216dd49d3",
+      "usual_context_sha256": "c1010a9b78bbdb834a4b78f480127d2bca6ec9156036ed25e5732a7c9635c921",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-118": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7177,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7177,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9599,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10354,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "fcceda40a1b37a0860fb039104eec40bca6400570d3cd4204ab2402d251394a6",
+      "usual_context_sha256": "fcceda40a1b37a0860fb039104eec40bca6400570d3cd4204ab2402d251394a6",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-119": {
+      "common_max_chars": 10721,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 14020,
+      "additional_truncation_chars": 5279,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10694,
+          "max_chars": 10721
+        },
+        "raw": {
+          "prompt_tokens": 13116,
+          "max_chars": 10721
+        },
+        "wiki": {
+          "prompt_tokens": 13871,
+          "max_chars": 10721
+        }
+      },
+      "context_sha256": "5e2703e42f26191fd5cb28875f7b3f6dcd3022afa11507f1006fa4421706387c",
+      "usual_context_sha256": "34747ec90ec7f136c2bf32850a315fd16148ce0bbbaf3443ed594c0a5199adc5",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-120": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5246,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5246,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7668,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8423,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "9a81464152b281b4c4afd80853f63681322cc02dbb4ab5af0485e47c7ef1dcbb",
+      "usual_context_sha256": "9a81464152b281b4c4afd80853f63681322cc02dbb4ab5af0485e47c7ef1dcbb",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-121": {
+      "common_max_chars": 10659,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 14120,
+      "additional_truncation_chars": 5341,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10662,
+          "max_chars": 10659
+        },
+        "raw": {
+          "prompt_tokens": 13084,
+          "max_chars": 10659
+        },
+        "wiki": {
+          "prompt_tokens": 13839,
+          "max_chars": 10659
+        }
+      },
+      "context_sha256": "e60dff44b806c5ea42d9fd03ad6869dfbeb049950de98f366cf5de6f672b37dd",
+      "usual_context_sha256": "bba39bcbea0ca6811b1192ba64d8b73b88a576a4c785572c6ebb1cf42146d284",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-122": {
+      "common_max_chars": 11152,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13356,
+      "additional_truncation_chars": 4848,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9842,
+          "max_chars": 11152
+        },
+        "raw": {
+          "prompt_tokens": 12264,
+          "max_chars": 11152
+        },
+        "wiki": {
+          "prompt_tokens": 13019,
+          "max_chars": 11152
+        }
+      },
+      "context_sha256": "2b9983493665bf1cab6f931b20b465c459357803478e52e1f3712a53f86509df",
+      "usual_context_sha256": "0267dcac9977d3e493eb7922d53a1b42c134e0856540dd16ebf2f342ca9e1e45",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-123": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8942,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8942,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11364,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12119,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "6f09b34b53bb8bb26288e581fa98ab695d99b734fe2abbf372bcc899a74825d4",
+      "usual_context_sha256": "6f09b34b53bb8bb26288e581fa98ab695d99b734fe2abbf372bcc899a74825d4",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-124": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8598,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8598,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11020,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11775,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "3c037541f6e6b26beb76520a01f3b260a561ea60305af70e05a57b817e75bf8e",
+      "usual_context_sha256": "3c037541f6e6b26beb76520a01f3b260a561ea60305af70e05a57b817e75bf8e",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-125": {
+      "common_max_chars": 11043,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13520,
+      "additional_truncation_chars": 4957,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10588,
+          "max_chars": 11043
+        },
+        "raw": {
+          "prompt_tokens": 13010,
+          "max_chars": 11043
+        },
+        "wiki": {
+          "prompt_tokens": 13765,
+          "max_chars": 11043
+        }
+      },
+      "context_sha256": "b92a8329c011614f65bb9ffa90f79bb9f8ae7a74e94ed2699103306853ee4a0e",
+      "usual_context_sha256": "b9e0a4c6784463d4c05e9ea033a5f7ad9f35454a41c6a3e72e3d08ef11795abf",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-126": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9377,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9377,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11799,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12554,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "bed1ff949bcbaec370b5f926d39b23a6365ba36bbfa966fae50c7be47353da45",
+      "usual_context_sha256": "bed1ff949bcbaec370b5f926d39b23a6365ba36bbfa966fae50c7be47353da45",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-127": {
+      "common_max_chars": 9826,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12489,
+      "additional_truncation_chars": 6174,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10074,
+          "max_chars": 9826
+        },
+        "raw": {
+          "prompt_tokens": 12496,
+          "max_chars": 9826
+        },
+        "wiki": {
+          "prompt_tokens": 13251,
+          "max_chars": 9826
+        }
+      },
+      "context_sha256": "14e2f4e01b133da80933e6929891183a0726e6e1a5f03d0a5a5ade2bcd7c1679",
+      "usual_context_sha256": "ca3b718a3b31cc9f396de0165c30e79db098fd9a016c962716a6f27f017235a7",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-128": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7546,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7546,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9968,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10723,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "b8b30e01fe96374b283575703dfc44ae65cf55775a4ba073b23eb2d97e55b1c9",
+      "usual_context_sha256": "b8b30e01fe96374b283575703dfc44ae65cf55775a4ba073b23eb2d97e55b1c9",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-129": {
+      "common_max_chars": 11256,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13204,
+      "additional_truncation_chars": 4744,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10577,
+          "max_chars": 11256
+        },
+        "raw": {
+          "prompt_tokens": 12999,
+          "max_chars": 11256
+        },
+        "wiki": {
+          "prompt_tokens": 13754,
+          "max_chars": 11256
+        }
+      },
+      "context_sha256": "db7ba06cfde3916a4e518b7c8bb68c1f48176d5bf4dcae18712958b35ca47731",
+      "usual_context_sha256": "67384a67b8a999821bfc57a879fdb7f8cd5a8ad395a0d9bf0101de4a087a75a0",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-130": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6067,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6067,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8489,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9244,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "92b32b94974ab4b12ebe4e0b929626cf00ed9e49211f8fe67879f918806ec1be",
+      "usual_context_sha256": "92b32b94974ab4b12ebe4e0b929626cf00ed9e49211f8fe67879f918806ec1be",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-131": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7508,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7508,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9930,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10685,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "8429c7d30a57c6a2a49492b7822b77edac517ab823aca15923f1dad1ac01c997",
+      "usual_context_sha256": "8429c7d30a57c6a2a49492b7822b77edac517ab823aca15923f1dad1ac01c997",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-132": {
+      "common_max_chars": 11190,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13301,
+      "additional_truncation_chars": 4810,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10591,
+          "max_chars": 11190
+        },
+        "raw": {
+          "prompt_tokens": 13013,
+          "max_chars": 11190
+        },
+        "wiki": {
+          "prompt_tokens": 13768,
+          "max_chars": 11190
+        }
+      },
+      "context_sha256": "18c51fe8f6ed493a345654fd141060980985ae2c22ee26ce19ccb7aa8a3a341e",
+      "usual_context_sha256": "2e1e3fadfdbd5e9f7acfab9ad6863f143da67c6964ba81e28eec73e7d2937206",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-133": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12121,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10728,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13150,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13905,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "31612d1a1a9a9cc6f2b03ebfa73ba0bfdaa172d3189e8f64736c4e4977fc389b",
+      "usual_context_sha256": "37b18ae246b54d07ce61fcbac3df6e1bd1b442ba2c585aefbce9ef5bae7cd5cf",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-134": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9276,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9276,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11698,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12453,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "903a20eb3a9f65cfc99dbe116c030dfdb8ddfbded8feeef4361f07e5df1ace98",
+      "usual_context_sha256": "903a20eb3a9f65cfc99dbe116c030dfdb8ddfbded8feeef4361f07e5df1ace98",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-135": {
+      "common_max_chars": 10965,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13639,
+      "additional_truncation_chars": 5035,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10599,
+          "max_chars": 10965
+        },
+        "raw": {
+          "prompt_tokens": 13021,
+          "max_chars": 10965
+        },
+        "wiki": {
+          "prompt_tokens": 13776,
+          "max_chars": 10965
+        }
+      },
+      "context_sha256": "9acbdc334ff852db909bb21e0ee6e7f520c7173d3568b8331a85a348e2ce8fe2",
+      "usual_context_sha256": "a0e16c612e7be66f58acea874d0f07f86601e30a1509ac35ef4d4cbd646fee36",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-136": {
+      "common_max_chars": 10958,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13649,
+      "additional_truncation_chars": 5042,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10568,
+          "max_chars": 10958
+        },
+        "raw": {
+          "prompt_tokens": 12990,
+          "max_chars": 10958
+        },
+        "wiki": {
+          "prompt_tokens": 13745,
+          "max_chars": 10958
+        }
+      },
+      "context_sha256": "1ead86b13856c5afd5806cb3cc8b31cdc4143fe9e75ccd6244c1ed1b43b4f301",
+      "usual_context_sha256": "bbae726cec3a2d831c55de6f270a5c59507aa4c35e6424801ddde01a3fb0d2b6",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-137": {
+      "common_max_chars": 11204,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13279,
+      "additional_truncation_chars": 4796,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10519,
+          "max_chars": 11204
+        },
+        "raw": {
+          "prompt_tokens": 12941,
+          "max_chars": 11204
+        },
+        "wiki": {
+          "prompt_tokens": 13696,
+          "max_chars": 11204
+        }
+      },
+      "context_sha256": "903cd459b1c04b0b18211550595e9227b2d339d1b680db92a601e40eb7891deb",
+      "usual_context_sha256": "c730650464a35115edea0f0a3ef278468ffbe9b1dc2abc5c38fee77fc595d377",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-138": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11909,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10412,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12834,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13589,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "640194b9af13c801921456b7a5202de333c2fffbefc334671a9cc6f737dd35b1",
+      "usual_context_sha256": "da7cd00a7406fbb37f078d19fa200cb4809863784c467346eaa8c8c09d382965",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-139": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10804,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10804,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 13226,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13981,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "2654f5b774116ac6ba2779622f0116f2da32428ec983e5b67d6c37435ac83c2c",
+      "usual_context_sha256": "2654f5b774116ac6ba2779622f0116f2da32428ec983e5b67d6c37435ac83c2c",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-140": {
+      "common_max_chars": 10906,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13729,
+      "additional_truncation_chars": 5094,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10645,
+          "max_chars": 10906
+        },
+        "raw": {
+          "prompt_tokens": 13067,
+          "max_chars": 10906
+        },
+        "wiki": {
+          "prompt_tokens": 13822,
+          "max_chars": 10906
+        }
+      },
+      "context_sha256": "3f99d80a7a1ed22a2648980ccd2d0f55cfa714dde897dd13c1fa81da83231bea",
+      "usual_context_sha256": "1b049a96f5044543827e95b093b3351d737036ba3673ae6604b483cca81e6fe4",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-141": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9241,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9241,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11663,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12418,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f835c8da7ce33b97a85259e87943eac20891bc50d588b6e8908b887139f12069",
+      "usual_context_sha256": "f835c8da7ce33b97a85259e87943eac20891bc50d588b6e8908b887139f12069",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-142": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5217,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5217,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7639,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8394,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "c2c5c1b343cba6d42133350b96bacaa3ba5b0faae17a872beba1a27691a8c4ec",
+      "usual_context_sha256": "c2c5c1b343cba6d42133350b96bacaa3ba5b0faae17a872beba1a27691a8c4ec",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-143": {
+      "common_max_chars": 11363,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13049,
+      "additional_truncation_chars": 4637,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10024,
+          "max_chars": 11363
+        },
+        "raw": {
+          "prompt_tokens": 12446,
+          "max_chars": 11363
+        },
+        "wiki": {
+          "prompt_tokens": 13201,
+          "max_chars": 11363
+        }
+      },
+      "context_sha256": "ea10e59f4dda35a6f1c73715f623fdc31dc15e18564ba05b7d9156b5e9b678b8",
+      "usual_context_sha256": "bbfcaa66b30169b1f3c5fe48afe01168dd4c2217cb8923f76daa5cf4fe0ca982",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-144": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8378,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8378,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10800,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11555,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "6d1622e7da152023e94fd31b797f6f27f87616eea5f26c256d1a8d244a17ba7a",
+      "usual_context_sha256": "6d1622e7da152023e94fd31b797f6f27f87616eea5f26c256d1a8d244a17ba7a",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-145": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12611,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10074,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12496,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13251,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "c93b00fb632b1bd68e72d8cf12edf1107a229e02d88bed1d63f63a81b7601674",
+      "usual_context_sha256": "114f9b0c31a3adc9fc51070544701197f29671c43c6100767a383dca6a5e97eb",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-146": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8772,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8772,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11194,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11949,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "88274e2e9cedbfbd9bf10c55e51a2cdaa416168485b16a2296c88d5e95cd2aeb",
+      "usual_context_sha256": "88274e2e9cedbfbd9bf10c55e51a2cdaa416168485b16a2296c88d5e95cd2aeb",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-147": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12226,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10839,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13261,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14016,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "2857554c236efe36b7e82f17e29a986da73248690e7513ae156bd319c86c958b",
+      "usual_context_sha256": "1a0a6dbb2c2189cb8f6acac609211650862f1eb31ede917664889179afd77c2d",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-148": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8584,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8584,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11006,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11761,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "41f2cf9f6cbdd35c3106cc251419a33233fc725b88a7729d01a0de73f46bb9be",
+      "usual_context_sha256": "41f2cf9f6cbdd35c3106cc251419a33233fc725b88a7729d01a0de73f46bb9be",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-149": {
+      "common_max_chars": 9826,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11693,
+      "additional_truncation_chars": 6174,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10034,
+          "max_chars": 9826
+        },
+        "raw": {
+          "prompt_tokens": 12456,
+          "max_chars": 9826
+        },
+        "wiki": {
+          "prompt_tokens": 13211,
+          "max_chars": 9826
+        }
+      },
+      "context_sha256": "cd200c0163e4a5fb0a633320c16241ca604a12a2eff7950c1d05ba1d231cd2e9",
+      "usual_context_sha256": "e7f7ef689f03a5830b17bfb3c8c274243cc16a270590f76cd5ae0e6fcb9a1b3f",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-150": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5212,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5212,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7634,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8389,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "27327d79b47a64bc6e5f73e98d0a499a1cabd0023d8e5f0d558ca511d1860841",
+      "usual_context_sha256": "27327d79b47a64bc6e5f73e98d0a499a1cabd0023d8e5f0d558ca511d1860841",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-151": {
+      "common_max_chars": 9826,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12726,
+      "additional_truncation_chars": 6174,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10253,
+          "max_chars": 9826
+        },
+        "raw": {
+          "prompt_tokens": 12675,
+          "max_chars": 9826
+        },
+        "wiki": {
+          "prompt_tokens": 13430,
+          "max_chars": 9826
+        }
+      },
+      "context_sha256": "96a68230140160e0f5be9d43a91ec410bc5e234562eac37681a468695ff6f510",
+      "usual_context_sha256": "701f1d5b1f0df1362ca7202579e4005a6ac9095a5a8f9a343355f7d575b1daef",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-152": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9081,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9081,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11503,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12258,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "76d1e5351d6c5bba22f697d27a0de8290204eb91cf7159e5f59a007e0478152b",
+      "usual_context_sha256": "76d1e5351d6c5bba22f697d27a0de8290204eb91cf7159e5f59a007e0478152b",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-153": {
+      "common_max_chars": 10934,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13686,
+      "additional_truncation_chars": 5066,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10497,
+          "max_chars": 10934
+        },
+        "raw": {
+          "prompt_tokens": 12919,
+          "max_chars": 10934
+        },
+        "wiki": {
+          "prompt_tokens": 13674,
+          "max_chars": 10934
+        }
+      },
+      "context_sha256": "5e16bd1692e07146217c6d57e071db0414e2d2b38f514c1bb6dacb0cf5855a4f",
+      "usual_context_sha256": "89914696ae5d124f455f5a7067b88aed6b35b7d92f243ec50e297345fc280847",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-154": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7587,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7587,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10009,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10764,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "2f97e93ff1436ba89fecf243efc127554dd2de6b3ea8e9ea4cb318e1d350076e",
+      "usual_context_sha256": "2f97e93ff1436ba89fecf243efc127554dd2de6b3ea8e9ea4cb318e1d350076e",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-155": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12698,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10048,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12470,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13225,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "f4cdfa2fbe489150035bb9a285fa6cba231a02707b9574b8b48a750801f2221d",
+      "usual_context_sha256": "f7d2c79e08bcada67cfdf0ae4d55c83674bc1128b8741506bd4a8d28668a8cb5",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-156": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6477,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6477,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8899,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9654,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "53b7f009182a6065ea067011ac52e16b73c1b9d1ed497b89422a3a70499ef455",
+      "usual_context_sha256": "53b7f009182a6065ea067011ac52e16b73c1b9d1ed497b89422a3a70499ef455",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-157": {
+      "common_max_chars": 10819,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13865,
+      "additional_truncation_chars": 5181,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10579,
+          "max_chars": 10819
+        },
+        "raw": {
+          "prompt_tokens": 13001,
+          "max_chars": 10819
+        },
+        "wiki": {
+          "prompt_tokens": 13756,
+          "max_chars": 10819
+        }
+      },
+      "context_sha256": "63dccd44c61118029d54c42af637e4b7e116e62796ba0591f468c4816f340fe0",
+      "usual_context_sha256": "73b50ce07d8f348f91f73812ace0687b0463df7bd767ae0abc0eb72297f998f5",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-158": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12064,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10643,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13065,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13820,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "a9a96b2da7776caa7af51542aa74b55c17ee3a8ce8f469b2f5a1154ca27517fd",
+      "usual_context_sha256": "7a157f61a3935e42f26448ee20e9d710d46e5ef378e8a110bf671e8d90f42035",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-159": {
+      "common_max_chars": 11099,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13436,
+      "additional_truncation_chars": 4901,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10597,
+          "max_chars": 11099
+        },
+        "raw": {
+          "prompt_tokens": 13019,
+          "max_chars": 11099
+        },
+        "wiki": {
+          "prompt_tokens": 13774,
+          "max_chars": 11099
+        }
+      },
+      "context_sha256": "0dbeca89407be7c1f27fd6214a328b12d2160d1b1e0e5a1b37fce64fc1ff8723",
+      "usual_context_sha256": "02a0b3fe01319ba0edfcd992dea98e741a755e91aedba53d3902f4564d0bbdb7",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-160": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7725,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7725,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10147,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10902,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "e145964288e3daf274368c89dd062d5d5d02755970114cd643a64f561d13cfd9",
+      "usual_context_sha256": "e145964288e3daf274368c89dd062d5d5d02755970114cd643a64f561d13cfd9",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-161": {
+      "common_max_chars": 11060,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13494,
+      "additional_truncation_chars": 4940,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10563,
+          "max_chars": 11060
+        },
+        "raw": {
+          "prompt_tokens": 12985,
+          "max_chars": 11060
+        },
+        "wiki": {
+          "prompt_tokens": 13740,
+          "max_chars": 11060
+        }
+      },
+      "context_sha256": "0d5acb808e203480a0a3f4cdd338d5f70603c866b5ff3fadaaff42678c68b796",
+      "usual_context_sha256": "20ba59de3e6141c120053404867a4a73d1ca6ce1bc687cdcd3bf218dd5245428",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-162": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12368,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10066,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12488,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 13243,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "07e1a1d2da634d10ff0543f22402135d8a145e77299c21607514a757d908ce73",
+      "usual_context_sha256": "9f11d9ad9ca3af1bd34f8944ee2d85a3b198e029b6663b6a6fe6d90c760f8d74",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-163": {
+      "common_max_chars": 10607,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 14206,
+      "additional_truncation_chars": 5393,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10754,
+          "max_chars": 10607
+        },
+        "raw": {
+          "prompt_tokens": 13176,
+          "max_chars": 10607
+        },
+        "wiki": {
+          "prompt_tokens": 13931,
+          "max_chars": 10607
+        }
+      },
+      "context_sha256": "f2dc6ca41369ed84a0df50d517b48ab758b1eb2de44d6956ad9b4a85a6edf942",
+      "usual_context_sha256": "840267930eed1a8a73d5ed754599c1f34d09d93136f566a80fc7a464caafbc32",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-164": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7120,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7120,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9542,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10297,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f82c7cdea72bc0947f9a9341d3d4b38bb19ae233e6c5afc595c1b3f565ab4336",
+      "usual_context_sha256": "f82c7cdea72bc0947f9a9341d3d4b38bb19ae233e6c5afc595c1b3f565ab4336",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-165": {
+      "common_max_chars": 11062,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13490,
+      "additional_truncation_chars": 4938,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10432,
+          "max_chars": 11062
+        },
+        "raw": {
+          "prompt_tokens": 12854,
+          "max_chars": 11062
+        },
+        "wiki": {
+          "prompt_tokens": 13609,
+          "max_chars": 11062
+        }
+      },
+      "context_sha256": "c11f9392cccd11808991a5bb76606e93b7425272da2f8987257f8f10a5168e33",
+      "usual_context_sha256": "540ea85cc210e362143a2a26d17aa53831ea2e4efcca21332cce911896668f36",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-166": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5575,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5575,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7997,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8752,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "37b48c96b6f9ff1b4c28041c6a52ec0470a740125e184307e9aa60590a465a3f",
+      "usual_context_sha256": "37b48c96b6f9ff1b4c28041c6a52ec0470a740125e184307e9aa60590a465a3f",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-167": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8383,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8383,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10805,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11560,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "7a06b63263e38812b9e0bc1b0f9f8f5555ca8901fd34863928916cfd406a2ece",
+      "usual_context_sha256": "7a06b63263e38812b9e0bc1b0f9f8f5555ca8901fd34863928916cfd406a2ece",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-168": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 6520,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 6520,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8942,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9697,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "8b1300d2b5a787d58e68590108d7f445bb2af7a9a15556c498a87e3829f711a5",
+      "usual_context_sha256": "8b1300d2b5a787d58e68590108d7f445bb2af7a9a15556c498a87e3829f711a5",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-169": {
+      "common_max_chars": 11462,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12909,
+      "additional_truncation_chars": 4538,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9970,
+          "max_chars": 11462
+        },
+        "raw": {
+          "prompt_tokens": 12392,
+          "max_chars": 11462
+        },
+        "wiki": {
+          "prompt_tokens": 13147,
+          "max_chars": 11462
+        }
+      },
+      "context_sha256": "1d5a9eeec0f4f5bdd3003c1d8d22f9ed5b765387f394ee4e17251a3d6ce95730",
+      "usual_context_sha256": "70ad2b77619ae5cfc75b3b33230bc7f1f2e466fb7c34d6b0e84154fb82baeb80",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-170": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12107,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10546,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12968,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13723,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "56c52d4ebf95032abada6fdadd32a3f2381d473888123f55ee0bf1adf10415fe",
+      "usual_context_sha256": "3a2338c17555bcb2ad3a8d0dab49832efeabcfc3958dc9168e1ff183cf440216",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-171": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11655,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10330,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12752,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13507,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "42cb65dd85fb39e1a0aceaa50d417547c012f3d7e6de9b73ffe92cf8ea765574",
+      "usual_context_sha256": "a573880afe9f6a006e6db4bff9933e6715a6682b784b54d456edb6e111620f26",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-172": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11607,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10335,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 12757,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13512,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "a051a0849245027fd4a05f948b652cfe8ca6af48f3eed97365d23816d55c87ac",
+      "usual_context_sha256": "873e9e89c905760236037c9a8797068b0c0f33853b63607c4b7690829ce21e73",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-173": {
+      "common_max_chars": 11003,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13581,
+      "additional_truncation_chars": 4997,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10508,
+          "max_chars": 11003
+        },
+        "raw": {
+          "prompt_tokens": 12930,
+          "max_chars": 11003
+        },
+        "wiki": {
+          "prompt_tokens": 13685,
+          "max_chars": 11003
+        }
+      },
+      "context_sha256": "930220954c8b14677227cef318652bcfa5b4a980875a656f8924265392f7960a",
+      "usual_context_sha256": "38b163655739594af4634c90503dfcc265a9bc093657c485bde37f97461b55f0",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-174": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5661,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5661,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8083,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8838,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "2d648ef0beb4724abd6e05656031b6e51cc5dc958cf2ae8ae0892a0dde85f131",
+      "usual_context_sha256": "2d648ef0beb4724abd6e05656031b6e51cc5dc958cf2ae8ae0892a0dde85f131",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-175": {
+      "common_max_chars": 10662,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 14116,
+      "additional_truncation_chars": 5338,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10576,
+          "max_chars": 10662
+        },
+        "raw": {
+          "prompt_tokens": 12998,
+          "max_chars": 10662
+        },
+        "wiki": {
+          "prompt_tokens": 13753,
+          "max_chars": 10662
+        }
+      },
+      "context_sha256": "5293ad4f8ed0527248f12a6b282b5457043e1673eeacfa727c21aded1ddd25fc",
+      "usual_context_sha256": "b10e576d8093933f23ba4f1242623ac8299c37165434a34c5803182e6d80de64",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-176": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10879,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10879,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 13301,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 14056,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "701450b50f1dfd15c9b65948f05b7a05bc1c2989ca12c5ebe770af17d6d2a317",
+      "usual_context_sha256": "701450b50f1dfd15c9b65948f05b7a05bc1c2989ca12c5ebe770af17d6d2a317",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-177": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8710,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8710,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11132,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11887,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "58d3b744b0b57b3c1f0b69015fbeaa8170a2310568212c3046c0fd96e7fbe1c5",
+      "usual_context_sha256": "58d3b744b0b57b3c1f0b69015fbeaa8170a2310568212c3046c0fd96e7fbe1c5",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-178": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12480,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10996,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13418,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14173,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "a53bd2a655d3326913094b8eefb0a9dde6ea0efe5771debdc80fc4ef2b2fef00",
+      "usual_context_sha256": "b3c38f1b72d393b939aef661a0f94cd1cedb868bb0509d3f650f4e8630f5038e",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-179": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 4866,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 4866,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 7288,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 8043,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "35fa3ddaf6a9ad83138f97a0fc8ad5868bd7604abd760a8ff13493cf7001434e",
+      "usual_context_sha256": "35fa3ddaf6a9ad83138f97a0fc8ad5868bd7604abd760a8ff13493cf7001434e",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-180": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12347,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10858,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13280,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14035,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "f4f7c4b6e8c1389e4ece31d906b356f0dd61c2727c5e58ea7b5988c4235d7b04",
+      "usual_context_sha256": "5f19eb53530599bbd27aa6dbfe8d1b37da7d61ef0760db8ad8def0c8472b4588",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-181": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12721,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10961,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 13383,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 14138,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "5b2a9c7fa79fb77238f31a96520bf73c2f9765ced12b375b41d64efa24df520b",
+      "usual_context_sha256": "61b0fd4690c827d3a3236982eb5a7d12efc63cf2038e11389aea1a616b0673c5",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-182": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 5986,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 5986,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 8408,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 9163,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "e38b371eb00c7f7e266c33cd215224829576050262d4a76cffdd910dde4dd07a",
+      "usual_context_sha256": "e38b371eb00c7f7e266c33cd215224829576050262d4a76cffdd910dde4dd07a",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-183": {
+      "common_max_chars": 10904,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13732,
+      "additional_truncation_chars": 5096,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10601,
+          "max_chars": 10904
+        },
+        "raw": {
+          "prompt_tokens": 13023,
+          "max_chars": 10904
+        },
+        "wiki": {
+          "prompt_tokens": 13778,
+          "max_chars": 10904
+        }
+      },
+      "context_sha256": "f53ff77cbf8c727c516731552f95e2f722ea2a0575118710c193aeed74a5e83e",
+      "usual_context_sha256": "31c3b406908fbad18363b622518aa5a4aca21b844290afa351de05d35d4b7c0e",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-184": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7731,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7731,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 10153,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10908,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "09ef5e089755331af24029cb31e5a83d630be1d18fcbe9fbad6323adacfaf0b4",
+      "usual_context_sha256": "09ef5e089755331af24029cb31e5a83d630be1d18fcbe9fbad6323adacfaf0b4",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-185": {
+      "common_max_chars": 11288,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13156,
+      "additional_truncation_chars": 4712,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10186,
+          "max_chars": 11288
+        },
+        "raw": {
+          "prompt_tokens": 12608,
+          "max_chars": 11288
+        },
+        "wiki": {
+          "prompt_tokens": 13363,
+          "max_chars": 11288
+        }
+      },
+      "context_sha256": "5ed453646ae23d68ae469c361aceb2a387f56a617e94fc28b5ee745f77ec6ac4",
+      "usual_context_sha256": "de1ad250153fc352420e6cbcffefa628aac077cef21611aad30bba950ab94b11",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-186": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10223,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10223,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12645,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13400,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "4ecbc0a11e76a954b573f010f7e32272b1b7649ac11fbbb3bf1fc88b9f3b0764",
+      "usual_context_sha256": "4ecbc0a11e76a954b573f010f7e32272b1b7649ac11fbbb3bf1fc88b9f3b0764",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-187": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9087,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9087,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11509,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12264,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "7f08d17a1cf086d8f8cc300eee2c2834a33bc224cfd63743463a651e79b00dde",
+      "usual_context_sha256": "7f08d17a1cf086d8f8cc300eee2c2834a33bc224cfd63743463a651e79b00dde",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-188": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 11961,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10623,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13045,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 13800,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "6b441db12d0b6e7cbc58381194b702da55ac29d39ec06bf345e9b8ef761dca29",
+      "usual_context_sha256": "61f15a3899bc3ed32f2ee18a9a6fc267a45d5eae8d232e2fee1da5b77be20004",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-189": {
+      "common_max_chars": 10561,
+      "usual_control_max_chars": 13600,
+      "usual_control_prompt_tokens": 12708,
+      "additional_truncation_chars": 3039,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10726,
+          "max_chars": 10561
+        },
+        "raw": {
+          "prompt_tokens": 13148,
+          "max_chars": 10561
+        },
+        "wiki": {
+          "prompt_tokens": 13903,
+          "max_chars": 10561
+        }
+      },
+      "context_sha256": "55014fed20814cdc57833d8830e819055303ef2ec483878243dda0bc7ed05514",
+      "usual_context_sha256": "4d4cb029327258d16f36b864982526e222c8f2505e81627d605e252331313901",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-190": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10296,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10296,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12718,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13473,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "f8a27cc2ed9704571f03c0428d6454bb4a93b187ba59fa852ec60789320a114a",
+      "usual_context_sha256": "f8a27cc2ed9704571f03c0428d6454bb4a93b187ba59fa852ec60789320a114a",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-191": {
+      "common_max_chars": 10871,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13784,
+      "additional_truncation_chars": 5129,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10743,
+          "max_chars": 10871
+        },
+        "raw": {
+          "prompt_tokens": 13165,
+          "max_chars": 10871
+        },
+        "wiki": {
+          "prompt_tokens": 13920,
+          "max_chars": 10871
+        }
+      },
+      "context_sha256": "ffc96759bb351c9cec80a1d8e11c87be974b302933df10af000757dbc4b97cf4",
+      "usual_context_sha256": "d177f1eae9422648573998ad72b779019a8f71807f890f3cb8eda1da1dacc6fd",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-192": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 8599,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 8599,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11021,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 11776,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "18e46044a13cd6fec1b5b66c0088305dbcc85da9ce1b38a48e170d14201b2342",
+      "usual_context_sha256": "18e46044a13cd6fec1b5b66c0088305dbcc85da9ce1b38a48e170d14201b2342",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-193": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12325,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10847,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13269,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14024,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "9273f718d20edb87afe7d08fe69f425942819fad1fe3401e52c12735c51a6a49",
+      "usual_context_sha256": "0d661d3aeea3c5eb4ad35df2b4a6d047adca518e55506ebbe95d53b0846ea4f4",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-194": {
+      "common_max_chars": 11560,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12323,
+      "additional_truncation_chars": 4440,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9776,
+          "max_chars": 11560
+        },
+        "raw": {
+          "prompt_tokens": 12198,
+          "max_chars": 11560
+        },
+        "wiki": {
+          "prompt_tokens": 12953,
+          "max_chars": 11560
+        }
+      },
+      "context_sha256": "8c13769f1fedc1f4ffef5ba5884a7a5fc23d1ee25c3c7570e0b8d592dbafbc14",
+      "usual_context_sha256": "9e9a878dc53429dc6436b6b87dea2100eb014458e42f8fd3e6204a0f9cd36219",
+      "truncated": true,
+      "usual_truncated": false
+    },
+    "PPS-DEV-195": {
+      "common_max_chars": 11081,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 13462,
+      "additional_truncation_chars": 4919,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10605,
+          "max_chars": 11081
+        },
+        "raw": {
+          "prompt_tokens": 13027,
+          "max_chars": 11081
+        },
+        "wiki": {
+          "prompt_tokens": 13782,
+          "max_chars": 11081
+        }
+      },
+      "context_sha256": "c7e98ed1e55cc60dc7b73b4f38e06ec41fe322e267725fe75eb9aada867776ca",
+      "usual_context_sha256": "13a889ff97030ffedbe2192e04b2ed647510f270ebce47eca5c8db26d547b59c",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-196": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 10460,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10460,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 12882,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 13637,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "9b092c119deed60bec44469d98272191c809ab25f273e357203c8ed8410b8413",
+      "usual_context_sha256": "9b092c119deed60bec44469d98272191c809ab25f273e357203c8ed8410b8413",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-197": {
+      "common_max_chars": 11402,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12993,
+      "additional_truncation_chars": 4598,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10112,
+          "max_chars": 11402
+        },
+        "raw": {
+          "prompt_tokens": 12534,
+          "max_chars": 11402
+        },
+        "wiki": {
+          "prompt_tokens": 13289,
+          "max_chars": 11402
+        }
+      },
+      "context_sha256": "bdf6cc4a25f3b1977e6bffe75acaeb6e811dbcb5055a58a20167c309abc855c8",
+      "usual_context_sha256": "5ac2ab7f162f7869fc5ac580de657ed2eae005b4886ef19e0237e6d06d51da56",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-198": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 7341,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 7341,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 9763,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 10518,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "2a5bb81aa0ec2ac1b7fc8e2c7ffdce91c07405b240379d6213d99e19fe06385d",
+      "usual_context_sha256": "2a5bb81aa0ec2ac1b7fc8e2c7ffdce91c07405b240379d6213d99e19fe06385d",
+      "truncated": false,
+      "usual_truncated": false
+    },
+    "PPS-DEV-199": {
+      "common_max_chars": 13600,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 12438,
+      "additional_truncation_chars": 2400,
+      "arms": {
+        "control": {
+          "prompt_tokens": 10982,
+          "max_chars": 13600
+        },
+        "raw": {
+          "prompt_tokens": 13404,
+          "max_chars": 13600
+        },
+        "wiki": {
+          "prompt_tokens": 14159,
+          "max_chars": 13600
+        }
+      },
+      "context_sha256": "3b4cf1e13feb7521ab9e4a22b5e93b6737389d00c03a56baad956d592d43d2bb",
+      "usual_context_sha256": "061f0d456557596be1221fbca74c9e868b54e9ac7c04d85610cd47617e974f9f",
+      "truncated": true,
+      "usual_truncated": true
+    },
+    "PPS-DEV-200": {
+      "common_max_chars": 16000,
+      "usual_control_max_chars": 16000,
+      "usual_control_prompt_tokens": 9176,
+      "additional_truncation_chars": 0,
+      "arms": {
+        "control": {
+          "prompt_tokens": 9176,
+          "max_chars": 16000
+        },
+        "raw": {
+          "prompt_tokens": 11598,
+          "max_chars": 16000
+        },
+        "wiki": {
+          "prompt_tokens": 12353,
+          "max_chars": 16000
+        }
+      },
+      "context_sha256": "136b8dacea96aceb86a0589931c1f159dc3b6e2274c3d680d0af859243617a7c",
+      "usual_context_sha256": "136b8dacea96aceb86a0589931c1f159dc3b6e2274c3d680d0af859243617a7c",
+      "truncated": false,
+      "usual_truncated": false
+    }
+  }
+}

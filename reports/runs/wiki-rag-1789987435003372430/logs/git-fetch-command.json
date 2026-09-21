@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "a9fdd0a86c6c4b1f8c7021561169fddb60cc6223"
+  ],
+  "cwd": "/content/wiki-rag-temvm92p/repo",
+  "started": 1789985648.334375,
+  "returncode": 0,
+  "elapsed_seconds": 1.197472333908081
+}

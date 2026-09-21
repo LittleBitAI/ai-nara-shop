@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "nvidia-smi",
+    "--query-gpu=name,memory.total,driver_version",
+    "--format=csv,noheader"
+  ],
+  "cwd": "/content/wiki-rag-tx9v4yj0",
+  "started": 1789983834.5129757,
+  "returncode": 0,
+  "elapsed_seconds": 0.021663188934326172
+}

@@ -37,6 +37,10 @@ company_size 프롬프트에만 넣고 control/후보를 같은 ZIP으로 두 �
 실제 company 입력의 토큰·추가 절단은 구현 전 미측정이다. 스키마·소비자·관측 게이트는 유지한다.
 PR #83 검토로 판정 경로와 TP≥3 전제를 정정했다. 입력·출력·허용 경로·반복 통과 조건은 착수서가 소유한다.
 조회 근거는 [보고서](../reports/team-c/law-index/README.md)가 소유한다.
+**착수 전에 `wiki-rag-pilot`의 실측을 읽는다** — A8이 넣으려는 제2조+별표 1은
+그 파일럿의 `raw` 블록(12 span·3,843자)의 **부분집합**이고, 그 블록으로도 v20 TP는 control과
+같은 1, FN 4건 불변, 검증된 참여 인용 0건이었다. A8 §5의 "TP 상한 2"도 실측으로 확인됐다.
+공통 예산 계산에 쓸 공고별 실제 토큰은 `reports/runs/wiki-rag-*/pilot/*/budget.json`에 있다.
 
 `a8-pr83-review`: **done / 검토와 필요한 문서 수정**, 사용자 요청 2026-09-21.
 입력: PR #83 `26c38d3` diff, A8 착수서, 제공 원문, 현재 판정 경로와 보관 분석.
@@ -50,6 +54,17 @@ PR #83 검토로 판정 경로와 TP≥3 전제를 정정했다. 입력·출력�
 front matter 누락을 재현해 PR #83과 같은 헤더로 수정했다. 양쪽 repo_lint·허브 lint 통과.
 헤더 수정은 PR #83의 기존 `dd78047`에 이미 포함된다. 기본 checkout에는 동일 수정을 로컬 적용했으며
 그곳의 별도 브랜치는 커밋하지 않는다. push·GPU 실행 없음.
+
+`wiki-rag-pilot`: **done / 두 회차 완료·가설 기각·세 군 모두 미채택**, [실제 결과](../reports/wiki-rag-pilot/results.md).
+2026-09-21 사용자 배정: Codex 설계, Claude 구현. 브랜치 `feat/wiki-rag-pilot`, 실행 코드 `a9fdd0a`.
+v20의 현재 방식·원문 조회·위키 페이지 조회를 같은 공고 입력과 기존 소비 코드로 비교했다.
+두 회차 600/600 유효 응답, 파싱 실패 0. v20 TP는 세 군·두 회차 모두 1이고 FN 4건은 하나도 회복되지 않았다.
+**검증된 참여 조항 인용이 1,200회 호출에서 0건**이고, 유일한 인용 1건(`PPS-DEV-068`)은 원문에 없는 문장이었다.
+`wiki`는 회차 1에서 control과 동률이라 승격 조건 미충족, `raw`는 v16 TP 3→1 등 반복 손실로 미채택.
+남은 원인은 인용 전사 실패와 적용 대상 과탐이며 둘 다 이번 실험 밖이다.
+[착수서](tasks/wiki-rag-pilot.md), [실행 안내](../reports/wiki-rag-pilot/run-request.md),
+[PR #82](https://github.com/LittleBitAI/ai-nara-shop/pull/82). 무라벨·전체 파이프라인·서버·독립 리뷰는 미실행이다.
+이 결과가 `a8-v20-annex-injection`의 가설·예산 전제와 직접 겹친다. A8 착수 전에 먼저 읽는다.
 
 `a5-v18-scope-review`: **done / 두 회차 기록 완료·후보 미채택**, [작업서](tasks/a5-v18-scope-review.md).
 한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
