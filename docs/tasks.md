@@ -33,7 +33,8 @@ v20의 현재 방식·원문 조회·위키 페이지 조회를 같은 공고 �
 자산 12 span·7칸 페이지·세 군 실행기·노트북·검사 19개를 만들었다.
 [준비 상태와 한계](../reports/wiki-rag-pilot/README.md), [실행 안내](../reports/wiki-rag-pilot/run-request.md).
 모델 호출 0회, 실제 토크나이저 측정 0회, 독립 리뷰·사람 자산 검토 미실행이다.
-공통 예산 추정으로 dev 200건 중 100건이 통상 A보다 본문을 잃는다. 커밋·push·PR은 미수행이다.
+공통 예산 추정으로 dev 200건 중 100건이 통상 A보다 본문을 잃는다.
+실험·준비 기록 보관 목적의 [PR #82](https://github.com/LittleBitAI/ai-nara-shop/pull/82)를 열었다. 머지·채택은 별도 판단이다.
 
 `a5-v18-scope-review`: **done / 두 회차 기록 완료·후보 미채택**, [작업서](tasks/a5-v18-scope-review.md).
 한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
