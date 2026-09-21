@@ -72,6 +72,11 @@ control과 후보는 같은 기준을 사용하며 다른 미채택 후보를 �
 | 이 문서, `docs/tasks.md`, `.wiki/plan-active.md`, `artifacts/review/a8-*.md` | 상태·검증·리뷰 기록 |
 
 운영 `script.py`, 조회 알고리즘, 제공 데이터, 기존 후보 의미·보관 결과는 수정하지 않는다.
+**2026-09-21 사용자 결정으로 이 제한을 한 건에 한해 푼다** — 독립 리뷰가 찾은 v13 근거 구멍
+(`company_size_products()`가 `qualification_quote`를 검증 없이 근거로 씀)을 별건 PR이 아니라
+이 PR 안에서 고친다. 허용 범위에 `script.py`의 그 함수와 그로 인해 깨지는 기존 검사,
+`tools/replay_run.py`의 비교 헬퍼, `reports/team-d/final/hashes.json` 재기록이 들어간다.
+**보관 CSV는 그대로 둔다** — 바이트 동일 대신 "움직인 셀이 정확히 이 셋"을 고정했다.
 기존 실행기가 스키마 확장을 요구하더라도 A8에는 확장하지 말고 프롬프트 전용 분기를 쓴다.
 CPU 준비 완료와 실제 모델 성공, 혼합 재생과 전체 GPU/서버 점수를 구분한다.
 

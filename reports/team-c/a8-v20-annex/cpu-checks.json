@@ -10,7 +10,7 @@
     "confirmed_by_reviewer": ["결합 스윕 외에 더 넓힐 결정적 조합 없음", "예산 검사에 가짜 초록 없음",
                               "GPU 두 회차 실행 자체는 막을 이유 없음 — 채택만 막는다"]
   },
-  "adoption_gate": "(1) qualification_quote 검증 수리 적용 + (2) 그 소비자로 저장 원응답 재생해 24항목 재확인 + (3) A8 두 회차가 사전 등록 조건 통과. 셋 전에는 채택하지 않는다. 실행은 막지 않는다.",
+  "adoption_gate": "(1) 검증 수리 적용 — 완료. (2) 저장 원응답 재생으로 24항목 재확인 — 완료(움직인 셀 3개, 대상 밖 0). (3) A8 두 회차가 사전 등록 조건 통과 — 미실행. 실행은 막지 않는다.",
   "full_pipeline_gpu_macro_f1": null,
   "candidate_gpu_stage_seconds": null,
   "server_macro_f1": null,
@@ -149,8 +149,20 @@
     "measured_fix_cost": {"evidence_only": {"macro": 0.593846165415, "v13": [4, 9, 2], "closes_new_positives": false},
                           "verified_quote_required": {"macro": 0.591008188119, "v13": [3, 8, 3],
                                                       "delta": -0.002838, "closes_new_positives": true}},
-    "fix_location": "운영 script.py — A8 허용 파일 밖. 별도 PR 로 낸다.",
-    "chosen_fix": "verified_quote_required (2026-09-21 사용자 결정) — 검증된 인용이 없으면 v13 을 쓰지 않는다. 재생 Macro -0.002838 을 치르고 신규 양성 24셀 경로를 닫는다.",
+    "status": "fixed in this PR — 2026-09-21 사용자 결정으로 착수서 §3 의 운영 파일 제한을 이 건에 한해 해제",
+    "fix": {
+      "where": "script.py:company_size_products()",
+      "rule": "restore_spacing 복원 뒤 인용이 visible 과 rec['docs'] 양쪽에 있어야 v13 을 쓴다. 없으면 기본 판정 보존.",
+      "macro_before_after": [0.593846165415, 0.591008188119],
+      "macro_delta": -0.002838,
+      "v13_before_after": [[4, 9, 2], [3, 8, 3]],
+      "moved_cells": [["PPS-DEV-16", "v13"], ["PPS-DEV-148", "e13"], ["PPS-DEV-198", "v13"]],
+      "other_items_moved": 0,
+      "sweep_after_fix": {"all_quote_fields": 0, "combined_role_and_quote": 0, "baseline_v13_cells": 6},
+      "mutation_check": "가드를 빼면 검사 8개가 빨개진다",
+      "archived_csvs": "다시 쓰지 않았다. tools/replay_run.csv_cell_diff() 로 움직인 셀을 고정한다.",
+      "v12_unaffected": "근거가 direct_production_demand(rec) 파생이라 검증 밖"
+    },
     "pinned_by": "tests/test_a8_v20_annex.py::LawQuotationTests 두 검사"
   },
   "cpu_budget_check": {
