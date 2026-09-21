@@ -11,6 +11,10 @@
 /experiments/**
 !/experiments/**/
 !/experiments/**/*.py
+# wiki-rag 의 페이지·span 명세는 실행 산출물이 아니라 고정 입력 자산이다.
+# 확장자가 .py 가 아니라서 위 규칙으로는 조용히 빠진다.
+!/experiments/wiki-rag/*.md
+!/experiments/wiki-rag/*.json
 /checkpoints/
 /weights/
 /predictions/

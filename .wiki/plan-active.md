@@ -7,6 +7,16 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
+**2026-09-21 Wiki RAG 구현 완료·GPU 미실행:** [준비 상태](../reports/wiki-rag-pilot/README.md),
+[Claude 착수서](../docs/tasks/wiki-rag-pilot.md). 기준 `8afae99`, 브랜치 `feat/wiki-rag-pilot`.
+v20 span 12개·7칸 페이지와 `control`/`raw`/`wiki` 세 군 실행기, Colab 노트북, 검사 19개를 만들었다.
+세 군은 system 프롬프트·스키마·소비 코드를 바꾸지 않고 사용자 메시지 끝의 지식 블록만 바꾼다.
+`raw`와 `wiki`의 인용문 집합은 같고 차이는 배치·연결뿐이다. H4 보관 응답 재생은 기존 HEAD CSV와 바이트 동일하다.
+세 군 공통 문서 예산이 `wiki` 블록 크기에 묶여, 추정으로 dev 200건 중 100건이 통상 A보다 본문을 잃는다
+(최소 8,845자). 결과를 읽을 때 `budget.json`을 먼저 본다.
+모델 호출 0회·실제 토크나이저 측정 0회·독립 리뷰 미실행이며 커밋·push·PR을 하지 않았다.
+노트북 `REPO_REF`는 push 전이라 40자리 0이다. 기존 운영 코드·최고 점수·A5 미채택 판단은 그대로다.
+
 **2026-09-21 A5 v18 두 회차 완료·미채택:** [실제 결과와 24항목 F1](../reports/team-c/a5-v18-scope-review/results.md).
 `44f5e4b` 후보 혼합 F1은 회차1 0.600586987945, 최신 회차2 0.598735136094다.
 v18 TP/FP/FN=1/3/6, 재검토 OFF/ON 0셀로 TP 회복 실패. v13·v20 FP +1이 두 회차 반복됐다.

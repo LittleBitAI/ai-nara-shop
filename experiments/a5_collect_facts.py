@@ -38,7 +38,8 @@ def save(path, value):
     temporary.replace(path)
 
 
-def collect(records, runner, products, emit):
+def collect(records, runner, products, emit, plan=None):
+    """`plan` fixes each notice's document budget so parallel arms share one 공고 본문."""
     rows, inference_seconds = [], 0.0
     started = time.perf_counter()
     for start in range(0, len(records), CHUNK):
@@ -47,9 +48,12 @@ def collect(records, runner, products, emit):
         for rec in group:
             company_rec = {**rec, "meta": {k: v for k, v in rec.get("meta", {}).items()
                                          if k != "조항호내용"}}
+            planned = MAX_CHARS if plan is None else plan[rec["id"]]
             messages, tokens, chars = script.fit_to_budget(
-                company_rec, script.COMPANY_SIZE_PROMPT, runner, MAX_CHARS,
+                company_rec, script.COMPANY_SIZE_PROMPT, runner, planned,
                 budget=script.PROMPT_BUDGET, products=products)
+            if plan is not None and chars != planned:
+                raise ValueError(f"{rec['id']}: 계획한 문서 예산 {planned}이 토큰 예산을 넘었다")
             batch.append(messages)
             budgets.append((tokens, chars))
             emit('company_size_input', id=rec['id'], max_chars=chars, prompt_tokens=tokens,

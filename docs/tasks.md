@@ -27,6 +27,14 @@
 
 ## 첫 작업 큐
 
+`wiki-rag-pilot`: **doing / 구현·CPU 검증 완료, GPU 미실행**, [Claude 착수서](tasks/wiki-rag-pilot.md).
+2026-09-21 사용자 배정: Codex 설계, Claude 구현. 브랜치 `feat/wiki-rag-pilot`, 기준 `8afae99`.
+v20의 현재 방식·원문 조회·위키 페이지 조회를 같은 공고 입력과 기존 소비 코드로 비교한다.
+자산 12 span·7칸 페이지·세 군 실행기·노트북·검사 19개를 만들었다.
+[준비 상태와 한계](../reports/wiki-rag-pilot/README.md), [실행 안내](../reports/wiki-rag-pilot/run-request.md).
+모델 호출 0회, 실제 토크나이저 측정 0회, 독립 리뷰·사람 자산 검토 미실행이다.
+공통 예산 추정으로 dev 200건 중 100건이 통상 A보다 본문을 잃는다. 커밋·push·PR은 미수행이다.
+
 `a5-v18-scope-review`: **done / 두 회차 기록 완료·후보 미채택**, [작업서](tasks/a5-v18-scope-review.md).
 한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
 후보·CPU 계약 검사·Colab 준비·회차 기록을 완료했고, 2026-09-21 사용자 승인으로 PR #80의 보관 목적 병합을 진행한다.

@@ -1,0 +1,1631 @@
+{
+  "purpose": "Planning estimate for the shared document budget of the three arms.",
+  "method": "Per notice, tokens/char comes from the archived H4 run (recorded prompt_tokens over the rebuilt message length at the same max_chars). The wiki block is charged at that same ratio. This is arithmetic on a past run, NOT a Gemma tokenizer measurement.",
+  "not_evidence_of": [
+    "actual prompt tokens of any arm",
+    "model success",
+    "F1",
+    "stage seconds"
+  ],
+  "case": "reports/runs/colab-1789902969401579900/dev-debug",
+  "prompt_budget": 14272,
+  "block_chars": {
+    "control": 0,
+    "raw": 4505,
+    "wiki": 7199
+  },
+  "tokens_per_char": {
+    "median": 0.453961,
+    "minimum": 0.319334,
+    "maximum": 0.514734
+  },
+  "estimated": {
+    "notices": 200,
+    "notices_losing_notice_text": 100,
+    "median_common_max_chars": 15970.5,
+    "min_common_max_chars": 8845,
+    "additional_truncation_chars_total": 416185
+  },
+  "notices": [
+    {
+      "id": "PPS-DEV-01",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12644,
+      "tokens_per_char": 0.478269,
+      "estimated_common_max_chars": 12205,
+      "estimated_additional_truncation_chars": 3795
+    },
+    {
+      "id": "PPS-DEV-02",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 4586,
+      "tokens_per_char": 0.344449,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-03",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13158,
+      "tokens_per_char": 0.465819,
+      "estimated_common_max_chars": 11193,
+      "estimated_additional_truncation_chars": 4807
+    },
+    {
+      "id": "PPS-DEV-04",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13594,
+      "tokens_per_char": 0.485413,
+      "estimated_common_max_chars": 10198,
+      "estimated_additional_truncation_chars": 5802
+    },
+    {
+      "id": "PPS-DEV-05",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13614,
+      "tokens_per_char": 0.486214,
+      "estimated_common_max_chars": 10155,
+      "estimated_additional_truncation_chars": 5845
+    },
+    {
+      "id": "PPS-DEV-06",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12676,
+      "tokens_per_char": 0.480461,
+      "estimated_common_max_chars": 12123,
+      "estimated_additional_truncation_chars": 3877
+    },
+    {
+      "id": "PPS-DEV-07",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13720,
+      "tokens_per_char": 0.490438,
+      "estimated_common_max_chars": 9927,
+      "estimated_additional_truncation_chars": 6073
+    },
+    {
+      "id": "PPS-DEV-08",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13700,
+      "tokens_per_char": 0.489793,
+      "estimated_common_max_chars": 9969,
+      "estimated_additional_truncation_chars": 6031
+    },
+    {
+      "id": "PPS-DEV-09",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9152,
+      "tokens_per_char": 0.424096,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-10",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13077,
+      "tokens_per_char": 0.467169,
+      "estimated_common_max_chars": 11359,
+      "estimated_additional_truncation_chars": 4641
+    },
+    {
+      "id": "PPS-DEV-11",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12623,
+      "tokens_per_char": 0.476825,
+      "estimated_common_max_chars": 12260,
+      "estimated_additional_truncation_chars": 3740
+    },
+    {
+      "id": "PPS-DEV-12",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10574,
+      "tokens_per_char": 0.469642,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-13",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11799,
+      "tokens_per_char": 0.474141,
+      "estimated_common_max_chars": 14017,
+      "estimated_additional_truncation_chars": 1983
+    },
+    {
+      "id": "PPS-DEV-14",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9378,
+      "tokens_per_char": 0.447189,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-15",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12931,
+      "tokens_per_char": 0.491972,
+      "estimated_common_max_chars": 11527,
+      "estimated_additional_truncation_chars": 4473
+    },
+    {
+      "id": "PPS-DEV-16",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9718,
+      "tokens_per_char": 0.467886,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-17",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13546,
+      "tokens_per_char": 0.48427,
+      "estimated_common_max_chars": 10301,
+      "estimated_additional_truncation_chars": 5699
+    },
+    {
+      "id": "PPS-DEV-18",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7330,
+      "tokens_per_char": 0.410944,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-19",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11861,
+      "tokens_per_char": 0.45015,
+      "estimated_common_max_chars": 14157,
+      "estimated_additional_truncation_chars": 1843
+    },
+    {
+      "id": "PPS-DEV-20",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13442,
+      "tokens_per_char": 0.487258,
+      "estimated_common_max_chars": 10505,
+      "estimated_additional_truncation_chars": 5495
+    },
+    {
+      "id": "PPS-DEV-21",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7414,
+      "tokens_per_char": 0.421873,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-22",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12621,
+      "tokens_per_char": 0.48091,
+      "estimated_common_max_chars": 12235,
+      "estimated_additional_truncation_chars": 3765
+    },
+    {
+      "id": "PPS-DEV-23",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12194,
+      "tokens_per_char": 0.490744,
+      "estimated_common_max_chars": 13036,
+      "estimated_additional_truncation_chars": 2964
+    },
+    {
+      "id": "PPS-DEV-24",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9801,
+      "tokens_per_char": 0.451721,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-25",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13448,
+      "tokens_per_char": 0.479583,
+      "estimated_common_max_chars": 10520,
+      "estimated_additional_truncation_chars": 5480
+    },
+    {
+      "id": "PPS-DEV-26",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13595,
+      "tokens_per_char": 0.486004,
+      "estimated_common_max_chars": 10194,
+      "estimated_additional_truncation_chars": 5806
+    },
+    {
+      "id": "PPS-DEV-27",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13334,
+      "tokens_per_char": 0.475348,
+      "estimated_common_max_chars": 10775,
+      "estimated_additional_truncation_chars": 5225
+    },
+    {
+      "id": "PPS-DEV-28",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13418,
+      "tokens_per_char": 0.479608,
+      "estimated_common_max_chars": 10582,
+      "estimated_additional_truncation_chars": 5418
+    },
+    {
+      "id": "PPS-DEV-29",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6782,
+      "tokens_per_char": 0.408677,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-30",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13932,
+      "tokens_per_char": 0.498034,
+      "estimated_common_max_chars": 9484,
+      "estimated_additional_truncation_chars": 6516
+    },
+    {
+      "id": "PPS-DEV-31",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9382,
+      "tokens_per_char": 0.44948,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-32",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13010,
+      "tokens_per_char": 0.464179,
+      "estimated_common_max_chars": 11520,
+      "estimated_additional_truncation_chars": 4480
+    },
+    {
+      "id": "PPS-DEV-033",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7139,
+      "tokens_per_char": 0.403927,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-034",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12843,
+      "tokens_per_char": 0.486846,
+      "estimated_common_max_chars": 11737,
+      "estimated_additional_truncation_chars": 4263
+    },
+    {
+      "id": "PPS-DEV-035",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5063,
+      "tokens_per_char": 0.360792,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-036",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6413,
+      "tokens_per_char": 0.396427,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-037",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10106,
+      "tokens_per_char": 0.455554,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-038",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8507,
+      "tokens_per_char": 0.436637,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-039",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10749,
+      "tokens_per_char": 0.436614,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-040",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7094,
+      "tokens_per_char": 0.408264,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-041",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6250,
+      "tokens_per_char": 0.388295,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-042",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8697,
+      "tokens_per_char": 0.436312,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-043",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8494,
+      "tokens_per_char": 0.433876,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-044",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12548,
+      "tokens_per_char": 0.448575,
+      "estimated_common_max_chars": 12645,
+      "estimated_additional_truncation_chars": 3355
+    },
+    {
+      "id": "PPS-DEV-045",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12430,
+      "tokens_per_char": 0.444167,
+      "estimated_common_max_chars": 12949,
+      "estimated_additional_truncation_chars": 3051
+    },
+    {
+      "id": "PPS-DEV-046",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7197,
+      "tokens_per_char": 0.415867,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-047",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7203,
+      "tokens_per_char": 0.411107,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-048",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5861,
+      "tokens_per_char": 0.384303,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-049",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10064,
+      "tokens_per_char": 0.45706,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-050",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10525,
+      "tokens_per_char": 0.47098,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-051",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8547,
+      "tokens_per_char": 0.430298,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-052",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11008,
+      "tokens_per_char": 0.440531,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-053",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10191,
+      "tokens_per_char": 0.454165,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-054",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5220,
+      "tokens_per_char": 0.363307,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-055",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10702,
+      "tokens_per_char": 0.45384,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-056",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9734,
+      "tokens_per_char": 0.440492,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-057",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5472,
+      "tokens_per_char": 0.36978,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-058",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8701,
+      "tokens_per_char": 0.433835,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-059",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7300,
+      "tokens_per_char": 0.407139,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-060",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5160,
+      "tokens_per_char": 0.361345,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-061",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5688,
+      "tokens_per_char": 0.378418,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-062",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5714,
+      "tokens_per_char": 0.377935,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-063",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12732,
+      "tokens_per_char": 0.48295,
+      "estimated_common_max_chars": 11990,
+      "estimated_additional_truncation_chars": 4010
+    },
+    {
+      "id": "PPS-DEV-064",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10466,
+      "tokens_per_char": 0.456831,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-065",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6673,
+      "tokens_per_char": 0.401867,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-066",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13841,
+      "tokens_per_char": 0.494021,
+      "estimated_common_max_chars": 9674,
+      "estimated_additional_truncation_chars": 6326
+    },
+    {
+      "id": "PPS-DEV-067",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8536,
+      "tokens_per_char": 0.429355,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-068",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8499,
+      "tokens_per_char": 0.430416,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-069",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12532,
+      "tokens_per_char": 0.447763,
+      "estimated_common_max_chars": 12687,
+      "estimated_additional_truncation_chars": 3313
+    },
+    {
+      "id": "PPS-DEV-070",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 4798,
+      "tokens_per_char": 0.349989,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-071",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6106,
+      "tokens_per_char": 0.385894,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-072",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7602,
+      "tokens_per_char": 0.416183,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-073",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11621,
+      "tokens_per_char": 0.438777,
+      "estimated_common_max_chars": 14843,
+      "estimated_additional_truncation_chars": 1157
+    },
+    {
+      "id": "PPS-DEV-074",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7891,
+      "tokens_per_char": 0.428602,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-075",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8280,
+      "tokens_per_char": 0.432308,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-076",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12790,
+      "tokens_per_char": 0.484525,
+      "estimated_common_max_chars": 11860,
+      "estimated_additional_truncation_chars": 4140
+    },
+    {
+      "id": "PPS-DEV-077",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5542,
+      "tokens_per_char": 0.372371,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-078",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7581,
+      "tokens_per_char": 0.411139,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-079",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7148,
+      "tokens_per_char": 0.409604,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-080",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6507,
+      "tokens_per_char": 0.394292,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-081",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13459,
+      "tokens_per_char": 0.480216,
+      "estimated_common_max_chars": 10494,
+      "estimated_additional_truncation_chars": 5506
+    },
+    {
+      "id": "PPS-DEV-082",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12346,
+      "tokens_per_char": 0.469769,
+      "estimated_common_max_chars": 12901,
+      "estimated_additional_truncation_chars": 3099
+    },
+    {
+      "id": "PPS-DEV-083",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9200,
+      "tokens_per_char": 0.454613,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-084",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8669,
+      "tokens_per_char": 0.429499,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-085",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12515,
+      "tokens_per_char": 0.44722,
+      "estimated_common_max_chars": 12730,
+      "estimated_additional_truncation_chars": 3270
+    },
+    {
+      "id": "PPS-DEV-086",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11979,
+      "tokens_per_char": 0.454663,
+      "estimated_common_max_chars": 13845,
+      "estimated_additional_truncation_chars": 2155
+    },
+    {
+      "id": "PPS-DEV-087",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12692,
+      "tokens_per_char": 0.45348,
+      "estimated_common_max_chars": 12286,
+      "estimated_additional_truncation_chars": 3714
+    },
+    {
+      "id": "PPS-DEV-088",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12378,
+      "tokens_per_char": 0.468083,
+      "estimated_common_max_chars": 12848,
+      "estimated_additional_truncation_chars": 3152
+    },
+    {
+      "id": "PPS-DEV-089",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10694,
+      "tokens_per_char": 0.464573,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-090",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12191,
+      "tokens_per_char": 0.476807,
+      "estimated_common_max_chars": 13166,
+      "estimated_additional_truncation_chars": 2834
+    },
+    {
+      "id": "PPS-DEV-091",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 14250,
+      "tokens_per_char": 0.506217,
+      "estimated_common_max_chars": 8845,
+      "estimated_additional_truncation_chars": 7155
+    },
+    {
+      "id": "PPS-DEV-092",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8517,
+      "tokens_per_char": 0.438681,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-093",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11810,
+      "tokens_per_char": 0.448436,
+      "estimated_common_max_chars": 14292,
+      "estimated_additional_truncation_chars": 1708
+    },
+    {
+      "id": "PPS-DEV-094",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5219,
+      "tokens_per_char": 0.361327,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-095",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11587,
+      "tokens_per_char": 0.471783,
+      "estimated_common_max_chars": 14493,
+      "estimated_additional_truncation_chars": 1507
+    },
+    {
+      "id": "PPS-DEV-096",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11769,
+      "tokens_per_char": 0.448394,
+      "estimated_common_max_chars": 14384,
+      "estimated_additional_truncation_chars": 1616
+    },
+    {
+      "id": "PPS-DEV-097",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12513,
+      "tokens_per_char": 0.480327,
+      "estimated_common_max_chars": 12464,
+      "estimated_additional_truncation_chars": 3536
+    },
+    {
+      "id": "PPS-DEV-098",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8370,
+      "tokens_per_char": 0.425391,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-099",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13568,
+      "tokens_per_char": 0.482349,
+      "estimated_common_max_chars": 10261,
+      "estimated_additional_truncation_chars": 5739
+    },
+    {
+      "id": "PPS-DEV-100",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12044,
+      "tokens_per_char": 0.458138,
+      "estimated_common_max_chars": 13665,
+      "estimated_additional_truncation_chars": 2335
+    },
+    {
+      "id": "PPS-DEV-101",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13378,
+      "tokens_per_char": 0.477854,
+      "estimated_common_max_chars": 10672,
+      "estimated_additional_truncation_chars": 5328
+    },
+    {
+      "id": "PPS-DEV-102",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11003,
+      "tokens_per_char": 0.468552,
+      "estimated_common_max_chars": 15778,
+      "estimated_additional_truncation_chars": 222
+    },
+    {
+      "id": "PPS-DEV-103",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12393,
+      "tokens_per_char": 0.470841,
+      "estimated_common_max_chars": 12792,
+      "estimated_additional_truncation_chars": 3208
+    },
+    {
+      "id": "PPS-DEV-104",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7673,
+      "tokens_per_char": 0.421362,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-105",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13153,
+      "tokens_per_char": 0.514734,
+      "estimated_common_max_chars": 10975,
+      "estimated_additional_truncation_chars": 5025
+    },
+    {
+      "id": "PPS-DEV-106",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13230,
+      "tokens_per_char": 0.50352,
+      "estimated_common_max_chars": 10871,
+      "estimated_additional_truncation_chars": 5129
+    },
+    {
+      "id": "PPS-DEV-107",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9504,
+      "tokens_per_char": 0.454302,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-108",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8140,
+      "tokens_per_char": 0.399686,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-109",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13073,
+      "tokens_per_char": 0.466993,
+      "estimated_common_max_chars": 11369,
+      "estimated_additional_truncation_chars": 4631
+    },
+    {
+      "id": "PPS-DEV-110",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9019,
+      "tokens_per_char": 0.4505,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-111",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11494,
+      "tokens_per_char": 0.476494,
+      "estimated_common_max_chars": 14632,
+      "estimated_additional_truncation_chars": 1368
+    },
+    {
+      "id": "PPS-DEV-112",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12293,
+      "tokens_per_char": 0.468233,
+      "estimated_common_max_chars": 13028,
+      "estimated_additional_truncation_chars": 2972
+    },
+    {
+      "id": "PPS-DEV-113",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7039,
+      "tokens_per_char": 0.410222,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-114",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5722,
+      "tokens_per_char": 0.378189,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-115",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8443,
+      "tokens_per_char": 0.438848,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-116",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8438,
+      "tokens_per_char": 0.43223,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-117",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12641,
+      "tokens_per_char": 0.4805,
+      "estimated_common_max_chars": 12196,
+      "estimated_additional_truncation_chars": 3804
+    },
+    {
+      "id": "PPS-DEV-118",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7177,
+      "tokens_per_char": 0.41056,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-119",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 14020,
+      "tokens_per_char": 0.50118,
+      "estimated_common_max_chars": 9304,
+      "estimated_additional_truncation_chars": 6696
+    },
+    {
+      "id": "PPS-DEV-120",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5246,
+      "tokens_per_char": 0.363599,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-121",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 14120,
+      "tokens_per_char": 0.504394,
+      "estimated_common_max_chars": 9103,
+      "estimated_additional_truncation_chars": 6897
+    },
+    {
+      "id": "PPS-DEV-122",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13356,
+      "tokens_per_char": 0.506927,
+      "estimated_common_max_chars": 10608,
+      "estimated_additional_truncation_chars": 5392
+    },
+    {
+      "id": "PPS-DEV-123",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8942,
+      "tokens_per_char": 0.319334,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-124",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8598,
+      "tokens_per_char": 0.439503,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-125",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13520,
+      "tokens_per_char": 0.483116,
+      "estimated_common_max_chars": 10358,
+      "estimated_additional_truncation_chars": 5642
+    },
+    {
+      "id": "PPS-DEV-126",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9377,
+      "tokens_per_char": 0.448725,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-127",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12489,
+      "tokens_per_char": 0.483246,
+      "estimated_common_max_chars": 12491,
+      "estimated_additional_truncation_chars": 3509
+    },
+    {
+      "id": "PPS-DEV-128",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7546,
+      "tokens_per_char": 0.426448,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-129",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13204,
+      "tokens_per_char": 0.471807,
+      "estimated_common_max_chars": 11065,
+      "estimated_additional_truncation_chars": 4935
+    },
+    {
+      "id": "PPS-DEV-130",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6067,
+      "tokens_per_char": 0.388487,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-131",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7508,
+      "tokens_per_char": 0.416764,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-132",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13301,
+      "tokens_per_char": 0.475002,
+      "estimated_common_max_chars": 10846,
+      "estimated_additional_truncation_chars": 5154
+    },
+    {
+      "id": "PPS-DEV-133",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12121,
+      "tokens_per_char": 0.46098,
+      "estimated_common_max_chars": 13468,
+      "estimated_additional_truncation_chars": 2532
+    },
+    {
+      "id": "PPS-DEV-134",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9276,
+      "tokens_per_char": 0.439808,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-135",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13639,
+      "tokens_per_char": 0.486568,
+      "estimated_common_max_chars": 10102,
+      "estimated_additional_truncation_chars": 5898
+    },
+    {
+      "id": "PPS-DEV-136",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13649,
+      "tokens_per_char": 0.486752,
+      "estimated_common_max_chars": 10081,
+      "estimated_additional_truncation_chars": 5919
+    },
+    {
+      "id": "PPS-DEV-137",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13279,
+      "tokens_per_char": 0.474504,
+      "estimated_common_max_chars": 10894,
+      "estimated_additional_truncation_chars": 5106
+    },
+    {
+      "id": "PPS-DEV-138",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11909,
+      "tokens_per_char": 0.451116,
+      "estimated_common_max_chars": 14040,
+      "estimated_additional_truncation_chars": 1960
+    },
+    {
+      "id": "PPS-DEV-139",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10804,
+      "tokens_per_char": 0.408438,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-140",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13729,
+      "tokens_per_char": 0.489727,
+      "estimated_common_max_chars": 9910,
+      "estimated_additional_truncation_chars": 6090
+    },
+    {
+      "id": "PPS-DEV-141",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9241,
+      "tokens_per_char": 0.44332,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-142",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5217,
+      "tokens_per_char": 0.361238,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-143",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13049,
+      "tokens_per_char": 0.495463,
+      "estimated_common_max_chars": 11270,
+      "estimated_additional_truncation_chars": 4730
+    },
+    {
+      "id": "PPS-DEV-144",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8378,
+      "tokens_per_char": 0.427536,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-145",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12611,
+      "tokens_per_char": 0.475062,
+      "estimated_common_max_chars": 12298,
+      "estimated_additional_truncation_chars": 3702
+    },
+    {
+      "id": "PPS-DEV-146",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8772,
+      "tokens_per_char": 0.436983,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-147",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12226,
+      "tokens_per_char": 0.463914,
+      "estimated_common_max_chars": 13212,
+      "estimated_additional_truncation_chars": 2788
+    },
+    {
+      "id": "PPS-DEV-148",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8584,
+      "tokens_per_char": 0.425182,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-149",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11693,
+      "tokens_per_char": 0.48064,
+      "estimated_common_max_chars": 14167,
+      "estimated_additional_truncation_chars": 1833
+    },
+    {
+      "id": "PPS-DEV-150",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5212,
+      "tokens_per_char": 0.362523,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-151",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12726,
+      "tokens_per_char": 0.49949,
+      "estimated_common_max_chars": 11897,
+      "estimated_additional_truncation_chars": 4103
+    },
+    {
+      "id": "PPS-DEV-152",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9081,
+      "tokens_per_char": 0.438632,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-153",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13686,
+      "tokens_per_char": 0.489257,
+      "estimated_common_max_chars": 9999,
+      "estimated_additional_truncation_chars": 6001
+    },
+    {
+      "id": "PPS-DEV-154",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7587,
+      "tokens_per_char": 0.397579,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-155",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12698,
+      "tokens_per_char": 0.480675,
+      "estimated_common_max_chars": 12076,
+      "estimated_additional_truncation_chars": 3924
+    },
+    {
+      "id": "PPS-DEV-156",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6477,
+      "tokens_per_char": 0.402598,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-157",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13865,
+      "tokens_per_char": 0.495444,
+      "estimated_common_max_chars": 9623,
+      "estimated_additional_truncation_chars": 6377
+    },
+    {
+      "id": "PPS-DEV-158",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12064,
+      "tokens_per_char": 0.459056,
+      "estimated_common_max_chars": 13611,
+      "estimated_additional_truncation_chars": 2389
+    },
+    {
+      "id": "PPS-DEV-159",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13436,
+      "tokens_per_char": 0.479652,
+      "estimated_common_max_chars": 10544,
+      "estimated_additional_truncation_chars": 5456
+    },
+    {
+      "id": "PPS-DEV-160",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7725,
+      "tokens_per_char": 0.414654,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-161",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13494,
+      "tokens_per_char": 0.482084,
+      "estimated_common_max_chars": 10415,
+      "estimated_additional_truncation_chars": 5585
+    },
+    {
+      "id": "PPS-DEV-162",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12368,
+      "tokens_per_char": 0.46916,
+      "estimated_common_max_chars": 12860,
+      "estimated_additional_truncation_chars": 3140
+    },
+    {
+      "id": "PPS-DEV-163",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 14206,
+      "tokens_per_char": 0.50392,
+      "estimated_common_max_chars": 8932,
+      "estimated_additional_truncation_chars": 7068
+    },
+    {
+      "id": "PPS-DEV-164",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7120,
+      "tokens_per_char": 0.407906,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-165",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13490,
+      "tokens_per_char": 0.482078,
+      "estimated_common_max_chars": 10424,
+      "estimated_additional_truncation_chars": 5576
+    },
+    {
+      "id": "PPS-DEV-166",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5575,
+      "tokens_per_char": 0.376766,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-167",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8383,
+      "tokens_per_char": 0.434916,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-168",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 6520,
+      "tokens_per_char": 0.390676,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-169",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12909,
+      "tokens_per_char": 0.490017,
+      "estimated_common_max_chars": 11583,
+      "estimated_additional_truncation_chars": 4417
+    },
+    {
+      "id": "PPS-DEV-170",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12107,
+      "tokens_per_char": 0.459451,
+      "estimated_common_max_chars": 13514,
+      "estimated_additional_truncation_chars": 2486
+    },
+    {
+      "id": "PPS-DEV-171",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11655,
+      "tokens_per_char": 0.441829,
+      "estimated_common_max_chars": 14725,
+      "estimated_additional_truncation_chars": 1275
+    },
+    {
+      "id": "PPS-DEV-172",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11607,
+      "tokens_per_char": 0.448857,
+      "estimated_common_max_chars": 14739,
+      "estimated_additional_truncation_chars": 1261
+    },
+    {
+      "id": "PPS-DEV-173",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13581,
+      "tokens_per_char": 0.484793,
+      "estimated_common_max_chars": 10227,
+      "estimated_additional_truncation_chars": 5773
+    },
+    {
+      "id": "PPS-DEV-174",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5661,
+      "tokens_per_char": 0.376446,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-175",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 14116,
+      "tokens_per_char": 0.504269,
+      "estimated_common_max_chars": 9111,
+      "estimated_additional_truncation_chars": 6889
+    },
+    {
+      "id": "PPS-DEV-176",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10879,
+      "tokens_per_char": 0.475211,
+      "estimated_common_max_chars": 15941,
+      "estimated_additional_truncation_chars": 59
+    },
+    {
+      "id": "PPS-DEV-177",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8710,
+      "tokens_per_char": 0.404589,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-178",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12480,
+      "tokens_per_char": 0.474056,
+      "estimated_common_max_chars": 12582,
+      "estimated_additional_truncation_chars": 3418
+    },
+    {
+      "id": "PPS-DEV-179",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 4866,
+      "tokens_per_char": 0.352762,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-180",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12347,
+      "tokens_per_char": 0.470452,
+      "estimated_common_max_chars": 12893,
+      "estimated_additional_truncation_chars": 3107
+    },
+    {
+      "id": "PPS-DEV-181",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12721,
+      "tokens_per_char": 0.48559,
+      "estimated_common_max_chars": 11996,
+      "estimated_additional_truncation_chars": 4004
+    },
+    {
+      "id": "PPS-DEV-182",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 5986,
+      "tokens_per_char": 0.38159,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-183",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13732,
+      "tokens_per_char": 0.487729,
+      "estimated_common_max_chars": 9909,
+      "estimated_additional_truncation_chars": 6091
+    },
+    {
+      "id": "PPS-DEV-184",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7731,
+      "tokens_per_char": 0.418095,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-185",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13156,
+      "tokens_per_char": 0.469271,
+      "estimated_common_max_chars": 11180,
+      "estimated_additional_truncation_chars": 4820
+    },
+    {
+      "id": "PPS-DEV-186",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10223,
+      "tokens_per_char": 0.457917,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-187",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9087,
+      "tokens_per_char": 0.448121,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-188",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 11961,
+      "tokens_per_char": 0.454083,
+      "estimated_common_max_chars": 13891,
+      "estimated_additional_truncation_chars": 2109
+    },
+    {
+      "id": "PPS-DEV-189",
+      "recorded_max_chars": 13600,
+      "recorded_prompt_tokens": 12708,
+      "tokens_per_char": 0.489768,
+      "estimated_common_max_chars": 9595,
+      "estimated_additional_truncation_chars": 4005
+    },
+    {
+      "id": "PPS-DEV-190",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10296,
+      "tokens_per_char": 0.456343,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-191",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13784,
+      "tokens_per_char": 0.489976,
+      "estimated_common_max_chars": 9797,
+      "estimated_additional_truncation_chars": 6203
+    },
+    {
+      "id": "PPS-DEV-192",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 8599,
+      "tokens_per_char": 0.436431,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-193",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12325,
+      "tokens_per_char": 0.470115,
+      "estimated_common_max_chars": 12943,
+      "estimated_additional_truncation_chars": 3057
+    },
+    {
+      "id": "PPS-DEV-194",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12323,
+      "tokens_per_char": 0.482422,
+      "estimated_common_max_chars": 12842,
+      "estimated_additional_truncation_chars": 3158
+    },
+    {
+      "id": "PPS-DEV-195",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 13462,
+      "tokens_per_char": 0.480528,
+      "estimated_common_max_chars": 10487,
+      "estimated_additional_truncation_chars": 5513
+    },
+    {
+      "id": "PPS-DEV-196",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 10460,
+      "tokens_per_char": 0.397704,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-197",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12993,
+      "tokens_per_char": 0.462615,
+      "estimated_common_max_chars": 11566,
+      "estimated_additional_truncation_chars": 4434
+    },
+    {
+      "id": "PPS-DEV-198",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 7341,
+      "tokens_per_char": 0.414137,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    },
+    {
+      "id": "PPS-DEV-199",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 12438,
+      "tokens_per_char": 0.472658,
+      "estimated_common_max_chars": 12682,
+      "estimated_additional_truncation_chars": 3318
+    },
+    {
+      "id": "PPS-DEV-200",
+      "recorded_max_chars": 16000,
+      "recorded_prompt_tokens": 9176,
+      "tokens_per_char": 0.44054,
+      "estimated_common_max_chars": 16000,
+      "estimated_additional_truncation_chars": 0
+    }
+  ]
+}
