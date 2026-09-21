@@ -13,7 +13,10 @@ reads: [docs/tasks/a8-v20-annex-injection.md, docs/tasks/team-handoff.md, report
 새 세션은 그 경로 한 줄을 받아 시작한다. 이 항목이 끝나기 전에는 다른 주입 항목을 열지 않는다.
 
 **2026-09-21 A8 구현 완료·GPU 미실행:** [보고서](../reports/team-c/a8-v20-annex/README.md) ·
-[실행 안내](../reports/team-c/a8-v20-annex/run-request.md).
+[실행 안내](../reports/team-c/a8-v20-annex/run-request.md) · PR #84(`feat/a8-v20-annex-injection`,
+코드 `713aa83`, 노트북 `91dd9c3`).
+**열린 PR #82 와 겹친다** — 그쪽은 같은 지침을 포함한 12 span 을 user 메시지에 넣는 세 군
+파일럿이다. A8 은 제2조+별표 1 만 system 프롬프트에 넣는다. 어느 쪽을 GPU 에 태울지는 미결정이다.
 후보 [`experiments/a8_v20_annex.py`](../experiments/a8_v20_annex.py)는 `company_size` 프롬프트
 문자열만 바꾼다 — 스키마·소비자·관측 게이트·조회 알고리즘·운영 `script.py` 그대로다.
 붙는 블록은 **실측 1,568자**(법령 원문 934자 + 영어 지시 634자)라 **착수서의 623토큰 추정은
