@@ -28,6 +28,8 @@
 ## 첫 작업 큐
 
 `a5-label-definition-wall / 회차 2`: [재계산·판단](../reports/team-c/a5-label-definition/round2-decision.md).
+후속 [원문 감사](../reports/team-c/a5-label-definition/observation-findings.md)에서 실제 발화의
+240kW/고시 50kW 모순과 입력 분포 차이를 확인했다. 검증 완화·같은 H2 연속 수집은 기각했다.
 실제 dev 3/200·무라벨 31/2,000 발화, 전체 검증 배율 1.033333·술어 배율 0.822222를 재현했다.
 전수 수집 강제를 원문 타당성/분포 감사로 대체한다. 남은 18회차 일괄 수집 중단, 채택 보류.
 부분 표본·대표성 미확인을 명시하며 `complete=false`는 유지한다. 서버 추가 호출 0, 머지하지 않는다.

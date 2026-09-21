@@ -8,6 +8,9 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
 **2026-09-21 A5 회차 2 판단:** [재계산과 결정](../reports/team-c/a5-label-definition/round2-decision.md).
+후속 [83건 근거 감사](../reports/team-c/a5-label-definition/observation-findings.md)에서
+발화한 240kW 충전기와 고시 50kW 조건의 모순을 확인했다. 두 정보 모두 모델 입력에 있었다.
+기존 H2 연속 수집과 검증 완화는 기각했고, 범위 조건 관측이 다음 실험 질문이다. 채택 보류.
 실제 무라벨 2,000건/31발화·dev 200건/3발화를 검증했다. 전체 검증 배율 1.033333과
 술어 배율 0.822222는 조건부 검증 통과율 차이로 양립한다. 전수 완료 강제는 철회하고
 남은 18회차 연속 수집보다 원문 타당성/입력 분포 감사를 먼저 한다. 부분 표본 표시·채택 보류 유지.
