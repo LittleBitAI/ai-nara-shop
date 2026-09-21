@@ -120,7 +120,14 @@ v18 +0.229 의 대가로 여섯이 무너져 Macro **−0.0497**
 조건 관측은 200건 중 **128건이 `unobserved`** 다(met 42 · not_required 27 · contradicted 3).
 
 astra 가 필드별로 갈라 보니 **h3 의 v18 이득은 `scope` 묶음에서, 손실은 다른 두 묶음에서**
-각각 재현된다. 다음 한 수는 v18 적용범위이며 설계는 `five-stuck-how.md` 가 소유한다.
+각각 재현된다. 다음 한 수는 v18 적용범위다. 설계는 `five-stuck-how.md` 가,
+착수 절차는 [`docs/tasks/a5-v18-scope-review.md`](../../../docs/tasks/a5-v18-scope-review.md) 가 소유한다.
+
+**그 설계의 배선 전제는 주 세션이 CPU 로 미리 확인했다.** `verify_company_size()` 를
+`scope` 만 바꿔 두 번 계산하고 `v18` 키 하나만 교체하면, v18 이 바뀐 공고 2건에
+**v18 밖에서 바뀐 셀은 0건**이다. "v18 밖 23항목 차이 0셀"이라는 CPU 통과 조건은
+배선 자체로 보장된다. 남는 위험은 **새 프롬프트가 legacy 필드를 흔드는 것**이고
+`five-stuck-how.md` 가 그것을 CPU 로 증명할 수 없다고 이미 적어 두었다.
 
 ## 5. 재현
 
