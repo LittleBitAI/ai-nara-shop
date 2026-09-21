@@ -185,6 +185,39 @@ class LawIndex(unittest.TestCase):
         self.assertEqual(law_index.resolve("없는법 제1조", DATA, strict=False), [])
         self.assertEqual(law_index.resolve("법령 이름만 있고 주소가 없다", DATA), [])
 
+    def test_a_paragraph_that_has_no_marker_does_not_widen_either(self):
+        """`제0항` · `제21항` 은 동그라미 표시로 못 바꾼다 — 그래도 **요청은 있었다.**
+
+        표시가 없다고 `article(..., None)` 을 부르면 존재하는 조의 전문이 돌아오고
+        토큰이 소비돼 strict 가 또 침묵한다. 라운드 2 수정이 못 막은 자리다.
+        """
+        for citation in ("국가계약법 시행령 제21조 제0항", "국가계약법 시행령 제21조 제21항"):
+            with self.assertRaises(ValueError, msg=citation):
+                law_index.resolve(citation, DATA)
+
+    def test_item_paths_return_to_an_ancestor_of_the_same_kind(self):
+        """`1. 나. 2.` 는 `(1.,나.)` 와 최상위 형제 `(2.,)` 둘이다.
+
+        마지막 토큰만 보면 `2.` 가 `나.` 아래로 들어가 세 층짜리 경로 하나가 된다.
+        """
+        self.assertEqual(law_index._item_paths(["1.", "나.", "2."]), [("1.", "나."), ("2.",)])
+        self.assertEqual(law_index._item_paths(["가.", "1."]), [("가.", "1.")])
+        found = law_index.resolve(
+            "지방자치단체 입찰 및 계약 집행기준 제5장 제3절 1. 나. 및 2. 항목", DATA)
+        self.assertEqual([s.path for s in found],
+                         [("제5장", "제3절", "1.", "나."), ("제5장", "제3절", "2.")])
+
+    def test_an_unknown_law_after_a_known_one_does_not_inherit_its_address(self):
+        """`… 제21조 없는법 제22조` 에서 `제22조` 를 앞 법령 것으로 돌려주면 안 된다.
+
+        `_law_spans` 는 아는 법령만 찾으므로 뒤 주소가 앞 법령 구간에 딸려 온다.
+        라운드 2 수정은 법령 span 이 0개인 경우만 막았다.
+        """
+        with self.assertRaises(ValueError):
+            law_index.resolve("국가계약법 시행령 제21조 없는법 제22조", DATA)
+        kept = law_index.resolve("국가계약법 시행령 제21조 없는법 제22조", DATA, strict=False)
+        self.assertEqual([s.path for s in kept], [("제21조",)])
+
     def test_a_trailing_law_without_an_address_means_the_whole_file(self):
         """마지막에 주소 없이 놓인 이름은 그 법령 전체를 가리킨다 — 고시금액이 그렇다."""
         found = law_index.resolve(

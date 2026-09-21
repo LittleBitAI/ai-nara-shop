@@ -349,6 +349,33 @@ def _law_spans(citation: str, data_dir: str) -> List[Tuple[int, int, str]]:
     return sorted(spans)
 
 
+# 조·항·별표 뒤에 한글 덩어리가 끼고 다시 조/장/별표가 오면 그 사이에 **이름 모를 법령**이 있다.
+# 장·절·번호 뒤의 한글은 그 단위의 제목이므로 이 규칙에서 뺀다.
+HANGUL_RUN = re.compile(r"[가-힣]{2,}")
+CLOSES_ADDRESS = re.compile(r"^(제\d+조|제?\d+항|별표)")
+OPENS_ADDRESS = re.compile(r"^(제\d+조|제\d+장|별표)")
+
+
+def _split_region(region: str) -> Tuple[List[str], List[str]]:
+    """한 법령 뒤의 주소 구간을 (그 법령 것, 주인 모를 것) 으로 가른다.
+
+    `_law_spans` 는 **아는 법령만** 찾으므로 `… 제21조 없는법 제22조` 에서 `제22조` 까지
+    앞 법령의 토큰으로 넘어온다. strict 가 실패하지 않고 **다른 법령의 원문**을 돌려줬다.
+    라운드 2 수정은 법령 span 이 0개인 경우만 막았다.
+    """
+    mine: List[str] = []
+    orphans: List[str] = []
+    previous = None
+    cut = False
+    for match in ADDRESS.finditer(region):
+        token = match.group(0).replace(" ", "")
+        if not cut and previous is not None and OPENS_ADDRESS.match(token)                 and CLOSES_ADDRESS.match(previous)                 and HANGUL_RUN.search(region[previous_end:match.start()]):
+            cut = True
+        (orphans if cut else mine).append(token)
+        previous, previous_end = token, match.end()
+    return mine, orphans
+
+
 def resolve(citation: str, data_dir: str = "open/data", *, strict: bool = True) -> List[Segment]:
     """항목표의 인용 문자열 하나 → 원문 조각들.
 
@@ -364,10 +391,11 @@ def resolve(citation: str, data_dir: str = "open/data", *, strict: bool = True) 
         unconsumed.append(f"법령 미상: {citation.strip()[:60]}")
     for index, (_, end, raw) in enumerate(spans):
         stop = spans[index + 1][0] if index + 1 < len(spans) else len(citation)
-        tokens = [t.replace(" ", "") for t in ADDRESS.findall(citation[end:stop])]
+        tokens, orphans = _split_region(citation[end:stop])
         law = resolve_law(raw, data_dir)
         if law is None:
             continue
+        unconsumed.extend(f"법령 미상 주소: {token}" for token in orphans)
         if not tokens:
             # 주소가 안 붙은 법령이 **뒤에 다른 법령을 달고 있으면** 그것은 상위 법령 표시다 —
             # `소프트웨어진흥법 … 지침 제2조 별표1` 에서 진흥법 37,234자가 통째로 딸려 왔다.
@@ -410,6 +438,9 @@ def _segments_for(law: str, tokens: List[str], data_dir: str) -> Tuple[List[Segm
                 inner = chapter(law, token, section, (), data_dir)
                 article_token = tokens[index]; index += 1
                 paragraph, asked, index = _paragraph(tokens, index)
+                if asked is not None and paragraph is None:
+                    unused.append(asked)        # `제0항`·`⑳` 초과 — 표시로 못 바꾼다
+                    continue
                 found = (inner and article(law, article_token, paragraph, data_dir, within=inner))
                 if found is None and asked is not None:
                     unused.append(asked)
@@ -428,6 +459,12 @@ def _segments_for(law: str, tokens: List[str], data_dir: str) -> Tuple[List[Segm
                 continue
         elif IS_ARTICLE.match(token):
             paragraph, asked, index = _paragraph(tokens, index)
+            if asked is not None and paragraph is None:
+                # **표시로 못 바꾸는 항도 요청이다.** `제0항`·`제21항` 은 `paragraph=None` 이 되는데
+                # 그대로 `article(..., None)` 을 부르면 존재하는 조의 **전문**이 돌아오고
+                # 토큰이 소비돼 strict 가 또 침묵한다. 라운드 2 수정이 못 막은 자리다.
+                unused.append(asked)
+                continue
             found = article(law, token, paragraph, data_dir)
             if found is None and asked is not None:
                 # **항을 지목했는데 못 찾았으면 조 전체로 넓히지 않는다.**
@@ -478,10 +515,16 @@ def _item_paths(run: List[str]) -> List[Tuple[str, ...]]:
     paths: List[Tuple[str, ...]] = []
     current: List[str] = []
     for token in run:
-        if current and _item_kind(current[-1]) == _item_kind(token):
-            paths.append(tuple(current))
-            current = current[:-1] + [token]
-        else:
+        kind = _item_kind(token)
+        # **조상 중 같은 종류가 있으면 그 깊이로 돌아간다.** 마지막 것만 보면
+        # `1. 나. 2.` 에서 `2.` 가 `나.` 아래로 들어가 `('1.','나.','2.')` 가 된다 —
+        # 실제로는 `('1.','나.')` 와 최상위 형제 `('2.',)` 둘이다.
+        back = next((i for i in range(len(current) - 1, -1, -1)
+                     if _item_kind(current[i]) == kind), None)
+        if back is None:
             current = current + [token]
+        else:
+            paths.append(tuple(current))
+            current = current[:back] + [token]
     paths.append(tuple(current))
     return paths
