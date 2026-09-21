@@ -24,6 +24,8 @@
     "4": "P1 3(실행 핀이 수리 전 코드·권위 문서 모순·게이트가 사전 등록과 충돌), P2 1(비교기). 반영.",
     "5": "P1 4(실행 안내·작업 큐·측정 원장·README 게이트), P2 1(비교기의 들쭉날쭉한 행). 반영.",
     "6": "P1 1(기계 판독 게이트 누락), P2 2(리뷰 메타데이터·비교기 일반 계약). 반영.",
+    "7": "**머지 허용** — P0·P1 새 발견 없음. P2 2건(리뷰 이력 세 자리·측정 원장의 최신 검사 기록)도 반영.",
+    "deferred_p2": ["tools/replay_run.py csv_cell_diff — 닫히지 않은 인용부호의 관대한 파싱. 현 호출자는 200행 생성 CSV 와 보관 CSV 를 비교하므로 실행 영향 없음(라운드 6·7 판단)."],
     "confirmed_by_reviewer": ["결합 스윕 외에 더 넓힐 결정적 조합 없음", "예산 검사에 가짜 초록 없음",
                               "GPU 두 회차 실행 자체는 막을 이유 없음 — 채택만 막는다",
                               "v13 가드의 visible/docs 두 검사는 중복이 아니다",
@@ -263,6 +265,25 @@
       "skipped": 1,
       "seconds": 105.39,
       "phase": "라운드 1 반영 후. baseline 게이트 19개 별도 OK. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 22,
+      "phase": "최종 — 라운드 7 `머지 허용` 시점"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 299,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 98.29,
+      "phase": "최종 — 라운드 7 `머지 허용` 시점. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "phase": "최종 오프라인 게이트 — 라운드 7 `머지 허용` 시점"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
