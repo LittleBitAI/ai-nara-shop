@@ -3,7 +3,8 @@
 여기서 지키는 것은 **주소지정**이다. 항목표의 인용 31개가 전부 비어 있지 않은 원문으로 풀리고,
 돌려준 조각이 제공 파일의 부분문자열인지 본다. 조문을 발명하면 여기서 걸린다.
 
-만들면서 실제로 걸린 오류 넷을 회귀로 고정한다.
+만들면서와 리뷰 두 라운드에서 실제로 걸린 오류를 회귀로 고정한다.
+앞의 넷은 만들면서, 뒤의 여섯은 리뷰가 잡았다. **전부 "조용히 틀린 값을 돌려주는" 쪽이다.**
 
 1. `국가계약법 시행령 제21조` 가 **시행령이 아니라 법률** 제21조로 풀렸다.
    약칭 다섯 자만 법령 이름으로 잡히고 ` 시행령` 이 주소 쪽에 남았다.
@@ -13,6 +14,13 @@
 3. `제2조의2` 는 **'조'로 끝나지 않는다.** 끝글자로 종류를 가르면 통째로 빠진다.
 4. 주소가 안 붙은 법령을 파일 전체로 펴면 `소프트웨어진흥법 … 지침 제2조 별표1` 에서
    진흥법 37,234자가 딸려 온다.
+5. 주소를 **평탄한 목록**으로 소비하면 `제2장 … 제5조` 가 부모(7,021자)와 자식(2,292자)을
+   둘 다 돌려준다. v9 크기를 13,516자로 부풀려 "안 들어감" 으로 적게 했다. (라운드 1)
+6. `제5장 제3절 1. 나.` 의 `나.` 가 조용히 버려졌다. (라운드 1)
+7. `제3장의2` 가 `제3장` 으로 풀려 **다른 장의 원문**을 돌려줬다. (라운드 1)
+8. 항을 지목했는데 없으면 **조 전체로 확대**됐고 토큰이 소비돼 strict 도 침묵했다. (라운드 2)
+9. `1. 2.` 형제를 중첩 경로로 읽어 유효한 인용이 실패했다. (라운드 2)
+10. 법령 이름을 못 찾으면 strict 에서도 **빈 결과로 성공**했다. (라운드 2)
 """
 
 import importlib.util
@@ -143,6 +151,39 @@ class LawIndex(unittest.TestCase):
         """`(’22. 9. 20. …)` 의 `22.` 은 번호가 아니다 — 장 문맥 없는 `N.` 은 주소가 아니다."""
         found = law_index.resolve("지방계약법 시행령 제43조 7항 삭제 (’22. 9. 20. 시행령 개정으로 삭제)", DATA)
         self.assertEqual([s.path for s in found], [("제43조", "⑦")])
+
+    def test_a_missing_paragraph_does_not_widen_to_the_whole_article(self):
+        """항을 지목했는데 없으면 **조 전체로 넓히지 않는다.**
+
+        넓히면 요청하지 않은 조 전문 2,646자가 근거가 되고, 토큰이 소비돼 strict 도 침묵한다.
+        """
+        with self.assertRaises(ValueError):
+            law_index.resolve("국가계약법 시행령 제21조 제20항", DATA)
+        self.assertEqual(law_index.resolve("국가계약법 시행령 제21조 제20항", DATA, strict=False), [])
+        kept = law_index.resolve("국가계약법 시행령 제21조 제1항", DATA)
+        self.assertEqual([s.path for s in kept], [("제21조", "①")])
+
+    def test_same_kind_items_are_siblings_not_a_nested_path(self):
+        """`1. 2.` 는 제3절의 형제 둘이고 `1. 나.` 는 `1.` 안의 `나.` 하나다.
+
+        하나의 중첩 경로로 읽으면 `1.` 안에서 `2.` 를 찾다가 유효한 인용이 실패한다.
+        """
+        siblings = law_index.resolve(
+            "지방자치단체 입찰 및 계약 집행기준 제5장 제3절 1. 및 2. 항목", DATA)
+        self.assertEqual([s.path for s in siblings],
+                         [("제5장", "제3절", "1."), ("제5장", "제3절", "2.")])
+        self.assertEqual(law_index._item_paths(["1.", "나.", "다."]),
+                         [("1.", "나."), ("1.", "다.")])
+
+    def test_an_unknown_law_name_is_not_a_silent_empty_success(self):
+        """주소는 있는데 법령을 못 찾으면 빈 성공이 아니라 실패다.
+
+        오타나 스냅샷 불일치가 **근거 없는 판정**으로 흘러가는 경로였다.
+        """
+        with self.assertRaises(ValueError):
+            law_index.resolve("없는법 제1조", DATA)
+        self.assertEqual(law_index.resolve("없는법 제1조", DATA, strict=False), [])
+        self.assertEqual(law_index.resolve("법령 이름만 있고 주소가 없다", DATA), [])
 
     def test_a_trailing_law_without_an_address_means_the_whole_file(self):
         """마지막에 주소 없이 놓인 이름은 그 법령 전체를 가리킨다 — 고시금액이 그렇다."""

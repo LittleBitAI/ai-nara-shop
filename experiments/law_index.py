@@ -358,6 +358,10 @@ def resolve(citation: str, data_dir: str = "open/data", *, strict: bool = True) 
     spans = _law_spans(citation or "", data_dir)
     out: List[Segment] = []
     unconsumed: List[str] = []
+    if not spans and ADDRESS.search(citation or ""):
+        # 주소 토큰은 있는데 법령 이름을 하나도 못 찾았다. 빈 결과로 성공하면
+        # 오타나 스냅샷 불일치가 **근거 없는 판정**으로 그대로 흘러간다.
+        unconsumed.append(f"법령 미상: {citation.strip()[:60]}")
     for index, (_, end, raw) in enumerate(spans):
         stop = spans[index + 1][0] if index + 1 < len(spans) else len(citation)
         tokens = [t.replace(" ", "") for t in ADDRESS.findall(citation[end:stop])]
@@ -405,16 +409,32 @@ def _segments_for(law: str, tokens: List[str], data_dir: str) -> Tuple[List[Segm
                 # 예규는 장이 조를 품는다. 장 전체가 아니라 그 안의 조가 인용의 대상이다.
                 inner = chapter(law, token, section, (), data_dir)
                 article_token = tokens[index]; index += 1
-                paragraph, index = _paragraph(tokens, index)
+                paragraph, asked, index = _paragraph(tokens, index)
                 found = (inner and article(law, article_token, paragraph, data_dir, within=inner))
+                if found is None and asked is not None:
+                    unused.append(asked)
             else:
-                items: List[str] = []
+                run: List[str] = []
                 while index < len(tokens) and tokens[index].endswith("."):
-                    items.append(tokens[index]); index += 1
-                found = chapter(law, token, section, tuple(items), data_dir)
+                    run.append(tokens[index]); index += 1
+                # 같은 종류가 이어지면 **형제**다. 종류가 바뀔 때만 한 층 내려간다 —
+                # `1. 2.` 는 제3절의 형제 둘이고 `1. 나.` 는 `1.` 안의 `나.` 하나다.
+                for path in _item_paths(run):
+                    piece = chapter(law, token, section, path, data_dir)
+                    if piece:
+                        out.append(piece)
+                    else:
+                        unused.append(token)
+                continue
         elif IS_ARTICLE.match(token):
-            paragraph, index = _paragraph(tokens, index)
-            found = article(law, token, paragraph, data_dir) or article(law, token, None, data_dir)
+            paragraph, asked, index = _paragraph(tokens, index)
+            found = article(law, token, paragraph, data_dir)
+            if found is None and asked is not None:
+                # **항을 지목했는데 못 찾았으면 조 전체로 넓히지 않는다.**
+                # 넓히면 요청하지 않은 조 전문이 근거가 되고, 토큰이 소비돼 strict 도 침묵한다.
+                unused.append(asked)
+            elif found is None:
+                found = article(law, token, None, data_dir)
         elif token.endswith("."):
             # 장·절 문맥 없는 `22.` 은 주소가 아니라 날짜다 —
             # `제43조 7항 삭제 (’22. 9. 20. …)`. 주소로 세면 영원히 못 푼다.
@@ -428,10 +448,40 @@ def _segments_for(law: str, tokens: List[str], data_dir: str) -> Tuple[List[Segm
     return out, unused
 
 
-def _paragraph(tokens: List[str], index: int) -> Tuple[Optional[str], int]:
-    """`제1항` · `6항` 을 동그라미 숫자로. 항 토큰이 아니면 소비하지 않는다."""
+def _paragraph(tokens: List[str], index: int) -> Tuple[Optional[str], Optional[str], int]:
+    """`제1항` · `6항` 을 동그라미 숫자로. (표시, 요청한 토큰, 다음 위치).
+
+    **요청한 토큰을 함께 돌려준다.** 항을 못 찾았을 때 조 전체로 넓히는 대신
+    그 토큰을 미소비로 남기려면 호출자가 "항을 물었다" 는 사실을 알아야 한다.
+    `⑳` 을 넘는 번호처럼 표시가 없는 경우도 요청은 있었던 것이다.
+    """
     if index >= len(tokens) or not tokens[index].endswith("항"):
-        return None, index
-    number = int(re.sub(r"\D", "", tokens[index]))
+        return None, None, index
+    asked = tokens[index]
+    number = int(re.sub(r"\D", "", asked))
     mark = CIRCLED[number - 1] if 1 <= number <= len(CIRCLED) else None
-    return mark, index + 1
+    return mark, asked, index + 1
+
+
+def _item_kind(token: str) -> str:
+    return "number" if token.rstrip(".").isdigit() else "letter"
+
+
+def _item_paths(run: List[str]) -> List[Tuple[str, ...]]:
+    """`1. 2.` → 형제 둘, `1. 나.` → 한 층 내려간 경로 하나.
+
+    같은 종류가 이어지면 같은 부모의 형제다. 하나의 중첩 경로로 읽으면
+    `1.` 안에서 `2.` 를 찾다가 유효한 인용이 실패한다.
+    """
+    if not run:
+        return [()]
+    paths: List[Tuple[str, ...]] = []
+    current: List[str] = []
+    for token in run:
+        if current and _item_kind(current[-1]) == _item_kind(token):
+            paths.append(tuple(current))
+            current = current[:-1] + [token]
+        else:
+            current = current + [token]
+    paths.append(tuple(current))
+    return paths
