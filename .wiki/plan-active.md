@@ -15,8 +15,11 @@ reads: [docs/tasks/a8-v20-annex-injection.md, docs/tasks/team-handoff.md, report
 **2026-09-21 A8 구현 완료·GPU 미실행:** [보고서](../reports/team-c/a8-v20-annex/README.md) ·
 [실행 안내](../reports/team-c/a8-v20-annex/run-request.md) · PR #84(`feat/a8-v20-annex-injection`,
 코드 `713aa83`, 노트북 `91dd9c3`).
-**열린 PR #82 와 겹친다** — 그쪽은 같은 지침을 포함한 12 span 을 user 메시지에 넣는 세 군
-파일럿이다. A8 은 제2조+별표 1 만 system 프롬프트에 넣는다. 어느 쪽을 GPU 에 태울지는 미결정이다.
+**열린 PR #82 는 다른 실험이다** — 그쪽 가설은 제공 원문을 판정 페이지로 **묶어서** 주는 것이
+사실 추출을 개선하는가이고(기존/원문/위키 페이지 세 군), 원문군은 그 비교의 대조다.
+A8 은 제2조+별표 1 을 system 프롬프트에 그대로 붙이는 단일 축 실험이다.
+코드 충돌은 없다 — 실행기·후보·검사·보고서가 서로 다른 파일이고, 겹치는 것은
+`docs/tasks.md` 와 이 문서의 텍스트뿐이다. 두 실험의 GPU 순서는 미결정이다.
 후보 [`experiments/a8_v20_annex.py`](../experiments/a8_v20_annex.py)는 `company_size` 프롬프트
 문자열만 바꾼다 — 스키마·소비자·관측 게이트·조회 알고리즘·운영 `script.py` 그대로다.
 붙는 블록은 **실측 1,568자**(법령 원문 934자 + 영어 지시 634자)라 **착수서의 623토큰 추정은
