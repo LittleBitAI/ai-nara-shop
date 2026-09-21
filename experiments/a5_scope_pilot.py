@@ -16,6 +16,7 @@ import script
 from experiments import a5_collect_facts as collector
 from experiments import a5_scope_observation as candidate
 from experiments import a5_v18_scope_review as v18_candidate
+from experiments import a8_v20_annex as a8_candidate
 from experiments.a5_v11_absence_candidate import verify_company_size
 from tools import compare_runs, replay_run, score
 
@@ -24,14 +25,33 @@ DIAGNOSTIC_IDS = ('PPS-D-000732', 'PPS-D-001333', 'PPS-D-002069', 'PPS-D-002106'
 FACTOR = 1853 / 200 * 0.96
 STAGE_LIMIT = 246.985 + (7200 - 6380) / FACTOR
 INPUT_MANIFEST = ROOT/'reports/team-c/a5-v18-scope-review/inputs.json'
+A8_INPUT_MANIFEST = ROOT/'reports/team-c/a8-v20-annex/inputs.json'
+# 회차 기록·비교·churn 이 보는 항목. 실험마다 하나다.
+FOCUS = {'h3': 'v11', 'v18': 'v18', 'a8': 'v20'}
+# dev 입력 명세를 쓰는 실험. h3 만 무라벨 진단 입력을 받는다.
+DEV_ONLY = ('v18', 'a8')
+
+
+def manifest_for(experiment):
+    return A8_INPUT_MANIFEST if experiment == 'a8' else INPUT_MANIFEST
+
+
+def output_reserved(experiment):
+    """A8은 두 군 모두 줄인 출력 예약을 쓴다. 근거는 후보 모듈 상수의 주석이다."""
+    return a8_candidate.OUTPUT_RESERVED if experiment == 'a8' else script.MAX_TOKENS
+
+
+def prompt_budget(experiment):
+    return a8_candidate.PROMPT_BUDGET if experiment == 'a8' else script.PROMPT_BUDGET
 
 
 def activate_arm(name):
-    return candidate.activate() if name == 'h3' else v18_candidate.activate() if name == 'v18' else nullcontext()
+    return (candidate.activate() if name == 'h3' else v18_candidate.activate() if name == 'v18'
+            else a8_candidate.activate() if name == 'a8' else nullcontext())
 
 
-def validate_inputs():
-    expected = json.loads(INPUT_MANIFEST.read_text(encoding='utf-8'))
+def validate_inputs(experiment='v18'):
+    expected = json.loads(manifest_for(experiment).read_text(encoding='utf-8'))
     for name, digest in expected.items():
         if collector.file_hash(ROOT/name) != digest:
             raise ValueError('Input SHA256 mismatch: ' + name)
@@ -67,10 +87,15 @@ def hybrid_replay(payload, output, *, experiment='h3', review_fields=False):
         (case/'run_report.json').write_bytes((CASE/'run_report.json').read_bytes())
         (case/'diagnostics.jsonl').write_text(''.join(json.dumps(e, ensure_ascii=False)+'\n' for e in events),
                                              encoding='utf-8', newline='\n')
+        # A8은 소비자를 바꾸지 않으므로 후보 문맥 OFF/ON 재생은 **바이트가 같을 수밖에 없다.**
+        # 이것은 `activate()`가 재생 경로에서 읽히는 것을 하나도 건드리지 않았다는 정적 불변만
+        # 말한다. 법령 문자열이 항목으로 새는지는 재생이 아니라
+        # `tests/test_a8_v20_annex.py::LawQuotationTests`의 결정적 소비자 스윕이 잡는다.
         variants = (('off', None), ('on', v18_candidate.verify_company_size)) if experiment == 'v18' else (
-            ('head', None), ('h2', verify_company_size))
+            ('off', None), ('on', None)) if experiment == 'a8' else (('head', None), ('h2', verify_company_size))
         for name, verifier in variants:
-            with v18_candidate.activate() if review_fields else nullcontext():
+            with (v18_candidate.activate() if review_fields else
+                  a8_candidate.activate() if experiment == 'a8' and name == 'on' else nullcontext()):
                 replay = replay_run.replay(script, case, input_path=str(ROOT/'open/dev.jsonl'),
                                           data_dir=str(ROOT/'open/data'), verify_company_size=verifier)
             (output/f'{name}-hybrid.csv').write_bytes(replay_run.to_csv_bytes(script, replay['rows']))
@@ -119,8 +144,9 @@ def record_run(output, contract, started_at, seconds, status, error_type=None):
                   planned_responses=2 * (len(contract['dev_ids']) + len(contract['diagnostic_ids'])),
                   independent_diagnostic_sample=False)
     collector.save(output/'run_report.json', report)
-    focus = 'v18' if contract.get('experiment') == 'v18' else 'v11'
-    lines = ['# A5 ' + contract.get('experiment', 'h3') + ' 회차 기록', '', f"- 회차 ID: {report['run_id']}", f"- 상태: {status}",
+    focus = FOCUS.get(contract.get('experiment'), 'v11')
+    lines = [f"# {contract.get('experiment', 'h3')} 회차 기록 (A5 파일럿 실행기)", '',
+             f"- 회차 ID: {report['run_id']}", f"- 상태: {status}",
              f"- 코드: {contract['source_commit']}", f"- 순서: {' → '.join(contract['order'])}",
              f"- 시작 UTC: {started_at}", f"- 입력 검사 이후 경과: {seconds:.3f}초",
              f"- 모델 적재: {environment.get('model_load_seconds', '미측정')}초",
@@ -150,15 +176,15 @@ def record_run(output, contract, started_at, seconds, status, error_type=None):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input', type=Path, help='H3 diagnostic unlabeled input; unused for v18 dev-only pilot')
-    parser.add_argument('--experiment', choices=('h3', 'v18'), default='h3')
+    parser.add_argument('--experiment', choices=('h3', 'v18', 'a8'), default='h3')
     parser.add_argument('--model-dir', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--episode', type=int, choices=(1, 2), required=True)
     args = parser.parse_args()
     if args.model_dir.name != script.MODEL_REVISION or not args.model_dir.is_dir():
         parser.error('Use the fixed Hugging Face snapshot directory')
-    if args.experiment == 'v18':
-        validate_inputs()
+    if args.experiment in DEV_ONLY:
+        validate_inputs(args.experiment)
     elif args.input is None or collector.file_hash(args.input) != collector.UNLABELED_SHA256:
         parser.error('Wrong train_unlabeled SHA256')
     dev = list(script.iter_records(str(ROOT/'open/dev.jsonl')))
@@ -174,11 +200,14 @@ def main():
                ROOT/'tools/replay_run.py', ROOT/'tools/score.py', ROOT/'tools/compare_runs.py', ROOT/'requirements.txt',
                ROOT/'open/dev.jsonl', ROOT/'open/dev_labels.csv', CASE/'diagnostics.jsonl', CASE/'run_report.json',
                *sorted(p for p in (ROOT/'open/data').rglob('*') if p.is_file())]
-    if args.experiment == 'v18':
+    if args.experiment in DEV_ONLY:
+        manifest = manifest_for(args.experiment)
         sources = [p for p in sources if not p.is_relative_to(ROOT/'open/data')]
-        sources += [ROOT/name for name in json.loads(INPUT_MANIFEST.read_text(encoding='utf-8'))
+        sources += [ROOT/name for name in json.loads(manifest.read_text(encoding='utf-8'))
                     if name.startswith('open/data/')]
-        sources += [ROOT/'experiments/a5_v18_scope_review.py', INPUT_MANIFEST]
+        sources += [ROOT/'experiments/a5_v18_scope_review.py', manifest]
+        if args.experiment == 'a8':
+            sources += [ROOT/'experiments/a8_v20_annex.py', ROOT/'experiments/law_index.py']
     contract = dict(source_commit=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                     files={p.relative_to(ROOT).as_posix(): collector.file_hash(p) for p in sources},
                     input_sha256=collector.UNLABELED_SHA256 if args.experiment == 'h3' else collector.file_hash(ROOT/'open/dev.jsonl'),
@@ -186,8 +215,9 @@ def main():
                     model_revision=script.MODEL_REVISION, episode=args.episode, order=order,
                     dev_ids=[r['id'] for r in dev], diagnostic_ids=[r['id'] for r in diagnostics],
                     chunk=collector.CHUNK, max_chars=collector.MAX_CHARS, seed=script.SEED,
-                    max_tokens=script.MAX_TOKENS, quant=script.QUANT,
-                    prompt_budget=script.PROMPT_BUDGET, max_model_len=script.MAX_MODEL_LEN,
+                    max_tokens=output_reserved(args.experiment), quant=script.QUANT,
+                    prompt_budget=prompt_budget(args.experiment), max_model_len=script.MAX_MODEL_LEN,
+                    submission_max_tokens=script.MAX_TOKENS, submission_prompt_budget=script.PROMPT_BUDGET,
                     stage_limit_seconds=STAGE_LIMIT, arms={})
     for name in order:
         with activate_arm(name):
@@ -199,7 +229,7 @@ def main():
     record_run(output, contract, started_at, 0, 'running')
     status, error_type = 'failed', None
     try:
-        if args.experiment == 'v18' and args.episode == 2:
+        if args.experiment in DEV_ONLY and args.episode == 2:
             validate_previous(output, contract)
         execute(args, output, contract, dev, diagnostics, products, order)
         status = 'complete'
@@ -211,14 +241,22 @@ def main():
 
 
 def execute(args, output, contract, dev, diagnostics, products, order):
-    runner = script.VLLMRunner(script.decode_schema(str(ROOT/'open/data')), model_dir=str(args.model_dir))
+    runner = script.VLLMRunner(script.decode_schema(str(ROOT/'open/data')), model_dir=str(args.model_dir),
+                               max_tokens=output_reserved(args.experiment))
     collector.save(output/'environment.json', dict(environment=runner.environment, model_load_seconds=runner.load_seconds,
                                                    runner_mode=getattr(runner, 'MODE', 'test_double')))
-    if args.experiment == 'v18' and args.episode == 2:
+    if args.experiment in DEV_ONLY and args.episode == 2:
         first = output.parent/'episode-1'
         previous = json.loads((first/'environment.json').read_text(encoding='utf-8'))
         if previous['environment'] != runner.environment or previous['runner_mode'] != getattr(runner, 'MODE', 'test_double'):
             raise ValueError('Episode GPU/runtime mismatch')
+    if args.experiment == 'a8':
+        # 생성 호출 전에 이 러너의 실제 토크나이저로 두 군을 센다. 기록은 실패해도 남긴다.
+        budget = a8_candidate.budget_report(dev, runner, products, max_chars=collector.MAX_CHARS,
+                                           budget=prompt_budget(args.experiment))
+        collector.save(output/'budget.json', budget)
+        if not budget['conditions_pass']:
+            raise RuntimeError('Injected block shrinks documents or changes notice text; stopping before generation')
     summary = dict(mode=getattr(runner, 'MODE', 'test_double') + '_company_size_pilot_with_hybrid_cpu_replay', episode=args.episode,
                    complete=False, arms={}, diagnostic_is_independent_evaluation=False)
     collector.save(output/'summary.json', summary)
@@ -235,7 +273,9 @@ def execute(args, output, contract, dev, diagnostics, products, order):
                     def emit(event, **fields):
                         log.write(json.dumps(dict(event=event, **fields), ensure_ascii=False)+'\n')
                         log.flush()
-                    payload = collector.collect(records, runner, products, emit)
+                    # 위치 인자로 넘긴다 — 기존 v18 검사가 `collect(*args)`로 감싼다.
+                    payload = collector.collect(records, runner, products, emit,
+                                                prompt_budget(args.experiment))
                 if name == 'h3':
                     for row, rec in zip(payload['rows'], records):
                         facts = script.parse_judgment(row['response_text'], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
@@ -252,10 +292,13 @@ def execute(args, output, contract, dev, diagnostics, products, order):
                                                   review_fields=name == 'v18')
         stage = payloads['dev']['stage_seconds']
         projected = 6380 + (stage - 246.985) * FACTOR
-        variants = ('off', 'on') if args.experiment == 'v18' else ('head', 'h2')
+        variants = ('off', 'on') if args.experiment in ('v18', 'a8') else ('head', 'h2')
         within = changes(predictions[name][variants[0]], predictions[name][variants[1]])
-        assert all(c['item'] == ('v18' if args.experiment == 'v18' else 'v11') for c in within)
-        change_key = 'off_to_on_changes' if args.experiment == 'v18' else 'head_to_h2_changes'
+        if args.experiment == 'a8':
+            assert not within, 'Prompt-only injection must not change any consumed cell'
+        else:
+            assert all(c['item'] == FOCUS[args.experiment] for c in within)
+        change_key = 'off_to_on_changes' if args.experiment in ('v18', 'a8') else 'head_to_h2_changes'
         summary['arms'][name] = dict(metrics=metrics, **{change_key: within},
                                      dev_stage_seconds=stage, dev_inference_seconds=payloads['dev']['inference_seconds'],
                                      projected_server_seconds_conditional=projected,
@@ -266,31 +309,32 @@ def execute(args, output, contract, dev, diagnostics, products, order):
             summary['arms'][name]['competitive_without_condition_support'] = [r['id'] for r in payloads['dev']['rows']
                 if r['scope_trace']['competitive_without_condition_support']]
         collector.save(output/'summary.json', summary)
-        if args.experiment == 'v18' and stage > STAGE_LIMIT:
+        if args.experiment in DEV_ONLY and stage > STAGE_LIMIT:
             raise RuntimeError('Company stage exceeds planning limit; partial results preserved')
     summary[f'control_to_{args.experiment}_changes'] = {
         name: changes(predictions['control'][name], predictions[args.experiment][name]) for name in variants}
     for name in variants:
         comparison = compare_runs.compare(score, ROOT/'open/dev_labels.csv',
             output/'control'/f'{name}-hybrid.csv', output/args.experiment/f'{name}-hybrid.csv',
-            focus=('v18',) if args.experiment == 'v18' else ('v11', 'v13'))
+            focus=(FOCUS[args.experiment],) if args.experiment in DEV_ONLY else ('v11', 'v13'))
         comparison['interpretation'] = 'Different prompts; historical drift_reference is not a pass/fail threshold.'
         collector.save(output/f'{name}-comparison.json', comparison)
-    if args.experiment == 'v18':
+    if args.experiment in DEV_ONLY:
+        focus = (FOCUS[args.experiment],)
         collector.save(output/'consumer-comparison.json', compare_runs.compare(score, ROOT/'open/dev_labels.csv',
-            output/'v18/off-hybrid.csv', output/'v18/on-hybrid.csv', focus=('v18',)))
+            output/args.experiment/'off-hybrid.csv', output/args.experiment/'on-hybrid.csv', focus=focus))
         if args.episode == 2:
             for arm in order:
                 for variant in variants:
                     comparison = compare_runs.compare(score, ROOT/'open/dev_labels.csv',
-                        output.parent/'episode-1'/arm/f'{variant}-hybrid.csv', output/arm/f'{variant}-hybrid.csv', focus=('v18',))
+                        output.parent/'episode-1'/arm/f'{variant}-hybrid.csv', output/arm/f'{variant}-hybrid.csv', focus=focus)
                     comparison['interpretation'] = 'Same arm, independent runtime; measured churn, not a universal threshold.'
                     collector.save(output/f'repeat-{arm}-{variant}.json', comparison)
     summary['complete'] = True
     summary['note'] = 'Company_size observations only. Hybrid replay is not a new full-pipeline GPU score or adoption.'
     collector.save(output/'summary.json', summary)
     print(json.dumps({name: dict(macro_f1=arm['metrics'][variants[-1]]['macro_f1'],
-                     focus=arm['metrics'][variants[-1]]['items']['v18' if args.experiment == 'v18' else 'v11'],
+                     focus=arm['metrics'][variants[-1]]['items'][FOCUS[args.experiment]],
                      stage_seconds=arm['dev_stage_seconds'], within_limit=arm['within_stage_planning_limit'])
                      for name, arm in summary['arms'].items()}, ensure_ascii=False, indent=2))
 

@@ -148,6 +148,54 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             "settings": settings}
 
 
+def csv_cell_diff(left: bytes, right: bytes):
+    """두 제출 CSV 에서 다른 셀을 `(id, 열)` 로 돌려준다.
+
+    보관 CSV 와의 바이트 동일이 **일부러** 깨졌을 때 쓴다 — 무엇이 몇 셀 움직였는지 세어
+    고정하면 바이트 비교의 회귀 검출력을 잃지 않으면서 보관물을 다시 쓰지 않아도 된다.
+
+    그 검출력이 성립하려면 셀을 세기 전에 **구조**를 봐야 한다. 헤더가 다르거나 id 가 중복되면
+    셀 비교는 조용히 `[]` 를 돌려준다 — 열이 하나 늘어난 CSV 도, 같은 id 가 두 줄인 CSV 도
+    "움직인 셀 없음" 이 된다. 행 순서는 ID 기반 채점이라 보지 않는다.
+    """
+    import csv as _csv
+    import io as _io
+
+    def read(data, side):
+        reader = _csv.DictReader(_io.StringIO(data.decode("utf-8-sig")))
+        columns = reader.fieldnames
+        if not columns:
+            raise ValueError(f"{side} CSV 에 헤더가 없다")
+        if columns[0] != "id":
+            raise ValueError(f"{side} CSV 의 첫 열이 id 가 아니다: {columns[0]!r}")
+        if len(set(columns)) != len(columns):
+            raise ValueError(f"{side} CSV 의 헤더에 중복 열이 있다")
+        rows = {}
+        for row in reader:
+            # 헤더보다 긴 행은 여분 값을 `None` 키에 넣고, 짧은 행은 결측을 `None` 값으로 넣는다.
+            # 선언된 헤더만 순회하면 둘 다 조용히 통과하므로 여기서 거부한다.
+            if None in row:
+                raise ValueError(f"{side} CSV 의 행이 헤더보다 길다: {row['id']}")
+            if any(value is None for value in row.values()):
+                raise ValueError(f"{side} CSV 의 행이 헤더보다 짧다: {row['id']}")
+            if not row["id"].strip():
+                raise ValueError(f"{side} CSV 에 빈 id 행이 있다")
+            if row["id"] in rows:
+                raise ValueError(f"{side} CSV 에 id 가 중복된다: {row['id']}")
+            rows[row["id"]] = row
+        if not rows:
+            raise ValueError(f"{side} CSV 에 행이 없다")
+        return columns, rows
+
+    left_columns, a = read(left, "왼쪽")
+    right_columns, b = read(right, "오른쪽")
+    if left_columns != right_columns:
+        raise ValueError("CSV 의 열 구성이 다르다")
+    if set(a) != set(b):
+        raise ValueError("CSV 의 id 집합이 다르다")
+    return sorted((i, c) for i in b for c in right_columns if a[i][c] != b[i][c])
+
+
 def to_csv_bytes(script, rows):
     """`script.write_csv`와 같은 바이트를 메모리에서 만든다."""
     stream = io.StringIO(newline="")

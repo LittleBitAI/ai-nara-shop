@@ -48,6 +48,39 @@ def postprocess(judgment, rec):
 '''
 
 
+class CsvCellDiffTests(unittest.TestCase):
+    """보관 CSV 대신 셀 목록을 고정하려면 그 비교기가 구조 회귀를 놓치지 않아야 한다."""
+
+    HEADER = "id,v1,e1\n"
+
+    def test_reports_only_changed_cells_and_refuses_broken_structure(self):
+        base = (self.HEADER + "A,0,\nB,1,근거\n").encode()
+        self.assertEqual(replay_run.csv_cell_diff(base, base), [])
+        changed = (self.HEADER + "A,1,\nB,1,다른 근거\n").encode()
+        self.assertEqual(replay_run.csv_cell_diff(changed, base), [("A", "v1"), ("B", "e1")])
+        # 행 순서는 ID 기반 채점이라 차이가 아니다.
+        reordered = (self.HEADER + "B,1,근거\nA,0,\n").encode()
+        self.assertEqual(replay_run.csv_cell_diff(reordered, base), [])
+        # 구조가 깨지면 조용히 []를 돌려주지 않고 소리를 낸다.
+        for data, message in [
+            ((self.HEADER + "A,0,\nA,1,\n").encode(), "중복"),
+            (("id,v1,e1,v2\n" + "A,0,,0\nB,1,근거,0\n").encode(), "열 구성"),
+            ((self.HEADER + "A,0,\n").encode(), "id 집합"),
+            # 헤더보다 길거나 짧은 행은 선언된 열만 순회하면 조용히 통과한다.
+            ((self.HEADER + "A,0,,EXTRA\nB,1,근거\n").encode(), "길다"),
+            ((self.HEADER + "A,0\nB,1,근거\n").encode(), "짧다"),
+            # 양쪽이 똑같이 비어 있거나 뒤틀려도 [] 를 돌려주면 안 된다.
+            (b"", "헤더가 없다"),
+            (self.HEADER.encode(), "행이 없다"),
+            (("v1,e1\n" + "0,\n").encode(), "첫 열이 id"),
+            (("id,v1,v1\n" + "A,0,0\n").encode(), "중복 열"),
+            ((self.HEADER + ",0,\nB,1,근거\n").encode(), "빈 id"),
+        ]:
+            with self.assertRaises(ValueError) as caught:
+                replay_run.csv_cell_diff(data, base)
+            self.assertIn(message, str(caught.exception))
+
+
 class ReplayRunTests(unittest.TestCase):
     def test_loaded_script_is_reachable_as_sys_modules_submission(self):
         """후보가 이걸로 같은 제출 코드를 집는다. experiments/sme_candidate.baseline() 참고.
@@ -149,7 +182,11 @@ class ReplayRunTests(unittest.TestCase):
         h2 = ROOT / "reports/runs/colab-1789894949866134428/dev-debug"
         replayed = replay_run.replay(SCRIPT, h2, input_path=ROOT / "open/dev.jsonl",
                                      data_dir=ROOT / "open/data")
-        self.assertEqual(replay_run.to_csv_bytes(SCRIPT, replayed["rows"]), (h2 / "submission.csv").read_bytes())
+        # `company_size_products()`가 검증된 인용을 요구하면서 이 회차 CSV와 세 셀이 일부러 갈렸다.
+        # 보관 CSV는 그 회차가 만든 것이므로 다시 쓰지 않고, 움직인 셀을 여기서 고정한다.
+        self.assertEqual(replay_run.csv_cell_diff(replay_run.to_csv_bytes(SCRIPT, replayed["rows"]),
+                                                  (h2 / "submission.csv").read_bytes()),
+                         [("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-198", "v13")])
 
     def test_candidate_replaces_only_the_stage_it_defines(self):
         with tempfile.TemporaryDirectory() as tmp:

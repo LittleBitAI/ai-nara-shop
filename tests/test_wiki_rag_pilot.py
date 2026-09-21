@@ -221,7 +221,12 @@ class ConsumerTests(unittest.TestCase):
                 arm_dir = output/arm
                 arm_dir.mkdir()
                 metrics, predictions = wiki.replay_arm(payload, arm_dir, arm)
-                self.assertEqual((arm_dir/(arm + '-hybrid.csv')).read_bytes(), HEAD_REPLAY.read_bytes())
+                # 세 군이 서로 같은지가 이 검사의 뜻이다. 보관 기준선과는 A8 PR 의 v13 근거 수리로
+                # 세 셀이 일부러 다르다 — `company_size_products()` 가 검증된 공고 인용을 요구한다.
+                # 보관 CSV 는 다시 쓰지 않고 움직인 셀을 고정한다.
+                self.assertEqual(replay_run.csv_cell_diff((arm_dir/(arm + '-hybrid.csv')).read_bytes(),
+                                                          HEAD_REPLAY.read_bytes()),
+                                 [('PPS-DEV-148', 'e13'), ('PPS-DEV-16', 'v13'), ('PPS-DEV-198', 'v13')])
                 self.assertEqual(len(metrics['items']), 24)
                 self.assertEqual(len(predictions), 200)
                 self.assertTrue((arm_dir/'verification.json').is_file())

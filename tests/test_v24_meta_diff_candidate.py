@@ -86,8 +86,12 @@ class V24MetaDiffCandidate(unittest.TestCase):
                                    input_path=str(ROOT / "open/dev.jsonl"),
                                    data_dir=str(ROOT / "open/data"),
                                    postprocess=candidate.postprocess)
-        self.assertEqual(replay_run.to_csv_bytes(script, result["rows"]), AFTER.read_bytes(),
-                         "지금 후보의 출력이 보관된 candidate-replay/submission.csv 와 다르다")
+        # `company_size_products()`가 검증된 인용을 요구하면서 보관 CSV와 세 셀이 일부러 갈렸다.
+        # 보관물을 다시 쓰지 않고 움직인 셀을 고정한다 — 배선이 끊기면 목록이 달라져 빨개진다.
+        self.assertEqual(replay_run.csv_cell_diff(replay_run.to_csv_bytes(script, result["rows"]),
+                                                  AFTER.read_bytes()),
+                         [("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-198", "v13")],
+                         "지금 후보의 출력이 보관된 candidate-replay/submission.csv 와 예상 밖으로 다르다")
 
     def test_v24_counts_match_the_recorded_replay(self):
         self.assertEqual(_counts(self.before, self.truth, "v24"), EXPECTED["before"])

@@ -8,6 +8,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 from tests.test_baseline import baseline as script, valid
 
@@ -37,6 +38,30 @@ def facts(qualification="small_only"):
 
 
 class CompanySizeTests(unittest.TestCase):
+    def test_v13_needs_a_quote_the_notice_actually_contains(self):
+        """v13 근거문구는 모델이 준 문자열이 아니라 **공고에 있는** 인용이어야 한다.
+
+        없이 세우면 지어낸 문구도, 프롬프트에 실린 법령 원문도 그대로 근거가 됐다.
+        `company_size_products()`가 검증하지 않던 시절 dev 200건에서 근거가 공고에 없는
+        v13 양성이 3셀 있었고, 분류·역할·인용이 함께 바뀌면 9 → 33셀로 열렸다.
+        """
+        rec = notice()
+        rec["docs"][0]["text"] += " 세부품명번호 7811189902 직접생산확인증명서를 제출해야 한다."
+        visible = script.build_context(rec)
+        real = "소기업 또는 소상공인인 업체."
+        self.assertIn(real, visible)
+        base = dict(facts(), scope="competitive", scope_quote="일반 의료기기 구매.")
+        with patch.object(script, "competitive_product", return_value=True):
+            written, _ = script.verify_company_size(base, rec, 16000)
+            self.assertEqual(written["v13"], {"위반여부": 1, "근거문구": real})
+            for invented in ("이 문구는 공고에 없다", "「중소기업기본법」제2조의 중소기업", "", None):
+                out, _ = script.verify_company_size(dict(base, qualification_quote=invented), rec, 16000)
+                self.assertNotIn("v13", out, f"검증되지 않은 인용이 v13을 세웠다: {invented!r}")
+            # v12의 근거는 모델 인용이 아니라 공고에서 뽑은 것이라 이 검증 밖이다.
+            general, _ = script.verify_company_size(dict(base, scope="general"), rec, 16000)
+            self.assertEqual(general["v12"]["위반여부"], 1)
+            self.assertIn(general["v12"]["근거문구"], visible)
+
     def test_qualification_role_never_turns_a_checklist_into_a_restriction(self):
         rec = notice(50_000_000)
         rec["docs"][0]["text"] = (

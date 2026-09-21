@@ -1,0 +1,306 @@
+{
+  "execution_mode": "cpu_only",
+  "model_success_count": 0,
+  "actual_token_measurement": true,
+  "actual_token_measurement_means": "고정 리비전 토크나이저 + 제출 chat template 으로 dev 200건 두 군의 프롬프트를 셌다. 생성 호출은 0회이고 모델 성능 측정이 아니다.",
+  "adoption_gate": {
+    "1_v13_fix_applied": "완료",
+    "2_replay_recheck_24_items": "완료 — 움직인 셀 3개, 대상 밖 0",
+    "3_two_episodes_pass_preregistered": "미실행 — 다음 게이트. 실행 자체는 막지 않는다",
+    "4_unlabeled_6000_firing_rate": "미실행 — 착수서 §6-5. 유망한 후보만 수집한다",
+    "5_stage_time": "미실행 — 착수서 §5, 군별 company 단계 ≤339.178초/200건",
+    "6_independent_review_of_results": "미실행 — 착수서 §6-6. 두 회차 결과에 대한 리뷰다",
+    "note": "3 이 끝나도 채택이 아니다. 4·5·6 까지가 착수서 §6 의 채택 전 조건이다."
+  },
+  "full_pipeline_gpu_macro_f1": null,
+  "candidate_gpu_stage_seconds": null,
+  "server_macro_f1": null,
+  "independent_review": {
+    "rounds": 6,
+    "results": "artifacts/review/a8-v20-annex-round-{1,2,3,4,5,6}-result.md",
+    "1": "P1 3(법령 v13 유출·낡은 고정 커밋·문서 불일치), P2 1(OFF/ON 재생). 반영.",
+    "2": "P1 2(결합 필드 유출로 인한 가짜 초록·권위 문서 잔존). 반영. 수리 범위 재결정.",
+    "3": "P1 2(선택된 수리 상태 미반영·게이트 문구가 수리 전 채택 허용). 반영.",
+    "4": "P1 3(실행 핀이 수리 전 코드·권위 문서 모순·게이트가 사전 등록과 충돌), P2 1(비교기). 반영.",
+    "5": "P1 4(실행 안내·작업 큐·측정 원장·README 게이트), P2 1(비교기의 들쭉날쭉한 행). 반영.",
+    "6": "P1 1(기계 판독 게이트 누락), P2 2(리뷰 메타데이터·비교기 일반 계약). 반영.",
+    "7": "**머지 허용** — P0·P1 새 발견 없음. P2 2건(리뷰 이력 세 자리·측정 원장의 최신 검사 기록)도 반영.",
+    "deferred_p2": ["tools/replay_run.py csv_cell_diff — 닫히지 않은 인용부호의 관대한 파싱. 현 호출자는 200행 생성 CSV 와 보관 CSV 를 비교하므로 실행 영향 없음(라운드 6·7 판단)."],
+    "confirmed_by_reviewer": ["결합 스윕 외에 더 넓힐 결정적 조합 없음", "예산 검사에 가짜 초록 없음",
+                              "GPU 두 회차 실행 자체는 막을 이유 없음 — 채택만 막는다",
+                              "v13 가드의 visible/docs 두 검사는 중복이 아니다",
+                              "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
+  },
+  "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
+  "pinned_code_commit": "b139807723c22ec570d65635b0d654ba5e6149e2",
+  "pinned_notebook_commit": "a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6",
+  "notebook_only_change_from_code_commit": "REPO_REF",
+  "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
+                      "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전"],
+  "environment": {
+    "os": "Windows",
+    "python": "3.13.9"
+  },
+  "injection": {
+    "law": "중소 소프트웨어사업자의 사업 참여 지원에 관한 지침",
+    "article_chars": 305,
+    "annex_chars": 629,
+    "law_text_chars": 934,
+    "article_sha256": "18609dd3d09ababa25234cae3c1cc7b5519d04cb649c20c4f71edc2fe7a57ed7",
+    "annex_sha256": "ce7c05c2e69c89d7529f18fa25394914fb38f944de205f875fe89c444aa948ed",
+    "both_substrings_of_provided_text": true,
+    "floors_present": [
+      "80억원",
+      "40억원",
+      "20억원"
+    ],
+    "block_chars": 1568,
+    "block_sha256": "c0d6fcb3c25b62092c96e5afddb195796df79708acf1c185d13d1c2aa3a0cd28",
+    "control_prompt_chars": 9357,
+    "control_prompt_sha256": "a4afe5ca49dc690308ae429fd04184d7c4e81a7d368e53f6be09028831266b1f",
+    "candidate_prompt_chars": 10925,
+    "candidate_prompt_sha256": "7fb9f5489af45ac307215d414e3db4f39af0c77f7b183e684d3f9d6a4174badc",
+    "schema_unchanged": true,
+    "consumer_unchanged": "주입은 소비자를 바꾸지 않는다. 같은 PR 의 v13 근거 수리는 별개이며 아래 v13_evidence_hole 이 소유한다.",
+    "observation_gate_unchanged": true,
+    "estimated_tokens_not_measured": "934자/1.5 ≈ 623은 추정이며 이 구현에서 확인하지 않았다"
+  },
+  "replay_off_on": {
+    "off_and_on_equal_each_other": true,
+    "equal_h4_baseline_bytes": false,
+    "differs_from_h4_baseline": {"cells": [["PPS-DEV-16", "v13"], ["PPS-DEV-148", "e13"], ["PPS-DEV-198", "v13"]],
+                                 "why": "이 PR 의 v13 근거 수리 때문이다. 보관 CSV 는 다시 쓰지 않았다."},
+    "changed_cells": [],
+    "v20_tp_fp_fn": [
+      1,
+      4,
+      4
+    ],
+    "macro_f1": 0.591008188119,
+    "macro_f1_before_v13_fix": 0.5938461654151134,
+    "meaning": "wiring/regression only; not an injection effect"
+  },
+  "reachable_v20_tp_ceiling": {
+    "h4_tp": [
+      "PPS-DEV-133"
+    ],
+    "h4_fp": [
+      "PPS-DEV-056",
+      "PPS-DEV-064",
+      "PPS-DEV-068",
+      "PPS-DEV-144"
+    ],
+    "fn_blockers": {
+      "PPS-DEV-24": {
+        "software_business": "yes",
+        "requirements_complete": "no",
+        "완전관측": false,
+        "dropped_doc_counts": {
+          "제안요청서": 1
+        },
+        "blocked_by": "input_documents"
+      },
+      "PPS-DEV-131": {
+        "software_business": "yes",
+        "requirements_complete": "no",
+        "완전관측": false,
+        "dropped_doc_counts": {
+          "제안요청서": 1
+        },
+        "blocked_by": "input_documents"
+      },
+      "PPS-DEV-132": {
+        "software_business": "no",
+        "requirements_complete": "yes",
+        "완전관측": true,
+        "dropped_doc_counts": {},
+        "blocked_by": "software_business"
+      },
+      "PPS-DEV-134": {
+        "software_business": "yes",
+        "requirements_complete": "no",
+        "완전관측": false,
+        "dropped_doc_counts": {
+          "제안요청서": 1
+        },
+        "blocked_by": "input_documents"
+      }
+    },
+    "ceiling": 2,
+    "note": "프롬프트가 못 바꾸는 입력 사실로 FN 3건이 막힌다. 남은 132는 software_business=no다."
+  },
+  "output_reservation": {
+    "decided": 1024,
+    "submission_max_tokens": 2048,
+    "prompt_budget_with_decision": 15296,
+    "submission_prompt_budget": 14272,
+    "h4_company_prompt_tokens": {"min": 4586, "median": 10941, "mean": 10370, "max": 14250,
+                                 "worst_id": "PPS-DEV-091", "source": "colab-1789902969401579900 diagnostics"},
+    "h4_company_output_tokens": {"min": 142, "median": 269.5, "p95": 389, "max": 494,
+                                 "finish_reason": {"stop": 200}},
+    "headroom_at_submission_budget": 22,
+    "output_margin_over_observed_max": 2.07,
+    "h4_truncated_record_unblocked": "PPS-DEV-189",
+    "applies_to": "both arms of the a8 pilot only",
+    "note": "사전 등록 조건(추가 축소 0/200)을 낮춘 것이 아니라 만족시키는 방법이다."
+  },
+  "block_tokens": {
+    "measured": 586,
+    "measured_by": "TokenizerRunner: 고정 리비전 tokenizer + 제출 chat template, transformers 5.14.1, 생성 0회",
+    "parts": {"header_english": 145, "제2조": 187, "별표 1": 253, "boundary": 1},
+    "chars_per_token": {"header_english": 4.34, "제2조": 1.63, "별표 1": 2.49},
+    "estimate_before_measuring": "730~1,000 (과대 추정이었다)",
+    "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4",
+    "allowed_block_tokens_at_decision": 1014,
+    "worst_record": {"id": "PPS-DEV-189", "control": 14282, "candidate": 14868, "spare": 428}
+  },
+  "v13_evidence_hole": {
+    "location": "script.py:668 company_size_products()",
+    "introduced_by_a8": false,
+    "what": "qualification_quote 를 공고 원문으로 검증하지 않고 v13 근거문구로 쓴다. 지어낸 문구도 통과한다.",
+    "firing_today_without_a8": {"v13_cells_written": 9, "ungrounded_evidence": 3,
+                                "ids": ["PPS-DEV-16", "PPS-DEV-148", "PPS-DEV-198"]},
+    "a8_exposure": "별표의 부분문자열을 qualification_quote 에 넣으면 같은 9셀이 법령 문자열을 근거로 쓴다.",
+    "other_quote_fields": 0,
+    "combined_role_and_quote": {"v13_cells": 33, "new_positives": 24, "law_evidence": 24,
+                                "new_label_0": 23, "new_label_1": 1,
+                                "note": "scope 는 건드리지 않았다. 라운드 2 리뷰 P1 — 인용 한 필드만 보는 스윕은 이 경로를 못 본다."},
+    "measured_fix_cost": {"evidence_only": {"macro": 0.593846165415, "v13": [4, 9, 2], "closes_new_positives": false},
+                          "verified_quote_required": {"macro": 0.591008188119, "v13": [3, 8, 3],
+                                                      "delta": -0.002838, "closes_new_positives": true}},
+    "status": "fixed in this PR — 2026-09-21 사용자 결정으로 착수서 §3 의 운영 파일 제한을 이 건에 한해 해제",
+    "fix": {
+      "where": "script.py:company_size_products()",
+      "rule": "restore_spacing 복원 뒤 인용이 visible 과 rec['docs'] 양쪽에 있어야 v13 을 쓴다. 없으면 기본 판정 보존.",
+      "macro_before_after": [0.593846165415, 0.591008188119],
+      "macro_delta": -0.002838,
+      "v13_before_after": [[4, 9, 2], [3, 8, 3]],
+      "moved_cells": [["PPS-DEV-16", "v13"], ["PPS-DEV-148", "e13"], ["PPS-DEV-198", "v13"]],
+      "other_items_moved": 0,
+      "sweep_after_fix": {"all_quote_fields": 0, "combined_role_and_quote": 0, "baseline_v13_cells": 6},
+      "mutation_check": "가드를 빼면 검사 8개가 빨개진다",
+      "archived_csvs": "다시 쓰지 않았다. tools/replay_run.csv_cell_diff() 로 움직인 셀을 고정한다.",
+      "v12_unaffected": "근거가 direct_production_demand(rec) 파생이라 검증 밖"
+    },
+    "pinned_by": "tests/test_a8_v20_annex.py::LawQuotationTests 두 검사"
+  },
+  "cpu_budget_check": {
+    "file": "budget-cpu.json",
+    "records": 200,
+    "token_count_kind": "actual",
+    "added_tokens_min": 586,
+    "added_tokens_max": 586,
+    "additional_shrink": 0,
+    "visible_differs": 0,
+    "candidate_truncated": 0,
+    "conditions_pass": true,
+    "budget_safety_evidence": true,
+    "same_check_at_submission_budget": {"prompt_budget": 14272, "additional_shrink": 13,
+                                        "visible_differs": 13, "control_truncated": ["PPS-DEV-189"],
+                                        "conditions_pass": false},
+    "not_evidence_of": "모델이 블록을 어떻게 쓰는지. 생성 호출은 0회다."
+  },
+  "time_budget": {
+    "server_measured_seconds": 6380,
+    "server_limit_seconds": 7200,
+    "factor": 8.894400000000001,
+    "baseline_stage_seconds": 246.985,
+    "stage_limit_seconds": 339.1778404389279
+  },
+  "input_bundle": {
+    "path": "artifacts/a8-v20-annex/a8-v20-inputs.zip",
+    "files": 30,
+    "bytes": 3264446,
+    "all_member_sha256_verified": true
+  },
+  "notebook_sha256": "59da78455269f28f5f53be2621eb098c70b0aafcda7893ce5ebe57742310cf34",
+  "notebook_code_cells_compile": true,
+  "production_script_unchanged": false,
+  "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
+  "checks": [
+    {
+      "command": "python -m pytest -q tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py",
+      "phase": "before implementation",
+      "passed": 32,
+      "seconds": 23.61
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 12,
+      "seconds": 18.64,
+      "note": "조각 실패 5종은 한 검사 안의 subTest"
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 16,
+      "seconds": 19.14,
+      "phase": "출력 예약·법령 인용 기각·분할 재시도 검사 추가 후"
+    },
+    {
+      "command": "python -m pytest -q tests/",
+      "passed": 291,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 105.18,
+      "phase": "출력 예약 배선 후. 실패·오류는 아래 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 17,
+      "seconds": 18.88,
+      "phase": "CPU 실측 대조 검사 추가 후. 블록 글자가 바뀌면 이 검사가 먼저 깨진다"
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 19,
+      "seconds": 22.56,
+      "phase": "라운드 1 리뷰 반영 — 인용 필드 7개 × 공고 200건 법령 유출 스윕과 v13 현재 발화 고정"
+    },
+    {
+      "command": "python -m pytest -q tests/ && python -X utf8 tests/test_baseline.py",
+      "passed": 294,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 105.39,
+      "phase": "라운드 1 반영 후. baseline 게이트 19개 별도 OK. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 22,
+      "phase": "최종 — 라운드 7 `머지 허용` 시점"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 299,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 98.29,
+      "phase": "최종 — 라운드 7 `머지 허용` 시점. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "phase": "최종 오프라인 게이트 — 라운드 7 `머지 허용` 시점"
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
+      "passed": 80,
+      "seconds": 58.22
+    },
+    {
+      "command": "python -m pytest -q tests/",
+      "passed": 287,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 99.32,
+      "preexisting_failures": {
+        "tests/test_a5_scope_pilot.py::ScopePilotTests::test_full_pilot_replays_200_rows_and_preserves_outputs": "이 워크트리에 gitignore 된 open/train_unlabeled.jsonl 이 없다. h3 경로이며 A8 변경과 무관하다",
+        "tests/test_setup_agents.py": "워크트리에 gitignore 된 도구 설정이 없다"
+      }
+    }
+  ]
+}
