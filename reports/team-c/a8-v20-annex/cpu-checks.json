@@ -1,7 +1,9 @@
 {
   "execution_mode": "cpu_only",
   "model_success_count": 0,
-  "actual_token_measurement": false,
+  "actual_token_measurement": true,
+  "actual_token_measurement_means": "고정 리비전 토크나이저 + 제출 chat template 으로 dev 200건 두 군의 프롬프트를 셌다. 생성 호출은 0회이고 모델 성능 측정이 아니다.",
+  "independent_review_round_1": "머지 불가 — P1 3건, P2 1건. 결과는 artifacts/review/a8-v20-annex-round-1-result.md",
   "full_pipeline_gpu_macro_f1": null,
   "candidate_gpu_stage_seconds": null,
   "server_macro_f1": null,
@@ -123,6 +125,17 @@
     "allowed_block_tokens_at_decision": 1014,
     "worst_record": {"id": "PPS-DEV-189", "control": 14282, "candidate": 14868, "spare": 428}
   },
+  "v13_evidence_hole": {
+    "location": "script.py:668 company_size_products()",
+    "introduced_by_a8": false,
+    "what": "qualification_quote 를 공고 원문으로 검증하지 않고 v13 근거문구로 쓴다. 지어낸 문구도 통과한다.",
+    "firing_today_without_a8": {"v13_cells_written": 9, "ungrounded_evidence": 3,
+                                "ids": ["PPS-DEV-16", "PPS-DEV-148", "PPS-DEV-198"]},
+    "a8_exposure": "별표의 부분문자열을 qualification_quote 에 넣으면 같은 9셀이 법령 문자열을 근거로 쓴다.",
+    "other_quote_fields": 0,
+    "fix_location": "운영 script.py — A8 허용 파일 밖. v13 셀이 움직일 수 있어 별건 판단 대기.",
+    "pinned_by": "tests/test_a8_v20_annex.py::LawQuotationTests 두 검사"
+  },
   "cpu_budget_check": {
     "file": "budget-cpu.json",
     "records": 200,
@@ -188,6 +201,21 @@
       "passed": 17,
       "seconds": 18.88,
       "phase": "CPU 실측 대조 검사 추가 후. 블록 글자가 바뀌면 이 검사가 먼저 깨진다"
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 19,
+      "seconds": 22.56,
+      "phase": "라운드 1 리뷰 반영 — 인용 필드 7개 × 공고 200건 법령 유출 스윕과 v13 현재 발화 고정"
+    },
+    {
+      "command": "python -m pytest -q tests/ && python -X utf8 tests/test_baseline.py",
+      "passed": 294,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 105.39,
+      "phase": "라운드 1 반영 후. baseline 게이트 19개 별도 OK. 실패·오류는 preexisting_failures 와 같다"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",

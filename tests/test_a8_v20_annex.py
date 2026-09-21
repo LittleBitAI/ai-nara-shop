@@ -89,7 +89,11 @@ class AnnexBlockTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, message):
                         candidate.segments()
 
-    def test_replayed_h4_bytes_are_identical_with_the_block_on_and_off(self):
+    def test_activate_touches_nothing_the_replay_reads(self):
+        """정적 불변만 잰다 — 소비자를 안 바꿨으니 바이트는 같을 수밖에 없다.
+
+        법령 유출은 이 재생이 아니라 `LawQuotationTests`의 결정적 스윕이 잡는다.
+        """
         payload = h4_payload()
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
@@ -197,11 +201,71 @@ class MeasuredBudgetTests(unittest.TestCase):
 class LawQuotationTests(unittest.TestCase):
     """주입한 조문을 모델이 공고 인용 자리에 넣어도 v20을 움직이지 못해야 한다."""
 
+    # 인용을 담을 수 있는 company_size 필드 전부. 하나라도 빠지면 스윕이 표면을 덜 잰다.
+    QUOTE_FIELDS = ('scope_quote', 'qualification_quote', 'priority_exception_quote',
+                    'size_exception_quote', 'direct_production_quote',
+                    'software_business_quote', 'software_participation_quote')
+    # 별표 1의 실제 부분문자열. 모델이 복사하기 가장 쉬운 꼴이다.
+    LAW_SPAN = '「중소기업기본법」제2조의 중소기업'
+
     def facts_for(self, identifier):
         texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
         rec = {r['id']: r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))}[identifier]
         facts = script.parse_judgment(texts[identifier], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
         return facts, rec, script.build_context(rec, 16000)
+
+    def sweep(self):
+        """공고 200건 × 인용 필드 7개. 법령 문자열이 근거로 박히는 셀을 항목별로 센다.
+
+        카탈로그 전역(`_PRODUCTS`)을 실제 파이프라인처럼 채운 뒤 잰다 — 안 채우면
+        `competitive_product()`가 None 이라 v13 경로가 닫히고 스윕이 0을 돌려준다.
+        """
+        _, products = script.load_sme_reference(str(pilot.ROOT/'open/data'))
+        events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+        chars = {e['id']: e['max_chars'] for e in events if e['event'] == 'company_size_input'}
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        planted = {}
+        for rec in script.iter_records(str(pilot.ROOT/'open/dev.jsonl')):
+            facts = script.parse_judgment(texts[rec['id']], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+            for field in self.QUOTE_FIELDS:
+                out, _ = script.verify_company_size(dict(facts, **{field: self.LAW_SPAN}), rec, chars[rec['id']])
+                for item, cell in out.items():
+                    if cell['위반여부'] == 1 and cell['근거문구'] and self.LAW_SPAN in str(cell['근거문구']):
+                        planted.setdefault(field, {}).setdefault(item, []).append(rec['id'])
+        return planted
+
+    def test_only_the_known_v13_hole_accepts_the_law_as_evidence(self):
+        self.assertIn(self.LAW_SPAN, candidate.segments()[1].text)
+        self.assertIn(self.LAW_SPAN, candidate.block())
+        planted = self.sweep()
+        # 여섯 필드는 검증이 법령을 기각한다. 하나라도 열리면 이 PR 이 대상 밖 항목을 움직인다.
+        self.assertEqual({f: sorted(items) for f, items in planted.items() if f != 'qualification_quote'}, {})
+        # ponytail: 남은 구멍 하나는 운영 `script.py:668` 이다 — `company_size_products()` 가
+        # `qualification_quote` 를 공고 원문으로 검증하지 않고 v13 근거로 쓴다. A8 허용 파일 밖이라
+        # 여기서는 표면만 고정한다. 그 수리가 들어오면 이 기대값은 {} 가 된다.
+        self.assertEqual(sorted(planted['qualification_quote']), ['v13'])
+        self.assertEqual(len(planted['qualification_quote']['v13']), 9)
+
+    def test_v13_evidence_is_already_ungrounded_without_the_injection(self):
+        """같은 구멍이 후보 없이도 이미 3셀에서 발화한다 — A8 이 만든 회귀가 아니다."""
+        _, products = script.load_sme_reference(str(pilot.ROOT/'open/data'))
+        events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+        chars = {e['id']: e['max_chars'] for e in events if e['event'] == 'company_size_input'}
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        written, ungrounded = [], []
+        for rec in script.iter_records(str(pilot.ROOT/'open/dev.jsonl')):
+            facts = script.parse_judgment(texts[rec['id']], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+            out, _ = script.verify_company_size(facts, rec, chars[rec['id']])
+            cell = out.get('v13')
+            if not cell:
+                continue
+            written.append(rec['id'])
+            visible = script.build_context(rec, chars[rec['id']])
+            quote = cell['근거문구']
+            if not (quote and quote in visible and any(quote in d['text'] for d in rec['docs'])):
+                ungrounded.append(rec['id'])
+        self.assertEqual(len(written), 9)
+        self.assertEqual(ungrounded, ['PPS-DEV-16', 'PPS-DEV-148', 'PPS-DEV-198'])
 
     def test_injected_law_span_is_not_accepted_as_a_notice_clause(self):
         article, annex = candidate.segments()

@@ -87,8 +87,10 @@ def hybrid_replay(payload, output, *, experiment='h3', review_fields=False):
         (case/'run_report.json').write_bytes((CASE/'run_report.json').read_bytes())
         (case/'diagnostics.jsonl').write_text(''.join(json.dumps(e, ensure_ascii=False)+'\n' for e in events),
                                              encoding='utf-8', newline='\n')
-        # A8은 소비자를 바꾸지 않는다. 후보 문맥만 켜고 끄며 같은 저장 응답을 재생해,
-        # 참조 블록이 라벨·항목 규칙으로 새지 않았음을 24항목 CSV 바이트로 확인한다.
+        # A8은 소비자를 바꾸지 않으므로 후보 문맥 OFF/ON 재생은 **바이트가 같을 수밖에 없다.**
+        # 이것은 `activate()`가 재생 경로에서 읽히는 것을 하나도 건드리지 않았다는 정적 불변만
+        # 말한다. 법령 문자열이 항목으로 새는지는 재생이 아니라
+        # `tests/test_a8_v20_annex.py::LawQuotationTests`의 결정적 소비자 스윕이 잡는다.
         variants = (('off', None), ('on', v18_candidate.verify_company_size)) if experiment == 'v18' else (
             ('off', None), ('on', None)) if experiment == 'a8' else (('head', None), ('h2', verify_company_size))
         for name, verifier in variants:
