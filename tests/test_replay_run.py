@@ -48,6 +48,30 @@ def postprocess(judgment, rec):
 '''
 
 
+class CsvCellDiffTests(unittest.TestCase):
+    """보관 CSV 대신 셀 목록을 고정하려면 그 비교기가 구조 회귀를 놓치지 않아야 한다."""
+
+    HEADER = "id,v1,e1\n"
+
+    def test_reports_only_changed_cells_and_refuses_broken_structure(self):
+        base = (self.HEADER + "A,0,\nB,1,근거\n").encode()
+        self.assertEqual(replay_run.csv_cell_diff(base, base), [])
+        changed = (self.HEADER + "A,1,\nB,1,다른 근거\n").encode()
+        self.assertEqual(replay_run.csv_cell_diff(changed, base), [("A", "v1"), ("B", "e1")])
+        # 행 순서는 ID 기반 채점이라 차이가 아니다.
+        reordered = (self.HEADER + "B,1,근거\nA,0,\n").encode()
+        self.assertEqual(replay_run.csv_cell_diff(reordered, base), [])
+        # 구조가 깨지면 조용히 []를 돌려주지 않고 소리를 낸다.
+        for data, message in [
+            ((self.HEADER + "A,0,\nA,1,\n").encode(), "중복"),
+            (("id,v1,e1,v2\n" + "A,0,,0\nB,1,근거,0\n").encode(), "열 구성"),
+            ((self.HEADER + "A,0,\n").encode(), "id 집합"),
+        ]:
+            with self.assertRaises(ValueError) as caught:
+                replay_run.csv_cell_diff(data, base)
+            self.assertIn(message, str(caught.exception))
+
+
 class ReplayRunTests(unittest.TestCase):
     def test_loaded_script_is_reachable_as_sys_modules_submission(self):
         """후보가 이걸로 같은 제출 코드를 집는다. experiments/sme_candidate.baseline() 참고.

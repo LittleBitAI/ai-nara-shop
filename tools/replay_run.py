@@ -153,17 +153,30 @@ def csv_cell_diff(left: bytes, right: bytes):
 
     보관 CSV 와의 바이트 동일이 **일부러** 깨졌을 때 쓴다 — 무엇이 몇 셀 움직였는지 세어
     고정하면 바이트 비교의 회귀 검출력을 잃지 않으면서 보관물을 다시 쓰지 않아도 된다.
+
+    그 검출력이 성립하려면 셀을 세기 전에 **구조**를 봐야 한다. 헤더가 다르거나 id 가 중복되면
+    셀 비교는 조용히 `[]` 를 돌려준다 — 열이 하나 늘어난 CSV 도, 같은 id 가 두 줄인 CSV 도
+    "움직인 셀 없음" 이 된다. 행 순서는 ID 기반 채점이라 보지 않는다.
     """
     import csv as _csv
     import io as _io
 
-    def rows(data):
-        return {r["id"]: r for r in _csv.DictReader(_io.StringIO(data.decode("utf-8-sig")))}
+    def read(data, side):
+        reader = _csv.DictReader(_io.StringIO(data.decode("utf-8-sig")))
+        rows = {}
+        for row in reader:
+            if row["id"] in rows:
+                raise ValueError(f"{side} CSV 에 id 가 중복된다: {row['id']}")
+            rows[row["id"]] = row
+        return reader.fieldnames, rows
 
-    a, b = rows(left), rows(right)
+    left_columns, a = read(left, "왼쪽")
+    right_columns, b = read(right, "오른쪽")
+    if left_columns != right_columns:
+        raise ValueError("CSV 의 열 구성이 다르다")
     if set(a) != set(b):
         raise ValueError("CSV 의 id 집합이 다르다")
-    return sorted((i, c) for i in b for c in b[i] if a[i][c] != b[i][c])
+    return sorted((i, c) for i in b for c in right_columns if a[i][c] != b[i][c])
 
 
 def to_csv_bytes(script, rows):
