@@ -9,7 +9,13 @@ import {
 } from './panels.jsx'
 
 const fmt = (n) => n.toFixed(3)
-const shortRun = (id) => id.replace(/^colab-/, '').slice(-7)
+// 파일럿은 `<run-id>.<군>-<소비자>` 라 뒤 7글자만 자르면 `ol-head` 같은 것이 남는다.
+// 회차 꼬리와 변이 이름을 같이 보여야 네 항목이 서로 갈린다.
+const shortRun = (id) => {
+  const at = id.indexOf('.')
+  if (at < 0) return id.replace(/^colab-/, '').slice(-7)
+  return `${id.slice(0, at).slice(-7)}·${id.slice(at + 1)}`
+}
 
 function useTheme() {
   const [theme, setTheme] = useState(() => {
@@ -140,7 +146,8 @@ export default function App() {
           <select value={runId} onChange={(e) => { setRunId(e.target.value); setPicked(null) }}>
             {[...history].reverse().map((r) => (
               <option key={r.run_id} value={r.run_id}>
-                {shortRun(r.run_id)} · {fmt(r.macro_f1)}{r.has_raw ? '' : ' (원응답 없음)'}
+                {shortRun(r.run_id)} · {fmt(r.macro_f1)}
+                {r.kind === 'gpu-pilot' ? ' (파일럿·부분 GPU)' : r.has_raw ? '' : ' (원응답 없음)'}
               </option>
             ))}
           </select>

@@ -31,6 +31,13 @@ RUN_ID = re.compile(r"^[A-Za-z0-9._-]+$")
 # 쓰레기 run-id 가 만들어진다. 이름이 바뀌는 건 뒤의 숫자뿐이고 그 숫자가 run-id 다.
 RESULTS_NAME = re.compile(r"^colab-results-(\d+)\.zip$")
 INBOX = ROOT / "artifacts/inbox"
+# 파일럿 회차는 제출 회차가 아니다. `company_size` 같은 한 단계만 GPU 로 돌리고 나머지는
+# 보관 원응답으로 재생하므로, 회차 하나가 (군 × 소비자) 만큼의 CSV 를 낸다. 그 CSV 는
+# 제출물과 같은 49열이라 화면의 "한 항목 = CSV 하나" 전제는 그대로 두고, 대신
+# `<run-id>.<군>-<소비자>` 라는 별도 항목으로 편다.
+PILOT_CSV = "pilot/*/*/*-hybrid.csv"
+PILOT_SEP = "."
+KIND_RUN, KIND_PILOT = "gpu-run", "gpu-pilot"
 # grid 한 칸의 뜻. 화면(web/src/data.js)의 KIND와 같은 글자를 쓴다.
 TP, FP, FN, TN = "T", "P", "N", "."
 
@@ -69,8 +76,30 @@ def newest_zip(inbox):
     return max(found, key=lambda p: p.stat().st_mtime)
 
 
+def pilot_variants(base):
+    """이 회차가 파일럿이면 `(변이 이름, 그 CSV 경로)` 목록. 아니면 빈 목록.
+
+    이름은 `<군>-<소비자>` 다. `pilot/episode-1/control/head-hybrid.csv` → `control-head`.
+    """
+    found = []
+    for path in sorted(base.glob(PILOT_CSV)):
+        found.append((f"{path.parent.name}-{path.stem.removesuffix('-hybrid')}", path))
+    return found
+
+
+def split_variant(run):
+    """`<run-id>.<변이>` 를 갈라 준다. 변이가 없으면 (run, None)."""
+    head, sep, tail = run.rpartition(PILOT_SEP)
+    return (head, tail) if sep and (ROOT / "reports/runs" / head).is_dir() else (run, None)
+
+
 def read_source(args):
-    """(run_id, {경로: bytes}) 를 돌려준다. ZIP도 디렉터리도 같은 모양으로 맞춘다."""
+    """(run_id, {경로: bytes}, 원본경로, kind) 를 돌려준다. ZIP도 디렉터리도 같은 모양이다.
+
+    파일럿 변이는 그 군·소비자의 `*-hybrid.csv` 를 `dev/submission.csv` 자리에 끼운다.
+    그 CSV 가 제출물과 같은 49열이라 `build()` 의 채점·격자 코드는 한 글자도 안 바뀐다.
+    **무엇을 읽었는지 아는 것은 여기뿐이므로 `kind` 도 여기서 정해 넘긴다.**
+    """
     if args.zip:
         name = RESULTS_NAME.match(args.zip.name)
         if not name:
@@ -85,15 +114,27 @@ def read_source(args):
                 safe_member(i.filename): archive.read(i)
                 for i in archive.infolist() if not i.is_dir()
             }
-        return run_id, entries, args.zip
-    base = ROOT / "reports/runs" / args.run
+        return run_id, entries, args.zip, KIND_RUN
+    run, variant = split_variant(args.run)
+    base = ROOT / "reports/runs" / run
+    if variant is not None:
+        picked = dict(pilot_variants(base)).get(variant)
+        if picked is None:
+            known = ", ".join(name for name, _ in pilot_variants(base)) or "없음"
+            raise ValueError(f"{args.run}: 파일럿 변이 {variant!r} 가 없다. 있는 것: {known}")
+        return args.run, {"dev/submission.csv": picked.read_bytes()}, picked, KIND_PILOT
     if not (base / "dev/submission.csv").is_file():
-        raise ValueError(f"{args.run}: dev/submission.csv 가 없다")
+        hint = pilot_variants(base)
+        if hint:
+            names = ", ".join(f"{run}{PILOT_SEP}{name}" for name, _ in hint)
+            raise ValueError(f"{run}: dev/submission.csv 가 없다. 파일럿 회차이므로 "
+                             f"변이를 고른다 — {names}")
+        raise ValueError(f"{run}: dev/submission.csv 가 없다")
     entries = {
         p.relative_to(base).as_posix(): p.read_bytes()
         for p in base.rglob("*") if p.is_file()
     }
-    return args.run, entries, base
+    return run, entries, base, KIND_RUN
 
 
 def parse_diagnostics(blob):
@@ -139,7 +180,10 @@ def read_pred(score, blob):
     return pred, quotes, pred_hash
 
 
-def build(score, run_id, entries, source_path):
+def build(score, run_id, entries, source_path, kind=KIND_RUN):
+    """`kind` 는 **호출자가 준다.** 여기서 run_id 로 파일시스템을 다시 조회하지 않는다 —
+    무엇을 읽었는지는 `read_source` 가 이미 알고, 다시 캐면 저장소 밖에서 만든 입력이
+    조용히 제출 회차로 찍힌다. 실제로 검사가 그 모양으로 걸렸다."""
     if "dev/submission.csv" not in entries:
         raise ValueError(f"{run_id}: dev/submission.csv 가 없다")
     truth, _ = score.load_csv(TRUTH)
@@ -198,6 +242,9 @@ def build(score, run_id, entries, source_path):
 
     return {
         "run_id": run_id,
+        # 저울이 다른 것을 한 추이선에 그리지 않으려고 화면이 읽는다. 파일럿은 한 단계만
+        # GPU 로 돌리고 나머지는 보관 원응답으로 재생한 값이라 전체 GPU 점수가 아니다.
+        "kind": kind,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "source": {"path": score.portable(source_path), "pred_sha256": pred_hash},
         "settings": settings,
@@ -227,6 +274,7 @@ def refresh_index():
         report = json.loads(path.read_text(encoding="utf-8"))
         runs.append({
             "run_id": report["run_id"],
+            "kind": report.get("kind", KIND_RUN),   # 옛 빌드본에는 없다. 제출 회차로 읽는다
             "created_at": report["created_at"],
             "macro_f1": report["macro_f1"],
             "has_raw": report["has_raw"],
@@ -343,6 +391,10 @@ def main():
     if args.all:
         targets = [p.parent.parent.name for p in
                    sorted((ROOT / "reports/runs").glob("*/dev/submission.csv"))]
+        # 파일럿 회차는 `dev/submission.csv` 가 없어 위 탐색에 안 걸린다. 군·소비자마다
+        # 한 항목으로 편다. 이 줄이 없으면 회차를 등록해도 화면에 영영 안 실린다.
+        for base in sorted((ROOT / "reports/runs").glob("*")):
+            targets += [f"{base.name}{PILOT_SEP}{name}" for name, _ in pilot_variants(base)]
     elif args.run:
         if not RUN_ID.match(args.run):
             raise ValueError(f"run-id 형식이 아니다: {args.run!r}")
@@ -353,8 +405,8 @@ def main():
         if run is not None:
             args.run = run
             args.zip = None
-        run_id, entries, source_path = read_source(args)
-        report = build(score, run_id, entries, source_path)
+        run_id, entries, source_path, kind = read_source(args)
+        report = build(score, run_id, entries, source_path, kind)
         write_json(OUT_DIR / f"{run_id}.json", report)
         built.append(report)
         print(f"{run_id}: Macro F1={report['macro_f1']:.12g} "
