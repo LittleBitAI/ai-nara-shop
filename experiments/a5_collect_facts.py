@@ -38,7 +38,9 @@ def save(path, value):
     temporary.replace(path)
 
 
-def collect(records, runner, products, emit):
+def collect(records, runner, products, emit, budget=None):
+    """`budget`은 A8처럼 출력 예약을 바꾼 실험이 두 군 공통 예산을 명시할 때만 넘긴다."""
+    budget = script.PROMPT_BUDGET if budget is None else budget
     rows, inference_seconds = [], 0.0
     started = time.perf_counter()
     for start in range(0, len(records), CHUNK):
@@ -49,7 +51,7 @@ def collect(records, runner, products, emit):
                                          if k != "조항호내용"}}
             messages, tokens, chars = script.fit_to_budget(
                 company_rec, script.COMPANY_SIZE_PROMPT, runner, MAX_CHARS,
-                budget=script.PROMPT_BUDGET, products=products)
+                budget=budget, products=products)
             batch.append(messages)
             budgets.append((tokens, chars))
             emit('company_size_input', id=rec['id'], max_chars=chars, prompt_tokens=tokens,

@@ -30,6 +30,18 @@ from experiments import law_index
 
 LAW = "중소 소프트웨어사업자의 사업 참여 지원에 관한 지침"
 DATA_DIR = str(ROOT / "open/data")
+# 출력 예약과 그에서 나오는 프롬프트 예산. **두 군이 같은 값을 쓴다.**
+#
+# 운영 `MAX_TOKENS=2048`은 H4 company 응답 실측(200건 전부 `stop`, max 494 · p95 389 토큰)의
+# **4.15배**를 예약하고, 그 여유 때문에 프롬프트 예산이 14,272로 내려가 최대 공고 14,250에
+# **22토큰**만 남는다. 그 자리에 블록을 넣으면 후보만 문서가 깎여 비교가 교란된다.
+# 1,024는 관측 최댓값의 2.07배를 남기면서 예산을 15,296으로 올린다 — 블록 1,046토큰까지
+# 추가 축소 0/200이다. 분할 재시도도 살아 있다(14,250+1,046 프롬프트에서 출력 1,024 확보).
+# control의 프롬프트는 이미 예산 안이라 이 값과 무관하게 같다. 예외는 H4에서 13,600자로
+# 절단됐던 `PPS-DEV-189` 하나이며, 두 군 모두 절단이 풀려 H4와 달라진다 — 기록한다.
+# 이 값은 파일럿 한정이다. 운영 채택은 단계별 예약이 필요해 `script.py` 수정이 따르며 별건이다.
+OUTPUT_RESERVED = 1024
+PROMPT_BUDGET = script.MAX_MODEL_LEN - OUTPUT_RESERVED - 64
 # 별표 1의 세 하한. 80억·40억만 확인하면 중견기업 5년 미만의 20억원 행이 빠진 조각을 통과시킨다.
 FLOORS = ("80억원", "40억원", "20억원")
 # 지시는 영어, 원문은 한국어다. 법령은 공고 인용 근거가 아니며 null을 법적 추론으로 채우지 않는다.
@@ -82,11 +94,13 @@ def _visible_sha256(rec, max_chars: int) -> str:
     return hashlib.sha256(script.build_context(rec, max_chars).encode("utf-8")).hexdigest()
 
 
-def budget_report(records, runner, products=(), *, max_chars: int, data_dir: str = DATA_DIR):
+def budget_report(records, runner, products=(), *, max_chars: int, budget: int = PROMPT_BUDGET,
+                  data_dir: str = DATA_DIR):
     """공고별 control/후보 예산을 **러너의 실제 토크나이저와 chat template**로 센다.
 
     통과 조건은 추가 축소 0건과 두 군 공고 본문 동일이다. control에 이미 있던 절단은 따로 센다.
     mock/글자 환산 러너는 조건을 채워도 `budget_safety_evidence`가 거짓이다.
+    `budget`은 두 군 공통이다. 운영 `script.PROMPT_BUDGET`과의 차이도 함께 남긴다.
     """
     if HEADER in script.COMPANY_SIZE_PROMPT:
         raise ValueError("control 예산은 참조 블록 밖에서 센다")
@@ -98,7 +112,7 @@ def budget_report(records, runner, products=(), *, max_chars: int, data_dir: str
         measured = {}
         for arm, prompt in arms:
             messages, tokens, chars = script.fit_to_budget(company_rec, prompt, runner, max_chars,
-                                                           budget=script.PROMPT_BUDGET, products=products)
+                                                           budget=budget, products=products)
             measured[arm] = dict(prompt_tokens=tokens, max_chars=chars, shrunk=chars < max_chars,
                                  visible_sha256=_visible_sha256(company_rec, chars),
                                  messages_sha256=hashlib.sha256(json.dumps(
@@ -113,9 +127,12 @@ def budget_report(records, runner, products=(), *, max_chars: int, data_dir: str
     differs = [r["id"] for r in rows if not r["same_visible"]]
     passes = not shrink and not differs
     reference = block(data_dir)
-    return dict(records=len(rows), max_chars=max_chars, prompt_budget=script.PROMPT_BUDGET,
-                max_tokens=script.MAX_TOKENS, model_revision=script.MODEL_REVISION,
+    return dict(records=len(rows), max_chars=max_chars, prompt_budget=budget,
+                output_reserved=OUTPUT_RESERVED, submission_prompt_budget=script.PROMPT_BUDGET,
+                submission_max_tokens=script.MAX_TOKENS, model_revision=script.MODEL_REVISION,
                 token_count_kind=token_count,
+                headroom_over_worst_control=budget - max((r["control"]["prompt_tokens"] for r in rows),
+                                                         default=0),
                 chat_template_sha256=getattr(runner, "environment", {}).get("chat_template_sha256"),
                 reference_chars=len(reference), reference_sha256=hashlib.sha256(
                     reference.encode("utf-8")).hexdigest(),

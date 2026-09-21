@@ -36,6 +36,15 @@ def manifest_for(experiment):
     return A8_INPUT_MANIFEST if experiment == 'a8' else INPUT_MANIFEST
 
 
+def output_reserved(experiment):
+    """A8은 두 군 모두 줄인 출력 예약을 쓴다. 근거는 후보 모듈 상수의 주석이다."""
+    return a8_candidate.OUTPUT_RESERVED if experiment == 'a8' else script.MAX_TOKENS
+
+
+def prompt_budget(experiment):
+    return a8_candidate.PROMPT_BUDGET if experiment == 'a8' else script.PROMPT_BUDGET
+
+
 def activate_arm(name):
     return (candidate.activate() if name == 'h3' else v18_candidate.activate() if name == 'v18'
             else a8_candidate.activate() if name == 'a8' else nullcontext())
@@ -204,8 +213,9 @@ def main():
                     model_revision=script.MODEL_REVISION, episode=args.episode, order=order,
                     dev_ids=[r['id'] for r in dev], diagnostic_ids=[r['id'] for r in diagnostics],
                     chunk=collector.CHUNK, max_chars=collector.MAX_CHARS, seed=script.SEED,
-                    max_tokens=script.MAX_TOKENS, quant=script.QUANT,
-                    prompt_budget=script.PROMPT_BUDGET, max_model_len=script.MAX_MODEL_LEN,
+                    max_tokens=output_reserved(args.experiment), quant=script.QUANT,
+                    prompt_budget=prompt_budget(args.experiment), max_model_len=script.MAX_MODEL_LEN,
+                    submission_max_tokens=script.MAX_TOKENS, submission_prompt_budget=script.PROMPT_BUDGET,
                     stage_limit_seconds=STAGE_LIMIT, arms={})
     for name in order:
         with activate_arm(name):
@@ -229,7 +239,8 @@ def main():
 
 
 def execute(args, output, contract, dev, diagnostics, products, order):
-    runner = script.VLLMRunner(script.decode_schema(str(ROOT/'open/data')), model_dir=str(args.model_dir))
+    runner = script.VLLMRunner(script.decode_schema(str(ROOT/'open/data')), model_dir=str(args.model_dir),
+                               max_tokens=output_reserved(args.experiment))
     collector.save(output/'environment.json', dict(environment=runner.environment, model_load_seconds=runner.load_seconds,
                                                    runner_mode=getattr(runner, 'MODE', 'test_double')))
     if args.experiment in DEV_ONLY and args.episode == 2:
@@ -239,7 +250,8 @@ def execute(args, output, contract, dev, diagnostics, products, order):
             raise ValueError('Episode GPU/runtime mismatch')
     if args.experiment == 'a8':
         # 생성 호출 전에 이 러너의 실제 토크나이저로 두 군을 센다. 기록은 실패해도 남긴다.
-        budget = a8_candidate.budget_report(dev, runner, products, max_chars=collector.MAX_CHARS)
+        budget = a8_candidate.budget_report(dev, runner, products, max_chars=collector.MAX_CHARS,
+                                           budget=prompt_budget(args.experiment))
         collector.save(output/'budget.json', budget)
         if not budget['conditions_pass']:
             raise RuntimeError('Injected block shrinks documents or changes notice text; stopping before generation')
@@ -259,7 +271,9 @@ def execute(args, output, contract, dev, diagnostics, products, order):
                     def emit(event, **fields):
                         log.write(json.dumps(dict(event=event, **fields), ensure_ascii=False)+'\n')
                         log.flush()
-                    payload = collector.collect(records, runner, products, emit)
+                    # 위치 인자로 넘긴다 — 기존 v18 검사가 `collect(*args)`로 감싼다.
+                    payload = collector.collect(records, runner, products, emit,
+                                                prompt_budget(args.experiment))
                 if name == 'h3':
                     for row, rec in zip(payload['rows'], records):
                         facts = script.parse_judgment(row['response_text'], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']

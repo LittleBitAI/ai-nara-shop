@@ -121,6 +121,72 @@ class AnnexBlockTests(unittest.TestCase):
         self.assertEqual(len(cells['tp']) + len(reachable), 2)
 
 
+class ReservationTests(unittest.TestCase):
+    """줄인 출력 예약이 두 군 공통이고, 관측 출력과 재시도를 살려 두는지 본다."""
+
+    def h4(self):
+        events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+        prompts = [e['prompt_tokens'] for e in events if e['event'] == 'company_size_input']
+        outputs = [e['output_tokens'] for e in events if e['event'] == 'response'
+                   and e.get('phase') == 'company_size' and isinstance(e.get('output_tokens'), int)]
+        stops = {e.get('finish_reason') for e in events if e['event'] == 'response'
+                 and e.get('phase') == 'company_size'}
+        return prompts, outputs, stops
+
+    def test_reservation_keeps_twice_the_observed_output_and_frees_prompt_budget(self):
+        prompts, outputs, stops = self.h4()
+        self.assertEqual((len(prompts), len(outputs)), (200, 200))
+        self.assertEqual(stops, {'stop'})  # 관측 출력이 상한에 걸린 응답이 없어야 예약을 줄일 수 있다.
+        self.assertGreaterEqual(candidate.OUTPUT_RESERVED, 2 * max(outputs))
+        self.assertEqual(candidate.PROMPT_BUDGET, script.MAX_MODEL_LEN - candidate.OUTPUT_RESERVED - 64)
+        self.assertGreater(candidate.PROMPT_BUDGET, script.PROMPT_BUDGET)
+        # 운영 예산에서는 최악 공고에 22토큰만 남아 어떤 블록도 들어가지 못한다.
+        self.assertLess(script.PROMPT_BUDGET - max(prompts), 100)
+        self.assertGreaterEqual(candidate.PROMPT_BUDGET - max(prompts), 1000)
+
+    def test_split_retry_still_has_room_for_the_observed_output(self):
+        prompts, outputs, _ = self.h4()
+        block_ceiling = candidate.PROMPT_BUDGET - max(prompts)
+        # 분할 재시도는 system 메시지에 출력범위 문장을 덧붙인 뒤 출력 예산을 다시 계산한다.
+        suffix = ('\n[Output scope for this call] Evaluate only these keys, overriding the earlier key list: '
+                  + ', '.join(script.COMPANY_SIZE_KEYS)
+                  + '. Return no other keys. Keep evidence quotations under 100 characters.')
+        suffix_ceiling = len(suffix)  # 영어 1자=1토큰보다 나쁠 수 없다. 보수적 상한이다.
+        left = script.MAX_MODEL_LEN - (max(prompts) + block_ceiling + suffix_ceiling) - 64
+        self.assertGreater(left, max(outputs))
+
+    def test_both_arms_get_the_same_reduced_budget(self):
+        self.assertEqual(pilot.output_reserved('a8'), candidate.OUTPUT_RESERVED)
+        self.assertEqual(pilot.prompt_budget('a8'), candidate.PROMPT_BUDGET)
+        for experiment in ('h3', 'v18'):
+            self.assertEqual(pilot.output_reserved(experiment), script.MAX_TOKENS)
+            self.assertEqual(pilot.prompt_budget(experiment), script.PROMPT_BUDGET)
+
+
+class LawQuotationTests(unittest.TestCase):
+    """주입한 조문을 모델이 공고 인용 자리에 넣어도 v20을 움직이지 못해야 한다."""
+
+    def facts_for(self, identifier):
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        rec = {r['id']: r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))}[identifier]
+        facts = script.parse_judgment(texts[identifier], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+        return facts, rec, script.build_context(rec, 16000)
+
+    def test_injected_law_span_is_not_accepted_as_a_notice_clause(self):
+        article, annex = candidate.segments()
+        facts, rec, visible = self.facts_for('PPS-DEV-133')
+        self.assertEqual(script.verify_document_requirements(facts, rec, visible)['v20']['위반여부'], 1)
+        for span in (article.text.strip().splitlines()[0], '80억원 이상', annex.text.strip().splitlines()[0]):
+            self.assertNotIn(span, visible)  # 법령은 공고 본문이 아니다.
+            with self.subTest(span=span[:20]):
+                # 참여제한 인용 자리에 법령을 넣으면 present도 absent도 아니라 기본 판정이 보존된다.
+                out = script.verify_document_requirements(dict(facts, software_participation_quote=span), rec, visible)
+                self.assertNotIn('v20', out)
+                # SW 사업 인용 자리에 법령을 넣으면 적용 자체가 서지 않는다.
+                out = script.verify_document_requirements(dict(facts, software_business_quote=span), rec, visible)
+                self.assertNotIn('v20', out)
+
+
 class BudgetTests(unittest.TestCase):
     def long_record(self, chars=2000):
         """글자를 토큰으로 세는 러너에서도 control이 예산 안에 들어가는 길이."""
@@ -148,8 +214,8 @@ class BudgetTests(unittest.TestCase):
         control = script.fit_to_budget({**record, 'meta': {}}, script.COMPANY_SIZE_PROMPT, runner, 16000,
                                        budget=10**9)[1]
         # 후보만 넘치는 예산. control은 16,000자 그대로 들어간다.
-        with patch.object(script, 'PROMPT_BUDGET', control + len(candidate.block()) // 2):
-            report = candidate.budget_report([record], runner, max_chars=16000)
+        report = candidate.budget_report([record], runner, max_chars=16000,
+                                         budget=control + len(candidate.block()) // 2)
         row = report['rows'][0]
         self.assertTrue(row['additional_shrink'])
         self.assertFalse(row['same_visible'])
