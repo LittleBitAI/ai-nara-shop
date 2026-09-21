@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "44f5e4b8c9a9d8b7b0e83b51f546c04be5e3316e"
+  ],
+  "cwd": "/content/a5-v18-iiuzg53v/repo",
+  "started": 1789970663.3065546,
+  "returncode": 0,
+  "elapsed_seconds": 0.3912928104400635
+}

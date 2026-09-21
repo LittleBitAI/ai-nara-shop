@@ -27,13 +27,20 @@
 
 ## 첫 작업 큐
 
-`a5-v18-scope-review`: **ready**, [새 셀 착수서](tasks/a5-v18-scope-review.md).
+`a5-v18-scope-review`: **done / 두 회차 기록 완료·후보 미채택**, [작업서](tasks/a5-v18-scope-review.md).
 한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
-후보·CPU 계약 검사·Colab 준비·회차 기록·push/PR까지 진행하며 머지는 하지 않는다.
+후보·CPU 계약 검사·Colab 준비·회차 기록을 완료했고, 2026-09-21 사용자 승인으로 PR #80의 보관 목적 병합을 진행한다.
 [독립 분석](../reports/team-c/a5-label-definition/five-stuck-analysis.md)과
 [방법](../reports/team-c/a5-label-definition/five-stuck-how.md)이 이 주제를 소유한다.
-계획 상한 339.178초/200건, 새 후보 GPU 미실행. 기존 H3는 등록 회차에서 실행됐으며
+계획 상한 339.178초/200건, 후보 실측 280.871 / 299.693초. 기존 H3는 등록 회차에서 실행됐으며
 아래 H3 “GPU 미측정”은 준비 당시 이력이다.
+후보·OFF/ON 재생·두 회차 비교·dev 전용 노트북 구현, CPU 계약 33개 검증을 완료했다.
+실행 소스 `44f5e4b`, 고정 노트북 `dd99efa`. 실제 company GPU 두 회차 등록 완료.
+혼합 F1 0.600586987945 / 0.598735136094, v18 TP=1·OFF/ON 0셀·v13/v20 FP 증가 반복으로 미채택.
+[24항목·시간·실패 결과](../reports/team-c/a5-v18-scope-review/results.md).
+독립 리뷰·무라벨·전체 GPU·서버는 미실행이다. 후보 미채택과 운영 `script.py` 불변을 유지한다.
+입력·출력·허용 경로·통과 조건은 작업서 §3~6, 실행 안내는
+[v18 파일럿](../reports/team-c/a5-v18-scope-review/run-request.md)이 소유한다.
 
 `a5-label-definition-wall`: 착수·진행 중. 배정 2026-09-21, astra. **v11 · v13 · v24** — 라벨 기준이 벽인 셋.
 `18f07e5`(dev 0.599316 / 서버 0.508414)를 항목별로 갈랐다. v11은 오탐을 0으로 해도 최대 F1 0.500이고,

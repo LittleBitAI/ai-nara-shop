@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "nvidia-smi",
+    "--query-gpu=name,memory.total,driver_version",
+    "--format=csv,noheader"
+  ],
+  "cwd": "/content/a5-v18-iiuzg53v",
+  "started": 1789970665.4645271,
+  "returncode": 0,
+  "elapsed_seconds": 0.02214813232421875
+}

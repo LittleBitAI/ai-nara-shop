@@ -7,6 +7,22 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
+**2026-09-21 A5 v18 두 회차 완료·미채택:** [실제 결과와 24항목 F1](../reports/team-c/a5-v18-scope-review/results.md).
+`44f5e4b` 후보 혼합 F1은 회차1 0.600586987945, 최신 회차2 0.598735136094다.
+v18 TP/FP/FN=1/3/6, 재검토 OFF/ON 0셀로 TP 회복 실패. v13·v20 FP +1이 두 회차 반복됐다.
+단계 280.871/299.693초는 상한 이내, 출력 한도 실패 1/3건은 재시도로 복구됐다.
+원본 두 ZIP·800 최종 유효 응답 등록, 8 CSV 바이트 재현 및 37개 측정 근거 대조 완료.
+최신 ZIP의 회차1 사본은 중복 집계하지 않는다. 전체 GPU 최고 0.599315859078·서버 0.5084137874는
+그대로다. 2026-09-21 사용자 승인으로 PR #80의 실험·기록 보관 목적 병합을 진행한다.
+후보는 미채택이며 운영 `script.py`는 그대로다. 아래 “GPU 미실행/준비 완료/머지 금지”는 이전 이력이다.
+
+**2026-09-21 A5 v18 GPU 실행 준비 완료:** 같은 company 응답 끝의 범위 재검토 두 필드를 v18에만
+소비하는 후보와 OFF/ON 재생을 구현했다. 과거 H4 CSV 보존 및 H3 대역의 v18 두 셀만
+변경하는 배선 검사를 통과했다. dev 전용 두 회차 노트북의 실패·시간·입력 경계를 포함해
+CPU 계약 33개를 검증했다. 실행 소스 `44f5e4b`, 고정 노트북 `dd99efa`.
+실제 후보 GPU/무라벨/전체 파이프라인/서버는 미측정이다.
+[실행 안내](../reports/team-c/a5-v18-scope-review/run-request.md). 후보 PR은 머지하지 않는다.
+
 **2026-09-21 A5 브리프 4 후속 구현 준비:** [새 셀 착수서](../docs/tasks/a5-v18-scope-review.md).
 사용자가 [독립 분석](../reports/team-c/a5-label-definition/five-stuck-analysis.md)과
 [방법](../reports/team-c/a5-label-definition/five-stuck-how.md)을 이 주제의 소유 문서로 정했다.

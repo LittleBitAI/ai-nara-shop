@@ -62,11 +62,15 @@ def collect():
     # 2) 일부 단계만 GPU 로 돌린 파일럿. 회차 하나가 (군 × 소비자) 만큼의 측정을 낸다
     for path in sorted(glob.glob(str(ROOT / "reports/runs/*/pilot/*/*/*-score/metrics.json"))):
         parts = Path(path).relative_to(ROOT / "reports/runs").parts
-        run, arm, consumer = parts[0], parts[3], parts[4].removesuffix("-score")
-        add(id=f"{run}/{arm}/{consumer}", date=run_date(run), kind="gpu-pilot",
-            code=commits.get(run, "1735330"),
+        run, episode, arm, consumer = parts[0], parts[2], parts[3], parts[4].removesuffix("-score")
+        manifest = json.loads((ROOT / 'reports/runs' / run / 'manifest.json').read_text(encoding='utf-8'))
+        if episode not in manifest.get('canonical_episodes', [episode]):
+            continue  # Later result ZIPs also contain earlier episodes; do not count them again.
+        contract = json.loads((Path(path).parents[2] / 'contract.json').read_text(encoding='utf-8'))
+        add(id=f"{run}/{episode}/{arm}/{consumer}", date=run_date(run), kind="gpu-pilot",
+            code=contract['source_commit'][:7],
             evidence=Path(path).relative_to(ROOT).as_posix(),
-            note=f"company_size {arm} 군 · 소비자 {consumer} · 혼합 CPU 재생")
+            note=f"company_size {episode}/{arm} 군 · 소비자 {consumer} · 혼합 CPU 재생")
 
     # 3) 모델을 안 부르고 후처리만 바꾼 측정. 같은 원응답이라 회차 churn 이 없다
     for rid, code, rel, note in (

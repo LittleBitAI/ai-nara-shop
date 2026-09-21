@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/a5-v18-iiuzg53v/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/a5-v18-iiuzg53v/repo/requirements.txt"
+  ],
+  "cwd": "/content/a5-v18-iiuzg53v",
+  "started": 1789970855.3085213,
+  "returncode": 0,
+  "elapsed_seconds": 0.6100983619689941
+}

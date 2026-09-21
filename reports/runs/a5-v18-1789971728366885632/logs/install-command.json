@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/content/a5-v18-iiuzg53v/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "--extra-index-url",
+    "https://download.pytorch.org/whl/cu130",
+    "vllm==0.26.0",
+    "torch==2.11.0+cu130",
+    "transformers==5.14.1",
+    "xgrammar==0.2.3"
+  ],
+  "cwd": "/content/a5-v18-iiuzg53v",
+  "started": 1789970668.4048393,
+  "returncode": 0,
+  "elapsed_seconds": 186.9032084941864
+}

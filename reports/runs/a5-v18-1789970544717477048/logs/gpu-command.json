@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "nvidia-smi",
+    "--query-gpu=name,memory.total,driver_version",
+    "--format=csv,noheader"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op",
+  "started": 1789968784.6514978,
+  "returncode": 0,
+  "elapsed_seconds": 0.021383285522460938
+}

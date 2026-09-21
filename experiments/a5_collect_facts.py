@@ -52,6 +52,8 @@ def collect(records, runner, products, emit):
                 budget=script.PROMPT_BUDGET, products=products)
             batch.append(messages)
             budgets.append((tokens, chars))
+            emit('company_size_input', id=rec['id'], max_chars=chars, prompt_tokens=tokens,
+                 prompt_sha256=digest(messages))
         before = time.perf_counter()
         responses = script.run_chunk(
             runner, batch, start=start, ids=[r["id"] for r in group], emit=emit,

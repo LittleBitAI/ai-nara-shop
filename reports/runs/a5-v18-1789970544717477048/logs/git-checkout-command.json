@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op/repo",
+  "started": 1789968754.4176843,
+  "returncode": 0,
+  "elapsed_seconds": 0.05758500099182129
+}

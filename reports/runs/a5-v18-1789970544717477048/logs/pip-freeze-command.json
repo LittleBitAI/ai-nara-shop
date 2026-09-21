@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/a5-v18-eoxkp_op/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op",
+  "started": 1789969006.614167,
+  "returncode": 0,
+  "elapsed_seconds": 0.37116336822509766
+}

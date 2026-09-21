@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "/content/a5-v18-eoxkp_op/repo"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op",
+  "started": 1789968752.654379,
+  "returncode": 0,
+  "elapsed_seconds": 1.368079662322998
+}

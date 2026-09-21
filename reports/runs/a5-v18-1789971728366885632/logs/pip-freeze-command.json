@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/a5-v18-iiuzg53v/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/a5-v18-iiuzg53v",
+  "started": 1789970855.9193027,
+  "returncode": 0,
+  "elapsed_seconds": 0.37491941452026367
+}
