@@ -516,6 +516,38 @@ class PilotWiringTests(unittest.TestCase):
             self.assertEqual(report['model_success_count'], 0)
             self.assertEqual(sum(c['valid_json'] for c in report['counts'].values()), 400)
 
+    def test_the_unified_log_actually_projects_into_distinct_spans(self):
+        """로그를 만든 것과 사이드카가 그것을 쓸 수 있는 것은 다른 일이다.
+
+        커밋 1 직후 이 파일을 `plan()`에 넣으면 generation 400개가 **서로 다른 key 200개**로
+        겹쳤다(군이 key 에 없었다). 그 회귀를 여기서 막는다.
+        """
+        from tools import langfuse_tail
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            self.run_pilot(root/'episode-1', 1, BudgetFakeRunner())
+            state, ops = langfuse_tail.State(), []
+            for event in self.events_of(root/'episode-1'):
+                ops += langfuse_tail.plan(event, state)
+            generations = [o for o in ops if o.kind == 'generation' and o.action == 'open']
+            self.assertEqual(len(generations), 400)
+            self.assertEqual(len({o.key for o in generations}), 400)   # 겹치지 않는다
+            opens = {o.key for o in ops if o.action == 'open'}
+            closes = {o.key for o in ops if o.action == 'close'}
+            self.assertEqual(opens, closes)                            # 짝이 맞는다
+            self.assertEqual(state.calls, {})
+            self.assertIn('arm:control:dev', opens)
+            self.assertIn('arm:a8:dev', opens)
+            self.assertEqual(len([o for o in ops if o.key.startswith('parse:')]), 400)
+            self.assertFalse(any(o.key.startswith('gen:') for o in ops))
+            # 두 군의 system 프롬프트가 span 입력에서 갈린다.
+            systems = [json.loads(o.attrs['langfuse.observation.input'])[0]['content']
+                       for o in generations]
+            self.assertEqual(len({o.attrs['langfuse.observation.input'] for o in generations}), 400)
+            self.assertEqual(sum(1 for s in systems if s.endswith(candidate.block())), 200)
+            self.assertEqual(sum(1 for s in systems if s == script.COMPANY_SIZE_PROMPT), 200)
+
     def test_reserved_event_keys_cannot_be_overwritten(self):
         rows = []
         emit = pilot.make_emit(SimpleNamespace(write=rows.append, flush=lambda: None),

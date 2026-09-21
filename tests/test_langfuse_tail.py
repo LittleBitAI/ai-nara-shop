@@ -114,5 +114,135 @@ class LangfuseTail(unittest.TestCase):
         self.assertEqual([o.key for o in ops if o.action == "close"], ["chunk:baseline:0", "run"])
 
 
+def captured(arm, *, ids=("A", "B"), chunk_start=0, seq=1, fail=None):
+    """capture_protocol 1 판형의 한 군을 흉내낸 이벤트 묶음."""
+    out = [dict(event="arm_started", time_unix=1.0, arm=arm, sample="dev", selected_count=len(ids),
+                system_prompt_sha256=f"prompt-{arm}", schema_sha256="schema",
+                output_reserved=1024, prompt_budget=15296),
+           dict(event="phase_started", time_unix=1.1, arm=arm, sample="dev", phase="company_size")]
+    for index, identifier in enumerate(ids):
+        out.append(dict(event="company_size_input", time_unix=1.2, arm=arm, sample="dev",
+                        id=identifier, max_chars=16000, requested_max_chars=16000, truncated=False,
+                        prompt_tokens=100, token_count_kind="actual", prompt_sha256=f"p-{identifier}",
+                        visible_sha256=f"v-{identifier}", phase="company_size"))
+    out.append(dict(event="chunk_started", time_unix=2.0, arm=arm, sample="dev",
+                    phase="company_size", chunk_start=chunk_start, count=len(ids), ids=list(ids)))
+    for index, identifier in enumerate(ids):
+        common = dict(arm=arm, sample="dev", phase="company_size", chunk_start=chunk_start,
+                      call_seq=seq, call_index=index, id=identifier, identity_status="initial",
+                      call_kind="initial")
+        out.append(dict(event="model_call_started", time_unix=2.1, prompt_text=[
+            {"role": "system", "content": f"SYS-{arm}"}, {"role": "user", "content": identifier}],
+            prompt_sha256=f"p-{identifier}", schema_sha256="schema", max_tokens=1024, **common))
+        if fail == identifier:
+            out.append(dict(event="model_call_failed", time_unix=2.5, error_type="RuntimeError",
+                            transport_status="failed", **common))
+            continue
+        out.append(dict(event="model_call_finished", time_unix=2.5, response_text="{}",
+                        prompt_tokens=100, output_tokens=7, finish_reason="stop",
+                        transport_status="returned", **common))
+        out.append(dict(event="response", time_unix=2.6, arm=arm, sample="dev",
+                        phase="company_size", chunk_start=chunk_start, id=identifier,
+                        global_index=index, attempt=1, status="valid", response_chars=2))
+    out.append(dict(event="chunk_finished", time_unix=3.0, arm=arm, sample="dev",
+                    phase="company_size", chunk_start=chunk_start, count=len(ids)))
+    out.append(dict(event="arm_finished", time_unix=3.1, arm=arm, sample="dev", status="complete",
+                    stage_seconds=1.0, valid_response_count=len(ids), failed_response_count=0))
+    return out
+
+
+ROOT_EVENT = dict(event="run_started", time_unix=0.5, mode="pending", experiment="a8",
+                  dataset="dev", capture_protocol=1, code_sha256="abc1234def",
+                  expected_model={"id": "google/gemma-4-26B-A4B-it", "revision": "rev"})
+
+
+class CapturedRunProjection(unittest.TestCase):
+    """새 판형은 군을 가르고 물리 호출을 generation 으로 만든다."""
+
+    def test_arms_and_calls_get_distinct_keys_and_close_in_order(self):
+        events = [ROOT_EVENT] + captured("control") + captured("a8") + \
+                 [dict(event="run_succeeded", time_unix=9.0, seconds=8.5)]
+        ops, state = ops_for(events)
+        opens = [o.key for o in ops if o.action == "open"]
+        closes = [o.key for o in ops if o.action == "close"]
+        self.assertEqual(sorted(set(opens)), sorted(set(closes)))
+        self.assertEqual(len(opens), len(closes))
+        self.assertEqual(opens.count("run"), 1)
+        # 군·청크·호출 key 에 군 이름이 들어간다 — 안 들어가면 두 군이 겹친다.
+        self.assertIn("arm:control:dev", opens)
+        self.assertIn("arm:a8:dev", opens)
+        self.assertIn("chunk:control:dev:company_size:0", opens)
+        self.assertIn("chunk:a8:dev:company_size:0", opens)
+        generations = [o for o in ops if o.kind == "generation"]
+        self.assertEqual(len(generations), 4)
+        self.assertEqual(len({o.key for o in generations if o.action == "open"}), 4)
+        # 청크가 군별 부모다.
+        self.assertEqual({o.parent for o in generations if o.action == "open"},
+                         {"chunk:control:dev:company_size:0", "chunk:a8:dev:company_size:0"})
+        self.assertEqual({o.parent for o in ops if o.key.startswith("chunk:")},
+                         {"arm:control:dev", "arm:a8:dev", None})
+        self.assertIsNone(state.arm)
+        self.assertEqual(state.calls, {})
+
+    def test_same_notice_in_two_arms_does_not_share_a_key(self):
+        ops, _ = ops_for([ROOT_EVENT] + captured("control") + captured("a8") +
+                         [dict(event="run_succeeded", time_unix=9.0)])
+        for identifier in ("A", "B"):
+            keys = {o.key for o in ops if o.kind == "generation" and o.name == identifier}
+            self.assertEqual(len(keys), 2, identifier)     # 군마다 하나
+        prompts = {json.loads(o.attrs["langfuse.observation.input"])[0]["content"]
+                   for o in ops if o.kind == "generation" and o.action == "open"}
+        self.assertEqual(prompts, {"SYS-control", "SYS-a8"})
+
+    def test_response_is_a_parse_event_not_a_second_generation(self):
+        ops, _ = ops_for([ROOT_EVENT] + captured("control") +
+                         [dict(event="run_succeeded", time_unix=9.0)])
+        self.assertEqual(len([o for o in ops if o.kind == "generation" and o.action == "open"]), 2)
+        self.assertEqual(len([o for o in ops if o.key.startswith("parse:")]), 2)
+        self.assertFalse(any(o.key.startswith("gen:") for o in ops))   # 옛 투영이 겹치지 않는다
+
+    def test_failed_call_closes_with_an_error_and_no_invented_usage(self):
+        ops, _ = ops_for([ROOT_EVENT] + captured("control", fail="B") +
+                         [dict(event="run_succeeded", time_unix=9.0)])
+        closed = [o for o in ops if o.action == "close" and o.key.startswith("call:")]
+        self.assertEqual(len(closed), 2)
+        failed = next(o for o in closed if o.level == "ERROR")
+        self.assertNotIn("langfuse.observation.usage_details", failed.attrs)
+        self.assertEqual(failed.status, "RuntimeError")
+
+    def test_one_sided_usage_does_not_become_a_total(self):
+        events = [ROOT_EVENT] + captured("control", ids=("A",))
+        finished = next(e for e in events if e["event"] == "model_call_finished")
+        finished["output_tokens"] = None
+        ops, _ = ops_for(events + [dict(event="run_succeeded", time_unix=9.0)])
+        closed = next(o for o in ops if o.action == "close" and o.key.startswith("call:"))
+        self.assertNotIn("langfuse.observation.usage_details", closed.attrs)
+        self.assertIn("langfuse.observation.metadata.usage_note", closed.attrs)
+
+    def test_unclosed_call_and_arm_are_closed_by_the_run_end(self):
+        events = [ROOT_EVENT] + captured("control", ids=("A",))
+        events = [e for e in events
+                  if e["event"] not in ("model_call_finished", "chunk_finished", "arm_finished")]
+        ops, state = ops_for(events + [dict(event="run_failed", time_unix=9.0,
+                                            error_type="KeyboardInterrupt")])
+        closes = [o for o in ops if o.action == "close"]
+        self.assertIn("no model_call_finished", [o.status for o in closes])
+        self.assertEqual({o.key for o in ops if o.action == "open"},
+                         {o.key for o in closes})
+        self.assertEqual(state.calls, {})
+
+    def test_old_logs_without_capture_protocol_keep_the_legacy_projection(self):
+        legacy = [dict(event="run_started", time_unix=0.5, mode="live", code_sha256="abc1234"),
+                  dict(event="chunk_started", time_unix=1.0, phase="baseline", chunk_start=0, count=1),
+                  dict(event="response", time_unix=2.0, phase="baseline", global_index=0,
+                       id="A", attempt=1, status="valid", response_chars=2,
+                       prompt_tokens=12, output_tokens=3),
+                  dict(event="run_succeeded", time_unix=3.0)]
+        ops, state = ops_for(legacy)
+        self.assertIsNone(state.capture_protocol)
+        self.assertTrue(any(o.key == "gen:baseline:0:1" for o in ops))   # 옛 경로 유지
+        self.assertFalse(any(o.key.startswith("parse:") for o in ops))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -54,6 +54,29 @@ class State:
     chunk: Optional[str] = None
     chunk_start: float = 0.0
     last: float = 0.0
+    # 아래는 capture_protocol 1 로 기록한 회차에서만 채워진다.
+    capture_protocol: Optional[int] = None
+    arm: Optional[str] = None                      # 현재 열린 군 span 의 이름
+    arms: dict = field(default_factory=dict)       # (arm, sample) → span key
+    inputs: dict = field(default_factory=dict)     # (arm, sample, id) → company_size_input 이벤트
+    calls: dict = field(default_factory=dict)      # call key → 시작 시각
+
+
+def _scope(event: dict) -> tuple:
+    """군·표본을 포함한 범위. 이 값이 span key 에 들어가야 두 군이 겹치지 않는다."""
+    return event.get("arm"), event.get("sample")
+
+
+def _arm_key(event: dict) -> Optional[str]:
+    arm, sample = _scope(event)
+    return None if arm is None else f"arm:{arm}:{sample}"
+
+
+def _call_key(event: dict) -> str:
+    """물리 모델 요청 하나의 전체 식별자."""
+    arm, sample = _scope(event)
+    return (f"call:{arm}:{sample}:{event.get('phase')}:{event.get('chunk_start')}"
+            f":{event.get('call_seq')}:{event.get('call_index')}")
 
 
 def _meta(**fields: Any) -> dict:
@@ -77,6 +100,7 @@ def plan(event: dict, state: State) -> list:
 
     if kind == "run_started":
         state.run = "run"
+        state.capture_protocol = event.get("capture_protocol")
         state.model = (event.get("expected_model") or {}).get("id") or MODEL_FALLBACK
         mode = event.get("mode", "?")
         code = (event.get("code_sha256") or "")[:7]
@@ -105,24 +129,145 @@ def plan(event: dict, state: State) -> list:
                    attrs=_meta(load_seconds=event.get("load_seconds"),
                                environment=event.get("environment")))]
 
+    if kind == "arm_started":
+        key = _arm_key(event)
+        if key is None:
+            return []
+        arm, sample = _scope(event)
+        state.arm, state.arms[(arm, sample)] = key, key
+        return [Op("open", key, f"arm {arm} · {sample}", "span", "run", now,
+                   attrs=_meta(arm=arm, sample=sample, selected_count=event.get("selected_count"),
+                               system_prompt_sha256=event.get("system_prompt_sha256"),
+                               schema_sha256=event.get("schema_sha256"),
+                               output_reserved=event.get("output_reserved"),
+                               prompt_budget=event.get("prompt_budget")))]
+
+    if kind == "arm_finished":
+        key = _arm_key(event)
+        if key is None:
+            return []
+        if state.chunk:                        # 군이 끝나면 남은 청크를 먼저 닫는다.
+            ops.append(Op("close", state.chunk, end=now))
+            state.chunk = None
+        ops.append(Op("close", key, end=now,
+                      attrs=_meta(status=event.get("status"), stage_seconds=event.get("stage_seconds"),
+                                  valid_response_count=event.get("valid_response_count"),
+                                  failed_response_count=event.get("failed_response_count"))))
+        state.arms.pop(_scope(event), None)
+        state.arm = None
+        return ops
+
     if kind == "phase_started":
         state.phase = event.get("phase", phase)
-        return [Op("point", f"phase:{state.phase}", f"phase {state.phase}", "event", "run", now, now,
-                   attrs=_meta(items=event.get("items"),
+        return [Op("point", f"phase:{state.arm or 'run'}:{state.phase}", f"phase {state.phase}",
+                   "event", state.arm or "run", now, now,
+                   attrs=_meta(arm=event.get("arm"), sample=event.get("sample"),
+                               items=event.get("items"),
                                selected_count=event.get("selected_count"),
                                skipped_count=event.get("skipped_count"),
                                system_prompt_sha256=event.get("system_prompt_sha256")))]
+
+    if kind == "company_size_input" and state.capture_protocol:
+        arm, sample = _scope(event)
+        # 공고별 입력 예산을 군과 함께 기억한다. `chars < 요청값` 만으로 문서 누락을 단정하지 않는다.
+        state.inputs[(arm, sample, event.get("id"))] = event
+        return [Op("point", f"input:{arm}:{sample}:{event.get('id')}", str(event.get("id")),
+                   "event", state.arm or "run", now, now,
+                   attrs=_meta(arm=arm, sample=sample, id=event.get("id"),
+                               max_chars=event.get("max_chars"),
+                               requested_max_chars=event.get("requested_max_chars"),
+                               truncated=event.get("truncated"),
+                               prompt_tokens=event.get("prompt_tokens"),
+                               token_count_kind=event.get("token_count_kind"),
+                               prompt_sha256=event.get("prompt_sha256"),
+                               visible_sha256=event.get("visible_sha256"),
+                               note="입력 예산 관측. 군 간 추가 절단 판정은 budget.json 이 소유한다"))]
 
     if kind == "chunk_started":
         if state.chunk:                        # 청크는 순차적이다. 앞 청크를 닫는다.
             ops.append(Op("close", state.chunk, end=now))
         state.phase = phase
-        state.chunk = f"chunk:{phase}:{event.get('chunk_start')}"
+        arm, sample = _scope(event)
+        # 군을 key 에 넣는다 — 안 넣으면 control 의 청크에 a8 의 호출이 이어 붙는다.
+        state.chunk = (f"chunk:{arm}:{sample}:{phase}:{event.get('chunk_start')}" if arm
+                       else f"chunk:{phase}:{event.get('chunk_start')}")
         state.chunk_start = now
         ops.append(Op("open", state.chunk, f"{phase} chunk {event.get('chunk_start')}",
-                      "span", "run", now,
-                      attrs=_meta(count=event.get("count"), indices=event.get("indices"))))
+                      "span", state.arm or "run", now,
+                      attrs=_meta(arm=arm, sample=sample, count=event.get("count"),
+                                  ids=event.get("ids"), indices=event.get("indices"))))
         return ops
+
+    if kind == "chunk_finished":
+        if state.chunk:
+            ops.append(Op("close", state.chunk, end=now))
+            state.chunk = None
+        return ops
+
+    if kind == "model_call_started":
+        key = _call_key(event)
+        state.calls[key] = now
+        attrs = {"langfuse.observation.model.name": state.model,
+                 **_meta(arm=event.get("arm"), sample=event.get("sample"), id=event.get("id"),
+                         identity_status=event.get("identity_status"),
+                         call_kind=event.get("call_kind"), call_seq=event.get("call_seq"),
+                         call_index=event.get("call_index"),
+                         prompt_sha256=event.get("prompt_sha256"),
+                         schema_sha256=event.get("schema_sha256"),
+                         max_tokens=event.get("max_tokens"), items=event.get("items"),
+                         # 같은 batch 의 호출들은 시작·종료를 공유한다. 한 건의 지연이 아니다.
+                         duration_note="shared batch latency")}
+        source = state.inputs.get((event.get("arm"), event.get("sample"), event.get("id")))
+        if source is not None:
+            attrs.update(_meta(max_chars=source.get("max_chars"),
+                               token_count_kind=source.get("token_count_kind")))
+        if event.get("prompt_text") is not None:
+            attrs["langfuse.observation.input"] = _io(event["prompt_text"])
+        return [Op("open", key, str(event.get("id") or event.get("call_index")), "generation",
+                   state.chunk or state.arm or "run", now, attrs=attrs)]
+
+    if kind in ("model_call_finished", "model_call_failed"):
+        key = _call_key(event)
+        if key not in state.calls:             # 시작 없는 종료는 관측 계약 실패다. 꾸며 넣지 않는다.
+            return [Op("point", f"orphan:{key}:{now}", "orphan model call", "event",
+                       state.arm or "run", now, now, level="ERROR",
+                       attrs=_meta(call_key=key, transport_status=event.get("transport_status")))]
+        state.calls.pop(key, None)
+        failed = kind == "model_call_failed"
+        prompt_tokens, output_tokens = event.get("prompt_tokens"), event.get("output_tokens")
+        attrs = _meta(transport_status=event.get("transport_status"),
+                      finish_reason=event.get("finish_reason"), stop_reason=event.get("stop_reason"),
+                      error_type=event.get("error_type"),
+                      note="반환 여부다. JSON 유효 판정은 parse-result 가 소유한다")
+        if prompt_tokens is not None and output_tokens is not None:
+            # 둘 다 알 때만 total 을 만든다. 모르는 토큰을 0 으로 쓰지 않는다.
+            attrs["langfuse.observation.usage_details"] = json.dumps(
+                {"input": prompt_tokens, "output": output_tokens,
+                 "total": prompt_tokens + output_tokens})
+        elif prompt_tokens is not None or output_tokens is not None:
+            attrs.update(_meta(prompt_tokens=prompt_tokens, output_tokens=output_tokens,
+                               usage_note="한쪽만 보고돼 total 을 만들지 않았다"))
+        if event.get("response_text") is not None:
+            attrs["langfuse.observation.output"] = _io(event["response_text"])
+        return [Op("close", key, end=now, attrs=attrs, level="ERROR" if failed else None,
+                   status=f"{event.get('error_type')}" if failed else "")]
+
+    if kind == "response" and state.capture_protocol:
+        # 새 판형에서 물리 생성은 `model_call_*` 가 소유한다. 여기서 또 generation 을 만들면
+        # 호출 하나가 둘로 세진다. 최초 invalid·최종 valid 는 그대로 남긴다.
+        arm, sample = _scope(event)
+        ok = event.get("status") == "valid"
+        return [Op("point",
+                   f"parse:{arm}:{sample}:{event.get('global_index')}:{event.get('attempt', 1)}",
+                   f"parse {event.get('id') or event.get('global_index')}", "event",
+                   state.chunk or state.arm or "run", now, now,
+                   attrs=_meta(arm=arm, sample=sample, id=event.get("id"),
+                               attempt=event.get("attempt", 1), status=event.get("status"),
+                               response_chars=event.get("response_chars"),
+                               error_type=event.get("error_type"),
+                               error_message=event.get("error_message")),
+                   level=None if ok else "ERROR",
+                   status="" if ok else f"{event.get('error_type')}: {event.get('error_message')}")]
 
     if kind == "response":
         attempt = event.get("attempt", 1)
@@ -171,9 +316,19 @@ def plan(event: dict, state: State) -> list:
                           **_meta(rejected_conditions=event.get("rejected_conditions"))})]
 
     if kind in ("run_succeeded", "run_failed"):
+        # 남은 것을 안쪽부터 닫는다 — 호출 → 청크 → 군 → run.
+        for key in list(state.calls):
+            ops.append(Op("close", key, end=now, level="ERROR", status="no model_call_finished",
+                          attrs=_meta(note="종료 이벤트 없이 회차가 끝났다")))
+        state.calls.clear()
         if state.chunk:
             ops.append(Op("close", state.chunk, end=now))
             state.chunk = None
+        for key in list(state.arms.values()):
+            ops.append(Op("close", key, end=now,
+                          attrs=_meta(status="incomplete", note="arm_finished 없이 회차가 끝났다")))
+        state.arms.clear()
+        state.arm = None
         failed = kind == "run_failed"
         ops.append(Op("close", "run", end=now,
                       attrs={"langfuse.observation.output": _io(

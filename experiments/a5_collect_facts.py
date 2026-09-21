@@ -41,7 +41,7 @@ def save(path, value):
 
 
 @contextmanager
-def observe_chat(runner, emit, *, ids, phase):
+def observe_chat(runner, emit, *, ids, phase, chunk_start=None):
     """`runner.chat` 을 **인스턴스 속성으로만** 감싸 실제 모델 요청을 그대로 기록한다.
 
     왜 이 자리인가. 사이드카가 원자료로 프롬프트를 다시 조립하면 실제 절단·재시도와 달라진다.
@@ -85,7 +85,8 @@ def observe_chat(runner, emit, *, ids, phase):
                 if first else identify(messages, index)
             parameters = sampling_params if sampling_params is not None else getattr(runner, "sp", None)
             marks.append((index, identifier, status))
-            emit("model_call_started", phase=phase, call_seq=call_seq, call_index=index,
+            emit("model_call_started", phase=phase, chunk_start=chunk_start,
+                 call_seq=call_seq, call_index=index,
                  id=identifier, identity_status=status,
                  call_kind="initial" if first else "retry",
                  prompt_text=messages, prompt_sha256=digest(messages),
@@ -99,21 +100,24 @@ def observe_chat(runner, emit, *, ids, phase):
                              **({"items": items} if items is not None else {}))
         except BaseException as error:
             for index, identifier, status in marks:
-                emit("model_call_failed", phase=phase, call_seq=call_seq, call_index=index,
+                emit("model_call_failed", phase=phase, chunk_start=chunk_start,
+                     call_seq=call_seq, call_index=index,
                      id=identifier, identity_status=status, error_type=type(error).__name__,
                      transport_status="failed")
             raise
         info = list(getattr(runner, "last_response_info", []) or [])
         if len(texts) != len(batch):
             for index, identifier, status in marks:
-                emit("model_call_failed", phase=phase, call_seq=call_seq, call_index=index,
+                emit("model_call_failed", phase=phase, chunk_start=chunk_start,
+                     call_seq=call_seq, call_index=index,
                      id=identifier, identity_status=status,
                      error_type="ResponseCountMismatch", transport_status="response_count_mismatch")
             return texts
         for index, identifier, status in marks:
             # `last_response_info` 를 통째로 펼치지 않는다 — 이 allowlist 만 복사한다.
             one = info[index] if index < len(info) else {}
-            emit("model_call_finished", phase=phase, call_seq=call_seq, call_index=index,
+            emit("model_call_finished", phase=phase, chunk_start=chunk_start,
+                 call_seq=call_seq, call_index=index,
                  id=identifier, identity_status=status, transport_status="returned",
                  response_text=texts[index],
                  **{key: one.get(key) for key in
@@ -173,7 +177,8 @@ def collect(records, runner, products, emit, budget=None, plan=None, *, observe=
         before = time.perf_counter()
         # 관측은 이 호출만 감싼다. 저장 IO도 stage 시간에 들어간다 — 시간을 좋게 보이게 하지 않는다.
         try:
-            with observe_chat(runner, emit, ids=identifiers, phase="company_size") if observe \
+            with observe_chat(runner, emit, ids=identifiers, phase="company_size",
+                              chunk_start=start) if observe \
                     else contextlib.nullcontext():
                 responses = script.run_chunk(
                     runner, batch, start=start, ids=identifiers, emit=emit,
