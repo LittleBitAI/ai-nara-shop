@@ -32,11 +32,12 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "b139807723c22ec570d65635b0d654ba5e6149e2",
-  "pinned_notebook_commit": "a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6",
-  "notebook_only_change_from_code_commit": "REPO_REF",
+  "pinned_code_commit": "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023",
+  "pinned_notebook_commit": "2f6e20642e07132cf03dba26f2064b21c2e20deb",
+  "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
-                      "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전"],
+                      "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
+                      "b139807723c22ec570d65635b0d654ba5e6149e2 / a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6 — 관측·감사 배선 전"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -184,6 +185,14 @@
     },
     "pinned_by": "tests/test_a8_v20_annex.py::LawQuotationTests 두 검사"
   },
+  "observation": {
+    "file": "observation-contract.json",
+    "capture_protocol": 1,
+    "what": "회차가 실제 모델 요청을 diagnostics.jsonl 한 파일에 기록하고, 회차 뒤 같은 런타임의 CPU 감사가 인용 상태와 v20 판정을 가른다. 추론은 바뀌지 않는다.",
+    "notebook_wiring": "실행 셀(13)이 a8_v20_audit.py --episode-dir 를 이어 돌리고 군별 counts 와 gain_kind 집계를 찍는다. 모델 재호출 0회.",
+    "source_hashes_verified": true,
+    "not_evidence_of": "GPU 회차·Langfuse UI 적재. 투영은 CPU 재생 로그로만 확인했다."
+  },
   "cpu_budget_check": {
     "file": "budget-cpu.json",
     "records": 200,
@@ -213,7 +222,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "59da78455269f28f5f53be2621eb098c70b0aafcda7893ce5ebe57742310cf34",
+  "notebook_sha256": "9f41d016c0bea82e3faa9665dfe81c2832971ac0613572148a50843d9d308cdf",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -284,6 +293,26 @@
       "command": "python -X utf8 tests/test_baseline.py",
       "passed": 19,
       "phase": "최종 오프라인 게이트 — 라운드 7 `머지 허용` 시점"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 342,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 218.84,
+      "phase": "관측·투영·감사 배선 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.865,
+      "phase": "관측·투영·감사 배선 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 0,
+      "phase": "관측·투영·감사 배선 후. 공개 위키 허브에서 실행"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
