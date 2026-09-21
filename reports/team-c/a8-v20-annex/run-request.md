@@ -4,10 +4,10 @@
 후보는 프롬프트만 바꾸며 채택 결정이 아니다. [보고서](README.md)가 준비 근거를 소유한다.
 
 - 실행 코드 `713aa83c2d0e144b775710a2fee261c3e319a180` (노트북 `REPO_REF`).
-- 노트북 [`notebooks/colab-a8-v20-annex.ipynb`](../../../notebooks/colab-a8-v20-annex.ipynb),
-  sha256 `79ad632f…`. 그 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
+- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/91dd9c351a53384ca6ea2352e590c6a65c4c0351/notebooks/colab-a8-v20-annex.ipynb),
+  커밋 `91dd9c351a53384ca6ea2352e590c6a65c4c0351`, sha256 `79ad632f…`.
+  위 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
   `REPO_REF`가 40자리 16진수가 아니면 clone 전에 멈춘다.
-  노트북 커밋 SHA는 push 후 이 줄에 채운다 — 그 전에는 로컬 파일로 실행한다.
 - 모델은 고정 리비전 `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, Python 3.12.13 · vLLM 0.26.0 · CUDA 13.0.
 
 ## 입력 준비
