@@ -1,0 +1,1573 @@
+{
+  "mode": "live_company_size_pilot_with_hybrid_cpu_replay",
+  "episode": 1,
+  "complete": true,
+  "arms": {
+    "control": {
+      "metrics": {
+        "head": {
+          "macro_f1": 0.5980428341144911,
+          "items": {
+            "v1": {
+              "tp": 4,
+              "fp": 2,
+              "fn": 3,
+              "precision": 0.6666666666666666,
+              "recall": 0.5714285714285714,
+              "f1": 0.6153846153846154,
+              "support": 7
+            },
+            "v2": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 4,
+              "precision": 1.0,
+              "recall": 0.42857142857142855,
+              "f1": 0.6,
+              "support": 7
+            },
+            "v3": {
+              "tp": 8,
+              "fp": 5,
+              "fn": 0,
+              "precision": 0.6153846153846154,
+              "recall": 1.0,
+              "f1": 0.7619047619047619,
+              "support": 8
+            },
+            "v4": {
+              "tp": 6,
+              "fp": 3,
+              "fn": 0,
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "support": 6
+            },
+            "v5": {
+              "tp": 5,
+              "fp": 1,
+              "fn": 2,
+              "precision": 0.8333333333333334,
+              "recall": 0.7142857142857143,
+              "f1": 0.7692307692307693,
+              "support": 7
+            },
+            "v6": {
+              "tp": 3,
+              "fp": 4,
+              "fn": 3,
+              "precision": 0.42857142857142855,
+              "recall": 0.5,
+              "f1": 0.46153846153846156,
+              "support": 6
+            },
+            "v7": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 7
+            },
+            "v8": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 6
+            },
+            "v9": {
+              "tp": 5,
+              "fp": 12,
+              "fn": 1,
+              "precision": 0.29411764705882354,
+              "recall": 0.8333333333333334,
+              "f1": 0.43478260869565216,
+              "support": 6
+            },
+            "v10": {
+              "tp": 4,
+              "fp": 9,
+              "fn": 3,
+              "precision": 0.3076923076923077,
+              "recall": 0.5714285714285714,
+              "f1": 0.4,
+              "support": 7
+            },
+            "v11": {
+              "tp": 2,
+              "fp": 3,
+              "fn": 4,
+              "precision": 0.4,
+              "recall": 0.3333333333333333,
+              "f1": 0.36363636363636365,
+              "support": 6
+            },
+            "v12": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 2,
+              "precision": 0.8,
+              "recall": 0.6666666666666666,
+              "f1": 0.7272727272727273,
+              "support": 6
+            },
+            "v13": {
+              "tp": 4,
+              "fp": 10,
+              "fn": 2,
+              "precision": 0.2857142857142857,
+              "recall": 0.6666666666666666,
+              "f1": 0.4,
+              "support": 6
+            },
+            "v14": {
+              "tp": 7,
+              "fp": 2,
+              "fn": 1,
+              "precision": 0.7777777777777778,
+              "recall": 0.875,
+              "f1": 0.8235294117647058,
+              "support": 8
+            },
+            "v15": {
+              "tp": 5,
+              "fp": 1,
+              "fn": 1,
+              "precision": 0.8333333333333334,
+              "recall": 0.8333333333333334,
+              "f1": 0.8333333333333334,
+              "support": 6
+            },
+            "v16": {
+              "tp": 4,
+              "fp": 2,
+              "fn": 2,
+              "precision": 0.6666666666666666,
+              "recall": 0.6666666666666666,
+              "f1": 0.6666666666666666,
+              "support": 6
+            },
+            "v17": {
+              "tp": 5,
+              "fp": 5,
+              "fn": 1,
+              "precision": 0.5,
+              "recall": 0.8333333333333334,
+              "f1": 0.625,
+              "support": 6
+            },
+            "v18": {
+              "tp": 1,
+              "fp": 2,
+              "fn": 6,
+              "precision": 0.3333333333333333,
+              "recall": 0.14285714285714285,
+              "f1": 0.2,
+              "support": 7
+            },
+            "v19": {
+              "tp": 5,
+              "fp": 3,
+              "fn": 1,
+              "precision": 0.625,
+              "recall": 0.8333333333333334,
+              "f1": 0.7142857142857143,
+              "support": 6
+            },
+            "v20": {
+              "tp": 1,
+              "fp": 4,
+              "fn": 4,
+              "precision": 0.2,
+              "recall": 0.2,
+              "f1": 0.2,
+              "support": 5
+            },
+            "v21": {
+              "tp": 5,
+              "fp": 4,
+              "fn": 1,
+              "precision": 0.5555555555555556,
+              "recall": 0.8333333333333334,
+              "f1": 0.6666666666666666,
+              "support": 6
+            },
+            "v22": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 1,
+              "precision": 0.8,
+              "recall": 0.8,
+              "f1": 0.8,
+              "support": 5
+            },
+            "v23": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 4,
+              "precision": 0.5,
+              "recall": 0.2,
+              "f1": 0.2857142857142857,
+              "support": 5
+            },
+            "v24": {
+              "tp": 5,
+              "fp": 36,
+              "fn": 3,
+              "precision": 0.12195121951219512,
+              "recall": 0.625,
+              "f1": 0.20408163265306123,
+              "support": 8
+            }
+          },
+          "truth_count": 200,
+          "pred_count": 200,
+          "ids_match": true,
+          "error_count": 160
+        },
+        "h2": {
+          "macro_f1": 0.6067008427724997,
+          "items": {
+            "v1": {
+              "tp": 4,
+              "fp": 2,
+              "fn": 3,
+              "precision": 0.6666666666666666,
+              "recall": 0.5714285714285714,
+              "f1": 0.6153846153846154,
+              "support": 7
+            },
+            "v2": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 4,
+              "precision": 1.0,
+              "recall": 0.42857142857142855,
+              "f1": 0.6,
+              "support": 7
+            },
+            "v3": {
+              "tp": 8,
+              "fp": 5,
+              "fn": 0,
+              "precision": 0.6153846153846154,
+              "recall": 1.0,
+              "f1": 0.7619047619047619,
+              "support": 8
+            },
+            "v4": {
+              "tp": 6,
+              "fp": 3,
+              "fn": 0,
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "support": 6
+            },
+            "v5": {
+              "tp": 5,
+              "fp": 1,
+              "fn": 2,
+              "precision": 0.8333333333333334,
+              "recall": 0.7142857142857143,
+              "f1": 0.7692307692307693,
+              "support": 7
+            },
+            "v6": {
+              "tp": 3,
+              "fp": 4,
+              "fn": 3,
+              "precision": 0.42857142857142855,
+              "recall": 0.5,
+              "f1": 0.46153846153846156,
+              "support": 6
+            },
+            "v7": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 7
+            },
+            "v8": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 6
+            },
+            "v9": {
+              "tp": 5,
+              "fp": 12,
+              "fn": 1,
+              "precision": 0.29411764705882354,
+              "recall": 0.8333333333333334,
+              "f1": 0.43478260869565216,
+              "support": 6
+            },
+            "v10": {
+              "tp": 4,
+              "fp": 9,
+              "fn": 3,
+              "precision": 0.3076923076923077,
+              "recall": 0.5714285714285714,
+              "f1": 0.4,
+              "support": 7
+            },
+            "v11": {
+              "tp": 4,
+              "fp": 4,
+              "fn": 2,
+              "precision": 0.5,
+              "recall": 0.6666666666666666,
+              "f1": 0.5714285714285714,
+              "support": 6
+            },
+            "v12": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 2,
+              "precision": 0.8,
+              "recall": 0.6666666666666666,
+              "f1": 0.7272727272727273,
+              "support": 6
+            },
+            "v13": {
+              "tp": 4,
+              "fp": 10,
+              "fn": 2,
+              "precision": 0.2857142857142857,
+              "recall": 0.6666666666666666,
+              "f1": 0.4,
+              "support": 6
+            },
+            "v14": {
+              "tp": 7,
+              "fp": 2,
+              "fn": 1,
+              "precision": 0.7777777777777778,
+              "recall": 0.875,
+              "f1": 0.8235294117647058,
+              "support": 8
+            },
+            "v15": {
+              "tp": 5,
+              "fp": 1,
+              "fn": 1,
+              "precision": 0.8333333333333334,
+              "recall": 0.8333333333333334,
+              "f1": 0.8333333333333334,
+              "support": 6
+            },
+            "v16": {
+              "tp": 4,
+              "fp": 2,
+              "fn": 2,
+              "precision": 0.6666666666666666,
+              "recall": 0.6666666666666666,
+              "f1": 0.6666666666666666,
+              "support": 6
+            },
+            "v17": {
+              "tp": 5,
+              "fp": 5,
+              "fn": 1,
+              "precision": 0.5,
+              "recall": 0.8333333333333334,
+              "f1": 0.625,
+              "support": 6
+            },
+            "v18": {
+              "tp": 1,
+              "fp": 2,
+              "fn": 6,
+              "precision": 0.3333333333333333,
+              "recall": 0.14285714285714285,
+              "f1": 0.2,
+              "support": 7
+            },
+            "v19": {
+              "tp": 5,
+              "fp": 3,
+              "fn": 1,
+              "precision": 0.625,
+              "recall": 0.8333333333333334,
+              "f1": 0.7142857142857143,
+              "support": 6
+            },
+            "v20": {
+              "tp": 1,
+              "fp": 4,
+              "fn": 4,
+              "precision": 0.2,
+              "recall": 0.2,
+              "f1": 0.2,
+              "support": 5
+            },
+            "v21": {
+              "tp": 5,
+              "fp": 4,
+              "fn": 1,
+              "precision": 0.5555555555555556,
+              "recall": 0.8333333333333334,
+              "f1": 0.6666666666666666,
+              "support": 6
+            },
+            "v22": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 1,
+              "precision": 0.8,
+              "recall": 0.8,
+              "f1": 0.8,
+              "support": 5
+            },
+            "v23": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 4,
+              "precision": 0.5,
+              "recall": 0.2,
+              "f1": 0.2857142857142857,
+              "support": 5
+            },
+            "v24": {
+              "tp": 5,
+              "fp": 36,
+              "fn": 3,
+              "precision": 0.12195121951219512,
+              "recall": 0.625,
+              "f1": 0.20408163265306123,
+              "support": 8
+            }
+          },
+          "truth_count": 200,
+          "pred_count": 200,
+          "ids_match": true,
+          "error_count": 159
+        }
+      },
+      "head_to_h2_changes": [
+        {
+          "id": "PPS-DEV-040",
+          "item": "v11",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-061",
+          "item": "v11",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-062",
+          "item": "v11",
+          "before": 0,
+          "after": 1
+        }
+      ],
+      "dev_stage_seconds": 257.9974466539999,
+      "dev_inference_seconds": 253.711151792,
+      "projected_server_seconds_conditional": 6477.949105519337,
+      "within_stage_planning_limit": true,
+      "dev_h2_fired": 3
+    },
+    "h3": {
+      "metrics": {
+        "head": {
+          "macro_f1": 0.5483783713985577,
+          "items": {
+            "v1": {
+              "tp": 4,
+              "fp": 2,
+              "fn": 3,
+              "precision": 0.6666666666666666,
+              "recall": 0.5714285714285714,
+              "f1": 0.6153846153846154,
+              "support": 7
+            },
+            "v2": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 4,
+              "precision": 1.0,
+              "recall": 0.42857142857142855,
+              "f1": 0.6,
+              "support": 7
+            },
+            "v3": {
+              "tp": 8,
+              "fp": 5,
+              "fn": 0,
+              "precision": 0.6153846153846154,
+              "recall": 1.0,
+              "f1": 0.7619047619047619,
+              "support": 8
+            },
+            "v4": {
+              "tp": 6,
+              "fp": 3,
+              "fn": 0,
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "support": 6
+            },
+            "v5": {
+              "tp": 5,
+              "fp": 1,
+              "fn": 2,
+              "precision": 0.8333333333333334,
+              "recall": 0.7142857142857143,
+              "f1": 0.7692307692307693,
+              "support": 7
+            },
+            "v6": {
+              "tp": 3,
+              "fp": 4,
+              "fn": 3,
+              "precision": 0.42857142857142855,
+              "recall": 0.5,
+              "f1": 0.46153846153846156,
+              "support": 6
+            },
+            "v7": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 7
+            },
+            "v8": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 6
+            },
+            "v9": {
+              "tp": 5,
+              "fp": 12,
+              "fn": 1,
+              "precision": 0.29411764705882354,
+              "recall": 0.8333333333333334,
+              "f1": 0.43478260869565216,
+              "support": 6
+            },
+            "v10": {
+              "tp": 4,
+              "fp": 25,
+              "fn": 3,
+              "precision": 0.13793103448275862,
+              "recall": 0.5714285714285714,
+              "f1": 0.2222222222222222,
+              "support": 7
+            },
+            "v11": {
+              "tp": 2,
+              "fp": 3,
+              "fn": 4,
+              "precision": 0.4,
+              "recall": 0.3333333333333333,
+              "f1": 0.36363636363636365,
+              "support": 6
+            },
+            "v12": {
+              "tp": 3,
+              "fp": 1,
+              "fn": 3,
+              "precision": 0.75,
+              "recall": 0.5,
+              "f1": 0.6,
+              "support": 6
+            },
+            "v13": {
+              "tp": 4,
+              "fp": 10,
+              "fn": 2,
+              "precision": 0.2857142857142857,
+              "recall": 0.6666666666666666,
+              "f1": 0.4,
+              "support": 6
+            },
+            "v14": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 4,
+              "precision": 0.8,
+              "recall": 0.5,
+              "f1": 0.6153846153846154,
+              "support": 8
+            },
+            "v15": {
+              "tp": 3,
+              "fp": 2,
+              "fn": 3,
+              "precision": 0.6,
+              "recall": 0.5,
+              "f1": 0.5454545454545454,
+              "support": 6
+            },
+            "v16": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 5,
+              "precision": 0.5,
+              "recall": 0.16666666666666666,
+              "f1": 0.25,
+              "support": 6
+            },
+            "v17": {
+              "tp": 3,
+              "fp": 6,
+              "fn": 3,
+              "precision": 0.3333333333333333,
+              "recall": 0.5,
+              "f1": 0.4,
+              "support": 6
+            },
+            "v18": {
+              "tp": 3,
+              "fp": 4,
+              "fn": 4,
+              "precision": 0.42857142857142855,
+              "recall": 0.42857142857142855,
+              "f1": 0.42857142857142855,
+              "support": 7
+            },
+            "v19": {
+              "tp": 5,
+              "fp": 3,
+              "fn": 1,
+              "precision": 0.625,
+              "recall": 0.8333333333333334,
+              "f1": 0.7142857142857143,
+              "support": 6
+            },
+            "v20": {
+              "tp": 1,
+              "fp": 3,
+              "fn": 4,
+              "precision": 0.25,
+              "recall": 0.2,
+              "f1": 0.2222222222222222,
+              "support": 5
+            },
+            "v21": {
+              "tp": 5,
+              "fp": 4,
+              "fn": 1,
+              "precision": 0.5555555555555556,
+              "recall": 0.8333333333333334,
+              "f1": 0.6666666666666666,
+              "support": 6
+            },
+            "v22": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 1,
+              "precision": 0.8,
+              "recall": 0.8,
+              "f1": 0.8,
+              "support": 5
+            },
+            "v23": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 4,
+              "precision": 0.5,
+              "recall": 0.2,
+              "f1": 0.2857142857142857,
+              "support": 5
+            },
+            "v24": {
+              "tp": 5,
+              "fp": 36,
+              "fn": 3,
+              "precision": 0.12195121951219512,
+              "recall": 0.625,
+              "f1": 0.20408163265306123,
+              "support": 8
+            }
+          },
+          "truth_count": 200,
+          "pred_count": 200,
+          "ids_match": true,
+          "error_count": 186
+        },
+        "h2": {
+          "macro_f1": 0.5588678818880682,
+          "items": {
+            "v1": {
+              "tp": 4,
+              "fp": 2,
+              "fn": 3,
+              "precision": 0.6666666666666666,
+              "recall": 0.5714285714285714,
+              "f1": 0.6153846153846154,
+              "support": 7
+            },
+            "v2": {
+              "tp": 3,
+              "fp": 0,
+              "fn": 4,
+              "precision": 1.0,
+              "recall": 0.42857142857142855,
+              "f1": 0.6,
+              "support": 7
+            },
+            "v3": {
+              "tp": 8,
+              "fp": 5,
+              "fn": 0,
+              "precision": 0.6153846153846154,
+              "recall": 1.0,
+              "f1": 0.7619047619047619,
+              "support": 8
+            },
+            "v4": {
+              "tp": 6,
+              "fp": 3,
+              "fn": 0,
+              "precision": 0.6666666666666666,
+              "recall": 1.0,
+              "f1": 0.8,
+              "support": 6
+            },
+            "v5": {
+              "tp": 5,
+              "fp": 1,
+              "fn": 2,
+              "precision": 0.8333333333333334,
+              "recall": 0.7142857142857143,
+              "f1": 0.7692307692307693,
+              "support": 7
+            },
+            "v6": {
+              "tp": 3,
+              "fp": 4,
+              "fn": 3,
+              "precision": 0.42857142857142855,
+              "recall": 0.5,
+              "f1": 0.46153846153846156,
+              "support": 6
+            },
+            "v7": {
+              "tp": 7,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 7
+            },
+            "v8": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "f1": 1.0,
+              "support": 6
+            },
+            "v9": {
+              "tp": 5,
+              "fp": 12,
+              "fn": 1,
+              "precision": 0.29411764705882354,
+              "recall": 0.8333333333333334,
+              "f1": 0.43478260869565216,
+              "support": 6
+            },
+            "v10": {
+              "tp": 4,
+              "fp": 25,
+              "fn": 3,
+              "precision": 0.13793103448275862,
+              "recall": 0.5714285714285714,
+              "f1": 0.2222222222222222,
+              "support": 7
+            },
+            "v11": {
+              "tp": 4,
+              "fp": 3,
+              "fn": 2,
+              "precision": 0.5714285714285714,
+              "recall": 0.6666666666666666,
+              "f1": 0.6153846153846154,
+              "support": 6
+            },
+            "v12": {
+              "tp": 3,
+              "fp": 1,
+              "fn": 3,
+              "precision": 0.75,
+              "recall": 0.5,
+              "f1": 0.6,
+              "support": 6
+            },
+            "v13": {
+              "tp": 4,
+              "fp": 10,
+              "fn": 2,
+              "precision": 0.2857142857142857,
+              "recall": 0.6666666666666666,
+              "f1": 0.4,
+              "support": 6
+            },
+            "v14": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 4,
+              "precision": 0.8,
+              "recall": 0.5,
+              "f1": 0.6153846153846154,
+              "support": 8
+            },
+            "v15": {
+              "tp": 3,
+              "fp": 2,
+              "fn": 3,
+              "precision": 0.6,
+              "recall": 0.5,
+              "f1": 0.5454545454545454,
+              "support": 6
+            },
+            "v16": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 5,
+              "precision": 0.5,
+              "recall": 0.16666666666666666,
+              "f1": 0.25,
+              "support": 6
+            },
+            "v17": {
+              "tp": 3,
+              "fp": 6,
+              "fn": 3,
+              "precision": 0.3333333333333333,
+              "recall": 0.5,
+              "f1": 0.4,
+              "support": 6
+            },
+            "v18": {
+              "tp": 3,
+              "fp": 4,
+              "fn": 4,
+              "precision": 0.42857142857142855,
+              "recall": 0.42857142857142855,
+              "f1": 0.42857142857142855,
+              "support": 7
+            },
+            "v19": {
+              "tp": 5,
+              "fp": 3,
+              "fn": 1,
+              "precision": 0.625,
+              "recall": 0.8333333333333334,
+              "f1": 0.7142857142857143,
+              "support": 6
+            },
+            "v20": {
+              "tp": 1,
+              "fp": 3,
+              "fn": 4,
+              "precision": 0.25,
+              "recall": 0.2,
+              "f1": 0.2222222222222222,
+              "support": 5
+            },
+            "v21": {
+              "tp": 5,
+              "fp": 4,
+              "fn": 1,
+              "precision": 0.5555555555555556,
+              "recall": 0.8333333333333334,
+              "f1": 0.6666666666666666,
+              "support": 6
+            },
+            "v22": {
+              "tp": 4,
+              "fp": 1,
+              "fn": 1,
+              "precision": 0.8,
+              "recall": 0.8,
+              "f1": 0.8,
+              "support": 5
+            },
+            "v23": {
+              "tp": 1,
+              "fp": 1,
+              "fn": 4,
+              "precision": 0.5,
+              "recall": 0.2,
+              "f1": 0.2857142857142857,
+              "support": 5
+            },
+            "v24": {
+              "tp": 5,
+              "fp": 36,
+              "fn": 3,
+              "precision": 0.12195121951219512,
+              "recall": 0.625,
+              "f1": 0.20408163265306123,
+              "support": 8
+            }
+          },
+          "truth_count": 200,
+          "pred_count": 200,
+          "ids_match": true,
+          "error_count": 184
+        }
+      },
+      "head_to_h2_changes": [
+        {
+          "id": "PPS-DEV-061",
+          "item": "v11",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-062",
+          "item": "v11",
+          "before": 0,
+          "after": 1
+        }
+      ],
+      "dev_stage_seconds": 294.11521261000007,
+      "dev_inference_seconds": 289.80007753199993,
+      "projected_server_seconds_conditional": 6799.194963038384,
+      "within_stage_planning_limit": true,
+      "dev_h2_fired": 2,
+      "condition_states": {
+        "met": 42,
+        "unobserved": 128,
+        "not_required": 27,
+        "contradicted": 3
+      },
+      "competitive_without_condition_support": [
+        "PPS-DEV-01",
+        "PPS-DEV-03",
+        "PPS-DEV-04",
+        "PPS-DEV-06",
+        "PPS-DEV-09",
+        "PPS-DEV-11",
+        "PPS-DEV-12",
+        "PPS-DEV-13",
+        "PPS-DEV-14",
+        "PPS-DEV-15",
+        "PPS-DEV-16",
+        "PPS-DEV-18",
+        "PPS-DEV-19",
+        "PPS-DEV-21",
+        "PPS-DEV-22",
+        "PPS-DEV-24",
+        "PPS-DEV-28",
+        "PPS-DEV-033",
+        "PPS-DEV-036",
+        "PPS-DEV-039",
+        "PPS-DEV-046",
+        "PPS-DEV-048",
+        "PPS-DEV-050",
+        "PPS-DEV-051",
+        "PPS-DEV-052",
+        "PPS-DEV-053",
+        "PPS-DEV-054",
+        "PPS-DEV-057",
+        "PPS-DEV-059",
+        "PPS-DEV-060",
+        "PPS-DEV-061",
+        "PPS-DEV-062",
+        "PPS-DEV-063",
+        "PPS-DEV-064",
+        "PPS-DEV-068",
+        "PPS-DEV-069",
+        "PPS-DEV-071",
+        "PPS-DEV-074",
+        "PPS-DEV-075",
+        "PPS-DEV-076",
+        "PPS-DEV-077",
+        "PPS-DEV-086",
+        "PPS-DEV-093",
+        "PPS-DEV-094",
+        "PPS-DEV-099",
+        "PPS-DEV-103",
+        "PPS-DEV-106",
+        "PPS-DEV-108",
+        "PPS-DEV-112",
+        "PPS-DEV-117",
+        "PPS-DEV-119",
+        "PPS-DEV-122",
+        "PPS-DEV-124",
+        "PPS-DEV-126",
+        "PPS-DEV-128",
+        "PPS-DEV-130",
+        "PPS-DEV-131",
+        "PPS-DEV-134",
+        "PPS-DEV-138",
+        "PPS-DEV-139",
+        "PPS-DEV-142",
+        "PPS-DEV-143",
+        "PPS-DEV-146",
+        "PPS-DEV-147",
+        "PPS-DEV-152",
+        "PPS-DEV-155",
+        "PPS-DEV-156",
+        "PPS-DEV-158",
+        "PPS-DEV-160",
+        "PPS-DEV-162",
+        "PPS-DEV-164",
+        "PPS-DEV-166",
+        "PPS-DEV-169",
+        "PPS-DEV-170",
+        "PPS-DEV-171",
+        "PPS-DEV-177",
+        "PPS-DEV-179",
+        "PPS-DEV-182",
+        "PPS-DEV-184",
+        "PPS-DEV-186",
+        "PPS-DEV-188",
+        "PPS-DEV-190",
+        "PPS-DEV-191",
+        "PPS-DEV-193",
+        "PPS-DEV-194",
+        "PPS-DEV-196",
+        "PPS-DEV-199",
+        "PPS-DEV-200"
+      ]
+    }
+  },
+  "diagnostic_is_independent_evaluation": false,
+  "control_to_h3_changes": {
+    "head": [
+      {
+        "id": "PPS-DEV-09",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-18",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-18",
+        "item": "v15",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-19",
+        "item": "v15",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-20",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-21",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-21",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-033",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-033",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-036",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-037",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-040",
+        "item": "v10",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-040",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-041",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-044",
+        "item": "v17",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-051",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-051",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-052",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-052",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-057",
+        "item": "v12",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-057",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-058",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-068",
+        "item": "v20",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-089",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-094",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-105",
+        "item": "v17",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-108",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-112",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-124",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-130",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-142",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-152",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-153",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-154",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-156",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-182",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-182",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-187",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-190",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-194",
+        "item": "v15",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-194",
+        "item": "v17",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-200",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      }
+    ],
+    "h2": [
+      {
+        "id": "PPS-DEV-09",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-18",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-18",
+        "item": "v15",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-19",
+        "item": "v15",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-20",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-21",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-21",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-033",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-033",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-036",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-037",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-040",
+        "item": "v10",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-040",
+        "item": "v11",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-040",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-041",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-044",
+        "item": "v17",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-051",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-051",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-052",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-052",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-057",
+        "item": "v12",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-057",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-058",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-068",
+        "item": "v20",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-089",
+        "item": "v16",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-094",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-105",
+        "item": "v17",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-108",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-112",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-124",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-130",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-142",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-152",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-153",
+        "item": "v17",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-154",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-156",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-182",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-182",
+        "item": "v14",
+        "before": 1,
+        "after": 0
+      },
+      {
+        "id": "PPS-DEV-187",
+        "item": "v18",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-190",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-194",
+        "item": "v15",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-194",
+        "item": "v17",
+        "before": 0,
+        "after": 1
+      },
+      {
+        "id": "PPS-DEV-200",
+        "item": "v10",
+        "before": 0,
+        "after": 1
+      }
+    ]
+  },
+  "note": "410 company_size observations only. Hybrid replay is not a new full-pipeline GPU score or adoption."
+}

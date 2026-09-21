@@ -1,0 +1,100 @@
+{
+  "contract_sha256": "21aac1bef082ac6764dcda3fac0cfb8394872746454e32620d2c3b78cf54cda8",
+  "payload_sha256": "d4554332372332e4079c473f9ab3c5dc07970ad5a00efb62bc9b65f3fac288f3",
+  "payload": {
+    "rows": [
+      {
+        "id": "PPS-D-000732",
+        "response_text": "{\n  \"company_size\": {\n    \"scope_product_code\": \"4321150102\",\n    \"scope_condition_quote\": \"x86 서버 CPU 1개 전체, CPU 2개 중 Clock(기본주파수) 3.2GHz 이하 제품에 한함\",\n    \"scope_condition_quote_2\": null,\n    \"scope_condition_state\": \"met\",\n    \"scope\": \"competitive\",\n    \"scope_quote\": \"대학 연구용 서버 구입\",\n    \"qualification_role\": \"none\",\n    \"qualification_quote\": \"5. 입찰참가자격 가. 「국가를당사자로하는계약에관한법률시행령」 제12조에 의한 유자격자로서 입찰참가신청기한 내에 입찰등록서류(상기, 4-다. 구비서류)를 정상적으로 제출한 업체\",\n    \"qualification_complete\": \"yes\",\n    \"qualification\": \"unrestricted\",\n    \"priority_exception\": \"no\",\n    \"priority_exception_quote\": null,\n    \"size_exception\": \"none\",\n    \"size_exception_quote\": null,\n    \"requirements_complete\": \"yes\",\n    \"direct_production_quote\": null,\n    \"software_business\": \"yes\",\n    \"software_business_quote\": \"Miruware DL Docker Framework (출고 시 설치)\",\n    \"software_participation_quote\": null\n  }\n}",
+        "prompt_tokens": 6882,
+        "max_chars": 16000,
+        "h2_fired": true,
+        "scope_trace": {
+          "code": "4321150102",
+          "code_in_supplied_candidates": true,
+          "condition": "x86 서버 CPU 1개 전체, CPU 2개 중 Clock(기본주파수) 3.2GHz 이하 제품에 한함",
+          "state": "met",
+          "quote_grounding": {
+            "scope_condition_quote": false,
+            "scope_condition_quote_2": null
+          },
+          "competitive_without_condition_support": true
+        }
+      },
+      {
+        "id": "PPS-D-001333",
+        "response_text": "{\n  \"company_size\": {\n    \"scope_product_code\": \"5011209904\",\n    \"scope_condition_quote\": null,\n    \"scope_condition_quote_2\": null,\n    \"scope_condition_state\": \"not_required\",\n    \"scope\": \"competitive\",\n    \"scope_quote\": \"2026년도 식재료 구매 전자입찰 공고\",\n    \"qualification_role\": \"none\",\n    \"qualification_quote\": \"「지방자치단체를 당사자로하는 계약에 관한 법률」시행령 제13조 및 같은 법 시행규칙 제14조에 의하여 자격을 구비하고 식품위생법 제37조에 의한 집단급식소 식품판매업 신고 등을 필한 업체이어야 합니다.\",\n    \"qualification_complete\": \"yes\",\n    \"qualification\": \"unrestricted\",\n    \"priority_exception\": \"no\",\n    \"priority_exception_quote\": null,\n    \"size_exception\": \"none\",\n    \"size_exception_quote\": null,\n    \"requirements_complete\": \"yes\",\n    \"direct_production_quote\": null,\n    \"software_business\": \"no\",\n    \"software_business_quote\": null,\n    \"software_participation_quote\": null\n  }\n}",
+        "prompt_tokens": 5338,
+        "max_chars": 16000,
+        "h2_fired": true,
+        "scope_trace": {
+          "code": "5011209904",
+          "code_in_supplied_candidates": true,
+          "condition": "햄(부대찌개용 햄 포함)에 한함",
+          "state": "not_required",
+          "quote_grounding": {
+            "scope_condition_quote": null,
+            "scope_condition_quote_2": null
+          },
+          "competitive_without_condition_support": true
+        }
+      },
+      {
+        "id": "PPS-D-002069",
+        "response_text": "{\n  \"company_size\": {\n    \"scope_product_code\": \"4321150102\",\n    \"scope_condition_quote\": null,\n    \"scope_condition_quote_2\": null,\n    \"scope_condition_state\": \"unobserved\",\n    \"scope\": \"competitive\",\n    \"scope_quote\": \"대학 미디어아트센터 , 창의IT센터 고성능, 고사양 데스크탑, 모니터, 노트북, 서버 구입\",\n    \"qualification_role\": \"checklist\",\n    \"qualification_quote\": \"4. 참가 자격 가. 「국가를 당사자로 하는 계약에 관한 법률 시행령」제12조(경쟁입찰의 참가 자격) 및 동 법 시행규칙 제14조(입찰 참가 자격요건의 증명)에 따른 요건을 갖춘 자\",\n    \"qualification_complete\": \"yes\",\n    \"qualification\": \"unrestricted\",\n    \"priority_exception\": \"no\",\n    \"priority_exception_quote\": null,\n    \"size_exception\": \"none\",\n    \"size_exception_quote\": null,\n    \"requirements_complete\": \"yes\",\n    \"direct_production_quote\": null,\n    \"software_business\": \"no\",\n    \"software_business_quote\": null,\n    \"software_participation_quote\": null\n  }\n}",
+        "prompt_tokens": 8073,
+        "max_chars": 16000,
+        "h2_fired": true,
+        "scope_trace": {
+          "code": "4321150102",
+          "code_in_supplied_candidates": true,
+          "condition": "x86 서버 CPU 1개 전체, CPU 2개 중 Clock(기본주파수) 3.2GHz 이하 제품에 한함",
+          "state": "unobserved",
+          "quote_grounding": {
+            "scope_condition_quote": null,
+            "scope_condition_quote_2": null
+          },
+          "competitive_without_condition_support": true
+        }
+      },
+      {
+        "id": "PPS-D-002106",
+        "response_text": "{\n  \"company_size\": {\n    \"scope_product_code\": \"2513189901\",\n    \"scope_condition_quote\": \"1. 고정익, 군사용, 수소드론 제외 2. 자체중량 25㎏ 이하 또는 운용상승고도 150m 이하의 무인비행장치에 한함\",\n    \"scope_condition_quote_2\": \"무게 DB2160 인텔리전트 플라이트 배터리 장착: 56 kg (배터리 포함)\",\n    \"scope_condition_state\": \"contradicted\",\n    \"scope\": \"general\",\n    \"scope_quote\": \"대학 방제 드론 등 기자재 구입(일반경쟁·5천만원미만)\",\n    \"qualification_role\": \"checklist\",\n    \"qualification_quote\": \"가. 「국가를 당사자로 하는 계약에 관한 법률 시행령」제12조(경쟁입찰의 참가 자격) 및 동 법 시행규칙 제14조(입찰 참가 자격요건의 증명)에 따른 요건을 갖춘 자\",\n    \"qualification_complete\": \"yes\",\n    \"qualification\": \"unrestricted\",\n    \"priority_exception\": \"no\",\n    \"priority_exception_quote\": null,\n    \"size_exception\": \"none\",\n    \"size_exception_quote\": null,\n    \"requirements_complete\": \"yes\",\n    \"direct_production_quote\": null,\n    \"software_business\": \"no\",\n    \"software_business_quote\": null,\n    \"software_participation_quote\": null\n  }\n}",
+        "prompt_tokens": 6984,
+        "max_chars": 16000,
+        "h2_fired": false,
+        "scope_trace": {
+          "code": "2513189901",
+          "code_in_supplied_candidates": true,
+          "condition": "1. 고정익, 군사용, 수소드론 제외 2. 자체중량 25㎏ 이하 또는 운용상승고도 150m 이하의 무인비행장치에 한함",
+          "state": "contradicted",
+          "quote_grounding": {
+            "scope_condition_quote": false,
+            "scope_condition_quote_2": true
+          },
+          "competitive_without_condition_support": false
+        }
+      },
+      {
+        "id": "PPS-D-002151",
+        "response_text": "{\n  \"company_size\": {\n    \"scope_product_code\": \"2611170403\",\n    \"scope_condition_quote\": \"50kW 이하에 한함\",\n    \"scope_condition_quote_2\": null,\n    \"scope_condition_state\": \"contradicted\",\n    \"scope\": \"other\",\n    \"scope_quote\": \"240kW 급속충전기2기\",\n    \"qualification_role\": \"checklist\",\n    \"qualification_quote\": \"□ 신청 자격 : 다음 항목의 자격을 갖춘 자\",\n    \"qualification_complete\": \"yes\",\n    \"qualification\": \"unknown\",\n    \"priority_exception\": \"no\",\n    \"priority_exception_quote\": null,\n    \"size_exception\": \"none\",\n    \"size_exception_quote\": null,\n    \"requirements_complete\": \"yes\",\n    \"direct_production_quote\": \"｢전기자동차용충전장치(2611170403)를 제조 물품으로 입찰 참가 등록한 자.\",\n    \"software_business\": \"no\",\n    \"software_business_quote\": null,\n    \"software_participation_quote\": null\n  }\n}",
+        "prompt_tokens": 5213,
+        "max_chars": 16000,
+        "h2_fired": false,
+        "scope_trace": {
+          "code": "2611170403",
+          "code_in_supplied_candidates": true,
+          "condition": "50kW 이하에 한함",
+          "state": "contradicted",
+          "quote_grounding": {
+            "scope_condition_quote": false,
+            "scope_condition_quote_2": null
+          },
+          "competitive_without_condition_support": false
+        }
+      }
+    ],
+    "inference_seconds": 7.6861758530001225,
+    "stage_seconds": 7.7570299649999015
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "173533093617e340f4d4d5858d39766726cf0488"
+  ],
+  "cwd": "/content/a5-scope-3dd7smm4/repo",
+  "started": 1789958464.2448244,
+  "returncode": 0,
+  "elapsed_seconds": 0.47586965560913086
+}

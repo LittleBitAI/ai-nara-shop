@@ -1,0 +1,280 @@
+{
+  "owner": "이 파일은 생성물이다. tools/build_measurements.py 가 만들고 손으로 고치지 않는다. 수치는 evidence 의 metrics.json 에서 그대로 읽었다.",
+  "verify": "python -X utf8 tools/measurements.py --check",
+  "rebuild": "python -X utf8 tools/build_measurements.py",
+  "kinds": {
+    "gpu-run": "제출 파이프라인 전체를 GPU 로 돌린 회차. dev 200건",
+    "gpu-pilot": "일부 단계만 GPU 로 돌리고 나머지는 보관 원응답으로 재생한 회차. 전체 GPU 점수가 아니다",
+    "cpu-replay": "모델을 안 부르고 보관 원응답으로 후처리만 바꾼 측정. 회차 churn 이 없다",
+    "server": "대회 서버 채점. 입력이 dev 200건이 아니라 비공개 1,853건이다"
+  },
+  "caveats": [
+    "kind 가 다른 행을 같은 저울로 비교하지 않는다.",
+    "같은 코드의 회차 간 churn 이 4,800셀 중 29~45개이고 그 Macro F1 영향이 0.000008~0.004689다.",
+    "cpu-replay 는 같은 원응답을 쓰므로 churn 이 없다. 프롬프트가 바뀌면 다시 재야 한다.",
+    "server 행에는 evidence 파일이 없다. 사용자가 대회 화면에서 옮긴 값이다."
+  ],
+  "measurements": [
+    {
+      "id": "colab-1789621345861123113",
+      "date": "2026-09-17",
+      "kind": "gpu-run",
+      "code": "654c556",
+      "evidence": "reports/runs/colab-1789621345861123113/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.22078771129016228
+    },
+    {
+      "id": "colab-1789650911655581500",
+      "date": "2026-09-17",
+      "kind": "gpu-run",
+      "code": "36b6cc1",
+      "evidence": "reports/runs/colab-1789650911655581500/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.21825534501066987
+    },
+    {
+      "id": "colab-1789655036303880754",
+      "date": "2026-09-17",
+      "kind": "gpu-run",
+      "code": "b113425",
+      "evidence": "reports/runs/colab-1789655036303880754/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.21821144133644133
+    },
+    {
+      "id": "colab-1789658250172468461",
+      "date": "2026-09-17",
+      "kind": "gpu-run",
+      "code": "89a6a11",
+      "evidence": "reports/runs/colab-1789658250172468461/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.2208061355821381
+    },
+    {
+      "id": "colab-1789695980726180378",
+      "date": "2026-09-18",
+      "kind": "gpu-run",
+      "code": "cc1e61d",
+      "evidence": "reports/runs/colab-1789695980726180378/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.22022398959670256
+    },
+    {
+      "id": "colab-1789716500947261692",
+      "date": "2026-09-18",
+      "kind": "gpu-run",
+      "code": "57761ff",
+      "evidence": "reports/runs/colab-1789716500947261692/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.3719775475710831
+    },
+    {
+      "id": "colab-1789719173182820657",
+      "date": "2026-09-18",
+      "kind": "gpu-run",
+      "code": "99ebbf1",
+      "evidence": "reports/runs/colab-1789719173182820657/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.3334641077017238
+    },
+    {
+      "id": "colab-1789724885618578988",
+      "date": "2026-09-18",
+      "kind": "gpu-run",
+      "code": "a84cd72",
+      "evidence": "reports/runs/colab-1789724885618578988/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.369396965873948
+    },
+    {
+      "id": "colab-1789725593268014232",
+      "date": "2026-09-18",
+      "kind": "gpu-run",
+      "code": "568ae5d",
+      "evidence": "reports/runs/colab-1789725593268014232/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.36127747626194834
+    },
+    {
+      "id": "colab-1789861367622882347",
+      "date": "2026-09-19",
+      "kind": "gpu-run",
+      "code": "d786f98",
+      "evidence": "reports/runs/colab-1789861367622882347/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.40105423676852253
+    },
+    {
+      "id": "colab-1789866561858326417",
+      "date": "2026-09-20",
+      "kind": "gpu-run",
+      "code": "4762271",
+      "evidence": "reports/runs/colab-1789866561858326417/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.431856102622693
+    },
+    {
+      "id": "colab-1789872032146524122",
+      "date": "2026-09-20",
+      "kind": "gpu-run",
+      "code": "0a172a2",
+      "evidence": "reports/runs/colab-1789872032146524122/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.4780515523487083
+    },
+    {
+      "id": "colab-1789880471715651259",
+      "date": "2026-09-20",
+      "kind": "gpu-run",
+      "code": "0a8459a",
+      "evidence": "reports/runs/colab-1789880471715651259/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.5053824949205384
+    },
+    {
+      "id": "colab-1789889904147841755",
+      "date": "2026-09-20",
+      "kind": "gpu-run",
+      "code": "b7ac265",
+      "evidence": "reports/runs/colab-1789889904147841755/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.5307027832922974
+    },
+    {
+      "id": "colab-1789894949866134428",
+      "date": "2026-09-20",
+      "kind": "gpu-run",
+      "code": "cc7c971",
+      "evidence": "reports/runs/colab-1789894949866134428/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.5360273051061809
+    },
+    {
+      "id": "colab-1789898958261656296",
+      "date": "2026-09-20",
+      "kind": "gpu-run",
+      "code": "ec3dee4",
+      "evidence": "reports/runs/colab-1789898958261656296/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.5743735227782543
+    },
+    {
+      "id": "colab-1789902969401579900",
+      "date": "2026-09-20",
+      "kind": "gpu-run",
+      "code": "18f07e5",
+      "evidence": "reports/runs/colab-1789902969401579900/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.599315859077856
+    },
+    {
+      "id": "a5-scope-1789959906563639676/control/h2",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "1735330",
+      "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/control/h2-score/metrics.json",
+      "note": "company_size control 군 · 소비자 h2 · 혼합 CPU 재생",
+      "macro_f1": 0.6067008427724997
+    },
+    {
+      "id": "a5-scope-1789959906563639676/control/head",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "1735330",
+      "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/control/head-score/metrics.json",
+      "note": "company_size control 군 · 소비자 head · 혼합 CPU 재생",
+      "macro_f1": 0.5980428341144911
+    },
+    {
+      "id": "a5-scope-1789959906563639676/h3/h2",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "1735330",
+      "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/h3/h2-score/metrics.json",
+      "note": "company_size h3 군 · 소비자 h2 · 혼합 CPU 재생",
+      "macro_f1": 0.5588678818880682
+    },
+    {
+      "id": "a5-scope-1789959906563639676/h3/head",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "1735330",
+      "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/h3/head-score/metrics.json",
+      "note": "company_size h3 군 · 소비자 head · 혼합 CPU 재생",
+      "macro_f1": 0.5483783713985577
+    },
+    {
+      "id": "a4-scope-gate",
+      "date": "2026-09-21",
+      "kind": "cpu-replay",
+      "code": "c81644d",
+      "evidence": "reports/team-c/a4-scope-gate/candidate-score/metrics.json",
+      "note": "A4 v6·v9·v23 게이트 · PR #69 · 기준 0.593846165415",
+      "macro_f1": 0.6117243218802263
+    },
+    {
+      "id": "a5-head-baseline",
+      "date": "2026-09-21",
+      "kind": "cpu-replay",
+      "code": "734b4ec",
+      "evidence": "reports/team-c/a5-label-definition/head-score/metrics.json",
+      "note": "A5 가 쓴 HEAD 재생 기준 (astra) · PR #71",
+      "macro_f1": 0.5938461654151134
+    },
+    {
+      "id": "a5-h2-absence",
+      "date": "2026-09-21",
+      "kind": "cpu-replay",
+      "code": "734b4ec",
+      "evidence": "reports/team-c/a5-label-definition/absence-score/metrics.json",
+      "note": "A5 H2 v11 부재 연결 (astra) · PR #71 · 기준 0.593846165415",
+      "macro_f1": 0.602504174073122
+    },
+    {
+      "id": "a4-a5-combined",
+      "date": "2026-09-21",
+      "kind": "cpu-replay",
+      "code": "ae79d50",
+      "evidence": "reports/team-c/a4-a5-combined/combined-score/metrics.json",
+      "note": "A4 + A5 H2 합본 · PR #75 · 기준 0.593846165415",
+      "macro_f1": 0.620382330538235
+    },
+    {
+      "id": "server/5506ca0",
+      "date": "2026-09-17",
+      "kind": "server",
+      "code": "5506ca0",
+      "macro_f1": null,
+      "evidence": null,
+      "note": "미채점 (run_error)"
+    },
+    {
+      "id": "server/654c556",
+      "date": "2026-09-17",
+      "kind": "server",
+      "code": "654c556",
+      "macro_f1": 0.2197036943,
+      "evidence": null,
+      "note": "비공개 1,853건 · 같은 ZIP dev None · 6192초"
+    },
+    {
+      "id": "server/57761ff",
+      "date": "2026-09-18",
+      "kind": "server",
+      "code": "57761ff",
+      "macro_f1": 0.2978624361,
+      "evidence": null,
+      "note": "비공개 1,853건 · 같은 ZIP dev 0.3719775475710831 · 4281초"
+    },
+    {
+      "id": "server/18f07e5",
+      "date": "2026-09-20",
+      "kind": "server",
+      "code": "18f07e5",
+      "macro_f1": 0.5084137874,
+      "evidence": null,
+      "note": "비공개 1,853건 · 같은 ZIP dev 0.599315859077856 · 6380초"
+    }
+  ]
+}

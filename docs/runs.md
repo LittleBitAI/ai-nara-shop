@@ -81,6 +81,38 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `colab-1789894949866134428` | `cc7c971` | 0.5360273051061809 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1789894949866134428/](../reports/runs/colab-1789894949866134428/) |
 | `colab-1789898958261656296` | `ec3dee4` | 0.5743735227782543 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1789898958261656296/](../reports/runs/colab-1789898958261656296/) |
 | `colab-1789902969401579900` | `18f07e5` | 0.599315859077856 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1789902969401579900/](../reports/runs/colab-1789902969401579900/) |
+| `a5-scope-1789959906563639676` | `1735330` | control/head 0.598042834114 · control/h2 0.606700842772 · h3/head 0.548378371399 · h3/h2 0.558867881888 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/a5-scope-1789959906563639676/](../reports/runs/a5-scope-1789959906563639676/) |
+
+`a5-scope-…`는 **제출 파이프라인 회차가 아닙니다.** `company_size` 한 단계만 GPU로 돌리고
+나머지는 보관 원응답으로 재생한 A/B이며 제출 ZIP이 없습니다. 위 네 값을 위 행들의
+전체 GPU 점수와 같은 저울로 읽지 않습니다. `register_run.py`는 `colab-results-*.zip`과
+`submit.zip` 한 쌍만 받으므로 이 회차는 보관 규약대로 손으로 등록했습니다.
+
+## 측정 추이
+
+위 색인은 회차당 한 줄이라 CPU 재생 후보와 서버 채점이 안 들어갑니다.
+**모든 측정의 원본은 [reports/measurements.json](../reports/measurements.json)입니다.**
+
+```powershell
+python -X utf8 tools/measurements.py          # 추이표를 찍는다
+python -X utf8 tools/measurements.py --check  # 장부와 근거 metrics.json 대조만 한다
+python -X utf8 tools/build_measurements.py    # 장부를 근거 파일에서 다시 만든다
+```
+
+각 행의 `macro_f1`은 `evidence`가 가리키는 `metrics.json`에서 그대로 읽은 값이고,
+도구가 매번 다시 대조합니다. 손으로 적은 숫자가 근거와 어긋나면 종료 코드가 0이 아닙니다.
+
+**장부는 생성물입니다.** 고칠 일이 생기면 `tools/build_measurements.py`를 고치고 다시 돌립니다.
+장부를 손으로 고치지 않습니다 — 그러면 근거와 어긋난 줄이 조용히 남습니다.
+
+`kind`가 다른 행을 같은 저울로 비교하지 않습니다.
+
+| `kind` | 무엇인가 |
+| --- | --- |
+| `gpu-run` | 제출 파이프라인 전체를 GPU로 돌린 회차. dev 200건 |
+| `gpu-pilot` | 일부 단계만 GPU로 돌리고 나머지는 보관 원응답으로 재생. 전체 GPU 점수가 아니다 |
+| `cpu-replay` | 모델을 안 부르고 후처리만 바꾼 측정. **회차 churn이 없다** |
+| `server` | 대회 서버 채점. 입력이 dev 200건이 아니라 비공개 1,853건이다 |
 
 `미보관`은 그 실행의 ZIP을 이 규약으로 등록하기 전이라는 뜻입니다. 없었다는 뜻이 아닙니다.
 점수만 [history.json](../reports/team-score-audit/history.json)에 남아 있고 실행 환경·원응답 여부는

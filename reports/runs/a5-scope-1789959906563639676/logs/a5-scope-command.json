@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/content/a5-scope-3dd7smm4/venv/bin/python",
+    "/content/a5-scope-3dd7smm4/repo/experiments/a5_scope_pilot.py",
+    "--input",
+    "/content/drive/MyDrive/a5/train_unlabeled.jsonl",
+    "--output-dir",
+    "/content/drive/MyDrive/a5/h3-scope-173533093617-a/episode-1",
+    "--model-dir",
+    "/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "--episode",
+    "1"
+  ],
+  "cwd": "/content/a5-scope-3dd7smm4/repo",
+  "started": 1789958884.164426,
+  "returncode": 0,
+  "elapsed_seconds": 1022.3904948234558
+}

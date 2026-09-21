@@ -1,0 +1,60 @@
+{
+  "artifact_id": "score-h2-score",
+  "version": 1,
+  "status": "draft",
+  "run_id": "h2-score",
+  "baseline_run": null,
+  "created_at": "2026-09-21T02:59:55.016528+00:00",
+  "sources": [
+    {
+      "role": "truth",
+      "path": "open/dev_labels.csv",
+      "sha256": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35"
+    },
+    {
+      "role": "pred",
+      "path": "<외부>/h2-hybrid.csv",
+      "sha256": "3a72541b6294c06a010dc3b7eabdec2dea83c5158eb407c0b65809b0e7470910"
+    }
+  ],
+  "generator": {
+    "path": "tools/score.py",
+    "sha256": "17cb568c299239e52d3c843a668cc0d1436b18b2b68656f929f5e5a2d8e5b7a3",
+    "argv": [
+      "python",
+      "tools/score.py",
+      "--truth",
+      "open/dev_labels.csv",
+      "--pred",
+      "<외부>/h2-hybrid.csv",
+      "--output-dir",
+      "<외부>/h2-score"
+    ],
+    "command": "& 'python' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' '<외부>/h2-hybrid.csv' '--output-dir' '<외부>/h2-score'",
+    "settings": {
+      "output_dir": "<외부>/h2-score",
+      "zero_division": 0,
+      "items": 24
+    }
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "cwd": "."
+  },
+  "mode": "local_scoring",
+  "model": null,
+  "prompt_hash": null,
+  "seed": null,
+  "parents": [],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "execution_status": "complete",
+  "validation": {
+    "csv_contract": true,
+    "evidence_substring": false,
+    "evidence_quality": false
+  },
+  "elapsed_seconds_before_publish": 0.028302769999982047
+}
