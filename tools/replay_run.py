@@ -165,6 +165,12 @@ def csv_cell_diff(left: bytes, right: bytes):
         reader = _csv.DictReader(_io.StringIO(data.decode("utf-8-sig")))
         rows = {}
         for row in reader:
+            # 헤더보다 긴 행은 여분 값을 `None` 키에 넣고, 짧은 행은 결측을 `None` 값으로 넣는다.
+            # 선언된 헤더만 순회하면 둘 다 조용히 통과하므로 여기서 거부한다.
+            if None in row:
+                raise ValueError(f"{side} CSV 의 행이 헤더보다 길다: {row['id']}")
+            if any(value is None for value in row.values()):
+                raise ValueError(f"{side} CSV 의 행이 헤더보다 짧다: {row['id']}")
             if row["id"] in rows:
                 raise ValueError(f"{side} CSV 에 id 가 중복된다: {row['id']}")
             rows[row["id"]] = row

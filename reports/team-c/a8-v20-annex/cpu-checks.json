@@ -52,14 +52,18 @@
     "estimated_tokens_not_measured": "934자/1.5 ≈ 623은 추정이며 이 구현에서 확인하지 않았다"
   },
   "replay_off_on": {
-    "both_equal_h4_baseline_bytes": true,
+    "off_and_on_equal_each_other": true,
+    "equal_h4_baseline_bytes": false,
+    "differs_from_h4_baseline": {"cells": [["PPS-DEV-16", "v13"], ["PPS-DEV-148", "e13"], ["PPS-DEV-198", "v13"]],
+                                 "why": "이 PR 의 v13 근거 수리 때문이다. 보관 CSV 는 다시 쓰지 않았다."},
     "changed_cells": [],
     "v20_tp_fp_fn": [
       1,
       4,
       4
     ],
-    "macro_f1": 0.5938461654151134,
+    "macro_f1": 0.591008188119,
+    "macro_f1_before_v13_fix": 0.5938461654151134,
     "meaning": "wiring/regression only; not an injection effect"
   },
   "reachable_v20_tp_ceiling": {
@@ -197,7 +201,8 @@
   },
   "notebook_sha256": "59da78455269f28f5f53be2621eb098c70b0aafcda7893ce5ebe57742310cf34",
   "notebook_code_cells_compile": true,
-  "production_script_unchanged": true,
+  "production_script_unchanged": false,
+  "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
   "checks": [
     {
       "command": "python -m pytest -q tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py",

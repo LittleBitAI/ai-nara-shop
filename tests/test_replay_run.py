@@ -66,6 +66,9 @@ class CsvCellDiffTests(unittest.TestCase):
             ((self.HEADER + "A,0,\nA,1,\n").encode(), "중복"),
             (("id,v1,e1,v2\n" + "A,0,,0\nB,1,근거,0\n").encode(), "열 구성"),
             ((self.HEADER + "A,0,\n").encode(), "id 집합"),
+            # 헤더보다 길거나 짧은 행은 선언된 열만 순회하면 조용히 통과한다.
+            ((self.HEADER + "A,0,,EXTRA\nB,1,근거\n").encode(), "길다"),
+            ((self.HEADER + "A,0\nB,1,근거\n").encode(), "짧다"),
         ]:
             with self.assertRaises(ValueError) as caught:
                 replay_run.csv_cell_diff(data, base)
