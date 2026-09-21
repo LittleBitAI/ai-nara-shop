@@ -13,6 +13,13 @@ _spec = importlib.util.spec_from_file_location("replay_run", ROOT / "tools/repla
 replay_run = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(replay_run)
 SCRIPT = replay_run.load_module(ROOT / "script.py", "submission")
+# **이 줄은 이 파일의 검사를 위한 것이 아니다.** 위 한 줄이 `sys.modules["submission"]` 에
+# 두 번째 script 모듈을 **수집 시점에** 꽂는데, 후보들이 재생 대상 모듈을 그 이름으로 찾는다
+# (`base = sys.modules.get("submission") or ... or script`). 카탈로그를 안 채운 채 꽂으면
+# 그 후보가 품목 조회를 잃는다 — `a5_scope_pilot` 의 h2 갈래가 v13 TP 두 건을 잃고
+# 13셀이 어긋났다. 단독 실행은 통과하고 전체 실행만 깨져 원인이 안 보인다.
+# `replay_run.replay()` 는 언제나 이것을 부르므로, 이름을 꽂을 때 같은 상태로 맞춘다.
+SCRIPT.load_sme_reference(str(ROOT / "open/data"))
 
 # 원응답이 보관된 유일한 회차. 이 폴더가 없어지면 CPU 재평가 경로 전체가 근거를 잃는다.
 CASE = ROOT / "reports/runs/colab-1789655036303880754/dev-debug"
