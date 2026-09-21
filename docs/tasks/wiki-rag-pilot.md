@@ -1,7 +1,8 @@
 # Wiki RAG 파일럿 — 판정 페이지가 사실 추출을 개선하는가
 
-작업 ID: `wiki-rag-pilot`. 상태: **doing / 구현·CPU 검증 완료, GPU 미실행**.
-구현 결과·확인 범위·남은 한계는 [준비 상태](../../reports/wiki-rag-pilot/README.md),
+작업 ID: `wiki-rag-pilot`. 상태: **done / 두 회차 완료, 가설 기각, 세 군 모두 미채택**.
+실제 결과·셀 단위 감사·채택 판단은 [results.md](../../reports/wiki-rag-pilot/results.md),
+구현 범위와 실행 전 준비 기록은 [준비 상태](../../reports/wiki-rag-pilot/README.md),
 자산 검토는 [자산 검토](../../reports/wiki-rag-pilot/assets-review.md),
 실행 절차는 [실행 안내](../../reports/wiki-rag-pilot/run-request.md)가 소유한다.
 아래 §1~§6은 원래 설계이며 결과가 나와도 조건을 사후에 낮추지 않는다.

@@ -27,14 +27,15 @@
 
 ## 첫 작업 큐
 
-`wiki-rag-pilot`: **doing / 구현·CPU 검증 완료, GPU 미실행**, [Claude 착수서](tasks/wiki-rag-pilot.md).
-2026-09-21 사용자 배정: Codex 설계, Claude 구현. 브랜치 `feat/wiki-rag-pilot`, 기준 `8afae99`.
-v20의 현재 방식·원문 조회·위키 페이지 조회를 같은 공고 입력과 기존 소비 코드로 비교한다.
-자산 12 span·7칸 페이지·세 군 실행기·노트북·검사 19개를 만들었다.
-[준비 상태와 한계](../reports/wiki-rag-pilot/README.md), [실행 안내](../reports/wiki-rag-pilot/run-request.md).
-모델 호출 0회, 실제 토크나이저 측정 0회, 독립 리뷰·사람 자산 검토 미실행이다.
-공통 예산 추정으로 dev 200건 중 100건이 통상 A보다 본문을 잃는다.
-실험·준비 기록 보관 목적의 [PR #82](https://github.com/LittleBitAI/ai-nara-shop/pull/82)를 열었다. 머지·채택은 별도 판단이다.
+`wiki-rag-pilot`: **done / 두 회차 완료·가설 기각·세 군 모두 미채택**, [실제 결과](../reports/wiki-rag-pilot/results.md).
+2026-09-21 사용자 배정: Codex 설계, Claude 구현. 브랜치 `feat/wiki-rag-pilot`, 실행 코드 `a9fdd0a`.
+v20의 현재 방식·원문 조회·위키 페이지 조회를 같은 공고 입력과 기존 소비 코드로 비교했다.
+두 회차 600/600 유효 응답, 파싱 실패 0. v20 TP는 세 군·두 회차 모두 1이고 FN 4건은 하나도 회복되지 않았다.
+**검증된 참여 조항 인용이 1,200회 호출에서 0건**이고, 유일한 인용 1건(`PPS-DEV-068`)은 원문에 없는 문장이었다.
+`wiki`는 회차 1에서 control과 동률이라 승격 조건 미충족, `raw`는 v16 TP 3→1 등 반복 손실로 미채택.
+남은 원인은 인용 전사 실패와 적용 대상 과탐이며 둘 다 이번 실험 밖이다.
+[착수서](tasks/wiki-rag-pilot.md), [실행 안내](../reports/wiki-rag-pilot/run-request.md),
+[PR #82](https://github.com/LittleBitAI/ai-nara-shop/pull/82). 무라벨·전체 파이프라인·서버·독립 리뷰는 미실행이다.
 
 `a5-v18-scope-review`: **done / 두 회차 기록 완료·후보 미채택**, [작업서](tasks/a5-v18-scope-review.md).
 한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
