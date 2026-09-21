@@ -5,6 +5,7 @@
 import csv
 from copy import deepcopy
 import hashlib
+import io
 import json
 from pathlib import Path
 import sys
@@ -278,6 +279,36 @@ class LawQuotationTests(unittest.TestCase):
         self.assertEqual(len(base), 6)
         self.assertEqual(combined, {})
         self.assertEqual([i for i in combined if i not in base], [])
+
+    def test_no_evidence_column_of_the_final_csv_ever_holds_the_law(self):
+        """소비자 하나가 아니라 **최종 CSV** 로 잰다 — `근거문구` 를 쓰는 자리가 여럿이다.
+
+        `verify_company_size` 만 보는 스윕은 `_company_size_bands`(script.py:815)나
+        추가 호출 소비자(script.py:1278)처럼 모델 인용을 근거로 쓰는 다른 자리를 못 본다.
+        저장 company 응답의 인용 필드를 하나씩 법령으로 바꿔 전체 파이프라인을 재생하고,
+        24개 `e` 열 어디에도 법령이 남지 않는지 본다.
+        """
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        for field in self.QUOTE_FIELDS:
+            patched = {}
+            for identifier, text in texts.items():
+                obj = json.loads(text)
+                obj['company_size'][field] = self.LAW_SPAN
+                patched[identifier] = json.dumps(obj, ensure_ascii=False)
+            original = pilot.replay_run.saved_responses
+
+            def saved(case, *args, **kwargs):
+                return dict(original(case, *args, **kwargs), company_size=patched)
+
+            with patch.object(pilot.replay_run, 'saved_responses', side_effect=saved):
+                rows = pilot.replay_run.replay(script, pilot.CASE, input_path=str(pilot.ROOT/'open/dev.jsonl'),
+                                               data_dir=str(pilot.ROOT/'open/data'))['rows']
+            data = pilot.replay_run.to_csv_bytes(script, rows)
+            planted = [(row['id'], column)
+                       for row in csv.DictReader(io.StringIO(data.decode('utf-8-sig')))
+                       for column, value in row.items()
+                       if column.startswith('e') and value and self.LAW_SPAN in value]
+            self.assertEqual(planted, [], f'{field} 가 법령을 최종 근거열에 남겼다')
 
     def test_every_v13_cell_now_carries_a_verified_notice_quote(self):
         """수리 전에는 이 구멍이 후보 없이도 3셀에서 발화했다 — A8 이 만든 회귀가 아니었다.
