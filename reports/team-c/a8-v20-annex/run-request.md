@@ -3,9 +3,11 @@
 상태: **GPU 미실행.** 두 회차를 실행하면 결과 ZIP 두 개를 받아 감사한다.
 후보는 프롬프트만 바꾸며 채택 결정이 아니다. [보고서](README.md)가 준비 근거를 소유한다.
 
-- 실행 코드 `<구현 커밋 40자리 SHA>` (노트북 `REPO_REF`). 커밋 후 이 줄과 노트북을 함께 고정한다.
-- 노트북 [`notebooks/colab-a8-v20-annex.ipynb`](../../../notebooks/colab-a8-v20-annex.ipynb).
+- 실행 코드 `713aa83c2d0e144b775710a2fee261c3e319a180` (노트북 `REPO_REF`).
+- 노트북 [`notebooks/colab-a8-v20-annex.ipynb`](../../../notebooks/colab-a8-v20-annex.ipynb),
+  sha256 `79ad632f…`. 그 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
   `REPO_REF`가 40자리 16진수가 아니면 clone 전에 멈춘다.
+  노트북 커밋 SHA는 push 후 이 줄에 채운다 — 그 전에는 로컬 파일로 실행한다.
 - 모델은 고정 리비전 `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, Python 3.12.13 · vLLM 0.26.0 · CUDA 13.0.
 
 ## 입력 준비
@@ -20,7 +22,7 @@ H4 baseline/SME 보관 응답만 있다. 무라벨 20,000건 파일은 필요하
 ## 실행
 
 1. A100 GPU를 선택하고 고정 Gemma 접근 권한의 `HF_TOKEN` 보안 비밀을 허용한다.
-2. 셀 1의 `REPO_REF`를 위의 40자리 SHA로 바꾼다.
+2. 셀 1의 `REPO_REF`가 위의 40자리 SHA인지 확인한다. 그 커밋이 원격에 있어야 clone이 성공한다.
 3. 회차 선택 셀(인덱스 5): `EPISODE=1`, `ATTEMPT="a"`. 위에서부터 실행한다.
 4. 실행 셀(인덱스 13): 실행기가 **생성 호출 전에** 예산을 재고 `budget.json`을 남긴다.
    추가 축소가 1건이라도 있으면 거기서 멈춘다 — 그때도 ZIP 셀을 실행해 `budget.json`을 보낸다.
