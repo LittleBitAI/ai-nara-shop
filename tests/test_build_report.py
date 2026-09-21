@@ -226,6 +226,70 @@ class BuildReportTests(unittest.TestCase):
         self.assertEqual(settings, {"seed": 1})
         self.assertEqual(per_id["PPS-DEV-01"]["sme"]["flags"], {"v13": 0})
 
+    def make_pilot(self, tmp, arms=(("control", "head"), ("h3", "h2"))):
+        """파일럿 회차 한 벌을 실제 폴더 모양 그대로 만든다. 등록된 회차에 기대지 않는다."""
+        base = Path(tmp) / "reports/runs/pilot-1"
+        for arm, consumer in arms:
+            folder = base / "pilot/episode-1" / arm
+            folder.mkdir(parents=True, exist_ok=True)
+            # v는 "0"/"1", e는 빈칸이어야 한다. 48칸을 통째로 "0"으로 채우면
+            # e열이 "0"이 되어 score.load_csv 가 제출 규약 위반으로 거절한다.
+            rows = [HEADER] + [[i] + ["0"] * 24 + [""] * 24 for i in sorted(self.truth)]
+            (folder / f"{consumer}-hybrid.csv").write_bytes(csv_bytes(rows))
+        return base
+
+    def test_pilot_variants_are_found_and_named_by_arm_and_consumer(self):
+        with tempfile.TemporaryDirectory(prefix=".pilot-") as tmp:
+            base = self.make_pilot(tmp)
+            found = build_report.pilot_variants(base)
+            self.assertEqual(sorted(name for name, _ in found), ["control-head", "h3-h2"])
+            for name, path in found:
+                self.assertTrue(path.is_file(), name)
+
+    def test_a_plain_run_has_no_pilot_variants(self):
+        """제출 회차에 이 탐색이 걸리면 기존 18회차가 두 번 실린다."""
+        for recorded in sorted((ROOT / "reports/runs").glob("*/dev/submission.csv")):
+            self.assertEqual(build_report.pilot_variants(recorded.parent.parent), [],
+                             recorded.parent.parent.name)
+
+    def test_pilot_csv_is_read_into_the_submission_slot(self):
+        """변이 CSV가 49열 제출물과 같은 모양이라 build()는 그대로 받는다."""
+        with tempfile.TemporaryDirectory(prefix=".pilot-") as tmp:
+            base = self.make_pilot(tmp, arms=(("control", "head"),))
+            _, path = build_report.pilot_variants(base)[0]
+            entries = {"dev/submission.csv": path.read_bytes()}
+            report = build_report.build(self.score, "pilot-1.control-head", entries, path,
+                                        build_report.KIND_PILOT)
+            self.assertEqual(report["kind"], build_report.KIND_PILOT)
+            self.assertEqual(report["macro_f1"], 0.0)   # 전부 0 예측이라 양성이 없다
+
+    def test_kind_defaults_to_a_submission_round(self):
+        """`build()` 는 run_id 로 파일시스템을 다시 조회하지 않는다. 호출자가 준 값을 그대로 싣는다."""
+        run = next(iter(sorted((ROOT / "reports/runs").glob("*/dev/submission.csv"))))
+        entries = {"dev/submission.csv": run.read_bytes()}
+        report = build_report.build(self.score, run.parent.parent.name, entries, run)
+        self.assertEqual(report["kind"], build_report.KIND_RUN)
+        marked = build_report.build(self.score, "아무이름", entries, run, build_report.KIND_PILOT)
+        self.assertEqual(marked["kind"], build_report.KIND_PILOT)
+
+    def test_read_source_reports_the_kind_it_actually_read(self):
+        with tempfile.TemporaryDirectory(prefix=".pilot-") as tmp:
+            run = next(iter(sorted((ROOT / "reports/runs").glob("*/dev/submission.csv"))))
+            args = argparse.Namespace(zip=None, run=run.parent.parent.name)
+            self.assertEqual(build_report.read_source(args)[3], build_report.KIND_RUN)
+            self.make_pilot(tmp, arms=(("control", "head"),))   # 폴더 모양만 확인한다
+            self.assertEqual(len(build_report.pilot_variants(Path(tmp) / "reports/runs/pilot-1")), 1)
+
+    def test_split_variant_only_splits_when_the_run_folder_exists(self):
+        """`colab-…` 안에도 점이 없으리란 보장이 없다. 폴더가 있을 때만 가른다."""
+        run = next(iter(sorted((ROOT / "reports/runs").glob("*/dev/submission.csv"))))
+        run_id = run.parent.parent.name
+        self.assertEqual(build_report.split_variant(run_id), (run_id, None))
+        self.assertEqual(build_report.split_variant(f"{run_id}.control-head"),
+                         (run_id, "control-head"))
+        self.assertEqual(build_report.split_variant("없는회차.control-head"),
+                         ("없는회차.control-head", None))
+
     def test_evidence_quotes_survive_the_round_trip(self):
         """합성 예측으로 e열이 그대로 실리는지 본다. 채점기 검사이며 성능 검증이 아니다."""
         identifier = sorted(self.truth)[0]

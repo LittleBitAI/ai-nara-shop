@@ -1,0 +1,231 @@
+{
+  "counts": {
+    "dev": {
+      "counts": {
+        "n": 200,
+        "demand_before": 40,
+        "demand_after": 44,
+        "demand_added": 4,
+        "v11_before": 4,
+        "v11_after": 4,
+        "v11_added": 0,
+        "v12_added": 0,
+        "industry_code_mismatch": 1,
+        "region_marker": 7,
+        "region_guard_reached": 0
+      },
+      "cpu_seconds": 0.187,
+      "mismatch_ids": [
+        "PPS-DEV-079"
+      ],
+      "added_ids": [],
+      "guard_ids": []
+    },
+    "unlabeled": {
+      "counts": {
+        "n": 20000,
+        "demand_before": 3259,
+        "demand_after": 3535,
+        "demand_added": 276,
+        "v11_before": 299,
+        "v11_after": 329,
+        "v11_added": 30,
+        "v12_added": 1,
+        "industry_code_mismatch": 12,
+        "region_marker": 3589,
+        "region_guard_reached": null
+      },
+      "cpu_seconds": 17.341,
+      "mismatch_ids": [
+        "PPS-D-001140",
+        "PPS-D-001478",
+        "PPS-D-001483",
+        "PPS-D-003077",
+        "PPS-D-006115",
+        "PPS-D-009913",
+        "PPS-D-010409",
+        "PPS-D-012887",
+        "PPS-D-016451",
+        "PPS-D-016806",
+        "PPS-D-021680",
+        "PPS-D-021922"
+      ],
+      "added_ids": [
+        [
+          "PPS-D-000916",
+          "v11"
+        ],
+        [
+          "PPS-D-002157",
+          "v11"
+        ],
+        [
+          "PPS-D-004543",
+          "v11"
+        ],
+        [
+          "PPS-D-005391",
+          "v11"
+        ],
+        [
+          "PPS-D-006398",
+          "v11"
+        ],
+        [
+          "PPS-D-006765",
+          "v11"
+        ],
+        [
+          "PPS-D-006816",
+          "v12"
+        ],
+        [
+          "PPS-D-008079",
+          "v11"
+        ],
+        [
+          "PPS-D-008917",
+          "v11"
+        ],
+        [
+          "PPS-D-009140",
+          "v11"
+        ],
+        [
+          "PPS-D-011491",
+          "v11"
+        ],
+        [
+          "PPS-D-011500",
+          "v11"
+        ],
+        [
+          "PPS-D-011504",
+          "v11"
+        ],
+        [
+          "PPS-D-012342",
+          "v11"
+        ],
+        [
+          "PPS-D-013339",
+          "v11"
+        ],
+        [
+          "PPS-D-014315",
+          "v11"
+        ],
+        [
+          "PPS-D-014563",
+          "v11"
+        ],
+        [
+          "PPS-D-014907",
+          "v11"
+        ],
+        [
+          "PPS-D-015541",
+          "v11"
+        ],
+        [
+          "PPS-D-015769",
+          "v11"
+        ],
+        [
+          "PPS-D-016085",
+          "v11"
+        ],
+        [
+          "PPS-D-016112",
+          "v11"
+        ],
+        [
+          "PPS-D-016566",
+          "v11"
+        ],
+        [
+          "PPS-D-017481",
+          "v11"
+        ],
+        [
+          "PPS-D-018589",
+          "v11"
+        ],
+        [
+          "PPS-D-020348",
+          "v11"
+        ],
+        [
+          "PPS-D-020865",
+          "v11"
+        ],
+        [
+          "PPS-D-020974",
+          "v11"
+        ],
+        [
+          "PPS-D-020988",
+          "v11"
+        ],
+        [
+          "PPS-D-020998",
+          "v11"
+        ],
+        [
+          "PPS-D-021008",
+          "v11"
+        ]
+      ],
+      "guard_ids": []
+    }
+  },
+  "rates": {
+    "demand_before": {
+      "dev_rate": 0.2,
+      "unlabeled_rate": 0.16295,
+      "ratio": 0.81475
+    },
+    "demand_after": {
+      "dev_rate": 0.22,
+      "unlabeled_rate": 0.17675,
+      "ratio": 0.8034090909090909
+    },
+    "demand_added": {
+      "dev_rate": 0.02,
+      "unlabeled_rate": 0.0138,
+      "ratio": 0.69
+    },
+    "v11_before": {
+      "dev_rate": 0.02,
+      "unlabeled_rate": 0.01495,
+      "ratio": 0.7474999999999999
+    },
+    "v11_after": {
+      "dev_rate": 0.02,
+      "unlabeled_rate": 0.01645,
+      "ratio": 0.8224999999999999
+    },
+    "v11_added": {
+      "dev_rate": 0.0,
+      "unlabeled_rate": 0.0015,
+      "ratio": null
+    },
+    "v12_added": {
+      "dev_rate": 0.0,
+      "unlabeled_rate": 5e-05,
+      "ratio": null
+    },
+    "industry_code_mismatch": {
+      "dev_rate": 0.005,
+      "unlabeled_rate": 0.0006,
+      "ratio": 0.11999999999999998
+    },
+    "region_marker": {
+      "dev_rate": 0.035,
+      "unlabeled_rate": 0.17945,
+      "ratio": 5.127142857142856
+    }
+  },
+  "model_called": false,
+  "note": "무라벨 규칙 단독 발화율. 모델 원응답이 없으므로 최종 예측 발화율은 미측정."
+}

@@ -1,0 +1,54 @@
+{
+  "model_called": false,
+  "setup_install": {
+    "exit_code": 0,
+    "both_hosts_check": true,
+    "automatic_events_verified": false
+  },
+  "setup_check": {
+    "exit_code": 0
+  },
+  "archive_verify": {
+    "notices": 200,
+    "csv_bytes_identical": true
+  },
+  "candidate_self_check": "passed",
+  "cpu_replay": {
+    "head_macro_f1": 0.5938461654151134,
+    "candidate_macro_f1": 0.5913209128898608,
+    "changed_cells": 1,
+    "outside_focus_cells": 1,
+    "adopted": false
+  },
+  "audit": {
+    "dev_notices": 200,
+    "unlabeled_notices": 20000,
+    "quote_offsets_verified": true
+  },
+  "pytest": {
+    "command": "python -X utf8 -m pytest -q",
+    "exit_code": 1,
+    "passed": 209,
+    "skipped": 1,
+    "errors": 2,
+    "seconds": 51.3,
+    "reason": "tests/test_setup_agents.py WIKI=None; CLI --wiki와 분리된 pytest 수집 경로"
+  },
+  "setup_scenarios": {
+    "command": "python -X utf8 tests/test_setup_agents.py --wiki <공개위키>",
+    "exit_code": 1,
+    "tests": 2,
+    "failures": 3,
+    "errors": 1,
+    "seconds": 19.352,
+    "reason": "SessionStart docs/tasks.md 포인터 기대값 3개 실패; WinError 267 임시 경로 오류; preflight 통과"
+  },
+  "files": {
+    "utf8_without_bom_lf": true,
+    "new_document_links": true,
+    "git_diff_check": true
+  },
+  "independent_review": false,
+  "gpu_run": false,
+  "server_submission": false
+}

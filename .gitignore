@@ -21,6 +21,11 @@
 # 진단 화면(web/). 소스만 추적하고 설치물과 build_report.py 생성물은 뺀다.
 /web/node_modules/
 /web/dist/
+# Vite 의존성 캐시. 기본 자리는 `node_modules/.vite` 라 위 규칙이 이미 덮지만,
+# `npm install` 전에 vite 가 돌면 `node_modules` 가 없어 `web/.vite` 로 떨어진다.
+# `_metadata.json` 이 lockfileHash·configHash 를 담아 한 기계의 설치 상태에 묶이므로
+# 추적하면 낡은 캐시가 재최적화를 건너뛰게 만든다. 소스가 이 경로를 참조하지 않는다.
+/web/.vite/
 /web/public/runs/
 /web/public/items.json
 # --share 요약은 같은 회차에 다시 뽑으면 덮어쓴다. score/ 는 기존 디렉터리를 거부해

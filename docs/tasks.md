@@ -27,7 +27,7 @@
 
 ## 첫 작업 큐
 
-`a5-label-definition-wall`: ready. 배정 2026-09-21, astra. **v11 · v13 · v24** — 라벨 기준이 벽인 셋.
+`a5-label-definition-wall`: 착수·진행 중. 배정 2026-09-21, astra. **v11 · v13 · v24** — 라벨 기준이 벽인 셋.
 `18f07e5`(dev 0.599316 / 서버 0.508414)를 항목별로 갈랐다. v11은 오탐을 0으로 해도 최대 F1 0.500이고,
 v13은 금액 구간·`scope`·`qualification`·`qualification_role`·직생 언급·인용 문장 **여섯 축이 전부
 정탐과 오탐에서 같은 값**이다. v24는 [세 축 진단](../reports/team-c/v24-not-gateable/README.md)에 더해
@@ -35,7 +35,39 @@ v13은 금액 구간·`scope`·`qualification`·`qualification_role`·직생 언
 v10은 A3에 그대로 둔다 — `direct_production_demand()`가 v10 관련 15건 전부에서 직생 요구를 못 찾고
 v11에서는 4건을 찾는 비대칭이 관측됐다. v18·v20에 줄 새 재료(`조항호내용`, 죽은 `정보화사업여부`,
 안 쓴 SW 금액 4구간)도 §5에 있다. [작업서](tasks/a5-label-definition-wall.md).
-미착수이며 실제 모델·무라벨 발화율·서버 시간은 전부 미측정이다.
+이 배정 문단은 착수 시점의 것이며, 아래 H3·브리프 3·회차 2 항목이 그 뒤의 실제 결과다.
+
+`a5-label-definition-wall / H3`: [동일 호출 조건 관측 파일럿](../reports/team-c/a5-label-definition/h3-scope-observation.md).
+시간 예산 선계산·후보/실행기·Colab 준비·CPU 검사 5개 완료. 고정 코드 1735330, GPU 미측정.
+이번부터 회차 ID·F1/24항목 지표·환경·시간·오답·실패 상태를 JSON/Markdown으로 자동 기록한다.
+대조군/후보 dev 200건 + 진단 5건씩, 새 런타임에서 순서를 바꿔 반복한다. 기존 H2 소비자는 유지한다.
+조건 인용은 진단에만 쓰고 새 강제 게이트는 넣지 않는다. 같은 호출 교체·추가 서버 호출 0.
+실행 결과는 고정 기본/SME 응답을 결합한 혼합 CPU 재생이며 전체 GPU 점수와 구분한다.
+
+`a5-label-definition-wall / 브리프 3`: [메타·규격 대조](../reports/team-c/a5-label-definition/catalog-findings.md).
+발화 34건의 메타 적중 15·특이사항 5를 재현, 추가 네 건의 서버/햄/드론 규격 감사 완료.
+조항호내용 필수 조건은 무라벨 발화 0·dev TP 하나 손실이라 기각한다. 메타 조회는 이미 입력에 있다.
+조건 분해의 진단 자료로 사용하되 새 정답·scope 반례 네 건으로 세지 않는다. H2 채택 보류 유지.
+
+`a5-label-definition-wall / 회차 2`: [재계산·판단](../reports/team-c/a5-label-definition/round2-decision.md).
+후속 [원문 감사](../reports/team-c/a5-label-definition/observation-findings.md)에서 실제 발화의
+240kW/고시 50kW 모순과 입력 분포 차이를 확인했다. 검증 완화·같은 H2 연속 수집은 기각했다.
+실제 dev 3/200·무라벨 31/2,000 발화, 전체 검증 배율 1.033333·술어 배율 0.822222를 재현했다.
+전수 수집 강제를 원문 타당성/분포 감사로 대체한다. 남은 18회차 일괄 수집 중단, 채택 보류.
+부분 표본·대표성 미확인을 명시하며 `complete=false`는 유지한다. 서버 추가 호출 0, 머지하지 않는다.
+
+`a5-label-definition-wall / H2`: CPU 검증 완료·채택 보류.
+[결과](../reports/team-c/a5-label-definition/h2-absence.md): 명시적 기업규모 제한 부재를 v11에
+연결해 TP 2→4, FP 3→4, FN 4→2. 다른 23항목 변화 0, CPU 재생 Macro 0.602504174073.
+무라벨 2,000건 모델 사실은 확보·검증했다. A4 합본도 CPU 0.620382330538로 재현했다.
+무라벨 TP/FP·합본 GPU/서버는 미측정이다. 운영 코드 변경 없음.
+
+`a5-label-definition-wall`: in_progress. 2026-09-21 사용자 지정 `a5-label-wall` 작업.
+입력·출력·범위·통과선은 [작업서](tasks/a5-label-definition-wall.md), 1차 결과는
+[A5 진단](../reports/team-c/a5-label-definition/README.md)이 소유한다.
+시간 예산 선계산 완료(추가 dev 추론 92.193초 한도), 원응답 200건 재생 동일.
+H1은 대상 TP 변화 0·v12 FP +1로 기각. 무라벨 20,000건 규칙 발화율 측정 완료.
+v13 조회 배선·v24 익명화 분기의 인수인계 전제를 정정했다. 실제 모델·서버는 미실행, 채택 없음.
 
 `a3-zero-items / H4`: in_progress. 기준 `49475c3`, [회차 4](../reports/team-c/a3-zero-items/run4-facts.md).
 H3는 v10 4/7/3·v18 0/2/7·v20 1/4/4로 동시 TP>0 미달이다. 다음은 기업등급보다 먼저
