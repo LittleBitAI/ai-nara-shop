@@ -466,6 +466,83 @@ class PilotWiringTests(unittest.TestCase):
                 for variant in ('off', 'on'):
                     self.assertTrue((root/f'episode-2/repeat-{arm}-{variant}.json').is_file())
 
+    def events_of(self, output):
+        return [json.loads(line) for line in
+                (output/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+
+    def test_unified_log_carries_one_root_and_two_distinguishable_arms(self):
+        """사이드카는 `run_started` 가 없으면 **모든 이벤트를 버린다**(`langfuse_tail.py:91`).
+
+        그래서 루트·군·청크·실제 호출이 한 파일에 순서대로 있어야 관측이 존재한다.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            self.run_pilot(root/'episode-1', 1, BudgetFakeRunner())
+            events = self.events_of(root/'episode-1')
+            kinds = [e['event'] for e in events]
+            self.assertEqual(kinds.count('run_started'), 1)
+            self.assertEqual(kinds.count('run_succeeded'), 1)
+            self.assertEqual(kinds[0], 'run_started')
+            self.assertEqual(kinds[-1], 'run_succeeded')
+            self.assertEqual(kinds.count('arm_started'), 2)
+            self.assertEqual(kinds.count('arm_finished'), 2)
+            # 군이 갈린다 — 같은 공고가 두 군에 각각 있다.
+            for kind in ('company_size_input', 'model_call_started', 'model_call_finished', 'response'):
+                arms = {e['arm'] for e in events if e['event'] == kind}
+                self.assertEqual(arms, {'control', 'a8'}, kind)
+                self.assertEqual(sum(1 for e in events if e['event'] == kind), 400, kind)
+            root_event = events[0]
+            self.assertEqual(root_event['capture_protocol'], pilot.CAPTURE_PROTOCOL)
+            self.assertEqual(root_event['dataset'], 'dev')
+            self.assertEqual(len(root_event['dev_ids']), 200)
+            self.assertEqual(root_event['expected_model']['revision'], script.MODEL_REVISION)
+            self.assertEqual(root_event['mode'], 'pending')     # 시작 줄은 live 를 주장하지 않는다
+            loaded = next(e for e in events if e['event'] == 'model_loaded')
+            self.assertEqual(loaded['mode'], 'test_double')     # 실제 mode 는 적재 뒤에 적는다
+            # 같은 공고·같은 군의 입력과 호출이 이어진다.
+            started = [e for e in events if e['event'] == 'model_call_started']
+            self.assertEqual({e['call_kind'] for e in started}, {'initial'})
+            self.assertTrue(all(e['prompt_text'][0]['content'].startswith('Extract facts') for e in started))
+            a8_prompts = {e['prompt_text'][0]['content'] for e in started if e['arm'] == 'a8'}
+            control_prompts = {e['prompt_text'][0]['content'] for e in started if e['arm'] == 'control'}
+            self.assertTrue(all(p.endswith(candidate.block()) for p in a8_prompts))
+            self.assertFalse(any(p.endswith(candidate.block()) for p in control_prompts))
+            # 군별 로그도 그대로 남는다 — 기존 감사 경로가 계속 읽는다.
+            for arm in ('control', 'a8'):
+                self.assertTrue((root/'episode-1'/arm/'dev.events.jsonl').is_file())
+            # 성공을 두 번 세지 않는다.
+            report = json.loads((root/'episode-1/run_report.json').read_text(encoding='utf-8'))
+            self.assertEqual(report['model_success_count'], 0)
+            self.assertEqual(sum(c['valid_json'] for c in report['counts'].values()), 400)
+
+    def test_reserved_event_keys_cannot_be_overwritten(self):
+        rows = []
+        emit = pilot.make_emit(SimpleNamespace(write=rows.append, flush=lambda: None),
+                              run_id='r', episode=1, arm='a8', sample='dev')
+        emit('company_size_input', id='X')
+        self.assertEqual(json.loads(rows[0])['arm'], 'a8')
+        for key in ('arm', 'run_id', 'episode', 'time_unix', 'event', 'sample'):
+            with self.assertRaisesRegex(ValueError, '예약된 이벤트 키'):
+                emit('company_size_input', **{key: 'spoofed'})
+
+    def test_failed_run_leaves_the_root_and_the_reason(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            failing = dict(records=200, conditions_pass=False, additional_shrink=['PPS-DEV-01'])
+            with patch.object(candidate, 'budget_report', return_value=failing), \
+                    self.assertRaises(RuntimeError):
+                self.run_pilot(root/'stopped', 1, BudgetFakeRunner())
+            events = self.events_of(root/'stopped')
+            kinds = [e['event'] for e in events]
+            self.assertEqual(kinds.count('run_started'), 1)
+            self.assertEqual(kinds.count('run_failed'), 1)
+            self.assertEqual(kinds.count('run_succeeded'), 0)
+            self.assertEqual(kinds.count('model_call_started'), 0)   # 생성 전에 멈췄다
+            self.assertEqual(next(e for e in events if e['event'] == 'run_failed')['error_type'],
+                             'RuntimeError')
+
     def test_failed_budget_stops_before_any_generation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

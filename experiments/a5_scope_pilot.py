@@ -36,6 +36,33 @@ def manifest_for(experiment):
     return A8_INPUT_MANIFEST if experiment == 'a8' else INPUT_MANIFEST
 
 
+# 관측 로그의 판형. 사이드카가 이 번호로 옛 로그와 새 로그를 가른다.
+CAPTURE_PROTOCOL = 1
+# 호출자가 덮어쓰면 군·회차가 섞이므로 막는다.
+RESERVED_EVENT_KEYS = ('event', 'time_unix', 'run_id', 'episode', 'arm', 'sample')
+
+
+def make_emit(run_log, arm_log=None, *, run_id, episode, arm=None, sample=None):
+    """이벤트 한 줄을 통합 로그(그리고 있으면 군별 로그)에 쓰는 `emit` 을 만든다.
+
+    통합 로그 하나가 사이드카 입력이다. 군별 로그는 기존 감사 경로가 계속 쓰므로 같이 남기되
+    루트 이벤트를 두 번 적지 않는다 — `record_run()` 이 군별 파일의 논리 `response` 만 센다.
+    """
+    def emit(event, /, **fields):
+        # 위치 전용이다 — `event=` 로 넘겨도 파라미터와 충돌하지 않고 아래 가드에 걸린다.
+        clash = [key for key in RESERVED_EVENT_KEYS if key in fields]
+        if clash:
+            raise ValueError('예약된 이벤트 키를 덮어쓸 수 없다: ' + ', '.join(clash))
+        row = dict(event=event, time_unix=time.time(), run_id=run_id, episode=episode,
+                   arm=arm, sample=sample, **fields)
+        line = json.dumps(row, ensure_ascii=False) + '\n'
+        for handle in (run_log, arm_log):
+            if handle is not None:
+                handle.write(line)
+                handle.flush()
+    return emit
+
+
 def output_reserved(experiment):
     """A8은 두 군 모두 줄인 출력 예약을 쓴다. 근거는 후보 모듈 상수의 주석이다."""
     return a8_candidate.OUTPUT_RESERVED if experiment == 'a8' else script.MAX_TOKENS
@@ -228,21 +255,55 @@ def main():
     started = time.perf_counter()
     record_run(output, contract, started_at, 0, 'running')
     status, error_type = 'failed', None
-    try:
-        if args.experiment in DEV_ONLY and args.episode == 2:
-            validate_previous(output, contract)
-        execute(args, output, contract, dev, diagnostics, products, order)
-        status = 'complete'
-    except BaseException as error:
-        error_type = type(error).__name__
-        raise
-    finally:
-        record_run(output, contract, started_at, time.perf_counter()-started, status, error_type)
+    # A8만 통합 관측 로그를 쓴다. 다른 실험은 이 파일을 만들지 않고 기존 경로대로 돈다.
+    with ((output/'diagnostics.jsonl').open('x', encoding='utf-8', newline='\n')
+          if args.experiment == 'a8' else nullcontext()) as run_log:
+        run_id = f'a8-{started_at}' if args.experiment == 'a8' else None
+        run_emit = None
+        if run_log is not None:
+            run_emit = make_emit(run_log, run_id=run_id, episode=args.episode)
+            # 생성 전에 낸다. 여기서 실패해도 루트가 남아 회차가 무엇을 하려 했는지 읽힌다.
+            run_emit('run_started', mode='pending', experiment=args.experiment, dataset='dev',
+                     dataset_sha256=contract['input_sha256'], dev_ids=contract['dev_ids'],
+                     source_commit=contract['source_commit'], contract_sha256=collector.digest(contract),
+                     code_sha256=contract['files'].get('script.py'),
+                     expected_model=dict(id=script.MODEL_ID, revision=script.MODEL_REVISION),
+                     capture_protocol=CAPTURE_PROTOCOL, order=order,
+                     settings=dict(chunk=contract['chunk'], max_chars=contract['max_chars'],
+                                   seed=contract['seed'], max_tokens=contract['max_tokens'],
+                                   prompt_budget=contract['prompt_budget'],
+                                   max_model_len=contract['max_model_len'], quant=contract['quant']))
+        try:
+            if args.experiment in DEV_ONLY and args.episode == 2:
+                validate_previous(output, contract)
+            execute(args, output, contract, dev, diagnostics, products, order,
+                    run_log=run_log, run_id=run_id)
+            status = 'complete'
+        except BaseException as error:
+            error_type = type(error).__name__
+            if run_emit is not None:
+                run_emit('run_failed', error_type=error_type,
+                         seconds=time.perf_counter()-started)
+            raise
+        else:
+            if run_emit is not None:
+                run_emit('run_succeeded', seconds=time.perf_counter()-started)
+        finally:
+            record_run(output, contract, started_at, time.perf_counter()-started, status, error_type)
 
 
-def execute(args, output, contract, dev, diagnostics, products, order):
+def execute(args, output, contract, dev, diagnostics, products, order, *, run_log=None, run_id=None):
+    run_emit = make_emit(run_log, run_id=run_id, episode=args.episode) if run_log is not None else None
+    if run_emit is not None:
+        run_emit('model_loading', model_dir=Path(args.model_dir).name)
     runner = script.VLLMRunner(script.decode_schema(str(ROOT/'open/data')), model_dir=str(args.model_dir),
                                max_tokens=output_reserved(args.experiment))
+    mode = getattr(runner, 'MODE', 'test_double')
+    if run_emit is not None:
+        # 여기서 실제 mode 를 적는다. 시작 줄의 `pending` 을 live 로 읽지 않는다.
+        run_emit('model_loaded', mode=mode, load_seconds=runner.load_seconds,
+                 token_count_kind=getattr(runner, 'TOKEN_COUNT', 'test_double'),
+                 environment=runner.environment)
     collector.save(output/'environment.json', dict(environment=runner.environment, model_load_seconds=runner.load_seconds,
                                                    runner_mode=getattr(runner, 'MODE', 'test_double')))
     if args.experiment in DEV_ONLY and args.episode == 2:
@@ -265,17 +326,31 @@ def execute(args, output, contract, dev, diagnostics, products, order):
         arm = output/name
         arm.mkdir()
         payloads = {}
+        arm_emit = None
+        if run_log is not None:
+            arm_emit = make_emit(run_log, run_id=run_id, episode=args.episode, arm=name, sample='dev')
+            arm_emit('arm_started', selected_count=len(dev),
+                     system_prompt_sha256=contract['arms'][name]['prompt_sha256'],
+                     schema_sha256=contract['arms'][name]['schema_sha256'],
+                     output_reserved=contract['max_tokens'], prompt_budget=contract['prompt_budget'])
         with activate_arm(name):
             for group, records in (('dev', dev), ('diagnostic', diagnostics)):
                 if not records:
                     continue
                 with (arm/f'{group}.events.jsonl').open('x', encoding='utf-8', newline='\n') as log:
-                    def emit(event, **fields):
-                        log.write(json.dumps(dict(event=event, **fields), ensure_ascii=False)+'\n')
-                        log.flush()
+                    if run_log is None:
+                        def emit(event, **fields):
+                            log.write(json.dumps(dict(event=event, **fields), ensure_ascii=False)+'\n')
+                            log.flush()
+                    else:
+                        # 같은 공고 이벤트를 통합 로그와 군별 로그 둘 다에 쓴다.
+                        emit = make_emit(run_log, log, run_id=run_id, episode=args.episode,
+                                         arm=name, sample=group)
+                        emit('phase_started', phase='company_size')
                     # 위치 인자로 넘긴다 — 기존 v18 검사가 `collect(*args)`로 감싼다.
                     payload = collector.collect(records, runner, products, emit,
-                                                prompt_budget(args.experiment))
+                                                prompt_budget(args.experiment),
+                                                observe=args.experiment == 'a8')
                 if name == 'h3':
                     for row, rec in zip(payload['rows'], records):
                         facts = script.parse_judgment(row['response_text'], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
@@ -287,6 +362,16 @@ def execute(args, output, contract, dev, diagnostics, products, order):
                 payloads[group] = payload
                 collector.save(arm/f'{group}.json', dict(contract_sha256=collector.digest(contract),
                                payload_sha256=collector.digest(payload), payload=payload))
+        if arm_emit is not None:
+            # 군별 파일의 **논리 `response`** 만 센다. 새 `model_call_finished` 를 더해
+            # 성공을 두 번 세지 않는다.
+            counted = [json.loads(line) for line in
+                       (arm/'dev.events.jsonl').read_text(encoding='utf-8').splitlines()]
+            responses = [e for e in counted if e['event'] == 'response']
+            arm_emit('arm_finished', status='complete',
+                     stage_seconds=payloads['dev']['stage_seconds'],
+                     valid_response_count=sum(e.get('status') == 'valid' for e in responses),
+                     failed_response_count=sum(e['event'] == 'retry_failed' for e in counted))
         # H3 diagnostics are ignored; v18 explicitly retains review fields for OFF/ON replay.
         metrics, predictions[name] = hybrid_replay(payloads['dev'], arm, experiment=args.experiment,
                                                   review_fields=name == 'v18')

@@ -4,6 +4,8 @@ No labels, training, submission CSV, or additional production inference stage.
 """
 
 import argparse
+import contextlib
+from contextlib import contextmanager
 import hashlib
 import json
 from pathlib import Path
@@ -38,13 +40,106 @@ def save(path, value):
     temporary.replace(path)
 
 
-def collect(records, runner, products, emit, budget=None, plan=None):
+@contextmanager
+def observe_chat(runner, emit, *, ids, phase):
+    """`runner.chat` 을 **인스턴스 속성으로만** 감싸 실제 모델 요청을 그대로 기록한다.
+
+    왜 이 자리인가. 사이드카가 원자료로 프롬프트를 다시 조립하면 실제 절단·재시도와 달라진다.
+    그리고 `VLLMRunner.retry_chat` 은 system 뒤에 출력범위 문장을 붙이고 출력 예산을 다시
+    계산한 뒤 **`self.chat`** 을 부르므로, 인스턴스 속성을 감싸면 그 변경된 메시지가 그대로 잡힌다.
+    클래스 함수·`retry_chat`·전역 `script` 함수는 건드리지 않는다.
+
+    공고 대응. 첫 호출은 `ids` 와 batch 를 순서대로 잇는다. 뒤의 1건 재시도는 **system 을 뺀
+    메시지들의 digest** 로 첫 batch 를 되짚는다. `build_user_prompt` 가 첫 줄에 `[Notice ID]` 를
+    넣으므로 그 digest 는 **구조적으로 공고마다 유일하다** — 추측이 아니다.
+    그래도 프롬프트 형식이 그 줄을 잃으면 대응이 무너지므로, digest 가 첫 batch 안에서
+    유일할 때만 id 를 확정하고 중복이면 `identity_status="ambiguous"` 로 남긴다.
+    추론을 다른 공고에 붙이거나 본문으로 id 를 추측하지 않는다.
+    """
+    original = runner.chat
+    had_own = "chat" in vars(runner)
+    known, seq = {}, 0
+
+    def body_digest(messages):
+        return digest([m for m in messages if m.get("role") != "system"])
+
+    def identify(messages, index):
+        if not known:
+            return (ids[index] if index < len(ids) else None), "initial"
+        found = known.get(body_digest(messages))
+        if found is None:
+            return None, "unmatched"
+        return (found[0], "matched") if len(found) == 1 else (None, "ambiguous")
+
+    def chat(batch, sampling_params=None, items=None):
+        nonlocal seq
+        seq += 1
+        call_seq, first = seq, not known
+        if first:
+            for index, messages in enumerate(batch):
+                known.setdefault(body_digest(messages), []).append(
+                    ids[index] if index < len(ids) else None)
+        marks = []
+        for index, messages in enumerate(batch):
+            identifier, status = (ids[index] if index < len(ids) else None, "initial") \
+                if first else identify(messages, index)
+            parameters = sampling_params if sampling_params is not None else getattr(runner, "sp", None)
+            marks.append((index, identifier, status))
+            emit("model_call_started", phase=phase, call_seq=call_seq, call_index=index,
+                 id=identifier, identity_status=status,
+                 call_kind="initial" if first else "retry",
+                 prompt_text=messages, prompt_sha256=digest(messages),
+                 items=list(items) if items else None,
+                 max_tokens=getattr(parameters, "max_tokens", None),
+                 schema_sha256=digest(getattr(getattr(parameters, "structured_outputs", None),
+                                              "json", None)))
+        try:
+            texts = original(batch, **({"sampling_params": sampling_params}
+                                       if sampling_params is not None else {}),
+                             **({"items": items} if items is not None else {}))
+        except BaseException as error:
+            for index, identifier, status in marks:
+                emit("model_call_failed", phase=phase, call_seq=call_seq, call_index=index,
+                     id=identifier, identity_status=status, error_type=type(error).__name__,
+                     transport_status="failed")
+            raise
+        info = list(getattr(runner, "last_response_info", []) or [])
+        if len(texts) != len(batch):
+            for index, identifier, status in marks:
+                emit("model_call_failed", phase=phase, call_seq=call_seq, call_index=index,
+                     id=identifier, identity_status=status,
+                     error_type="ResponseCountMismatch", transport_status="response_count_mismatch")
+            return texts
+        for index, identifier, status in marks:
+            # `last_response_info` 를 통째로 펼치지 않는다 — 이 allowlist 만 복사한다.
+            one = info[index] if index < len(info) else {}
+            emit("model_call_finished", phase=phase, call_seq=call_seq, call_index=index,
+                 id=identifier, identity_status=status, transport_status="returned",
+                 response_text=texts[index],
+                 **{key: one.get(key) for key in
+                    ("prompt_tokens", "output_tokens", "finish_reason", "stop_reason", "max_tokens")})
+        return texts
+
+    runner.chat = chat
+    try:
+        yield
+    finally:
+        if had_own:
+            runner.chat = original
+        else:
+            del runner.chat
+
+
+def collect(records, runner, products, emit, budget=None, plan=None, *, observe=False):
     """두 실험이 각자 한 축만 고정한다. 둘은 직교하므로 같이 쓸 수 있다.
 
     `budget`은 A8처럼 **출력 예약을 바꿔 공통 토큰 예산이 달라진** 실험이 그 값을 명시할 때만
     넘긴다. `plan`은 wiki-rag처럼 **공고별 문서 예산을 미리 고정**해 여러 군이 같은 공고 본문을
     보게 할 때 넘긴다. A8은 `budget`을 5번째 위치 인자로 받고 wiki-rag는 `plan=`을 키워드로
     준다 — 순서를 바꾸면 둘 중 하나가 깨진다.
+
+    `observe=True`는 **실제 모델 요청과 청크 경계를 추가로 기록**한다. 기존 호출자의 메시지·
+    스키마·호출 순서·반환 원응답은 바뀌지 않는다 — 기록만 늘어난다.
     """
     budget = script.PROMPT_BUDGET if budget is None else budget
     rows, inference_seconds = [], 0.0
@@ -63,13 +158,30 @@ def collect(records, runner, products, emit, budget=None, plan=None):
                 raise ValueError(f"{rec['id']}: 계획한 문서 예산 {planned}이 토큰 예산을 넘었다")
             batch.append(messages)
             budgets.append((tokens, chars))
+            extra = dict(phase="company_size", global_index=start + len(batch) - 1,
+                         token_count_kind=getattr(runner, "TOKEN_COUNT", "test_double"),
+                         requested_max_chars=planned, truncated=chars < planned,
+                         visible_sha256=hashlib.sha256(
+                             script.build_context(company_rec, chars).encode("utf-8")).hexdigest(),
+                         prompt_messages=messages) if observe else {}
             emit('company_size_input', id=rec['id'], max_chars=chars, prompt_tokens=tokens,
-                 prompt_sha256=digest(messages))
+                 prompt_sha256=digest(messages), **extra)
+        identifiers = [r["id"] for r in group]
+        if observe:
+            emit("chunk_started", phase="company_size", chunk_start=start,
+                 count=len(group), ids=identifiers)
         before = time.perf_counter()
-        responses = script.run_chunk(
-            runner, batch, start=start, ids=[r["id"] for r in group], emit=emit,
-            debug_responses=True, items=script.COMPANY_SIZE_KEYS, phase="company_size")
-        inference_seconds += time.perf_counter() - before
+        # 관측은 이 호출만 감싼다. 저장 IO도 stage 시간에 들어간다 — 시간을 좋게 보이게 하지 않는다.
+        try:
+            with observe_chat(runner, emit, ids=identifiers, phase="company_size") if observe \
+                    else contextlib.nullcontext():
+                responses = script.run_chunk(
+                    runner, batch, start=start, ids=identifiers, emit=emit,
+                    debug_responses=True, items=script.COMPANY_SIZE_KEYS, phase="company_size")
+        finally:
+            inference_seconds += time.perf_counter() - before
+            if observe:
+                emit("chunk_finished", phase="company_size", chunk_start=start, count=len(group))
         # No baseline_texts: a failed retry raises instead of substituting a negative.
         for rec, response, (tokens, chars) in zip(group, responses, budgets):
             facts = script.parse_judgment(response, expected_items=script.COMPANY_SIZE_KEYS)[0]["company_size"]
