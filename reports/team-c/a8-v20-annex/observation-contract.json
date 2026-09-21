@@ -2,11 +2,11 @@
   "capture_protocol": 1,
   "why": "파일럿 군별 로그는 run_started 가 없어 사이드카가 모든 이벤트를 버렸다(langfuse_tail.plan 91행). 실측: H4 전체 파이프라인 1,020 이벤트 → 625 span, 파일럿 군별 로그 400 → 0.",
   "sources": {
-    "experiments/a5_collect_facts.py": "abb05a85f38b7d3c00c1dceecae38d5002790bd4ba74dcccc864080a47fa9de4",
+    "experiments/a5_collect_facts.py": "c7239c1bee7ba5a62db25567a4d320e56c29bdf433f7951a329f77f94c55f10a",
     "experiments/a5_scope_pilot.py": "d95603bc8c2ca39978c53adda435f0a47884f70dbcd23c9d21fabbe13da2b3b4",
     "experiments/a8_v20_annex.py": "62a3ea53e66f157cc143f9663e6e89802d708ce73df18e0ddd4e04dece8ecaba",
-    "experiments/a8_v20_audit.py": "58915f5c74a034265c42c0917f1af2a7f2a3a946e180a045cae7db9d6bee4015",
-    "tools/langfuse_tail.py": "0faac6d46f69e213d24f35ea1123aae82aeb52310ef28fd4b9f194f9a81efd47",
+    "experiments/a8_v20_audit.py": "ed454aacbb4aee1351c2da0294a700e5803f9ceeba42789cbdd8c51719e90ca9",
+    "tools/langfuse_tail.py": "ddc9203c54ba2ac273fd50797fbf1edd5c8d21256a06a7454b37e47144315ffb",
     "tools/replay_run.py": "35c235f99b3a2d824c18266b74f88534f033b4036a81ee4ce8611660b6f43895",
     "script.py": "8e7011e2bfcc8eab2f5463ee16266e3de11ff5115a70c850027af8fcb8667dd4"
   },
@@ -93,6 +93,31 @@
   },
   "gpu_status": "not_run",
   "api_status": "blocked_q1",
+  "prompt_export": {
+    "default": "withheld",
+    "means": "프롬프트·응답 **전문**은 기본적으로 span 에 실리지 않는다. 막았다는 사실은 prompt_capture=\"withheld\" 로 남는다.",
+    "requires": ["--include-prompts", "--dev-input <고정 공개 dev>"],
+    "allowed_hosts": ["http://localhost:3002", "http://127.0.0.1:3002", "http://[::1]:3002"],
+    "checked_before_provider": true,
+    "conditions": ["run_started.dataset == dev",
+                   "dev 파일 실측 sha256 == run_started.dataset_sha256 == inputs.json 고정값",
+                   "dev_ids == 그 파일의 고유 id 집합",
+                   "모든 공고 이벤트 id 가 그 집합에 속함",
+                   "신원 미확정(null·ambiguous·unmatched) 본문 0건"],
+    "refused_with": ["--follow", "--from-line != 0"],
+    "why": "capture_protocol 1 로그에는 실제 프롬프트 전문이 들어 있다. 플래그는 안전의 근거가 아니고 데이터 대조가 근거다. R17 경계.",
+    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 6개 검사"
+  },
+  "gain_kind": {
+    "verified_quote": "후보에서 v20 이 적용 가능하고(software_business=yes + 그 인용 검증) 참여 인용이 검증됐으며 판정이 실제로 write_0 으로 전이했다",
+    "fallback_only": "대조군에서 v20 이 쓰였는데 후보에서 인용이 기각돼(invalid·empty) preserve 로 내려앉았다 — 기전이 아니다",
+    "other": "나머지. 이름을 붙이지 않는 것이 잘못 붙이는 것보다 낫다",
+    "not": "인용 상태만으로 부르지 않는다. 판정이 안 움직인 인용 변화와 v20 이 열리지도 않는 공고의 정확한 인용은 둘 다 other 다",
+    "pinned_by": "tests/test_a8_v20_annex.py::AuditTests 의 gain_kind·v20_applicable 두 검사"
+  },
+  "payload_integrity": "감사가 dev.json 의 contract_sha256 과 payload_sha256 을 **둘 다** 재계산한다. 계약 hash 와 id 집합만 맞춰 원응답을 바꾼 산출물은 거부된다.",
+  "schema_hash": "items 가 주어지면 제품은 parameters_for_items 로 제한한 스키마를 쓴다(script.py:967). 기록도 같은 규칙으로 실제 파라미터를 고른다 — effective_parameters().",
+  "root_mode": "루트는 생성 전에 mode=pending 으로 열리고, model_loaded 가 실제 mode 를 루트 이름·metadata 에 얹는다(update 액션). 종료에도 한 번 더 적어 pending 으로 끝나지 않는다.",
   "langfuse_status": "projection_verified_on_cpu_only — 로컬 스택 적재·UI 확인은 미실행",
   "semantic_review": {
     "file": "semantic-review.jsonl",

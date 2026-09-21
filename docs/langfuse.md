@@ -71,11 +71,39 @@ cloudflared 임시 터널을 띄우고, 그 주소로 `NEXTAUTH_URL` 을 바꿔 
 - 임시 터널은 주소를 아는 누구나 로그인 화면까지 닿는다. 계정은 난수 비밀번호이고
   이 인스턴스에는 공개 dev 자료만 있다. 그래도 **필요할 때만 열고 닫는다.**
 
+## 프롬프트 전문은 터널로 보내지 않는다
+
+`capture_protocol=1` 회차(A8 관측)의 `diagnostics.jsonl` 에는 **모델에 실제로 보낸
+프롬프트 전문과 응답 전문**이 들어 있다. 아래 터널 주소로 그것을 보내지 마라.
+사이드카는 기본적으로 본문을 **안 싣고** `prompt_capture="withheld"` 만 남긴다.
+
+본문까지 보려면 **회차 뒤에 ZIP 을 받아 로컬에서 재생**한다. 그때만 실린다.
+
+```powershell
+python -X utf8 tools/langfuse_tail.py --diagnostics <받은>/diagnostics.jsonl `
+    --dev-input open/dev.jsonl --include-prompts
+```
+
+`LANGFUSE_HOST` 가 `http://localhost:3002`(또는 `127.0.0.1`·`[::1]`) 그대로가 아니면
+거부한다. userinfo·query·fragment·다른 포트·다른 경로도 거부다 — 로컬처럼 생긴
+주소가 밖으로 리다이렉트할 수 있다. `--follow`·`--from-line` 과도 같이 못 쓴다.
+
+그리고 로그가 **고정 공개 dev 회차**인지 데이터로 대조한다. `run_started.dataset="dev"`,
+dev 파일 실측 sha256 이 로그의 `dataset_sha256` 과 `inputs.json` 고정값과 모두 같고,
+`dev_ids` 가 그 파일의 고유 id 집합과 정확히 같고, 모든 공고 이벤트 id 가 그 집합
+안에 있고, 신원 미확정(`ambiguous`·`unmatched`) 본문이 0건이어야 한다.
+**플래그는 안전의 근거가 아니다 — 이 대조가 근거다.** 접두사만 보면 안 된다.
+
+계약은 `reports/team-c/a8-v20-annex/observation-contract.json` 이 소유하고
+`tests/test_langfuse_tail.py::PromptExportBoundary` 가 고정한다.
+
 ## Colab 에서 붙이기
 
 노트북이 clone 한 저장소 안에서 사이드카를 띄운다. 제출 ZIP 은
 `script.py` 와 `requirements.txt` **둘뿐**이므로(`tools/package.py` 의 `FILES`)
 이 도구가 제출물에 섞일 수 없다.
+
+아래는 **metadata 전용** 실시간 추종이다. 프롬프트 전문은 위 절을 따른다.
 
 ```python
 # 1) 사이드카 의존성. 제출 requirements.txt 와 무관하다.
@@ -120,25 +148,28 @@ tail.wait(timeout=180)   # 남은 배치를 보내고 끝난다
 프롬프트 본문과 원응답은 `--debug-responses` 로 돌린 **진단 실행에만** 들어간다.
 기본 실행은 토큰 수와 실패 사유만 남긴다.
 
-## B 에게 요청할 한 줄
+### capture_protocol 1 — 실제 호출이 따로 온다
 
-`script.py` 는 실제로 보낸 프롬프트를 남기지 않는다. `system_prompt_sha256` 만 있다.
-계획이 첫 48시간에 확인하라는 `적용 대상 인식 → 전달 문맥 → 사실 추출 → 조건 비교 →
-후처리` 중 **전달 문맥**이 그래서 비어 있다. `script.py:579` 에 한 줄이면 된다.
+A8 관측 회차는 판형 번호 `1` 을 적는다. 그 로그에서는 **물리 호출과 파싱이 갈린다.**
 
-```python
-        if debug_responses:
-            fields["prompt_text"] = batch[i][-1]["content"]   # 실제 전달된 문맥
-            fields["response_text"] = text
-```
+| 진단 이벤트 | Langfuse |
+| --- | --- |
+| `arm_started` → `arm_finished` | 군 span. 같은 공고가 군마다 다른 key 를 받는다 |
+| `model_call_started` → `model_call_finished`/`_failed` | **generation.** 실제 모델 요청 하나다. 분할 재시도는 별도 요청으로 남는다 |
+| `response` | `parse-…` **이벤트.** generation 을 또 만들지 않는다 — 호출 하나가 둘로 세지 않게 한다 |
+| `model_loaded` 의 `mode` | 루트 span 의 이름·metadata 를 고친다. 루트는 생성 전에 `pending` 으로 열리므로 이게 없으면 실제 회차와 대역 실행이 안 갈린다 |
 
-`batch` 는 `run_chunk` 의 인자라 이미 클로저에 있다. dev 진단 실행에서만 켜지고
-200건 × 16,000자 ≈ 3MB 다. 사이드카는 이 필드가 오면 generation 의 input 으로 싣고,
-없으면 그냥 비운다 — `tests/test_langfuse_tail.py` 가 두 경우를 모두 고정한다.
+`schema_sha256` 은 제품이 **실제로 쓴** 파라미터를 가리킨다 — `items` 가 있으면
+`sp` 가 아니라 `parameters_for_items()` 로 제한한 스키마다(`script.py:967`).
+
+판형 번호가 없는 옛 로그는 기존 `response` → generation 투영을 그대로 쓴다.
 
 ## 대회 규칙 경계
 
 - **공개 dev 자료만 보낸다.** 비공개 평가 입력을 넣으면 [R17](rules.md) 즉시 실격이다.
+- **프롬프트 전문은 로컬 주소로만, 고정 dev 대조를 통과할 때만 나간다.** 로컬 주소라는
+  사실만으로 비공개 자료가 허용되는 것은 아니다. 평가 입력·서버 추론 로그에는 이 도구를
+  연결하지 않는다. 비밀키·환경변수 전체·`.env`·개인 절대경로는 span 에 넣지 않는다.
 - 제출 추론은 외부를 호출하지 않는다(R7). 사이드카는 제출물 밖의 별도 프로세스이고
   제출 ZIP 은 `script.py`·`requirements.txt` 둘뿐이다.
 - `requirements.txt` 에 `langfuse`·`opentelemetry` 를 넣지 않는다. 평가 서버에 설치될
@@ -157,3 +188,9 @@ tail.wait(timeout=180)   # 남은 배치를 보내고 끝난다
   닫을 때 `NEXTAUTH_URL` 이 로컬로 자동 복원됨
 - **실제 GPU·Colab 회차에서는 아직 안 돌렸다.** `--follow` 의 실시간 추종도
   완성된 파일로만 확인했다. 팀원 계정 초대와 Member/Viewer 화면도 아직 안 만들었다
+
+2026-09-22 `capture_protocol=1` 투영을 **CPU 재생 로그로만** 확인했다.
+군별 파일럿 로그는 그전까지 `run_started` 가 없어 사이드카가 **모든 이벤트를 버렸다**
+(400 → span 0). 지금은 1,618 이벤트 → 1,618 op, 생성 키 400개 전부 구별, 열고닫은 쌍 408,
+미종료 0 이다. **로컬 스택 적재·UI 확인은 안 했고 GPU 회차에서도 안 돌렸다.**
+프롬프트 수출 검사는 검사 6개로만 확인했으며 실제 적재로 확인한 것이 아니다.

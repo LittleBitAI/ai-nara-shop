@@ -191,6 +191,19 @@
     "what": "회차가 실제 모델 요청을 diagnostics.jsonl 한 파일에 기록하고, 회차 뒤 같은 런타임의 CPU 감사가 인용 상태와 v20 판정을 가른다. 추론은 바뀌지 않는다.",
     "notebook_wiring": "실행 셀(13)이 a8_v20_audit.py --episode-dir 를 이어 돌리고 군별 counts 와 gain_kind 집계를 찍는다. 모델 재호출 0회.",
     "source_hashes_verified": true,
+    "prompt_export": "기본 withheld. --include-prompts + --dev-input + 로컬 주소 + 고정 dev 대조가 모두 맞을 때만 본문이 나간다.",
+    "round_1_review": {
+      "verdict": "머지 불가 → 수리 완료",
+      "p0": "사이드카가 프롬프트·응답 전문을 조건 없이 임의 host 로 보냈다. 설계 §3.5 미구현. validate_dev_export 를 넣었다.",
+      "p1": ["schema_sha256 이 sp 를 가리켜 실제 제한 스키마를 증명하지 못했다 → effective_parameters()",
+             "감사가 payload_sha256 을 재계산하지 않아 원응답을 바꿔도 통과했다 → 재계산",
+             "gain_kind 가 인용 상태만 봐 두 가지를 오분류했다 → 실제 v20 전이로 판정, v20_applicable 추가",
+             "루트가 mode=pending 으로 끝나 실제 회차와 대역 실행이 안 갈렸다 → update 액션"],
+      "mutation_check": "다섯 가드를 하나씩 되돌려 각각 담당 검사가 빨개지는 것을 확인했다",
+      "confirmed_by_reviewer": ["script.py·후보·law_index 무변경",
+                               "비-system 본문 digest 의 공고 유일성과 호출 키 비중복",
+                               "API 표본 45건 재현", "핀·미실행 목록이 문서와 원장에서 일치"]
+    },
     "not_evidence_of": "GPU 회차·Langfuse UI 적재. 투영은 CPU 재생 로그로만 확인했다."
   },
   "cpu_budget_check": {
@@ -313,6 +326,26 @@
       "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
       "findings": 0,
       "phase": "관측·투영·감사 배선 후. 공개 위키 허브에서 실행"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 356,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 238.02,
+      "phase": "라운드 1 P0·P1 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.735,
+      "phase": "라운드 1 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 0,
+      "phase": "라운드 1 수리 후"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
