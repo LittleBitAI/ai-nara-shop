@@ -18,6 +18,7 @@ from unittest.mock import patch
 import script
 from experiments import a5_scope_pilot as pilot
 from experiments import a8_v20_annex as candidate
+from experiments import a8_v20_audit as audit
 from experiments import law_index
 from tests.test_a5_collect_facts import FakeRunner, records
 
@@ -587,6 +588,138 @@ class PilotWiringTests(unittest.TestCase):
             self.assertEqual(json.loads((output/'budget.json').read_text(encoding='utf-8')), failing)
             self.assertFalse((output/'control').exists())
             self.assertEqual(json.loads((output/'run_report.json').read_text(encoding='utf-8'))['status'], 'failed')
+
+
+class AuditTests(unittest.TestCase):
+    """감사는 문자열 검증과 판정을 가르고, 실제 소비자와 어긋나면 안 된다."""
+
+    def h4_rows(self):
+        script.load_sme_reference(str(pilot.ROOT/'open/data'))
+        events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+        chars = {e['id']: e['max_chars'] for e in events if e['event'] == 'company_size_input'}
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        out = []
+        for rec in script.iter_records(str(pilot.ROOT/'open/dev.jsonl')):
+            facts = script.parse_judgment(texts[rec['id']], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+            out.append((rec, facts, chars[rec['id']], audit.audit_row(rec, facts, max_chars=chars[rec['id']])))
+        return out
+
+    def test_audit_matches_the_real_consumer_on_all_200_records(self):
+        rows = self.h4_rows()
+        for rec, facts, max_chars, row in rows:
+            writes, reason = script.verify_company_size(facts, rec, max_chars)
+            cell = writes.get('v20')
+            self.assertEqual(row['v20_write'], None if cell is None else cell['위반여부'], rec['id'])
+            self.assertEqual(row['company_reason'], reason, rec['id'])
+        counts = audit._counts([row for *_, row in rows])
+        # H4 의 v20 양성 다섯 건과 정확히 같다 — 감사가 판정을 새로 만들지 않는다.
+        self.assertEqual(counts['v20_write_1'], 5)
+        self.assertEqual([row['id'] for *_, row in rows if row['v20_action'] == 'write_1'],
+                         ['PPS-DEV-056', 'PPS-DEV-064', 'PPS-DEV-068', 'PPS-DEV-133', 'PPS-DEV-144'])
+        # **실패 분모**: 참여 조항 인용이 200건 전부 null 이다. 개선할 양성 인용이 없었다.
+        self.assertEqual(counts['participation_nonnull'], 0)
+        self.assertEqual(counts['software_yes'], 11)
+
+    def test_the_catalogue_global_must_be_filled_or_the_audit_refuses(self):
+        """`_PRODUCTS` 가 빈 상태의 0 은 안전의 증거가 아니다 — 라운드 2에서 내가 틀린 자리다."""
+        with tempfile.TemporaryDirectory() as directory:
+            episode = Path(directory)
+            (episode/'contract.json').write_text('{}', encoding='utf-8')
+            with patch.object(script, '_PRODUCTS', []), \
+                    patch.object(script, 'load_sme_reference', return_value=((), [])), \
+                    self.assertRaisesRegex(ValueError, '카탈로그 전역이 비었다'):
+                audit.audit_episode(episode)
+
+    def test_invalid_quote_is_preserve_not_a_verified_negative(self):
+        rec = {r['id']: r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))}['PPS-DEV-133']
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        facts = script.parse_judgment(texts['PPS-DEV-133'], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+        visible = script.build_context(rec, 16000)
+        real = facts['software_business_quote']
+        self.assertEqual(audit.quote_check(real, rec, visible)['state'], 'exact')
+        for quote, state in [(None, 'null'), ('   ', 'empty'), ('공고에 없는 문장', 'invalid'),
+                             ('「중소기업기본법」제2조의 중소기업', 'invalid')]:
+            self.assertEqual(audit.quote_check(quote, rec, visible)['state'], state, quote)
+        # 참여 인용이 원문 밖이면 판정을 보류한다 — 검증된 비위반(write_0)이 아니다.
+        row = audit.audit_row(rec, dict(facts, software_participation_quote='공고에 없는 문장'),
+                              max_chars=16000)
+        self.assertEqual(row['v20_action'], 'preserve')
+        self.assertEqual(row['software_participation_quote_check']['state'], 'invalid')
+        # null 이고 완전관측이면 부재로 1 을 쓴다.
+        self.assertEqual(audit.audit_row(rec, facts, max_chars=16000)['v20_action'], 'write_1')
+
+    def test_quote_matches_point_at_real_document_spans(self):
+        rec = {r['id']: r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))}['PPS-DEV-133']
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        facts = script.parse_judgment(texts['PPS-DEV-133'], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+        checked = audit.quote_check(facts['software_business_quote'], rec, script.build_context(rec, 16000))
+        self.assertTrue(checked['matches'])
+        for match in checked['matches']:
+            doc = rec['docs'][match['doc_index']]
+            self.assertEqual(doc['text'][match['start']:match['end']], checked['effective_quote'])
+            self.assertEqual(match['doc_id'], doc.get('doc_id'))
+
+    def test_fallback_only_change_is_marked_and_not_a_mechanism(self):
+        base = dict(id='X', v20_action='write_1', software_business='yes',
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        worse = dict(base, v20_action='preserve',
+                     software_participation_quote_check=dict(state='invalid'))
+        verified = dict(base, v20_action='write_0',
+                        software_participation_quote_check=dict(state='exact'))
+        self.assertEqual(audit.paired_changes([base], [worse])[0]['gain_kind'], 'fallback_only')
+        self.assertEqual(audit.paired_changes([base], [verified])[0]['gain_kind'], 'verified_quote')
+        self.assertEqual(audit.paired_changes([base], [base]), [])
+
+    def test_audit_episode_reads_a_real_pilot_output_and_writes_the_ledger(self):
+        """회차 폴더 전체를 감사한다 — 계약 hash·공고 집합·군을 함께 검사한다."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            argv = ['pilot', '--experiment', 'a8', '--model-dir', str(root/script.MODEL_REVISION),
+                    '--output-dir', str(root/'episode-1'), '--episode', '1']
+            with patch.object(sys, 'argv', argv), \
+                    patch.object(script, 'VLLMRunner', return_value=BudgetFakeRunner()):
+                pilot.main()
+            result = audit.audit_episode(root/'episode-1')
+            self.assertEqual(sorted(result['arms']), ['a8', 'control'])
+            self.assertTrue(result['complete'])
+            self.assertFalse(result['semantic_review_complete'])
+            for arm in result['arms'].values():
+                self.assertEqual(arm['counts']['records'], 200)
+                self.assertIsNone(arm['counts']['participation_semantically_applicable'])
+            self.assertEqual(result['execution_mode'], 'cpu_audit')
+            self.assertEqual(audit.main(['--episode-dir', str(root/'episode-1')]), 0)
+            self.assertTrue((root/'episode-1/v20-audit.json').is_file())
+            # 계약 hash 가 어긋나면 감사를 거부한다.
+            payload = json.loads((root/'episode-1/a8/dev.json').read_text(encoding='utf-8'))
+            payload['contract_sha256'] = '0' * 64
+            (root/'episode-1/a8/dev.json').write_text(json.dumps(payload, ensure_ascii=False),
+                                                      encoding='utf-8', newline='\n')
+            with self.assertRaisesRegex(ValueError, '계약 hash'):
+                audit.audit_episode(root/'episode-1')
+
+    def test_sample_takes_the_union_of_runs_plus_label_positives(self):
+        """`software_business=yes` 는 회차 산출물이라 한 회차로 고정하면 표본이 편향된다."""
+        manifest = json.loads((pilot.ROOT/'reports/team-c/a8-v20-annex/api-sample.json')
+                              .read_text(encoding='utf-8'))
+        self.assertEqual(len(manifest['mandatory_ids']), 15)
+        self.assertEqual(len(manifest['random_ids']), 30)
+        self.assertEqual(len(manifest['selected_ids']), 45)
+        self.assertEqual(len(set(manifest['selected_ids'])), 45)
+        self.assertIn('PPS-DEV-132', manifest['mandatory_ids'])        # 라벨 양성 중 yes 밖
+        sources = manifest['sources']
+        self.assertEqual(sources['union_count'], 14)
+        self.assertEqual(sources['intersection_count'], 9)             # 회차마다 흔들린다
+        self.assertEqual(len(sources['per_run']), 3)
+        self.assertFalse(set(manifest['mandatory_ids']) & set(manifest['random_ids']))
+        # 같은 seed 는 같은 표본을 준다.
+        again = audit.select_sample([r['id'] for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))],
+                                   sources['union'], {'PPS-DEV-132'},
+                                   random_n=manifest['random_n'], seed=manifest['seed'])
+        self.assertEqual(sorted(again['random_ids']), sorted(manifest['random_ids']))
+        with self.assertRaisesRegex(ValueError, '입력 밖의 공고'):
+            audit.select_sample(['A', 'B'], {'ZZZ'}, set(), random_n=1)
 
 
 class NotebookTests(unittest.TestCase):

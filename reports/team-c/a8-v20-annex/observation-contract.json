@@ -1,0 +1,111 @@
+{
+  "capture_protocol": 1,
+  "why": "파일럿 군별 로그는 run_started 가 없어 사이드카가 모든 이벤트를 버렸다(langfuse_tail.plan 91행). 실측: H4 전체 파이프라인 1,020 이벤트 → 625 span, 파일럿 군별 로그 400 → 0.",
+  "sources": {
+    "experiments/a5_collect_facts.py": "abb05a85f38b7d3c00c1dceecae38d5002790bd4ba74dcccc864080a47fa9de4",
+    "experiments/a5_scope_pilot.py": "d95603bc8c2ca39978c53adda435f0a47884f70dbcd23c9d21fabbe13da2b3b4",
+    "experiments/a8_v20_annex.py": "62a3ea53e66f157cc143f9663e6e89802d708ce73df18e0ddd4e04dece8ecaba",
+    "experiments/a8_v20_audit.py": "58915f5c74a034265c42c0917f1af2a7f2a3a946e180a045cae7db9d6bee4015",
+    "tools/langfuse_tail.py": "0faac6d46f69e213d24f35ea1123aae82aeb52310ef28fd4b9f194f9a81efd47",
+    "tools/replay_run.py": "35c235f99b3a2d824c18266b74f88534f033b4036a81ee4ce8611660b6f43895",
+    "script.py": "8e7011e2bfcc8eab2f5463ee16266e3de11ff5115a70c850027af8fcb8667dd4"
+  },
+  "events": {
+    "run": [
+      "run_started",
+      "model_loading",
+      "model_loaded",
+      "run_succeeded",
+      "run_failed"
+    ],
+    "arm": [
+      "arm_started",
+      "phase_started",
+      "arm_finished"
+    ],
+    "notice": [
+      "company_size_input",
+      "response"
+    ],
+    "chunk": [
+      "chunk_started",
+      "chunk_finished"
+    ],
+    "model_call": [
+      "model_call_started",
+      "model_call_finished",
+      "model_call_failed"
+    ],
+    "call_identity": "(run_id, episode, arm, sample, phase, chunk_start, call_seq, call_index)",
+    "reserved_keys": [
+      "event",
+      "time_unix",
+      "run_id",
+      "episode",
+      "arm",
+      "sample"
+    ]
+  },
+  "measured_projection": {
+    "before_commit_2": {
+      "events": 1618,
+      "ops": 414,
+      "generations": 400,
+      "distinct_generation_keys": 200,
+      "model_call_ops": 0,
+      "note": "군이 key 에 없어 control 과 a8 이 200쌍 겹쳤다. 옛 response 투영이었다."
+    },
+    "after_commit_2": {
+      "events": 1618,
+      "ops": 1618,
+      "generations": 400,
+      "distinct_generation_keys": 400,
+      "open_close_pairs": 408,
+      "left_open": 0,
+      "parse_events": 400,
+      "legacy_gen_projection": 0
+    }
+  },
+  "h4_audit_baseline": {
+    "records": 200,
+    "software_yes": 11,
+    "participation_nonnull": 0,
+    "v20_write_1": 5,
+    "v20_write_1_ids": [
+      "PPS-DEV-056",
+      "PPS-DEV-064",
+      "PPS-DEV-068",
+      "PPS-DEV-133",
+      "PPS-DEV-144"
+    ],
+    "v20_write_0": 0,
+    "v20_preserve": 195,
+    "note": "**실패 분모**: H4 에서 참여 조항 인용이 200건 전부 null 이다. 개선할 양성 인용이 없었고 v20 양성은 전부 부재 분기다."
+  },
+  "api_sample": {
+    "file": "api-sample.json",
+    "selected": 45,
+    "mandatory": 15,
+    "random_n": 30,
+    "mandatory_rule": "세 회차의 software_business=yes 합집합 14 + 라벨 양성 PPS-DEV-132",
+    "why_union": "그 집합은 회차 산출물이다 — H4 11 · wiki1 11 · wiki2 12, 교집합 9.",
+    "status": "blocked_q1"
+  },
+  "gpu_status": "not_run",
+  "api_status": "blocked_q1",
+  "langfuse_status": "projection_verified_on_cpu_only — 로컬 스택 적재·UI 확인은 미실행",
+  "semantic_review": {
+    "file": "semantic-review.jsonl",
+    "rows": 0,
+    "reviewer": null,
+    "note": "사람이 하지 않은 검토의 reviewer 를 채우지 않는다"
+  },
+  "tests": [
+    "tests/test_a5_collect_facts.py",
+    "tests/test_langfuse_tail.py",
+    "tests/test_a8_v20_annex.py",
+    "tests/test_replay_run.py",
+    "tests/test_a5_v18_scope_review.py",
+    "tests/test_wiki_rag_pilot.py"
+  ]
+}
