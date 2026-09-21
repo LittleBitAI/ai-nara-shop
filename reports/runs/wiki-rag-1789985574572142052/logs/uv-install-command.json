@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "pip",
+    "install",
+    "uv"
+  ],
+  "cwd": "/content/wiki-rag-tx9v4yj0",
+  "started": 1789983834.5432613,
+  "returncode": 0,
+  "elapsed_seconds": 4.169174671173096
+}

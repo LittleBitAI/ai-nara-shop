@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "uv",
+    "venv",
+    "--python",
+    "3.12.13",
+    "--seed",
+    "/content/wiki-rag-tx9v4yj0/venv"
+  ],
+  "cwd": "/content/wiki-rag-tx9v4yj0",
+  "started": 1789983838.7129664,
+  "returncode": 0,
+  "elapsed_seconds": 1.8961126804351807
+}

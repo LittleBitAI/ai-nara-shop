@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/wiki-rag-temvm92p/repo",
+  "started": 1789985649.532202,
+  "returncode": 0,
+  "elapsed_seconds": 0.45899009704589844
+}

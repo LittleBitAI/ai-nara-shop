@@ -84,6 +84,8 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `a5-scope-1789959906563639676` | `1735330` | control/head 0.598042834114 · control/h2 0.606700842772 · h3/head 0.548378371399 · h3/h2 0.558867881888 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/a5-scope-1789959906563639676/](../reports/runs/a5-scope-1789959906563639676/) |
 | `a5-v18-1789970544717477048` | `44f5e4b` | episode-1 control 0.580462327031 · v18 0.600586987945 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/a5-v18-1789970544717477048/](../reports/runs/a5-v18-1789970544717477048/) |
 | `a5-v18-1789971728366885632` | `44f5e4b` | episode-2 control 0.596128605198 · v18 0.598735136094 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/a5-v18-1789971728366885632/](../reports/runs/a5-v18-1789971728366885632/) |
+| `wiki-rag-1789985574572142052` | `a9fdd0a` | episode-1 control 0.590035679232 · raw 0.579480092032 · wiki 0.590312886688 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/wiki-rag-1789985574572142052/](../reports/runs/wiki-rag-1789985574572142052/) |
+| `wiki-rag-1789987435003372430` | `a9fdd0a` | episode-2 control 0.588936972870 · raw 0.579480092032 · wiki 0.590312886688 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/wiki-rag-1789987435003372430/](../reports/runs/wiki-rag-1789987435003372430/) |
 
 `a5-scope-…`는 **제출 파이프라인 회차가 아닙니다.** `company_size` 한 단계만 GPU로 돌리고
 나머지는 보관 원응답으로 재생한 A/B이며 제출 ZIP이 없습니다. 위 네 값을 위 행들의
@@ -95,6 +97,13 @@ episode-1 파일 32개는 첫 ZIP과 바이트 동일하며 원형 보존하되 
 측정 장부에서 중복 제외했습니다. CSV 8개 바이트 재현·24항목 지표 대조 통과.
 v18 TP는 두 회차 1건, OFF/ON 변화 0셀, v13·v20 FP 증가가 반복돼 미채택입니다.
 [24항목 F1·시간·실패·판정](../reports/team-c/a5-v18-scope-review/results.md).
+
+`wiki-rag-…` 두 회차도 같은 **부분 GPU/혼합 재생** 등록이며 제출 ZIP이 없습니다.
+`control`/`raw`/`wiki` 세 군이 같은 company 호출·같은 공고 본문을 쓰고 지식 블록만 달랐습니다.
+최신 ZIP의 episode-1 파일 63개는 첫 ZIP과 바이트 동일하며 `canonical_episodes`로 중복 제외했습니다.
+등록한 원응답으로 CSV 6개 바이트 재현을 확인했습니다. 세 군 모두 미채택이며,
+**1,200회 호출에서 검증된 참여 조항 인용이 0건**이라는 것이 기각 근거입니다.
+[셀 단위 감사·24항목 지표·채택 판단](../reports/wiki-rag-pilot/results.md).
 
 현재 전체 파이프라인 dev GPU 최고는 **0.599315859078**, 서버 최신/최고는 **0.5084137874**
 (모두 `18f07e5`)로 이번 파일럿에 의해 갱신되지 않았습니다. CPU 합본 0.620382330538과도 구분합니다.

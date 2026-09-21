@@ -38,8 +38,14 @@ def save(path, value):
     temporary.replace(path)
 
 
-def collect(records, runner, products, emit, budget=None):
-    """`budget`은 A8처럼 출력 예약을 바꾼 실험이 두 군 공통 예산을 명시할 때만 넘긴다."""
+def collect(records, runner, products, emit, budget=None, plan=None):
+    """두 실험이 각자 한 축만 고정한다. 둘은 직교하므로 같이 쓸 수 있다.
+
+    `budget`은 A8처럼 **출력 예약을 바꿔 공통 토큰 예산이 달라진** 실험이 그 값을 명시할 때만
+    넘긴다. `plan`은 wiki-rag처럼 **공고별 문서 예산을 미리 고정**해 여러 군이 같은 공고 본문을
+    보게 할 때 넘긴다. A8은 `budget`을 5번째 위치 인자로 받고 wiki-rag는 `plan=`을 키워드로
+    준다 — 순서를 바꾸면 둘 중 하나가 깨진다.
+    """
     budget = script.PROMPT_BUDGET if budget is None else budget
     rows, inference_seconds = [], 0.0
     started = time.perf_counter()
@@ -49,9 +55,12 @@ def collect(records, runner, products, emit, budget=None):
         for rec in group:
             company_rec = {**rec, "meta": {k: v for k, v in rec.get("meta", {}).items()
                                          if k != "조항호내용"}}
+            planned = MAX_CHARS if plan is None else plan[rec["id"]]
             messages, tokens, chars = script.fit_to_budget(
-                company_rec, script.COMPANY_SIZE_PROMPT, runner, MAX_CHARS,
+                company_rec, script.COMPANY_SIZE_PROMPT, runner, planned,
                 budget=budget, products=products)
+            if plan is not None and chars != planned:
+                raise ValueError(f"{rec['id']}: 계획한 문서 예산 {planned}이 토큰 예산을 넘었다")
             batch.append(messages)
             budgets.append((tokens, chars))
             emit('company_size_input', id=rec['id'], max_chars=chars, prompt_tokens=tokens,

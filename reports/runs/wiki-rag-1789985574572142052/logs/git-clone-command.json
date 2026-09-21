@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "/content/wiki-rag-tx9v4yj0/repo"
+  ],
+  "cwd": "/content/wiki-rag-tx9v4yj0",
+  "started": 1789983801.6565194,
+  "returncode": 0,
+  "elapsed_seconds": 2.032207489013672
+}
