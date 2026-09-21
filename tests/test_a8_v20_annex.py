@@ -246,6 +246,47 @@ class LawQuotationTests(unittest.TestCase):
         self.assertEqual(sorted(planted['qualification_quote']), ['v13'])
         self.assertEqual(len(planted['qualification_quote']['v13']), 9)
 
+    def facts_and_records(self):
+        """카탈로그 전역을 채운 뒤 H4 사실·공고·실제 max_chars 를 함께 돌려준다."""
+        script.load_sme_reference(str(pilot.ROOT/'open/data'))
+        events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+        chars = {e['id']: e['max_chars'] for e in events if e['event'] == 'company_size_input'}
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        for rec in script.iter_records(str(pilot.ROOT/'open/dev.jsonl')):
+            facts = script.parse_judgment(texts[rec['id']], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+            yield facts, rec, chars[rec['id']]
+
+    def test_role_and_quote_together_open_new_v13_positives(self):
+        """실제 모델은 분류·역할·인용을 한 응답에서 함께 낸다. 그 결합 경로를 계약에 넣는다.
+
+        라운드 2 리뷰의 P1이다. 인용 한 필드만 바꾸는 스윕은 이 경로를 못 본다 —
+        `qualification_role`이 baseline 에서 v13 을 막고 있던 공고들이 함께 열린다.
+        scope 는 건드리지 않는다. H4 의 `competitive` 78건이 그대로 후보군이다.
+        """
+        labels = read_csv(pilot.ROOT/'open/dev_labels.csv')
+        base, combined, law_evidence = {}, {}, []
+        for facts, rec, max_chars in self.facts_and_records():
+            before, _ = script.verify_company_size(facts, rec, max_chars)
+            after, _ = script.verify_company_size(
+                dict(facts, qualification_role='eligibility', qualification='small_only',
+                     qualification_quote=self.LAW_SPAN), rec, max_chars)
+            if 'v13' in before:
+                base[rec['id']] = before['v13']
+            if 'v13' in after:
+                combined[rec['id']] = after['v13']
+                if self.LAW_SPAN in str(after['v13']['근거문구']):
+                    law_evidence.append(rec['id'])
+        new = [i for i in combined if i not in base]
+        self.assertEqual((len(base), len(combined), len(new)), (9, 33, 24))
+        # 신규 24셀 전부가 법령 문자열을 근거로 쓴다.
+        self.assertEqual(sorted(i for i in law_evidence if i in new), sorted(new))
+        # 그중 23건은 정답 0 이다 — 모델이 이 결합을 내면 v13 오탐이 그만큼 늘어난다.
+        self.assertEqual(sum(1 for i in new if labels[i]['v13'] == '0'), 23)
+        self.assertEqual(sum(1 for i in new if labels[i]['v13'] == '1'), 1)
+        # ponytail: 근거만 비우는 수리는 이 신규 양성 경로를 닫지 않는다. 판정까지 막으려면
+        # `company_size_products()` 가 검증된 인용을 요구해야 하고 그것은 재생에서 -0.002838 이다.
+        # 그 선택이 서기 전에는 v20 실험의 채택 게이트를 열지 않는다.
+
     def test_v13_evidence_is_already_ungrounded_without_the_injection(self):
         """같은 구멍이 후보 없이도 이미 3셀에서 발화한다 — A8 이 만든 회귀가 아니다."""
         _, products = script.load_sme_reference(str(pilot.ROOT/'open/data'))

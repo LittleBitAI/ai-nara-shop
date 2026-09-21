@@ -134,6 +134,12 @@
                                 "ids": ["PPS-DEV-16", "PPS-DEV-148", "PPS-DEV-198"]},
     "a8_exposure": "별표의 부분문자열을 qualification_quote 에 넣으면 같은 9셀이 법령 문자열을 근거로 쓴다.",
     "other_quote_fields": 0,
+    "combined_role_and_quote": {"v13_cells": 33, "new_positives": 24, "law_evidence": 24,
+                                "new_label_0": 23, "new_label_1": 1,
+                                "note": "scope 는 건드리지 않았다. 라운드 2 리뷰 P1 — 인용 한 필드만 보는 스윕은 이 경로를 못 본다."},
+    "measured_fix_cost": {"evidence_only": {"macro": 0.593846165415, "v13": [4, 9, 2], "closes_new_positives": false},
+                          "verified_quote_required": {"macro": 0.591008188119, "v13": [3, 8, 3],
+                                                      "delta": -0.002838, "closes_new_positives": true}},
     "fix_location": "운영 script.py — A8 허용 파일 밖. v13 셀이 움직일 수 있어 별건 판단 대기.",
     "pinned_by": "tests/test_a8_v20_annex.py::LawQuotationTests 두 검사"
   },
