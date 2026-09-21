@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from experiments import c_v13_merge_candidate as candidate  # noqa: E402
+from experiments import c_v13_merge_candidate as candidate
 
 CASE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
 DEV = ROOT / "open/dev.jsonl"
