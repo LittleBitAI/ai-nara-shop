@@ -128,6 +128,23 @@ class V24MetaDiffCandidate(unittest.TestCase):
         meta = {"배정예산금액": 100_000_000, "입찰추정가격": 90_000_000}
         self.assertIsNotNone(candidate.amount_diff({}, "사업예산: 123,456,789원", meta))
 
+    def test_the_amount_axis_accepts_a_formula_and_rounding_residue(self):
+        """등록 금액이 **식 어디에든** 있으면 일치다. ±1원은 부가세 역산의 반올림이다.
+
+        "첫 금액 하나만" 은 절반이었다 — 산식의 구성값을 총액과 비교한다.
+        무라벨 `PPS-D-004155`: `사업예산: 1,750,000원 × 18명 = 31,500,000원`,
+        등록 배정예산 31,500,000. dev `PPS-DEV-067`: 본문 138,045,454 · 등록 138,045,455.
+        """
+        formula = {"배정예산금액": 31_500_000, "입찰추정가격": None}
+        self.assertIsNone(candidate.amount_diff(
+            {}, "사업예산: 1,750,000원 × 18명 = 31,500,000원", formula))
+        rounding = {"배정예산금액": 151_850_000, "입찰추정가격": 138_045_455}
+        self.assertIsNone(candidate.amount_diff(
+            {}, "추정가격 138,045,454원 + 부가가치세 13,804,546원", rounding))
+        # 식 어디에도 등록 금액이 없으면 여전히 발화한다.
+        self.assertIsNotNone(candidate.amount_diff(
+            {}, "사업예산: 123,456,789원", {"배정예산금액": 100_000_000}))
+
     def test_each_axis_finds_its_case(self):
         records = _records()
         for identifier, axis in AXIS_CASES.items():

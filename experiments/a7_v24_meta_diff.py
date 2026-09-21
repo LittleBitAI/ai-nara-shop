@@ -117,6 +117,8 @@ def title_tag_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Opti
     return None
 
 
+# 부가세를 역산한 추정가격은 등록값과 1원까지 어긋난다 — 반올림 잔차이지 불일치가 아니다.
+ROUNDING_WON = 1
 # 지역제한 문구에서 광역 이름을 찾을 범위. 제한 문구와 지역명 사이에 조건이 끼는 공고가 있다.
 REGION_CLAUSE_WINDOW = 120
 
@@ -166,12 +168,17 @@ def amount_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optiona
         return None
     script = baseline()
     for label in re.finditer(r"(?:사업|배정|추정|기초)\s*(?:예산|금액|가격)[^\n]{0,40}", body):
-        found = script.V24_AMOUNT.search(label.group(0))      # 라벨에 붙은 첫 금액 하나
-        if found is None:
+        amounts = [v for v in (_int(m.group(1)) for m in script.V24_AMOUNT.finditer(label.group(0)))
+                   if v is not None and v >= 1_000_000]
+        if not amounts:
             continue
-        value = _int(found.group(1))
-        if value is not None and value >= 1_000_000 and value not in known:
-            return label.group(0).strip()
+        # **그 식에 등록 금액이 어디든 있으면 일치로 본다.** 첫 금액만 보면 산식의
+        # 구성값을 총액과 비교한다 — 무라벨 `PPS-D-004155` 의
+        # `사업예산: 1,750,000원 × 18명 = 31,500,000원` 이 등록 31,500,000 과 같은데도 발화했다.
+        # ±1원은 부가세 역산의 반올림 잔차다 — `PPS-DEV-067` 138,045,454 대 등록 138,045,455.
+        if any(any(abs(value - base) <= ROUNDING_WON for base in known) for value in amounts):
+            continue
+        return label.group(0).strip()
     return None
 
 
