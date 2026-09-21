@@ -90,12 +90,32 @@ class ScopePilotTests(unittest.TestCase):
                                                 (True, 128), (True, 72), (True, 5)])
                 self.assertEqual(result['control_to_h3_changes'], {'head': [], 'h2': []})
                 self.assertEqual(result['arms']['h3']['condition_states'], {'unobserved': 200})
+                report = json.loads((output/'run_report.json').read_text(encoding='utf-8'))
+                self.assertEqual(report['status'], 'complete')
+                self.assertEqual(report['execution_mode'], 'test_double')
+                self.assertEqual(report['model_success_count'], 0)
+                self.assertEqual(sum(c['valid_json'] for c in report['counts'].values()), 410)
+                self.assertIsNone(report['full_pipeline_gpu_macro_f1'])
+                self.assertIn('Macro F1', (output/'run-record.md').read_text(encoding='utf-8'))
                 for name in ('control', 'h3'):
                     for variant in ('head', 'h2'):
                         self.assertEqual(len(pilot.score.load_csv(output/name/f'{variant}-hybrid.csv')[0]), 200)
+                        metrics = json.loads((output/name/f'{variant}-score/metrics.json').read_text(encoding='utf-8'))
+                        self.assertEqual(len(metrics['items']), 24)
+                        self.assertTrue((output/name/f'{variant}-score/errors.csv').is_file())
                 with self.assertRaises(FileExistsError):
                     pilot.main()
                 self.assertEqual(len(runner.calls), 6)
+                failed = root/'failed-episode'
+                argv[6] = str(failed)
+                with patch.object(pilot.collector, 'collect', side_effect=RuntimeError('test failure')):
+                    with self.assertRaisesRegex(RuntimeError, 'test failure'):
+                        pilot.main()
+                report = json.loads((failed/'run_report.json').read_text(encoding='utf-8'))
+                self.assertEqual(report['status'], 'failed')
+                self.assertEqual(report['error_type'], 'RuntimeError')
+                self.assertIsNone(report['full_pipeline_gpu_macro_f1'])
+                self.assertEqual(report['results']['arms'], {})
 
 
 if __name__ == '__main__':

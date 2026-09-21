@@ -2,11 +2,13 @@
 import argparse
 from collections import Counter
 from contextlib import nullcontext
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -31,7 +33,6 @@ def hybrid_replay(payload, output):
     events = [dict(event='response', status='valid', phase=phase, id=identifier, response_text=text)
               for phase, values in texts.items() for identifier, text in values.items()]
     events.extend(dict(event='company_size_input', id=r['id'], max_chars=r['max_chars']) for r in payload['rows'])
-    truth = score.load_csv(ROOT/'open/dev_labels.csv')[0]
     results, predictions = {}, {}
     with tempfile.TemporaryDirectory(prefix='a5-hybrid-') as directory:
         case = Path(directory)
@@ -43,13 +44,74 @@ def hybrid_replay(payload, output):
                                       data_dir=str(ROOT/'open/data'), verify_company_size=verifier)
             (output/f'{name}-hybrid.csv').write_bytes(replay_run.to_csv_bytes(script, replay['rows']))
             predictions[name] = {r['id']: tuple(int(r[v]) for v in script.ITEMS) for r in replay['rows']}
-            results[name] = score.calculate(truth, predictions[name])[0]
+            score_args = argparse.Namespace(truth=ROOT/'open/dev_labels.csv', pred=output/f'{name}-hybrid.csv',
+                                            output_dir=output/f'{name}-score')
+            results[name] = score.run(score_args, ['python', 'tools/score.py', '--truth', str(score_args.truth),
+                '--pred', str(score_args.pred), '--output-dir', str(score_args.output_dir)])
     return results, predictions
 
 
 def changes(before, after):
     return [dict(id=identifier, item=item, before=a, after=b)
             for identifier in before for item, a, b in zip(script.ITEMS, before[identifier], after[identifier]) if a != b]
+
+
+def record_run(output, contract, started_at, seconds, status, error_type=None):
+    """Self-contained episode record, including partial/failure runs; never invent missing F1."""
+    def read(name):
+        path = output/name
+        return json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+    summary, environment = read('summary.json'), read('environment.json')
+    counts = {}
+    for path in sorted(output.glob('*/*.events.jsonl')):
+        events = [json.loads(line) for line in path.read_text(encoding='utf-8').splitlines()]
+        responses = [e for e in events if e['event'] == 'response']
+        counts[path.relative_to(output).as_posix()] = dict(
+            valid_json=sum(e.get('status') == 'valid' for e in responses),
+            invalid_json=sum(e.get('status') == 'invalid' for e in responses),
+            retry_responses=sum(e.get('attempt', 1) > 1 for e in responses),
+            batch_failures=sum(e['event'] == 'batch_failed' for e in events),
+            retry_failures=sum(e['event'] == 'retry_failed' for e in events),
+            output_tokens=sum(e['output_tokens'] for e in responses if isinstance(e.get('output_tokens'), int)),
+            responses_with_token_counts=sum(isinstance(e.get('output_tokens'), int) for e in responses))
+    mode = environment.get('runner_mode', 'pending')
+    report = dict(run_id=f"a5-scope-{started_at}", started_at_utc=started_at,
+                  ended_at_utc=datetime.now(timezone.utc).isoformat() if status != 'running' else None,
+                  status=status, error_type=error_type, pilot_seconds_after_input_validation=seconds,
+                  episode=contract['episode'], execution_order=contract['order'],
+                  code_commit=contract['source_commit'], contract=contract, environment=environment,
+                  execution_mode=mode,
+                  score_kind='hybrid_cpu_replay_with_live_company_size_only' if mode == 'live' else 'not_live',
+                  full_pipeline_gpu_macro_f1=None,
+                  model_success_count=sum(c['valid_json'] for c in counts.values()) if mode == 'live' else 0,
+                  counts=counts, results=summary, raw_responses_included=True,
+                  planned_responses=410, independent_diagnostic_sample=False)
+    collector.save(output/'run_report.json', report)
+    lines = ['# A5 H3 회차 기록', '', f"- 회차 ID: {report['run_id']}", f"- 상태: {status}",
+             f"- 코드: {contract['source_commit']}", f"- 순서: {' → '.join(contract['order'])}",
+             f"- 시작 UTC: {started_at}", f"- 입력 검사 이후 경과: {seconds:.3f}초",
+             f"- 모델 적재: {environment.get('model_load_seconds', '미측정')}초",
+             f'- 실행 모드: {mode}. live 외의 실행을 실제 모델 성공으로 세지 않는다.',
+             '- F1 종류: company_size + 보관된 기본/SME 응답의 혼합 CPU 재생. 전체 GPU F1은 미측정.',
+             '- 진단 5건은 이미 본 사례이며 무라벨 정밀도/발화율 표본이 아님.', '',
+             '| 군 | 소비자 | Macro F1 | v11 TP/FP/FN | company 단계초 | 서버 조건부 환산초 |',
+             '| --- | --- | ---: | --- | ---: | ---: |']
+    for name, arm in summary.get('arms', {}).items():
+        for variant, metrics in arm['metrics'].items():
+            v = metrics['items']['v11']
+            lines.append(f"| {name} | {variant} | {metrics['macro_f1']:.12f} | {v['tp']}/{v['fp']}/{v['fn']} | "
+                         f"{arm['dev_stage_seconds']:.3f} | {arm['projected_server_seconds_conditional']:.3f} |")
+    lines += ['', '## 24항목 지표', '', '| 군/소비자 | 항목 | F1 | precision | recall | TP | FP | FN |',
+              '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |']
+    for name, arm in summary.get('arms', {}).items():
+        for variant, metrics in arm['metrics'].items():
+            for item, m in metrics['items'].items():
+                lines.append(f"| {name}/{variant} | {item} | {m['f1']:.6f} | {m['precision']:.6f} | "
+                             f"{m['recall']:.6f} | {m['tp']} | {m['fp']} | {m['fn']} |")
+    lines += ['', '입력/코드/스키마 해시·원응답·파싱/재시도 건수·변경 셀은 run_report.json과 군별 JSON,',
+              'CSV·오답은 군별 *-score/에 있다. 반복 비교는 회차 2의 repeat-*/comparison.json에 있다.',
+              f"실패 종류: {error_type or '없음'}. 미완료 단계의 F1은 0으로 채우지 않는다.", '']
+    (output/'run-record.md').write_text('\n'.join(lines), encoding='utf-8', newline='\n')
 
 
 def main():
@@ -87,8 +149,24 @@ def main():
         with candidate.activate() if name == 'h3' else nullcontext():
             contract['arms'][name] = dict(prompt=script.COMPANY_SIZE_PROMPT, schema=script.company_size_schema())
     collector.save(output/'contract.json', contract)
+    started_at = datetime.now(timezone.utc).isoformat()
+    started = time.perf_counter()
+    record_run(output, contract, started_at, 0, 'running')
+    status, error_type = 'failed', None
+    try:
+        execute(args, output, contract, dev, diagnostics, products, order)
+        status = 'complete'
+    except BaseException as error:
+        error_type = type(error).__name__
+        raise
+    finally:
+        record_run(output, contract, started_at, time.perf_counter()-started, status, error_type)
+
+
+def execute(args, output, contract, dev, diagnostics, products, order):
     runner = script.VLLMRunner(script.decode_schema(str(ROOT/'open/data')), model_dir=str(args.model_dir))
-    collector.save(output/'environment.json', dict(environment=runner.environment, model_load_seconds=runner.load_seconds))
+    collector.save(output/'environment.json', dict(environment=runner.environment, model_load_seconds=runner.load_seconds,
+                                                   runner_mode=getattr(runner, 'MODE', 'test_double')))
     summary = dict(mode='live_company_size_pilot_with_hybrid_cpu_replay', episode=args.episode,
                    complete=False, arms={}, diagnostic_is_independent_evaluation=False)
     collector.save(output/'summary.json', summary)
@@ -137,7 +215,7 @@ def main():
     summary['complete'] = True
     summary['note'] = '410 company_size observations only. Hybrid replay is not a new full-pipeline GPU score or adoption.'
     collector.save(output/'summary.json', summary)
-    print(json.dumps({name: dict(v11=arm['metrics']['h2']['items']['v11'],
+    print(json.dumps({name: dict(macro_f1_h2=arm['metrics']['h2']['macro_f1'], v11=arm['metrics']['h2']['items']['v11'],
                      stage_seconds=arm['dev_stage_seconds'], within_limit=arm['within_stage_planning_limit'])
                      for name, arm in summary['arms'].items()}, ensure_ascii=False, indent=2))
 
