@@ -3,7 +3,7 @@
 - Macro F1: 0.599231652943
 - 정답/예측: 200/200건, ID 집합 일치, 오답 137개
 - 상태: draft. 독립 리뷰·사람 승인 없음.
-- 로컬 채점·저장 준비: 0.085686초
+- 로컬 채점·저장 준비: 0.082417초
 
 가설: 두 CSV의 24개 양성 F1을 ID로 대응해 계산한다. 비교 baseline은 지정되지 않았다.
 자기 대조·전부 0 등 합성 예측은 채점기 검사이며 모델 성능 검증이 아니다.
@@ -19,5 +19,5 @@ e는 점수에서 제외했다. 근거 원문 부분문자열·의미 품질은 
 입력 경로·SHA-256과 채점 코드 SHA-256은 manifest.json에 기록했다.
 
 ```powershell
-& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' '<외부>/submission.csv' '--output-dir' '<외부>/v24b-score'
+& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' '<외부>/submission.csv' '--output-dir' '<외부>/r6-score'
 ```

@@ -320,7 +320,8 @@ ADDRESS = re.compile(
     r"제\s?\d+조(?:의\s?\d+)?"           # 제21조 · 제2조의2
     r"|제\s?\d+장(?:의\s?\d+)?"
     r"|제\s?\d+절(?:의\s?\d+)?"
-    r"|제\s?\d+항|(?<![^\s])\d+항"          # bare `7항` 은 공백·문두 뒤에서만.
+    r"|제\s?\d+항(?!목)|(?<![^\s])\d+항(?!목)"   # `제3항목` 의 `제3항` 을 항으로 읽지 않는다.
+    # bare `7항` 은 공백·문두 뒤에서만.
     # `제-1항`·`제+1항`·`제/1항` 의 `1항` 을 항으로 읽지 않는다. 기호 목록을 늘리는
     # 대신 **경계**를 요구한다 — 목록은 다음 기호에서 또 샌다.
     r"|별표\s*\d+"
@@ -356,7 +357,7 @@ def _law_spans(citation: str, data_dir: str) -> List[Tuple[int, int, str]]:
 
 
 # 기형 항 표기를 찾는 그물. 정상 토큰이 덮는 자리는 빼고 남은 것만 주소 흉내로 본다.
-SUSPECT_PARAGRAPH = re.compile(r"제\s*[^가-힣\s]{0,3}\s*\d*\s*항")
+SUSPECT_PARAGRAPH = re.compile(r"제\s*[^가-힣\s]{0,3}\s*\d*\s*항(?!목)")
 
 
 def _split_region(region: str) -> Tuple[List[str], List[str]]:

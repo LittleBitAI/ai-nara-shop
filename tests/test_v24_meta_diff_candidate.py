@@ -114,6 +114,20 @@ class V24MetaDiffCandidate(unittest.TestCase):
         self.assertIsNone(candidate.industry_diff({}, "업종코드 1169", agree))
         self.assertIsNotNone(candidate.industry_diff({}, "업종코드 5210", agree))
 
+    def test_the_amount_axis_reads_only_the_amount_attached_to_its_label(self):
+        """같은 줄의 **부가세**를 예산 불일치로 읽으면 안 된다.
+
+        `PPS-DEV-19` 는 등록 추정가격 168,410,000 과 본문이 정확히 같은데
+        `추정가격: 168,410,000원, 부가세: 16,841,000원` 의 뒤 금액까지 비교해 발화했다.
+        dev 의 예산 축 발화는 **전부 이 축 단독**이라 오염이 가려지지도 않았다.
+        """
+        record = _records()["PPS-DEV-19"]
+        body = "\n".join(doc["text"] for doc in record["docs"])
+        self.assertIsNone(candidate.amount_diff(record, body, record["meta"]))
+        # 라벨에 붙은 금액 자체가 등록과 다르면 여전히 발화한다.
+        meta = {"배정예산금액": 100_000_000, "입찰추정가격": 90_000_000}
+        self.assertIsNotNone(candidate.amount_diff({}, "사업예산: 123,456,789원", meta))
+
     def test_each_axis_finds_its_case(self):
         records = _records()
         for identifier, axis in AXIS_CASES.items():

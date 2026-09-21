@@ -253,6 +253,17 @@ class LawIndex(unittest.TestCase):
         self.assertEqual([s.path for s in law_index.resolve("지방계약법 시행령 제43조 7항", DATA)],
                          [("제43조", "⑦")])
 
+    def test_the_word_hangmok_is_not_a_paragraph_address(self):
+        """`제3항목` 의 `제3항` 을 항으로 읽으면 **근거 범위를 조용히 좁힌다.**
+
+        조 전문(2,646자) 대신 ③항(208자)이 돌아왔다. 조사 결합 `제1항의` 는 유지한다.
+        """
+        found = law_index.resolve("국가계약법 시행령 제21조 제3항목", DATA)
+        self.assertEqual([s.path for s in found], [("제21조",)])
+        self.assertEqual([s.path for s in law_index.resolve("국가계약법 시행령 제21조 제3항", DATA)],
+                         [("제21조", "③")])
+        self.assertEqual(law_index.ADDRESS.findall("제1항의 규정"), ["제1항"])
+
     def test_a_trailing_law_without_an_address_means_the_whole_file(self):
         """마지막에 주소 없이 놓인 이름은 그 법령 전체를 가리킨다 — 고시금액이 그렇다."""
         found = law_index.resolve(

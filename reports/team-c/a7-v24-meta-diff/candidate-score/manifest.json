@@ -1,10 +1,10 @@
 {
-  "artifact_id": "score-v24b-score",
+  "artifact_id": "score-r6-score",
   "version": 1,
   "status": "draft",
-  "run_id": "v24b-score",
+  "run_id": "r6-score",
   "baseline_run": null,
-  "created_at": "2026-09-21T07:23:41.969929+00:00",
+  "created_at": "2026-09-21T09:07:58.988256+00:00",
   "sources": [
     {
       "role": "truth",
@@ -30,11 +30,11 @@
       "--pred",
       "<외부>/submission.csv",
       "--output-dir",
-      "<외부>/v24b-score"
+      "<외부>/r6-score"
     ],
-    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' '<외부>/submission.csv' '--output-dir' '<외부>/v24b-score'",
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' '<외부>/submission.csv' '--output-dir' '<외부>/r6-score'",
     "settings": {
-      "output_dir": "<외부>/v24b-score",
+      "output_dir": "<외부>/r6-score",
       "zero_division": 0,
       "items": 24
     }
@@ -58,5 +58,5 @@
     "evidence_substring": false,
     "evidence_quality": false
   },
-  "elapsed_seconds_before_publish": 0.08568640006706119
+  "elapsed_seconds_before_publish": 0.08241739997174591
 }

@@ -155,16 +155,23 @@ def amount_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optiona
     """공고 본문이 배정예산·추정가격 어느 쪽과도 다른 사업 금액을 적는가.
 
     금액은 본문 어디에나 나오므로(단가·보증금) `사업/배정/추정` 근처 표기만 본다.
+    그 창 안에서도 **라벨에 바로 붙은 금액 하나만** 본다. 창 안의 모든 금액을 비교하면
+    같은 줄의 부가세를 불일치로 읽는다 — `PPS-DEV-19` 의
+    `추정가격: 168,410,000원, 부가세: 16,841,000원` 이 그랬다. 등록 추정가격과
+    정확히 같은데도 예산 축이 발화했고, dev 의 예산 축 발화 19건은 **전부 이 축 단독**이라
+    그 오염이 다른 축에 가려지지도 않았다.
     """
     known = {_int(meta.get("배정예산금액")), _int(meta.get("입찰추정가격"))} - {None}
     if not known:
         return None
     script = baseline()
     for label in re.finditer(r"(?:사업|배정|추정|기초)\s*(?:예산|금액|가격)[^\n]{0,40}", body):
-        for found in script.V24_AMOUNT.finditer(label.group(0)):
-            value = _int(found.group(1))
-            if value is not None and value >= 1_000_000 and value not in known:
-                return label.group(0).strip()
+        found = script.V24_AMOUNT.search(label.group(0))      # 라벨에 붙은 첫 금액 하나
+        if found is None:
+            continue
+        value = _int(found.group(1))
+        if value is not None and value >= 1_000_000 and value not in known:
+            return label.group(0).strip()
     return None
 
 
