@@ -140,7 +140,8 @@
     "measured_fix_cost": {"evidence_only": {"macro": 0.593846165415, "v13": [4, 9, 2], "closes_new_positives": false},
                           "verified_quote_required": {"macro": 0.591008188119, "v13": [3, 8, 3],
                                                       "delta": -0.002838, "closes_new_positives": true}},
-    "fix_location": "운영 script.py — A8 허용 파일 밖. v13 셀이 움직일 수 있어 별건 판단 대기.",
+    "fix_location": "운영 script.py — A8 허용 파일 밖. 별도 PR 로 낸다.",
+    "chosen_fix": "verified_quote_required (2026-09-21 사용자 결정) — 검증된 인용이 없으면 v13 을 쓰지 않는다. 재생 Macro -0.002838 을 치르고 신규 양성 24셀 경로를 닫는다.",
     "pinned_by": "tests/test_a8_v20_annex.py::LawQuotationTests 두 검사"
   },
   "cpu_budget_check": {
