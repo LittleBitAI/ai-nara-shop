@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 import tempfile
 from types import SimpleNamespace
+import unicodedata
 import unittest
 from unittest.mock import patch
 
@@ -309,6 +310,33 @@ class LawQuotationTests(unittest.TestCase):
                        for column, value in row.items()
                        if column.startswith('e') and value and self.LAW_SPAN in value]
             self.assertEqual(planted, [], f'{field} 가 법령을 최종 근거열에 남겼다')
+
+    def test_the_three_rejected_quotes_are_not_contiguous_notice_spans(self):
+        """잃은 셀이 정말 잃어야 할 셀인지 — 세 인용이 공고와 어디서 갈리는지 센다.
+
+        복원기(`restore_spacing`)의 결함이 아니다. 공백을 다 지워도 세 인용 모두 공고에 없고,
+        갈리는 지점이 다르다 — `16`은 23자 뒤부터 다른 대목을 이어 붙였고(실질 위조),
+        `148`·`198`은 끝에 모델이 붙인 마침표 한 글자뿐이다(그래도 축자 인용은 아니다).
+        프롬프트가 요구하는 것은 "하나의 연속된 정확한 구간"이므로 셋 다 기각이 맞다.
+        """
+        events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+        chars = {e['id']: e['max_chars'] for e in events if e['event'] == 'company_size_input'}
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        records = {r['id']: r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))}
+
+        def flat(value):
+            return ''.join(unicodedata.normalize('NFC', value).split())
+
+        for identifier, matched, total in [('PPS-DEV-16', 23, 78), ('PPS-DEV-148', 87, 88),
+                                           ('PPS-DEV-198', 141, 142)]:
+            rec = records[identifier]
+            facts = script.parse_judgment(texts[identifier], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+            quote = flat(facts['qualification_quote'])
+            visible = flat(script.build_context(rec, chars[identifier]))
+            self.assertEqual(len(quote), total)
+            self.assertNotIn(quote, visible)  # 공백 차이가 아니다
+            longest = max(n for n in range(len(quote) + 1) if quote[:n] in visible)
+            self.assertEqual(longest, matched, identifier)
 
     def test_every_v13_cell_now_carries_a_verified_notice_quote(self):
         """수리 전에는 이 구멍이 후보 없이도 3셀에서 발화했다 — A8 이 만든 회귀가 아니었다.
