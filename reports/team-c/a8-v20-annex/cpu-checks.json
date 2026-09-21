@@ -10,7 +10,7 @@
   "independent_review": false,
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
   "pinned_code_commit": "d2c5f54a9365a76de9d938970dd34018ac823058",
-  "pinned_notebook_commit": null,
+  "pinned_notebook_commit": "d616c4aaa048d796f45fd56ce7e4be5af3ab5188",
   "notebook_only_change_from_code_commit": "REPO_REF",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전"],
   "environment": {
