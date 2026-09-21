@@ -71,9 +71,18 @@ const W = 720
 const H = 190
 const PAD = { l: 42, r: 58, t: 14, b: 24 }
 
-/** 회차별 F1 추이. Macro 와 고른 항목 둘만 그린다 — 24줄은 실타래가 된다. */
-export function Trend({ history, item, itemName, current, compare, onPick }) {
+/** 회차별 F1 추이. Macro 와 고른 항목 둘만 그린다 — 24줄은 실타래가 된다.
+ *
+ * **한 선에는 같은 `kind` 만 올린다.** `gpu-pilot` 은 한 단계만 GPU 로 돌리고 나머지는
+ * 보관 원응답으로 재생한 값이라 제출 파이프라인 회차(`gpu-run`)와 저울이 다르다.
+ * 섞어 그리면 선이 뛰고, 그 뜀이 성능 변화로 읽힌다. 고르개에는 둘 다 남는다 —
+ * 파일럿을 고르면 그때는 파일럿끼리의 선을 본다.
+ */
+export function Trend({ history: all, item, itemName, current, compare, onPick }) {
   const [hover, setHover] = useState(null)
+  const kindOf = (run) => run?.kind ?? 'gpu-run'
+  const kind = kindOf(all.find((r) => r.run_id === current))
+  const history = all.filter((r) => kindOf(r) === kind)
   if (history.length < 2) return null
 
   const x = (i) => PAD.l + (i * (W - PAD.l - PAD.r)) / (history.length - 1)
@@ -97,7 +106,11 @@ export function Trend({ history, item, itemName, current, compare, onPick }) {
   return (
     <figure className="chart">
       <figcaption>
-        회차 추이 <span className="dim">— {history.length}회차, 점을 누르면 그 회차로 간다</span>
+        회차 추이 <span className="dim">
+          — {kind === 'gpu-pilot' ? '파일럿(부분 GPU)' : '제출 파이프라인'} {history.length}회차
+          {history.length < all.length && `, 저울이 다른 ${all.length - history.length}개는 뺐다`}
+          , 점을 누르면 그 회차로 간다
+        </span>
       </figcaption>
       <svg
         viewBox={`0 0 ${W} ${H}`}
