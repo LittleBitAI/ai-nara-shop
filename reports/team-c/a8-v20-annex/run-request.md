@@ -1,16 +1,16 @@
 # A8 v20 별표 주입 Colab 실행 안내
 
-> **지금 이 고정 커밋으로 실행하지 않는다.** 아래 `713aa83`은 출력 예약 축소(`f7a469d`) 이전이다.
-> 블록 토큰 실측으로 `OUTPUT_RESERVED`가 확정된 뒤 코드·노트북을 다시 고정하고 이 문서를 갱신한다.
-
 상태: **GPU 미실행.** 두 회차를 실행하면 결과 ZIP 두 개를 받아 감사한다.
+독립 리뷰 라운드 1은 `머지 불가`였고 운영 `script.py`의 v13 근거 구멍이 별건 판단 대기다 —
+그 처리를 정하기 전에는 이 회차를 돌려도 채택 검토로 이어지지 않는다.
 후보는 프롬프트만 바꾸며 채택 결정이 아니다. [보고서](README.md)가 준비 근거를 소유한다.
 
-- 실행 코드 `713aa83c2d0e144b775710a2fee261c3e319a180` (노트북 `REPO_REF`).
-- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/91dd9c351a53384ca6ea2352e590c6a65c4c0351/notebooks/colab-a8-v20-annex.ipynb),
-  커밋 `91dd9c351a53384ca6ea2352e590c6a65c4c0351`, sha256 `79ad632f…`.
+- 실행 코드 **`d2c5f54a9365a76de9d938970dd34018ac823058`** (노트북 `REPO_REF`).
+  출력 예약 1,024·공통 예산 15,296·CPU 실측 대조 검사·라운드 1 반영을 포함한다.
+- 고정 노트북 `notebooks/colab-a8-v20-annex.ipynb`, sha256 `cbf8ff0e…`.
   위 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
   `REPO_REF`가 40자리 16진수가 아니면 clone 전에 멈춘다.
+  노트북 커밋 SHA와 Colab 링크는 push 직후 이 줄에 채운다.
 - 모델은 고정 리비전 `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, Python 3.12.13 · vLLM 0.26.0 · CUDA 13.0.
 
 ## 입력 준비

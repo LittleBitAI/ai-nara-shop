@@ -9,9 +9,10 @@
   "server_macro_f1": null,
   "independent_review": false,
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "713aa83c2d0e144b775710a2fee261c3e319a180",
-  "pinned_notebook_commit": "91dd9c351a53384ca6ea2352e590c6a65c4c0351",
+  "pinned_code_commit": "d2c5f54a9365a76de9d938970dd34018ac823058",
+  "pinned_notebook_commit": null,
   "notebook_only_change_from_code_commit": "REPO_REF",
+  "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -165,7 +166,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "79ad632f8a97def77cdee9a5e4e455d867ab1371c825445475efbd477c140feb",
+  "notebook_sha256": "cbf8ff0e16e2e1914969934269cae1c0ddb352f5b4497b693fccb8044082e850",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": true,
   "checks": [
