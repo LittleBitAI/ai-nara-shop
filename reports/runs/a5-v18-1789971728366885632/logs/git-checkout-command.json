@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/a5-v18-iiuzg53v/repo",
+  "started": 1789970663.6982212,
+  "returncode": 0,
+  "elapsed_seconds": 0.4158592224121094
+}

@@ -169,40 +169,112 @@
       "macro_f1": 0.599315859077856
     },
     {
-      "id": "a5-scope-1789959906563639676/control/h2",
+      "id": "a5-scope-1789959906563639676/episode-1/control/h2",
       "date": "2026-09-17",
       "kind": "gpu-pilot",
       "code": "1735330",
       "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/control/h2-score/metrics.json",
-      "note": "company_size control 군 · 소비자 h2 · 혼합 CPU 재생",
+      "note": "company_size episode-1/control 군 · 소비자 h2 · 혼합 CPU 재생",
       "macro_f1": 0.6067008427724997
     },
     {
-      "id": "a5-scope-1789959906563639676/control/head",
+      "id": "a5-scope-1789959906563639676/episode-1/control/head",
       "date": "2026-09-17",
       "kind": "gpu-pilot",
       "code": "1735330",
       "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/control/head-score/metrics.json",
-      "note": "company_size control 군 · 소비자 head · 혼합 CPU 재생",
+      "note": "company_size episode-1/control 군 · 소비자 head · 혼합 CPU 재생",
       "macro_f1": 0.5980428341144911
     },
     {
-      "id": "a5-scope-1789959906563639676/h3/h2",
+      "id": "a5-scope-1789959906563639676/episode-1/h3/h2",
       "date": "2026-09-17",
       "kind": "gpu-pilot",
       "code": "1735330",
       "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/h3/h2-score/metrics.json",
-      "note": "company_size h3 군 · 소비자 h2 · 혼합 CPU 재생",
+      "note": "company_size episode-1/h3 군 · 소비자 h2 · 혼합 CPU 재생",
       "macro_f1": 0.5588678818880682
     },
     {
-      "id": "a5-scope-1789959906563639676/h3/head",
+      "id": "a5-scope-1789959906563639676/episode-1/h3/head",
       "date": "2026-09-17",
       "kind": "gpu-pilot",
       "code": "1735330",
       "evidence": "reports/runs/a5-scope-1789959906563639676/pilot/episode-1/h3/head-score/metrics.json",
-      "note": "company_size h3 군 · 소비자 head · 혼합 CPU 재생",
+      "note": "company_size episode-1/h3 군 · 소비자 head · 혼합 CPU 재생",
       "macro_f1": 0.5483783713985577
+    },
+    {
+      "id": "a5-v18-1789970544717477048/episode-1/control/off",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789970544717477048/pilot/episode-1/control/off-score/metrics.json",
+      "note": "company_size episode-1/control 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.580462327031275
+    },
+    {
+      "id": "a5-v18-1789970544717477048/episode-1/control/on",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789970544717477048/pilot/episode-1/control/on-score/metrics.json",
+      "note": "company_size episode-1/control 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.580462327031275
+    },
+    {
+      "id": "a5-v18-1789970544717477048/episode-1/v18/off",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789970544717477048/pilot/episode-1/v18/off-score/metrics.json",
+      "note": "company_size episode-1/v18 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.6005869879454095
+    },
+    {
+      "id": "a5-v18-1789970544717477048/episode-1/v18/on",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789970544717477048/pilot/episode-1/v18/on-score/metrics.json",
+      "note": "company_size episode-1/v18 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.6005869879454095
+    },
+    {
+      "id": "a5-v18-1789971728366885632/episode-2/control/off",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789971728366885632/pilot/episode-2/control/off-score/metrics.json",
+      "note": "company_size episode-2/control 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.5961286051975532
+    },
+    {
+      "id": "a5-v18-1789971728366885632/episode-2/control/on",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789971728366885632/pilot/episode-2/control/on-score/metrics.json",
+      "note": "company_size episode-2/control 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.5961286051975532
+    },
+    {
+      "id": "a5-v18-1789971728366885632/episode-2/v18/off",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789971728366885632/pilot/episode-2/v18/off-score/metrics.json",
+      "note": "company_size episode-2/v18 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.5987351360935577
+    },
+    {
+      "id": "a5-v18-1789971728366885632/episode-2/v18/on",
+      "date": "2026-09-21",
+      "kind": "gpu-pilot",
+      "code": "44f5e4b",
+      "evidence": "reports/runs/a5-v18-1789971728366885632/pilot/episode-2/v18/on-score/metrics.json",
+      "note": "company_size episode-2/v18 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.5987351360935577
     },
     {
       "id": "a4-scope-gate",

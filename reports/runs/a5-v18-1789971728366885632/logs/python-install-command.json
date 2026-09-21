@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "uv",
+    "venv",
+    "--python",
+    "3.12.13",
+    "--seed",
+    "/content/a5-v18-iiuzg53v/venv"
+  ],
+  "cwd": "/content/a5-v18-iiuzg53v",
+  "started": 1789970667.9807591,
+  "returncode": 0,
+  "elapsed_seconds": 0.42366528511047363
+}

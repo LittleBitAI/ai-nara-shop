@@ -1,0 +1,2222 @@
+{
+  "mode": "cpu_audit_of_live_pilot",
+  "duplicate_episode_1_files": 32,
+  "duplicate_episode_1_bytes_identical": true,
+  "contracts_equal_except_order_episode": true,
+  "environments_equal": true,
+  "episodes": {
+    "1": {
+      "source": "reports/runs/a5-v18-1789970544717477048/pilot/episode-1",
+      "arms": {
+        "control": {
+          "metrics": {
+            "off": {
+              "macro_f1": 0.580462327031275,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 8,
+                  "fn": 3,
+                  "precision": 0.3333333333333333,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.42105263157894735,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 9,
+                  "fn": 2,
+                  "precision": 0.3076923076923077,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.42105263157894735,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 3,
+                  "fn": 6,
+                  "precision": 0.25,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.18181818181818182,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 4,
+                  "fn": 4,
+                  "precision": 0.2,
+                  "recall": 0.2,
+                  "f1": 0.2,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 164
+            },
+            "on": {
+              "macro_f1": 0.580462327031275,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 8,
+                  "fn": 3,
+                  "precision": 0.3333333333333333,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.42105263157894735,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 9,
+                  "fn": 2,
+                  "precision": 0.3076923076923077,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.42105263157894735,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 3,
+                  "fn": 6,
+                  "precision": 0.25,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.18181818181818182,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 4,
+                  "fn": 4,
+                  "precision": 0.2,
+                  "recall": 0.2,
+                  "f1": 0.2,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 164
+            }
+          },
+          "off_to_on_changes": [],
+          "dev_stage_seconds": 259.456652418,
+          "dev_inference_seconds": 255.08670455999982,
+          "projected_server_seconds_conditional": 6490.927865266659,
+          "within_stage_planning_limit": true,
+          "dev_h2_fired": 3,
+          "off_on_changed_cells": [],
+          "csv_bytes_reproduced": true
+        },
+        "v18": {
+          "metrics": {
+            "off": {
+              "macro_f1": 0.6005869879454095,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 7,
+                  "fn": 3,
+                  "precision": 0.36363636363636365,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.4444444444444444,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 10,
+                  "fn": 2,
+                  "precision": 0.2857142857142857,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.4,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 6,
+                  "fp": 1,
+                  "fn": 0,
+                  "precision": 0.8571428571428571,
+                  "recall": 1.0,
+                  "f1": 0.9230769230769231,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 2,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 3,
+                  "fn": 6,
+                  "precision": 0.25,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.18181818181818182,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 5,
+                  "fn": 4,
+                  "precision": 0.16666666666666666,
+                  "recall": 0.2,
+                  "f1": 0.18181818181818182,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 160
+            },
+            "on": {
+              "macro_f1": 0.6005869879454095,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 7,
+                  "fn": 3,
+                  "precision": 0.36363636363636365,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.4444444444444444,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 10,
+                  "fn": 2,
+                  "precision": 0.2857142857142857,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.4,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 6,
+                  "fp": 1,
+                  "fn": 0,
+                  "precision": 0.8571428571428571,
+                  "recall": 1.0,
+                  "f1": 0.9230769230769231,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 2,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 3,
+                  "fn": 6,
+                  "precision": 0.25,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.18181818181818182,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 5,
+                  "fn": 4,
+                  "precision": 0.16666666666666666,
+                  "recall": 0.2,
+                  "f1": 0.18181818181818182,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 160
+            }
+          },
+          "off_to_on_changes": [],
+          "dev_stage_seconds": 280.8714989130003,
+          "dev_inference_seconds": 276.4322174250001,
+          "projected_server_seconds_conditional": 6681.40007593179,
+          "within_stage_planning_limit": true,
+          "dev_h2_fired": 3,
+          "off_on_changed_cells": [],
+          "csv_bytes_reproduced": true,
+          "scope_pairs": {
+            "competitive -> competitive": 75,
+            "general -> general": 123,
+            "competitive -> unknown": 1,
+            "other -> other": 1
+          },
+          "scope_disagreements": [
+            {
+              "id": "PPS-DEV-178",
+              "legacy_reason": "outside_general_scope",
+              "review_reason": "unverified_scope",
+              "legacy_writes": {
+                "v14": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v15": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v16": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v17": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v18": {
+                  "위반여부": 0,
+                  "근거문구": null
+                }
+              },
+              "review_writes": {},
+              "v18_overwritten": false,
+              "scope": "competitive",
+              "scope_review": "unknown",
+              "quotes": {
+                "scope_quote": {
+                  "raw": "실외기: 20대, 실내기 : 185대, 스텐드 : 2대 , ** 세부품명번호 : 4010180601",
+                  "restored": "실외기: 20대, 실내기 : 185대, 스텐드 : 2대 , ** 세부품명번호 : 4010180601",
+                  "grounded": true
+                },
+                "scope_review_quote": {
+                  "raw": null,
+                  "restored": null,
+                  "grounded": false
+                }
+              },
+              "max_chars": 16000
+            }
+          ]
+        }
+      },
+      "counts": {
+        "control/dev.events.jsonl": {
+          "valid_json": 200,
+          "invalid_json": 0,
+          "retry_responses": 0,
+          "batch_failures": 0,
+          "retry_failures": 0,
+          "output_tokens": 55426,
+          "responses_with_token_counts": 200
+        },
+        "v18/dev.events.jsonl": {
+          "valid_json": 200,
+          "invalid_json": 1,
+          "retry_responses": 1,
+          "batch_failures": 0,
+          "retry_failures": 0,
+          "output_tokens": 70412,
+          "responses_with_token_counts": 200
+        }
+      },
+      "control_to_candidate": [
+        {
+          "id": "PPS-DEV-18",
+          "item": "v15",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-036",
+          "item": "v15",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-037",
+          "item": "v16",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-058",
+          "item": "v16",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-088",
+          "item": "v20",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-102",
+          "item": "v13",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-102",
+          "item": "v17",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-105",
+          "item": "v17",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-111",
+          "item": "v16",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-120",
+          "item": "v17",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-146",
+          "item": "v10",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-153",
+          "item": "v17",
+          "before": 0,
+          "after": 1
+        }
+      ]
+    },
+    "2": {
+      "source": "reports/runs/a5-v18-1789971728366885632/pilot/episode-2",
+      "arms": {
+        "control": {
+          "metrics": {
+            "off": {
+              "macro_f1": 0.5961286051975532,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 8,
+                  "fn": 3,
+                  "precision": 0.3333333333333333,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.42105263157894735,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 9,
+                  "fn": 2,
+                  "precision": 0.3076923076923077,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.42105263157894735,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.8333333333333334,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 4,
+                  "fp": 3,
+                  "fn": 2,
+                  "precision": 0.5714285714285714,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.6153846153846154,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 2,
+                  "fn": 6,
+                  "precision": 0.3333333333333333,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.2,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 4,
+                  "fn": 4,
+                  "precision": 0.2,
+                  "recall": 0.2,
+                  "f1": 0.2,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 160
+            },
+            "on": {
+              "macro_f1": 0.5961286051975532,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 8,
+                  "fn": 3,
+                  "precision": 0.3333333333333333,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.42105263157894735,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 9,
+                  "fn": 2,
+                  "precision": 0.3076923076923077,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.42105263157894735,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.8333333333333334,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 4,
+                  "fp": 3,
+                  "fn": 2,
+                  "precision": 0.5714285714285714,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.6153846153846154,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 2,
+                  "fn": 6,
+                  "precision": 0.3333333333333333,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.2,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 4,
+                  "fn": 4,
+                  "precision": 0.2,
+                  "recall": 0.2,
+                  "f1": 0.2,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 160
+            }
+          },
+          "off_to_on_changes": [],
+          "dev_stage_seconds": 246.90933248599958,
+          "dev_inference_seconds": 242.79355517099975,
+          "projected_server_seconds_conditional": 6379.326982863475,
+          "within_stage_planning_limit": true,
+          "dev_h2_fired": 4,
+          "off_on_changed_cells": [],
+          "csv_bytes_reproduced": true
+        },
+        "v18": {
+          "metrics": {
+            "off": {
+              "macro_f1": 0.5987351360935577,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 9,
+                  "fn": 3,
+                  "precision": 0.3076923076923077,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.4,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 10,
+                  "fn": 2,
+                  "precision": 0.2857142857142857,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.4,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 6,
+                  "fp": 1,
+                  "fn": 0,
+                  "precision": 0.8571428571428571,
+                  "recall": 1.0,
+                  "f1": 0.9230769230769231,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 2,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 3,
+                  "fn": 6,
+                  "precision": 0.25,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.18181818181818182,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 5,
+                  "fn": 4,
+                  "precision": 0.16666666666666666,
+                  "recall": 0.2,
+                  "f1": 0.18181818181818182,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 162
+            },
+            "on": {
+              "macro_f1": 0.5987351360935577,
+              "items": {
+                "v1": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 3,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.6153846153846154,
+                  "support": 7
+                },
+                "v2": {
+                  "tp": 3,
+                  "fp": 0,
+                  "fn": 4,
+                  "precision": 1.0,
+                  "recall": 0.42857142857142855,
+                  "f1": 0.6,
+                  "support": 7
+                },
+                "v3": {
+                  "tp": 8,
+                  "fp": 5,
+                  "fn": 0,
+                  "precision": 0.6153846153846154,
+                  "recall": 1.0,
+                  "f1": 0.7619047619047619,
+                  "support": 8
+                },
+                "v4": {
+                  "tp": 6,
+                  "fp": 3,
+                  "fn": 0,
+                  "precision": 0.6666666666666666,
+                  "recall": 1.0,
+                  "f1": 0.8,
+                  "support": 6
+                },
+                "v5": {
+                  "tp": 5,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8333333333333334,
+                  "recall": 0.7142857142857143,
+                  "f1": 0.7692307692307693,
+                  "support": 7
+                },
+                "v6": {
+                  "tp": 3,
+                  "fp": 4,
+                  "fn": 3,
+                  "precision": 0.42857142857142855,
+                  "recall": 0.5,
+                  "f1": 0.46153846153846156,
+                  "support": 6
+                },
+                "v7": {
+                  "tp": 7,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 7
+                },
+                "v8": {
+                  "tp": 6,
+                  "fp": 0,
+                  "fn": 0,
+                  "precision": 1.0,
+                  "recall": 1.0,
+                  "f1": 1.0,
+                  "support": 6
+                },
+                "v9": {
+                  "tp": 5,
+                  "fp": 12,
+                  "fn": 1,
+                  "precision": 0.29411764705882354,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.43478260869565216,
+                  "support": 6
+                },
+                "v10": {
+                  "tp": 4,
+                  "fp": 9,
+                  "fn": 3,
+                  "precision": 0.3076923076923077,
+                  "recall": 0.5714285714285714,
+                  "f1": 0.4,
+                  "support": 7
+                },
+                "v11": {
+                  "tp": 2,
+                  "fp": 3,
+                  "fn": 4,
+                  "precision": 0.4,
+                  "recall": 0.3333333333333333,
+                  "f1": 0.36363636363636365,
+                  "support": 6
+                },
+                "v12": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 2,
+                  "precision": 0.8,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.7272727272727273,
+                  "support": 6
+                },
+                "v13": {
+                  "tp": 4,
+                  "fp": 10,
+                  "fn": 2,
+                  "precision": 0.2857142857142857,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.4,
+                  "support": 6
+                },
+                "v14": {
+                  "tp": 7,
+                  "fp": 2,
+                  "fn": 1,
+                  "precision": 0.7777777777777778,
+                  "recall": 0.875,
+                  "f1": 0.8235294117647058,
+                  "support": 8
+                },
+                "v15": {
+                  "tp": 6,
+                  "fp": 1,
+                  "fn": 0,
+                  "precision": 0.8571428571428571,
+                  "recall": 1.0,
+                  "f1": 0.9230769230769231,
+                  "support": 6
+                },
+                "v16": {
+                  "tp": 4,
+                  "fp": 2,
+                  "fn": 2,
+                  "precision": 0.6666666666666666,
+                  "recall": 0.6666666666666666,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v17": {
+                  "tp": 5,
+                  "fp": 6,
+                  "fn": 1,
+                  "precision": 0.45454545454545453,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.5882352941176471,
+                  "support": 6
+                },
+                "v18": {
+                  "tp": 1,
+                  "fp": 3,
+                  "fn": 6,
+                  "precision": 0.25,
+                  "recall": 0.14285714285714285,
+                  "f1": 0.18181818181818182,
+                  "support": 7
+                },
+                "v19": {
+                  "tp": 5,
+                  "fp": 3,
+                  "fn": 1,
+                  "precision": 0.625,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.7142857142857143,
+                  "support": 6
+                },
+                "v20": {
+                  "tp": 1,
+                  "fp": 5,
+                  "fn": 4,
+                  "precision": 0.16666666666666666,
+                  "recall": 0.2,
+                  "f1": 0.18181818181818182,
+                  "support": 5
+                },
+                "v21": {
+                  "tp": 5,
+                  "fp": 4,
+                  "fn": 1,
+                  "precision": 0.5555555555555556,
+                  "recall": 0.8333333333333334,
+                  "f1": 0.6666666666666666,
+                  "support": 6
+                },
+                "v22": {
+                  "tp": 4,
+                  "fp": 1,
+                  "fn": 1,
+                  "precision": 0.8,
+                  "recall": 0.8,
+                  "f1": 0.8,
+                  "support": 5
+                },
+                "v23": {
+                  "tp": 1,
+                  "fp": 1,
+                  "fn": 4,
+                  "precision": 0.5,
+                  "recall": 0.2,
+                  "f1": 0.2857142857142857,
+                  "support": 5
+                },
+                "v24": {
+                  "tp": 5,
+                  "fp": 36,
+                  "fn": 3,
+                  "precision": 0.12195121951219512,
+                  "recall": 0.625,
+                  "f1": 0.20408163265306123,
+                  "support": 8
+                }
+              },
+              "truth_count": 200,
+              "pred_count": 200,
+              "ids_match": true,
+              "error_count": 162
+            }
+          },
+          "off_to_on_changes": [],
+          "dev_stage_seconds": 299.6927390410001,
+          "dev_inference_seconds": 294.9527570090004,
+          "projected_server_seconds_conditional": 6848.803714126271,
+          "within_stage_planning_limit": true,
+          "dev_h2_fired": 4,
+          "off_on_changed_cells": [],
+          "csv_bytes_reproduced": true,
+          "scope_pairs": {
+            "competitive -> competitive": 75,
+            "general -> general": 123,
+            "competitive -> unknown": 1,
+            "other -> other": 1
+          },
+          "scope_disagreements": [
+            {
+              "id": "PPS-DEV-178",
+              "legacy_reason": "outside_general_scope",
+              "review_reason": "unverified_scope",
+              "legacy_writes": {
+                "v14": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v15": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v16": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v17": {
+                  "위반여부": 0,
+                  "근거문구": null
+                },
+                "v18": {
+                  "위반여부": 0,
+                  "근거문구": null
+                }
+              },
+              "review_writes": {},
+              "v18_overwritten": false,
+              "scope": "competitive",
+              "scope_review": "unknown",
+              "quotes": {
+                "scope_quote": {
+                  "raw": "실외기: 20대, 실내기 : 185대, 스텐드 : 2대 , ** 세부품명번호 : 4010180601",
+                  "restored": "실외기: 20대, 실내기 : 185대, 스텐드 : 2대 , ** 세부품명번호 : 4010180601",
+                  "grounded": true
+                },
+                "scope_review_quote": {
+                  "raw": null,
+                  "restored": null,
+                  "grounded": false
+                }
+              },
+              "max_chars": 16000
+            }
+          ]
+        }
+      },
+      "counts": {
+        "control/dev.events.jsonl": {
+          "valid_json": 200,
+          "invalid_json": 0,
+          "retry_responses": 0,
+          "batch_failures": 0,
+          "retry_failures": 0,
+          "output_tokens": 55365,
+          "responses_with_token_counts": 200
+        },
+        "v18/dev.events.jsonl": {
+          "valid_json": 200,
+          "invalid_json": 3,
+          "retry_responses": 3,
+          "batch_failures": 0,
+          "retry_failures": 0,
+          "output_tokens": 74085,
+          "responses_with_token_counts": 200
+        }
+      },
+      "control_to_candidate": [
+        {
+          "id": "PPS-DEV-09",
+          "item": "v10",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-23",
+          "item": "v10",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-036",
+          "item": "v15",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-088",
+          "item": "v20",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-102",
+          "item": "v13",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-102",
+          "item": "v17",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-105",
+          "item": "v17",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-111",
+          "item": "v16",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-120",
+          "item": "v17",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-127",
+          "item": "v18",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-146",
+          "item": "v10",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-153",
+          "item": "v17",
+          "before": 0,
+          "after": 1
+        }
+      ]
+    }
+  },
+  "full_pipeline_gpu_macro_f1": null,
+  "server_macro_f1": null,
+  "repeat": {
+    "control": {
+      "changes": [
+        {
+          "id": "PPS-DEV-18",
+          "item": "v15",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-23",
+          "item": "v10",
+          "before": 1,
+          "after": 0
+        },
+        {
+          "id": "PPS-DEV-037",
+          "item": "v16",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-041",
+          "item": "v10",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-058",
+          "item": "v16",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-127",
+          "item": "v18",
+          "before": 1,
+          "after": 0
+        }
+      ],
+      "macro_f1_delta": 0.01566627816627819
+    },
+    "v18": {
+      "changes": [
+        {
+          "id": "PPS-DEV-09",
+          "item": "v10",
+          "before": 0,
+          "after": 1
+        },
+        {
+          "id": "PPS-DEV-041",
+          "item": "v10",
+          "before": 0,
+          "after": 1
+        }
+      ],
+      "macro_f1_delta": -0.0018518518518518823
+    }
+  },
+  "decision": "not_adopted: v18 TP=1 in both episodes, OFF/ON changes=0; v13 and v20 FP increase in both episodes; recovered output-limit failures=1/3"
+}

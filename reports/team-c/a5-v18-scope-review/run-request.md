@@ -1,6 +1,7 @@
 # A5 v18 Colab 실행 안내
 
-상태: **GPU 실행 준비 완료**. CPU 계약 33개 검증. 실제 후보 GPU 미실행.
+상태 갱신: **두 회차 실행·등록 완료, 후보 미채택**. [결과](results.md)를 먼저 읽는다.
+아래는 실행했던 고정 절차이며 같은 후보의 추가 실행 요청이 아니다. CPU 계약 33개는 준비 당시 기록이다.
 
 - 실행 코드 `44f5e4b8c9a9d8b7b0e83b51f546c04be5e3316e` (`REPO_REF`).
 - [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/dd99efacb80b645adecae689ebd62cb9cf99ed05/notebooks/colab-a5-v18-scope-review.ipynb).

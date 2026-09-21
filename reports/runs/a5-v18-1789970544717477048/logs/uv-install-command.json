@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "pip",
+    "install",
+    "uv"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op",
+  "started": 1789968784.6805239,
+  "returncode": 0,
+  "elapsed_seconds": 4.274398326873779
+}

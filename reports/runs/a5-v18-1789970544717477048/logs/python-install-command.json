@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "uv",
+    "venv",
+    "--python",
+    "3.12.13",
+    "--seed",
+    "/content/a5-v18-eoxkp_op/venv"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op",
+  "started": 1789968788.9553943,
+  "returncode": 0,
+  "elapsed_seconds": 1.9613580703735352
+}

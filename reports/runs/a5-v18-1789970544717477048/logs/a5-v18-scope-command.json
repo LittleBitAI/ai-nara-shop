@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/content/a5-v18-eoxkp_op/venv/bin/python",
+    "/content/a5-v18-eoxkp_op/repo/experiments/a5_scope_pilot.py",
+    "--experiment",
+    "v18",
+    "--output-dir",
+    "/content/drive/MyDrive/a5/v18-scope-44f5e4b8c9a9-a/episode-1",
+    "--model-dir",
+    "/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "--episode",
+    "1"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op/repo",
+  "started": 1789969552.318539,
+  "returncode": 0,
+  "elapsed_seconds": 992.3896660804749
+}

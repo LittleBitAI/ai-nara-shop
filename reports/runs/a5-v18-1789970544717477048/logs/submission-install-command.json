@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/a5-v18-eoxkp_op/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/a5-v18-eoxkp_op/repo/requirements.txt"
+  ],
+  "cwd": "/content/a5-v18-eoxkp_op",
+  "started": 1789969006.0071478,
+  "returncode": 0,
+  "elapsed_seconds": 0.6063735485076904
+}
