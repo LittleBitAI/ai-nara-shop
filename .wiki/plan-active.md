@@ -7,6 +7,13 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
+**2026-09-21 A5 v18 구현 진행:** 같은 company 응답 끝의 범위 재검토 두 필드를 v18에만
+소비하는 후보와 OFF/ON 재생을 구현했다. 과거 H4 CSV 보존 및 H3 대역의 v18 두 셀만
+변경하는 배선 검사를 통과했다. dev 전용 두 회차 노트북의 실패·시간·입력 경계를 포함해
+CPU 계약 33개를 검증했다. 실행 소스 고정과 PR 게시를 진행한다.
+실제 후보 GPU/무라벨/전체 파이프라인/서버는 미측정이다.
+[실행 안내](../reports/team-c/a5-v18-scope-review/run-request.md). 후보 PR은 머지하지 않는다.
+
 **2026-09-21 A5 브리프 4 후속 구현 준비:** [새 셀 착수서](../docs/tasks/a5-v18-scope-review.md).
 사용자가 [독립 분석](../reports/team-c/a5-label-definition/five-stuck-analysis.md)과
 [방법](../reports/team-c/a5-label-definition/five-stuck-how.md)을 이 주제의 소유 문서로 정했다.
