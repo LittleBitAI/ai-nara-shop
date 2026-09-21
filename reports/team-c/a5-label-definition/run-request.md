@@ -1,6 +1,10 @@
 # A5 H2 — 다음 GPU 회차 실행
 
-2026-09-21 · 상태: 실행본 준비·CPU 계약 검사 완료, **GPU 미실행·후보 미채택**.
+2026-09-21 회차 2 반영 · **무라벨 2,000건 수집·재계산 완료, 후보 미채택**.
+**현재는 다음 회차를 자동으로 이어 돌리지 않는다.** [판단](round2-decision.md)에 따라
+전수 수집 필수 조건을 철회하고 원문 타당성·입력 분포 감사를 먼저 한다.
+아래는 추가 수집이 필요할 때 사용할 기존 실행 방법이며, 남은 18회차의 실행 지시가 아니다.
+`complete=false`는 20,000건 전수 수집 미완료라는 정확한 상태로 계속 유지한다.
 사용자 요청에 따라 커밋·push·PR까지만 진행하며 머지하지 않는다.
 
 ## 목적과 실행 대상
@@ -96,7 +100,8 @@ dev 발화 0이면 배율은 `null`이다. 새 dev 단독 company_size 추론과
 CPU 검사: `python -X utf8 -m pytest -q tests/test_a5_collect_facts.py`.
 동일 company_size 프롬프트·스키마, 등록 제한값 제외, 실제 파서·재시도,
 dev+1,000건/다음 1,000건 재개, 실패한 묶음 미저장, 변조 거부, 부분 집계·배율을 검증했다.
-노트북 코드 셀은 모두 구문 검사했다. **실제 모델 적재·GPU 추론·서버 제출은 미실행**이다.
+노트북 코드 셀은 모두 구문 검사했다. 준비 시점에는 실제 GPU가 미실행이었다.
+현재 실제 적재·추론은 받은 회차 2 ZIP으로 확인했고, 서버 제출은 미실행이다.
 
 게시 전 관련 회귀 검사까지 합친
 `python -X utf8 -m pytest -q tests/test_a5_collect_facts.py tests/test_replay_run.py tests/test_company_size.py tests/test_competitive_product.py`

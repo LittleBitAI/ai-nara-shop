@@ -7,6 +7,13 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
+**2026-09-21 A5 회차 2 판단:** [재계산과 결정](../reports/team-c/a5-label-definition/round2-decision.md).
+실제 무라벨 2,000건/31발화·dev 200건/3발화를 검증했다. 전체 검증 배율 1.033333과
+술어 배율 0.822222는 조건부 검증 통과율 차이로 양립한다. 전수 완료 강제는 철회하고
+남은 18회차 연속 수집보다 원문 타당성/입력 분포 감사를 먼저 한다. 부분 표본 표시·채택 보류 유지.
+A4 합본 CPU 재생 0.620382330538·15셀·대상 밖 0을 재현했다. 새 GPU/서버 합본 점수가 아니다.
+아래 GPU 미실행·모델 원응답 부재 문구는 회차 2 전의 이력이다.
+
 **2026-09-21 A5 GPU 준비:** H2의 무라벨 모델 사실을 수집할 단계다.
 [전용 실행 안내](../reports/team-c/a5-label-definition/run-request.md)의 Colab에서
 기존 company_size만 dev 200 + 무라벨 1,000건씩 실행하고 Drive로 재개한다.

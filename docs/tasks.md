@@ -27,15 +27,16 @@
 
 ## 첫 작업 큐
 
-`a5-label-definition-wall / GPU 사실 수집`: 실행본 준비, GPU 미실행.
-[실행 안내](../reports/team-c/a5-label-definition/run-request.md): 기존 company_size로
-dev 200 + 무라벨 1,000건씩 Drive 재개. 전체 20,000건 발화율을 재기 위한 진단 회차이며
-제출 파이프라인 추가 호출은 0이다. 사용자 승인 범위는 커밋·push·PR까지, 머지하지 않는다.
+`a5-label-definition-wall / 회차 2`: [재계산·판단](../reports/team-c/a5-label-definition/round2-decision.md).
+실제 dev 3/200·무라벨 31/2,000 발화, 전체 검증 배율 1.033333·술어 배율 0.822222를 재현했다.
+전수 수집 강제를 원문 타당성/분포 감사로 대체한다. 남은 18회차 일괄 수집 중단, 채택 보류.
+부분 표본·대표성 미확인을 명시하며 `complete=false`는 유지한다. 서버 추가 호출 0, 머지하지 않는다.
 
 `a5-label-definition-wall / H2`: CPU 검증 완료·채택 보류.
 [결과](../reports/team-c/a5-label-definition/h2-absence.md): 명시적 기업규모 제한 부재를 v11에
 연결해 TP 2→4, FP 3→4, FN 4→2. 다른 23항목 변화 0, CPU 재생 Macro 0.602504174073.
-무라벨 모델 원응답이 없어 H2 발화율은 미측정이다. 새 모델·운영 코드 변경 없음.
+무라벨 2,000건 모델 사실은 확보·검증했다. A4 합본도 CPU 0.620382330538로 재현했다.
+무라벨 TP/FP·합본 GPU/서버는 미측정이다. 운영 코드 변경 없음.
 
 `a5-label-definition-wall`: in_progress. 2026-09-21 사용자 지정 `a5-label-wall` 작업.
 입력·출력·범위·통과선은 [작업서](tasks/a5-label-definition-wall.md), 1차 결과는
