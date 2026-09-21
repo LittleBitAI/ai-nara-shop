@@ -72,6 +72,21 @@ def quote_check(quote, rec, visible) -> dict:
                 in_document=bool(matches), matches=matches)
 
 
+def v20_applicable(facts, rec, visible) -> bool:
+    """소비자가 v20 을 계산하는 조건. `script.py:739` 의 `applicable` 과 같은 식이다.
+
+    `verify_document_requirements` 의 `quoted()` 가 `restore_spacing` 을 먼저 적용하므로
+    여기도 같은 순서로 본다 — `quote_check` 의 `exact`/`spacing_restored` 와 같은 판정이다.
+    이 식이 제품과 갈라지면 `tests/test_a8_v20_annex.py` 의 대조 검사가 먼저 깨진다.
+    """
+    if facts.get("software_business") != "yes":
+        return False
+    quote = facts.get("software_business_quote")
+    effective = script.restore_spacing(quote, rec, visible) or quote
+    return bool(effective and effective.strip() and effective in visible
+                and any(effective in doc["text"] for doc in rec["docs"]))
+
+
 def audit_row(rec, facts, *, max_chars) -> dict:
     """공고 하나의 인용 상태와 **실제 소비 결과**를 함께 남긴다."""
     visible = script.build_context(rec, max_chars)
@@ -94,6 +109,10 @@ def audit_row(rec, facts, *, max_chars) -> dict:
                                            for d in software_docs)),
         v20_write=None if cell is None else cell["위반여부"],
         v20_action="preserve" if cell is None else f"write_{cell['위반여부']}",
+        # 소비자가 v20 을 **계산하기는 했는가.** `software_business != yes` 거나 그 인용이
+        # 기각되면 참여 인용이 완벽해도 v20 은 열리지 않는다(script.py:739 의 applicable).
+        # 이 값 없이는 "정확한 인용" 과 "쓰인 인용" 이 안 갈린다.
+        v20_applicable=v20_applicable(facts, rec, visible),
         company_writes={item: value["위반여부"] for item, value in writes.items()},
         # `outside_general_scope` 여도 v20 은 따로 계산된다. 이것을 v20 차단 이유로 쓰지 않는다.
         company_reason=reason,
@@ -137,13 +156,41 @@ def paired_changes(control_rows, candidate_rows) -> list:
                 fields[f"{field}_quote_state"] = [before[key]["state"], after[key]["state"]]
         if not fields:
             continue
-        verified = after["software_participation_quote_check"]["state"] in ("exact", "spacing_restored")
-        # 검증된 인용 없이 판정만 보류로 바뀐 것은 기전이 아니다.
-        gain_kind = "verified_quote" if verified else (
-            "fallback_only" if after["v20_action"] == "preserve" else "other")
-        out.append(dict(id=after["id"], fields=fields, gain_kind=gain_kind,
+        out.append(dict(id=after["id"], fields=fields, gain_kind=gain_kind(before, after),
                         semantic_review="pending"))
     return out
+
+
+def gain_kind(before, after) -> str:
+    """기전을 **실제 v20 전이**로 판정한다. 인용 상태만으로 부르지 않는다.
+
+    왜 인용만으로는 안 되나. 두 가지가 조용히 섞인다.
+
+    - `software_business != yes` 인 공고는 v20 이 애초에 안 열린다. 참여 인용이
+      정확해도 **그 인용은 아무것도 세우지 않았다.** 그것을 `verified_quote` 로
+      세면 닿지도 않은 경로가 기전으로 집계된다.
+    - 양쪽 다 `preserve` 인데 인용 상태만 `null → invalid` 로 바뀐 것은
+      판정이 하나도 안 움직인 것이다. 그것을 `fallback_only` 로 세면
+      "우연한 baseline 이득" 이 실제보다 많아 보인다.
+
+    그래서 둘로 좁힌다.
+
+    - `verified_quote` — 후보에서 v20 이 **적용 가능**하고 참여 인용이 검증됐으며
+      판정이 실제로 `write_0` 으로 **전이**했다.
+    - `fallback_only` — 대조군에서 v20 이 쓰였는데(`write_*`) 후보에서 인용이
+      기각돼(`invalid`/`empty`) **`preserve` 로 내려앉았다.** 지표가 좋아졌다면
+      그 자리를 채운 것은 baseline 이지 이 주입이 아니다.
+    - 나머지는 `other` 다. 이름을 붙이지 않는 것이 잘못 붙이는 것보다 낫다.
+    """
+    verified = after["software_participation_quote_check"]["state"] in ("exact", "spacing_restored")
+    moved = before["v20_action"] != after["v20_action"]
+    if moved and after["v20_action"] == "write_0" and after["v20_applicable"] and verified:
+        return "verified_quote"
+    if (moved and before["v20_action"].startswith("write_")
+            and after["v20_action"] == "preserve"
+            and after["software_participation_quote_check"]["state"] in ("invalid", "empty")):
+        return "fallback_only"
+    return "other"
 
 
 def audit_episode(episode_dir, *, dev_path=None, data_dir=None) -> dict:
@@ -165,6 +212,10 @@ def audit_episode(episode_dir, *, dev_path=None, data_dir=None) -> dict:
         payload = json.loads((episode_dir/name/"dev.json").read_text(encoding="utf-8"))
         if payload["contract_sha256"] != _digest(contract):
             raise ValueError(f"{name}: 계약 hash 가 다르다")
+        # 계약 hash 와 id 집합만 보면 **원응답을 바꿔도 감사가 통과한다.** 파일이 스스로
+        # 적어 둔 payload hash 를 다시 계산해 그 경로를 막는다.
+        if payload["payload_sha256"] != _digest(payload["payload"]):
+            raise ValueError(f"{name}: 저장 원응답 hash 가 다르다 — 산출물이 바뀌었다")
         rows = []
         seen = set()
         for row in payload["payload"]["rows"]:

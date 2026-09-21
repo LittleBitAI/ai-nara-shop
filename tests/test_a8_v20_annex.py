@@ -528,7 +528,9 @@ class PilotWiringTests(unittest.TestCase):
             root = Path(directory)
             (root/script.MODEL_REVISION).mkdir()
             self.run_pilot(root/'episode-1', 1, BudgetFakeRunner())
-            state, ops = langfuse_tail.State(), []
+            # 프롬프트 전문 계약을 보려면 수출이 허용된 상태여야 한다. 기본 상태는
+            # 본문을 막으며 그 경계는 tests/test_langfuse_tail.py 가 소유한다.
+            state, ops = langfuse_tail.State(include_prompts=True), []
             for event in self.events_of(root/'episode-1'):
                 ops += langfuse_tail.plan(event, state)
             generations = [o for o in ops if o.kind == 'generation' and o.action == 'open']
@@ -660,7 +662,7 @@ class AuditTests(unittest.TestCase):
             self.assertEqual(match['doc_id'], doc.get('doc_id'))
 
     def test_fallback_only_change_is_marked_and_not_a_mechanism(self):
-        base = dict(id='X', v20_action='write_1', software_business='yes',
+        base = dict(id='X', v20_action='write_1', software_business='yes', v20_applicable=True,
                     software_business_quote_check=dict(state='exact'),
                     software_participation_quote_check=dict(state='null'))
         worse = dict(base, v20_action='preserve',
@@ -670,6 +672,65 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(audit.paired_changes([base], [worse])[0]['gain_kind'], 'fallback_only')
         self.assertEqual(audit.paired_changes([base], [verified])[0]['gain_kind'], 'verified_quote')
         self.assertEqual(audit.paired_changes([base], [base]), [])
+
+    def test_gain_kind_needs_a_real_verdict_transition_not_just_a_quote_state(self):
+        """인용 상태만 보면 두 가지가 기전으로 새어 들어온다. 둘 다 `other` 여야 한다."""
+        base = dict(id='X', v20_action='preserve', software_business='yes', v20_applicable=True,
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        # 1. 판정이 하나도 안 움직였는데 인용 상태만 바뀐 것 — 우연한 이득이 아니다.
+        still = dict(base, software_participation_quote_check=dict(state='invalid'))
+        change = audit.paired_changes([base], [still])[0]
+        self.assertEqual(change['fields'], {'software_participation_quote_state': ['null', 'invalid']})
+        self.assertEqual(change['gain_kind'], 'other')
+        # 2. v20 이 애초에 안 열리는 공고(`software_business != yes`)의 정확한 인용.
+        #    그 인용은 아무것도 세우지 않았다.
+        unreachable = dict(base, software_business='no', v20_applicable=False,
+                           software_participation_quote_check=dict(state='exact'))
+        self.assertEqual(audit.paired_changes([base], [unreachable])[0]['gain_kind'], 'other')
+        # 3. 적용 가능한데 write_0 으로 전이했고 인용도 검증됐다 — 이것만 기전이다.
+        real = dict(base, v20_action='write_0',
+                    software_participation_quote_check=dict(state='spacing_restored'))
+        self.assertEqual(audit.paired_changes([base], [real])[0]['gain_kind'], 'verified_quote')
+        # 4. 적용 가능하지만 v20 을 계산하지 않은 상태의 write_0 은 기전으로 세지 않는다.
+        self.assertEqual(audit.paired_changes([base], [dict(real, v20_applicable=False)])[0]
+                         ['gain_kind'], 'other')
+
+    def test_v20_applicable_matches_the_consumer_on_all_200_records(self):
+        """감사의 `v20_applicable` 이 제품과 갈리면 `gain_kind` 가 조용히 틀린다.
+        소비자가 v20 칸을 쓴 공고는 전부 적용 가능으로 나와야 한다."""
+        rows = self.h4_rows()
+        for rec, facts, chars, row in rows:
+            visible = script.build_context(rec, chars)
+            self.assertEqual(row['v20_applicable'],
+                             audit.v20_applicable(facts, rec, visible), rec['id'])
+            if row['v20_action'] != 'preserve':
+                self.assertTrue(row['v20_applicable'], rec['id'])
+        # 적용 가능한데 보류인 공고는 있을 수 있다(참여 상태 조건 미달). 그 역은 없다.
+        self.assertTrue(any(r['v20_applicable'] for _, _, _, r in rows))
+
+    def test_a_tampered_payload_is_refused_even_when_the_contract_hash_matches(self):
+        """계약 hash 와 공고 집합만 보면 **원응답을 바꿔도 감사가 통과한다.**"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            argv = ['pilot', '--experiment', 'a8', '--model-dir', str(root/script.MODEL_REVISION),
+                    '--output-dir', str(root/'episode-1'), '--episode', '1']
+            with patch.object(sys, 'argv', argv), \
+                    patch.object(script, 'VLLMRunner', return_value=BudgetFakeRunner()):
+                pilot.main()
+            self.assertTrue(audit.audit_episode(root/'episode-1')['complete'])
+            path = root/'episode-1/a8/dev.json'
+            payload = json.loads(path.read_text(encoding='utf-8'))
+            # 계약 hash·id 집합은 그대로 두고 응답 한 줄만 바꾼다.
+            facts = dict(script.empty_company_size(), software_business='yes',
+                         software_business_quote='심어 넣은 문장')
+            payload['payload']['rows'][0]['response_text'] = json.dumps(
+                {'company_size': facts}, ensure_ascii=False)
+            self.assertNotEqual(payload['payload_sha256'], audit._digest(payload['payload']))
+            path.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8', newline='\n')
+            with self.assertRaisesRegex(ValueError, '원응답 hash'):
+                audit.audit_episode(root/'episode-1')
 
     def test_audit_episode_reads_a_real_pilot_output_and_writes_the_ledger(self):
         """회차 폴더 전체를 감사한다 — 계약 hash·공고 집합·군을 함께 검사한다."""

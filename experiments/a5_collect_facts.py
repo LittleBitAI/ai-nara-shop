@@ -40,6 +40,24 @@ def save(path, value):
     temporary.replace(path)
 
 
+def effective_parameters(runner, sampling_params, items):
+    """`VLLMRunner.chat()` 이 **실제로 쓰는** 샘플링 파라미터를 그대로 고른다.
+
+    `runner.sp` 를 그냥 적으면 안 된다. `items` 가 주어지면 제품은 `sp` 가 아니라
+    `parameters_for_items(items, sme=items == SME_ITEMS)` 로 **제한한 스키마**를 쓴다
+    (`script.py:967`). 그것을 모르고 `sp` 를 적으면 `schema_sha256` 이 전체 스키마를
+    가리켜, 기록이 실제 요청을 증명하지 못한다 — 제한 호출마다 조용히 틀린다.
+
+    `parameters_for_items` 가 없는 실행기(대역·API)는 `sp`/`sampling_params` 로 떨어진다.
+    """
+    if sampling_params is not None:
+        return sampling_params
+    restrict = getattr(runner, "parameters_for_items", None)
+    if items is not None and restrict is not None:
+        return restrict(items, sme=items == getattr(script, "SME_ITEMS", None))
+    return getattr(runner, "sp", None)
+
+
 @contextmanager
 def observe_chat(runner, emit, *, ids, phase, chunk_start=None):
     """`runner.chat` 을 **인스턴스 속성으로만** 감싸 실제 모델 요청을 그대로 기록한다.
@@ -83,7 +101,7 @@ def observe_chat(runner, emit, *, ids, phase, chunk_start=None):
         for index, messages in enumerate(batch):
             identifier, status = (ids[index] if index < len(ids) else None, "initial") \
                 if first else identify(messages, index)
-            parameters = sampling_params if sampling_params is not None else getattr(runner, "sp", None)
+            parameters = effective_parameters(runner, sampling_params, items)
             marks.append((index, identifier, status))
             emit("model_call_started", phase=phase, chunk_start=chunk_start,
                  call_seq=call_seq, call_index=index,

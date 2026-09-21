@@ -25,8 +25,10 @@ DATA = str(ROOT / "open/data")
 INPUT = str(ROOT / "open/data/test.jsonl.gz")
 
 
-def ops_for(events):
-    state = tail.State()
+def ops_for(events, *, include_prompts=True):
+    """`include_prompts` 는 수출 검사 통과 상태다. 기본값을 참으로 두는 검사는
+    **본문 계약**을 보고, 거짓으로 두는 검사는 **수출 경계**를 본다."""
+    state = tail.State(include_prompts=include_prompts)
     out = []
     for event in events:
         out.extend(tail.plan(event, state))
@@ -242,6 +244,139 @@ class CapturedRunProjection(unittest.TestCase):
         self.assertIsNone(state.capture_protocol)
         self.assertTrue(any(o.key == "gen:baseline:0:1" for o in ops))   # 옛 경로 유지
         self.assertFalse(any(o.key.startswith("parse:") for o in ops))
+
+    def test_the_real_mode_reaches_the_root_so_live_and_double_are_distinguishable(self):
+        """루트는 생성 전에 `pending` 으로 열린다. 실제 mode 가 루트까지 오지 않으면
+        Langfuse 에서 실제 모델 회차와 대역 실행이 같은 이름으로 끝난다."""
+        events = [dict(event="run_started", time_unix=0.5, mode="pending", code_sha256="abc1234def",
+                       capture_protocol=1, dataset="dev"),
+                  dict(event="model_loading", time_unix=0.6),
+                  dict(event="model_loaded", time_unix=0.9, mode="live", load_seconds=12.0,
+                       token_count_kind="actual"),
+                  dict(event="run_succeeded", time_unix=3.0)]
+        ops, state = ops_for(events)
+        self.assertEqual(state.actual_mode, "live")
+        self.assertEqual(state.trace_name, "nara live abc1234")
+        update = next(o for o in ops if o.action == "update")
+        self.assertEqual((update.key, update.name), ("run", "nara live abc1234"))
+        self.assertEqual(update.attrs["langfuse.trace.name"], "nara live abc1234")
+        self.assertEqual(update.attrs["langfuse.observation.metadata.mode"], "live")
+        self.assertEqual(update.attrs["langfuse.observation.metadata.mode_at_start"], "pending")
+        # 루트를 닫을 때도 실제 mode 로 끝난다 — `pending` 으로 남지 않는다.
+        end = next(o for o in ops if o.action == "close" and o.key == "run")
+        self.assertEqual(end.attrs["langfuse.observation.metadata.mode"], "live")
+        self.assertEqual(end.attrs["langfuse.observation.metadata.model_loaded"], "yes")
+
+    def test_a_run_that_never_loaded_a_model_does_not_claim_a_mode(self):
+        ops, state = ops_for([dict(event="run_started", time_unix=0.5, mode="pending",
+                                   code_sha256="abc1234def", capture_protocol=1),
+                              dict(event="run_failed", time_unix=1.0, error_type="ValueError",
+                                   error_message="budget")])
+        self.assertIsNone(state.actual_mode)
+        self.assertFalse(any(o.action == "update" for o in ops))
+        end = next(o for o in ops if o.action == "close" and o.key == "run")
+        self.assertEqual(end.attrs["langfuse.observation.metadata.mode"], "pending")
+        self.assertEqual(end.attrs["langfuse.observation.metadata.model_loaded"], "no")
+
+
+class PromptExportBoundary(unittest.TestCase):
+    """프롬프트 전문은 로컬 Langfuse + 고정 공개 dev 회차에서만 나간다."""
+
+    def _dev_ids(self):
+        dev = ROOT / "open/dev.jsonl"
+        return dev, [json.loads(line)["id"]
+                     for line in dev.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+    def _events(self, tmp, *, notices=("A", "B"), **overrides):
+        event = dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                     dataset="dev", code_sha256="abc1234def")
+        event.update(overrides)
+        path = Path(tmp) / "diagnostics.jsonl"
+        lines = [event] + captured("control", ids=tuple(notices)) + \
+            [dict(event="run_succeeded", time_unix=9.0)]
+        path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                        encoding="utf-8", newline="\n")
+        return path
+
+    def test_bodies_are_withheld_by_default_and_the_withholding_is_visible(self):
+        ops, _ = ops_for([ROOT_EVENT] + captured("control") +
+                         [dict(event="run_succeeded", time_unix=9.0)], include_prompts=False)
+        bodies = {o.key for o in ops if "langfuse.observation.input" in o.attrs
+                  or "langfuse.observation.output" in o.attrs}
+        # 루트의 settings·회차 요약은 본문이 아니다. 프롬프트·응답 전문은 하나도 없어야 한다.
+        self.assertEqual(bodies, {"run"})
+        marked = [o for o in ops if o.attrs.get("langfuse.observation.metadata.prompt_capture")
+                  == "withheld"]
+        self.assertTrue(marked, "막았다는 사실을 남겨야 '본문 없는 회차' 와 갈린다")
+        with_prompts, _ = ops_for([ROOT_EVENT] + captured("control") +
+                                  [dict(event="run_succeeded", time_unix=9.0)])
+        self.assertTrue(any("langfuse.observation.input" in o.attrs
+                            for o in with_prompts if o.kind == "generation"))
+
+    def test_non_local_host_is_refused(self):
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            for host in ("https://cloud.langfuse.com", "http://localhost:3002/../x",
+                         "http://user:pw@localhost:3002", "http://localhost:3003",
+                         "http://localhost:3002?to=evil", "http://127.0.0.1:3002#x"):
+                verdict = tail.validate_dev_export(path, dev, host=host)
+                self.assertFalse(verdict["allowed"], host)
+                self.assertIn(f"host_not_local:{host}", verdict["reasons"])
+
+    def test_a_pinned_dev_run_on_the_local_host_is_allowed(self):
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertTrue(verdict["allowed"], verdict["reasons"])
+        self.assertEqual(verdict["dev_records"], len(ids))
+        self.assertEqual(verdict["observed_records"], 2)
+
+    def test_a_notice_outside_the_pinned_dev_is_refused(self):
+        """고정 dev 로 이름만 붙이고 다른 공고를 돌린 로그. 접두사만 보면 통과한다."""
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=(ids[0], "PPS-DEV-9999"),
+                                dataset_sha256=tail._sha256(dev), dev_ids=ids)
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertIn("unknown_ids:PPS-DEV-9999", verdict["reasons"])
+
+    def test_a_log_that_declares_a_different_id_set_is_refused(self):
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids[:2])      # 200건 파일을 2건이라고 적은 로그
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertIn("dev_ids_mismatch", verdict["reasons"])
+
+    def test_an_unidentified_prompt_body_is_never_exported(self):
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            for line in lines:
+                if line["event"] == "model_call_started":
+                    line["identity_status"] = "ambiguous"
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertTrue(any(r.startswith("unknown_ids:") for r in verdict["reasons"]))
+
+    def test_a_dev_file_that_is_not_the_pinned_one_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            other = Path(tmp) / "dev.jsonl"
+            other.write_text('{"id": "A", "docs": []}\n', encoding="utf-8", newline="\n")
+            path = self._events(tmp, dataset_sha256=tail._sha256(other), dev_ids=["A"])
+            verdict = tail.validate_dev_export(path, other, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertIn("dev_input_not_pinned", verdict["reasons"])
 
 
 if __name__ == "__main__":

@@ -11,7 +11,12 @@
 없으면 보낼 곳이 없다는 뜻이므로 아무것도 안 하고 끝난다.
 
 **공개 dev 자료만 보낸다.** 비공개 평가 입력을 넣는 순간 R17 즉시 실격이다.
-원문·프롬프트는 `--debug-responses` 로 돌린 진단 실행에만 들어 있다.
+
+`capture_protocol=1` 로그에는 **모델에 실제로 보낸 프롬프트 전문과 응답 전문**이 들어 있다.
+그래서 그 본문은 기본적으로 **보내지 않는다** — `--include-prompts` 와
+`--dev-input` 을 함께 주고 `validate_dev_export()` 가 통과할 때만 실린다.
+그 검사는 보낼 곳이 **로컬 Langfuse 인지**와 로그가 **고정 공개 dev 회차인지**를
+provider 를 만들기 전에 본다. 플래그는 안전의 근거가 아니다 — 데이터 대조가 근거다.
 """
 
 from __future__ import annotations
@@ -28,12 +33,93 @@ from pathlib import Path
 from typing import Any, Iterator, Optional
 
 MODEL_FALLBACK = "google/gemma-4-26B-A4B-it"
+ROOT = Path(__file__).resolve().parents[1]
+# 프롬프트 전문 수출이 허용되는 곳. 대회 전용 로컬 Langfuse 하나뿐이다.
+LOCAL_HOSTS = ("http://localhost:3002", "http://127.0.0.1:3002", "http://[::1]:3002")
+# 프로젝트가 고정한 공개 dev 파일. 이 hash 가 아니면 프롬프트를 수출하지 않는다.
+DEV_MANIFEST = ROOT/"reports/team-c/a8-v20-annex/inputs.json"
+DEV_NAME = "open/dev.jsonl"
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def validate_dev_export(events_path, dev_path, *, host: str) -> dict:
+    """프롬프트 전문을 수출해도 되는지 **provider 를 만들기 전에** 판단한다.
+
+    순수 함수다 — 파일을 읽고 판단만 돌려주며 네트워크를 모른다. 거짓이면
+    호출자가 metadata 만 보낸다. 통과 조건은 넷이고 하나라도 빠지면 거짓이다.
+
+    1. 보낼 곳이 대회 전용 로컬 Langfuse 주소 그대로다. userinfo·query·fragment·
+       다른 경로·다른 포트는 전부 거부한다 — 로컬처럼 생긴 주소가 밖으로 리다이렉트할 수 있다.
+    2. 로그의 첫 `run_started` 가 `dataset="dev"` 이고 그 `dataset_sha256` 이
+       넘긴 dev 파일의 실측 hash 와 같고, **프로젝트가 고정한 공개 dev hash** 와도 같다.
+    3. `dev_ids` 가 그 파일의 고유 공고 id 집합과 정확히 같다.
+    4. 로그의 모든 공고 이벤트 id 가 그 집합 안에 있다. `null`·`ambiguous` 신원이
+       하나라도 있으면 거짓이다 — 어느 공고의 프롬프트인지 모르는 본문은 내보내지 않는다.
+    """
+    reasons = []
+    if host not in LOCAL_HOSTS:
+        reasons.append(f"host_not_local:{host}")
+    events_path, dev_path = Path(events_path), Path(dev_path)
+    if not events_path.is_file():
+        reasons.append("no_diagnostics")
+    if not dev_path.is_file():
+        reasons.append("no_dev_input")
+    if reasons:
+        return dict(allowed=False, reasons=reasons)
+
+    pinned = json.loads(DEV_MANIFEST.read_text(encoding="utf-8")).get(DEV_NAME)
+    actual = _sha256(dev_path)
+    if pinned != actual:
+        reasons.append("dev_input_not_pinned")
+    dev_ids = []
+    for line in dev_path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            dev_ids.append(json.loads(line)["id"])
+    if len(dev_ids) != len(set(dev_ids)):
+        reasons.append("dev_input_duplicate_ids")
+    known, started = set(dev_ids), None
+    seen, unknown = set(), set()
+    with events_path.open(encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            event = json.loads(line)
+            if event.get("event") == "run_started":
+                if started is not None:
+                    reasons.append("multiple_runs")
+                    break
+                started = event
+                if event.get("dataset") != "dev":
+                    reasons.append(f"dataset_not_dev:{event.get('dataset')}")
+                if event.get("dataset_sha256") != actual:
+                    reasons.append("dataset_sha256_mismatch")
+                if sorted(event.get("dev_ids") or []) != sorted(known):
+                    reasons.append("dev_ids_mismatch")
+                continue
+            if event.get("event") in ("model_call_started", "model_call_finished",
+                                      "model_call_failed", "company_size_input", "response"):
+                identifier = event.get("id")
+                if identifier is None or event.get("identity_status") in ("ambiguous", "unmatched"):
+                    unknown.add(event.get("identity_status") or "no_id")
+                elif identifier not in known:
+                    unknown.add(identifier)
+                else:
+                    seen.add(identifier)
+    if started is None:
+        reasons.append("no_run_started")
+    if unknown:
+        reasons.append("unknown_ids:" + ",".join(sorted(unknown)[:5]))
+    return dict(allowed=not reasons, reasons=reasons, dev_records=len(known),
+                observed_records=len(seen), dev_sha256=actual)
 
 
 @dataclass
 class Op:
     """span 하나에 대한 지시. 네트워크를 모른다."""
-    action: str                      # open | close | point
+    action: str                      # open | close | point | update
     key: str
     name: str = ""
     kind: str = "span"               # Langfuse 의 observation type
@@ -56,6 +142,10 @@ class State:
     last: float = 0.0
     # 아래는 capture_protocol 1 로 기록한 회차에서만 채워진다.
     capture_protocol: Optional[int] = None
+    # 프롬프트·응답 **전문**을 실을지. `run()` 이 `validate_dev_export()` 통과 후에만 켠다.
+    include_prompts: bool = False
+    actual_mode: Optional[str] = None              # model_loaded 가 적은 실제 실행 방식
+    code: str = ""                                 # trace 이름에 쓰는 코드 hash 앞자리
     arm: Optional[str] = None                      # 현재 열린 군 span 의 이름
     arms: dict = field(default_factory=dict)       # (arm, sample) → span key
     inputs: dict = field(default_factory=dict)     # (arm, sample, id) → company_size_input 이벤트
@@ -90,6 +180,21 @@ def _io(value: Any) -> str:
     return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
 
 
+def _body(state: "State", attrs: dict, slot: str, value: Any) -> dict:
+    """프롬프트·응답 **전문**은 수출 검사를 통과했을 때만 싣는다.
+
+    막았을 때 조용히 비우지 않는다 — `prompt_capture="withheld"` 로 남겨
+    Langfuse 에서 "본문이 없는 회차" 와 "본문을 안 보낸 회차" 가 갈린다.
+    """
+    if value is None:
+        return attrs
+    if state.include_prompts:
+        attrs[f"langfuse.observation.{slot}"] = _io(value)
+    else:
+        attrs["langfuse.observation.metadata.prompt_capture"] = "withheld"
+    return attrs
+
+
 def plan(event: dict, state: State) -> list:
     """이벤트 하나를 span 지시로 바꾼다. 여기까지가 순수 함수다."""
     kind = event.get("event")
@@ -103,8 +208,8 @@ def plan(event: dict, state: State) -> list:
         state.capture_protocol = event.get("capture_protocol")
         state.model = (event.get("expected_model") or {}).get("id") or MODEL_FALLBACK
         mode = event.get("mode", "?")
-        code = (event.get("code_sha256") or "")[:7]
-        state.trace_name = f"nara {mode} {code}".strip()
+        state.code = (event.get("code_sha256") or "")[:7]
+        state.trace_name = f"nara {mode} {state.code}".strip()
         return [Op("open", "run", state.trace_name, "span", None, now,
                    attrs={"langfuse.observation.input": _io(event.get("settings", {})),
                           **_meta(mode=mode, code_sha256=event.get("code_sha256"),
@@ -125,9 +230,20 @@ def plan(event: dict, state: State) -> list:
                                system_prompt_sha256=event.get("system_prompt_sha256")))]
 
     if kind == "model_loaded":
-        return [Op("close", "model", end=now,
-                   attrs=_meta(load_seconds=event.get("load_seconds"),
-                               environment=event.get("environment")))]
+        # 루트는 생성 전에 나므로 `mode="pending"` 으로 열렸다. 실제 mode 는 여기서 처음 알 수 있다.
+        # 그것을 루트에 얹지 않으면 Langfuse 에서 **실제 모델 회차와 대역 실행이 안 갈린다.**
+        ops = [Op("close", "model", end=now,
+                  attrs=_meta(load_seconds=event.get("load_seconds"),
+                              environment=event.get("environment")))]
+        mode = event.get("mode")
+        if mode:
+            state.actual_mode = mode
+            state.trace_name = f"nara {mode} {state.code}".strip()
+            ops.append(Op("update", "run", state.trace_name,
+                          attrs={"langfuse.trace.name": state.trace_name,
+                                 **_meta(mode=mode, mode_at_start="pending",
+                                         token_count_kind=event.get("token_count_kind"))}))
+        return ops
 
     if kind == "arm_started":
         key = _arm_key(event)
@@ -221,8 +337,7 @@ def plan(event: dict, state: State) -> list:
         if source is not None:
             attrs.update(_meta(max_chars=source.get("max_chars"),
                                token_count_kind=source.get("token_count_kind")))
-        if event.get("prompt_text") is not None:
-            attrs["langfuse.observation.input"] = _io(event["prompt_text"])
+        _body(state, attrs, "input", event.get("prompt_text"))
         return [Op("open", key, str(event.get("id") or event.get("call_index")), "generation",
                    state.chunk or state.arm or "run", now, attrs=attrs)]
 
@@ -247,8 +362,7 @@ def plan(event: dict, state: State) -> list:
         elif prompt_tokens is not None or output_tokens is not None:
             attrs.update(_meta(prompt_tokens=prompt_tokens, output_tokens=output_tokens,
                                usage_note="한쪽만 보고돼 total 을 만들지 않았다"))
-        if event.get("response_text") is not None:
-            attrs["langfuse.observation.output"] = _io(event["response_text"])
+        _body(state, attrs, "output", event.get("response_text"))
         return [Op("close", key, end=now, attrs=attrs, level="ERROR" if failed else None,
                    status=f"{event.get('error_type')}" if failed else "")]
 
@@ -289,10 +403,8 @@ def plan(event: dict, state: State) -> list:
             attrs["langfuse.observation.usage_details"] = json.dumps(
                 {"input": prompt_tokens or 0, "output": output_tokens or 0,
                  "total": (prompt_tokens or 0) + (output_tokens or 0)})
-        if event.get("prompt_text") is not None:
-            attrs["langfuse.observation.input"] = _io(event["prompt_text"])
-        if event.get("response_text") is not None:
-            attrs["langfuse.observation.output"] = _io(event["response_text"])
+        _body(state, attrs, "input", event.get("prompt_text"))
+        _body(state, attrs, "output", event.get("response_text"))
         return [Op("point", f"gen:{phase}:{event.get('global_index')}:{attempt}",
                    str(event.get("id") or event.get("global_index")), "generation",
                    state.chunk or "run", state.chunk_start or now, now, attrs=attrs,
@@ -333,7 +445,10 @@ def plan(event: dict, state: State) -> list:
         ops.append(Op("close", "run", end=now,
                       attrs={"langfuse.observation.output": _io(
                           {k: v for k, v in event.items() if k not in ("event", "time_unix")}),
-                          **_meta(traceback=event.get("traceback"))},
+                          # 루트가 `pending` 으로 끝나지 않게 실제 mode 를 마지막에 한 번 더 적는다.
+                          **_meta(mode=state.actual_mode or "pending",
+                                  model_loaded="yes" if state.actual_mode else "no",
+                                  traceback=event.get("traceback"))},
                       level="ERROR" if failed else None,
                       status=(f"{event.get('error_type')}: {event.get('error_message')}"
                               if failed else "")))
@@ -411,10 +526,28 @@ def run(args: argparse.Namespace) -> int:
     path = Path(args.diagnostics)
     session = args.session or str(path.resolve())
     trace_id = int.from_bytes(hashlib.sha256(session.encode()).digest()[:16], "big")
+
+    # 프롬프트·응답 전문 수출은 **provider 를 만들기 전에** 판단한다.
+    include_prompts = False
+    if args.include_prompts:
+        if args.follow or args.from_line:
+            print("[tail] --include-prompts 는 완성 파일만 본다. --follow/--from-line 과 같이 못 쓴다.")
+            return 2
+        if not args.dev_input:
+            print("[tail] --include-prompts 에는 --dev-input 이 필요하다. 대조할 것이 없으면 안 보낸다.")
+            return 2
+        verdict = validate_dev_export(path, args.dev_input, host=host)
+        if not verdict["allowed"]:
+            print("[tail] 프롬프트 수출 거부: " + ", ".join(verdict["reasons"]))
+            return 2
+        include_prompts = True
+        print(f"[tail] 프롬프트 수출 허용 — 로컬 {host}, 공고 {verdict['observed_records']}"
+              f"/{verdict['dev_records']}건")
+
     provider = build_provider(host, public, secret, trace_id, args.service)
     tracer = provider.get_tracer("nara-langfuse-tail")
 
-    state = State()
+    state = State(include_prompts=include_prompts)
     live: dict = {}
     sent = [0]
 
@@ -431,6 +564,14 @@ def run(args: argparse.Namespace) -> int:
     try:
         for event in follow(path, args.from_line, args.follow, args.idle_timeout):
             for op in plan(event, state):
+                if op.action == "update":       # 열린 span 을 닫지 않고 고친다
+                    span = live.get(op.key)
+                    if span is not None:
+                        for key, value in op.attrs.items():
+                            span.set_attribute(key, value)
+                        if op.name:
+                            span.update_name(op.name)
+                    continue
                 if op.action == "close":
                     span = live.pop(op.key, None)
                     if span is not None:
@@ -472,6 +613,10 @@ def main(argv: list) -> int:
     parser.add_argument("--from-line", type=int, default=0, help="이 줄까지는 건너뛴다(재개용)")
     parser.add_argument("--idle-timeout", type=float, default=900.0,
                         help="이 시간 동안 새 줄이 없으면 끝낸다")
+    parser.add_argument("--dev-input", default="",
+                        help="대조할 고정 공개 dev 파일. --include-prompts 에 필수다")
+    parser.add_argument("--include-prompts", action="store_true",
+                        help="프롬프트·응답 **전문**을 싣는다. 로컬 Langfuse + 고정 dev 회차만 허용된다")
     parser.add_argument("--environment", default="colab")
     parser.add_argument("--session", default="", help="실행 이름. 비우면 파일 경로로 정한다")
     parser.add_argument("--service", default="ai-nara-shop")

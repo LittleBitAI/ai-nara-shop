@@ -114,6 +114,51 @@ class A5FactsTests(unittest.TestCase):
         self.assertIn("chunk_started", kinds(on_events))
         self.assertIn("chunk_finished", kinds(on_events))
 
+    def test_recorded_schema_is_the_one_the_runner_actually_restricts_to(self):
+        """`items` 가 오면 제품은 `sp` 가 아니라 **제한한 스키마**로 부른다
+        (`script.py:967`). `sp` 를 적으면 기록이 실제 요청을 증명하지 못한다."""
+        class Restricting(FakeRunner):
+            def __init__(self):
+                super().__init__()
+                self.sp = type("SP", (), {})()
+                self.sp.max_tokens = 1024
+                self.sp.structured_outputs = type("SO", (), {})()
+                self.sp.structured_outputs.json = {"properties": {"a": 1, "b": 2}}
+                self.used = []
+
+            def parameters_for_items(self, items, *, sme=True):
+                restricted = type("SP", (), {})()
+                restricted.max_tokens = self.sp.max_tokens
+                restricted.structured_outputs = type("SO", (), {})()
+                restricted.structured_outputs.json = {"properties": {"a": 1}, "sme": sme}
+                self.used.append(items)
+                return restricted
+
+        runner = Restricting()
+        events = []
+        with a5.observe_chat(runner, lambda name, **f: events.append(dict(event=name, **f)),
+                             ids=["PPS-DEV-1"], phase="company_size"):
+            runner.chat([[{"role": "system", "content": "s"}, {"role": "user", "content": "u"}]],
+                        items=a5.script.COMPANY_SIZE_KEYS)
+        started = next(e for e in events if e["event"] == "model_call_started")
+        full = a5.digest(runner.sp.structured_outputs.json)
+        restricted = a5.digest(
+            runner.parameters_for_items(a5.script.COMPANY_SIZE_KEYS,
+                                        sme=False).structured_outputs.json)
+        self.assertNotEqual(full, restricted)            # 두 스키마가 실제로 다르다
+        self.assertEqual(started["schema_sha256"], restricted)
+        self.assertNotEqual(started["schema_sha256"], full)
+
+    def test_a_runner_without_restriction_falls_back_to_its_own_parameters(self):
+        """대역·API 실행기는 `parameters_for_items` 가 없다. 그 경로가 죽으면 안 된다."""
+        runner = FakeRunner()
+        runner.sp = type("SP", (), {})()
+        runner.sp.max_tokens = 512
+        runner.sp.structured_outputs = None
+        chosen = a5.effective_parameters(runner, None, a5.script.COMPANY_SIZE_KEYS)
+        self.assertIs(chosen, runner.sp)
+        self.assertIsNone(a5.effective_parameters(FakeRunner(), None, None))
+
     def test_observe_chat_restores_the_runner_even_when_it_raises(self):
         """감싼 메서드가 남으면 다음 군의 호출이 이전 군 로그로 흘러간다."""
         runner = FakeRunner()
