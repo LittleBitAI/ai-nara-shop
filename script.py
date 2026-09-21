@@ -643,7 +643,7 @@ def restore_spacing(quote, rec, visible):
     return best
 
 
-def company_size_products(facts, rec):
+def company_size_products(facts, rec, visible=None):
     """검증된 `scope`가 v12·v13에 대해 말하는 것. v14~v18의 금액·등급 축과 독립이다.
 
     왜 여기인가. `scope` 절을 고친 뒤 모델의 `competitive`가 0건 → 76건이 됐고, 확실한
@@ -658,6 +658,14 @@ def company_size_products(facts, rec):
     v11은 잇지 않는다 — 재 보니 F1 0.400 → 0.385로 손해다.
 
     실측(같은 원응답 재생): v12 F1 0.444→0.727(TP 2→4), v13 0.167→0.375(FP 5→7, TP 1→3).
+
+    **v13은 공고 원문으로 검증된 인용이 있어야 선다.** 없이 세우면 모델이 준 문자열이 무엇이든
+    그대로 근거문구가 됐다 — 지어낸 문구도, 프롬프트에 든 법령 원문도 통과했다. 그것은 근거
+    계약 위반이고, 분류·역할·인용이 함께 바뀌면 이 자리에서 v13 양성이 9 → 33셀로 열렸다
+    (신규 24셀 중 23셀이 오탐). 보관 H4 재생 기준 이 검증의 대가는 v13 4/9/2 → 3/8/3,
+    Macro 0.593846165415 → 0.591008188119(−0.002838)이며 잃는 것은 **근거가 공고에 없는데
+    우연히 맞은 양성**이다. 근거는 `reports/team-c/a8-v20-annex/README.md`가 소유한다.
+    v12의 근거는 모델 인용이 아니라 `direct_production_demand(rec)` 파생이라 이 검증 밖이다.
     """
     out = {}
     demand, codes = direct_production_demand(rec)
@@ -665,7 +673,13 @@ def company_size_products(facts, rec):
         out["v12"] = {"위반여부": 1, "근거문구": demand}
     elif (facts["scope"] == "competitive" and facts.get("qualification") == "small_only"
             and competitive_product(rec, codes) is True):
-        out["v13"] = {"위반여부": 1, "근거문구": facts.get("qualification_quote")}
+        # 호출자가 이미 `restore_spacing`으로 복원한 인용을 넘긴다. 복원 전 값으로 재면
+        # 공백 표기만 다른 진짜 인용을 놓친다.
+        quote = facts.get("qualification_quote")
+        if visible is None:
+            visible = build_context(rec)
+        if quote and quote.strip() and quote in visible and any(quote in d["text"] for d in rec["docs"]):
+            out["v13"] = {"위반여부": 1, "근거문구": quote}
     return out
 
 
@@ -695,7 +709,7 @@ def verify_company_size(facts, rec, max_chars):
     bands, reason = _company_size_bands(facts, rec, max_chars)
     out = dict(bands)
     if reason != "unverified_scope":
-        out.update(company_size_products(facts, rec))
+        out.update(company_size_products(facts, rec, visible))
     out.update(verify_document_requirements(facts, rec, visible))
     return out, reason
 

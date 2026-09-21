@@ -148,6 +148,24 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             "settings": settings}
 
 
+def csv_cell_diff(left: bytes, right: bytes):
+    """두 제출 CSV 에서 다른 셀을 `(id, 열)` 로 돌려준다.
+
+    보관 CSV 와의 바이트 동일이 **일부러** 깨졌을 때 쓴다 — 무엇이 몇 셀 움직였는지 세어
+    고정하면 바이트 비교의 회귀 검출력을 잃지 않으면서 보관물을 다시 쓰지 않아도 된다.
+    """
+    import csv as _csv
+    import io as _io
+
+    def rows(data):
+        return {r["id"]: r for r in _csv.DictReader(_io.StringIO(data.decode("utf-8-sig")))}
+
+    a, b = rows(left), rows(right)
+    if set(a) != set(b):
+        raise ValueError("CSV 의 id 집합이 다르다")
+    return sorted((i, c) for i in b for c in b[i] if a[i][c] != b[i][c])
+
+
 def to_csv_bytes(script, rows):
     """`script.write_csv`와 같은 바이트를 메모리에서 만든다."""
     stream = io.StringIO(newline="")

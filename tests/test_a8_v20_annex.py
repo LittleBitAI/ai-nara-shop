@@ -100,7 +100,9 @@ class AnnexBlockTests(unittest.TestCase):
             metrics, predictions = pilot.hybrid_replay(payload, output, experiment='a8')
             baseline = BASELINE_CSV.read_bytes()
             for variant in ('off', 'on'):
-                self.assertEqual((output/f'{variant}-hybrid.csv').read_bytes(), baseline)
+                # v13 근거 수리로 보관 CSV와 세 셀이 일부러 갈렸다. v20 은 그대로다.
+                self.assertEqual(pilot.replay_run.csv_cell_diff((output/f'{variant}-hybrid.csv').read_bytes(), baseline),
+                                 [('PPS-DEV-148', 'e13'), ('PPS-DEV-16', 'v13'), ('PPS-DEV-198', 'v13')])
                 item = metrics[variant]['items']['v20']
                 self.assertEqual((item['tp'], item['fp'], item['fn']), (1, 4, 4))
             self.assertEqual(pilot.changes(predictions['off'], predictions['on']), [])
@@ -234,17 +236,15 @@ class LawQuotationTests(unittest.TestCase):
                         planted.setdefault(field, {}).setdefault(item, []).append(rec['id'])
         return planted
 
-    def test_only_the_known_v13_hole_accepts_the_law_as_evidence(self):
+    def test_no_quote_field_accepts_the_law_as_evidence(self):
+        """인용 필드 일곱 중 어디에 법령을 넣어도 24항목의 근거로 서지 못한다.
+
+        `company_size_products()`가 검증된 인용을 요구하게 된 뒤의 계약이다. 그 전에는
+        `qualification_quote` → v13 9셀이 열려 있었다.
+        """
         self.assertIn(self.LAW_SPAN, candidate.segments()[1].text)
         self.assertIn(self.LAW_SPAN, candidate.block())
-        planted = self.sweep()
-        # 여섯 필드는 검증이 법령을 기각한다. 하나라도 열리면 이 PR 이 대상 밖 항목을 움직인다.
-        self.assertEqual({f: sorted(items) for f, items in planted.items() if f != 'qualification_quote'}, {})
-        # ponytail: 남은 구멍 하나는 운영 `script.py:668` 이다 — `company_size_products()` 가
-        # `qualification_quote` 를 공고 원문으로 검증하지 않고 v13 근거로 쓴다. A8 허용 파일 밖이라
-        # 여기서는 표면만 고정한다. 그 수리가 들어오면 이 기대값은 {} 가 된다.
-        self.assertEqual(sorted(planted['qualification_quote']), ['v13'])
-        self.assertEqual(len(planted['qualification_quote']['v13']), 9)
+        self.assertEqual(self.sweep(), {})
 
     def facts_and_records(self):
         """카탈로그 전역을 채운 뒤 H4 사실·공고·실제 max_chars 를 함께 돌려준다."""
@@ -256,15 +256,15 @@ class LawQuotationTests(unittest.TestCase):
             facts = script.parse_judgment(texts[rec['id']], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
             yield facts, rec, chars[rec['id']]
 
-    def test_role_and_quote_together_open_new_v13_positives(self):
-        """실제 모델은 분류·역할·인용을 한 응답에서 함께 낸다. 그 결합 경로를 계약에 넣는다.
+    def test_role_and_quote_together_no_longer_open_new_v13_positives(self):
+        """실제 모델은 분류·역할·인용을 한 응답에서 함께 낸다. 그 결합 경로가 닫혔는지 본다.
 
-        라운드 2 리뷰의 P1이다. 인용 한 필드만 바꾸는 스윕은 이 경로를 못 본다 —
-        `qualification_role`이 baseline 에서 v13 을 막고 있던 공고들이 함께 열린다.
-        scope 는 건드리지 않는다. H4 의 `competitive` 78건이 그대로 후보군이다.
+        라운드 2 리뷰의 P1이다. 수리 전에는 `qualification_role=eligibility` +
+        `qualification=small_only` + 법령 인용을 함께 넣으면 v13 이 9 → 33셀로 열리고
+        신규 24셀(정답 23×0 / 1×1)이 전부 법령을 근거로 썼다. scope 는 건드리지 않는다 —
+        H4 의 `competitive` 78건이 그대로 후보군이다.
         """
-        labels = read_csv(pilot.ROOT/'open/dev_labels.csv')
-        base, combined, law_evidence = {}, {}, []
+        base, combined = {}, {}
         for facts, rec, max_chars in self.facts_and_records():
             before, _ = script.verify_company_size(facts, rec, max_chars)
             after, _ = script.verify_company_size(
@@ -274,21 +274,16 @@ class LawQuotationTests(unittest.TestCase):
                 base[rec['id']] = before['v13']
             if 'v13' in after:
                 combined[rec['id']] = after['v13']
-                if self.LAW_SPAN in str(after['v13']['근거문구']):
-                    law_evidence.append(rec['id'])
-        new = [i for i in combined if i not in base]
-        self.assertEqual((len(base), len(combined), len(new)), (9, 33, 24))
-        # 신규 24셀 전부가 법령 문자열을 근거로 쓴다.
-        self.assertEqual(sorted(i for i in law_evidence if i in new), sorted(new))
-        # 그중 23건은 정답 0 이다 — 모델이 이 결합을 내면 v13 오탐이 그만큼 늘어난다.
-        self.assertEqual(sum(1 for i in new if labels[i]['v13'] == '0'), 23)
-        self.assertEqual(sum(1 for i in new if labels[i]['v13'] == '1'), 1)
-        # ponytail: 근거만 비우는 수리는 이 신규 양성 경로를 닫지 않는다. 판정까지 막으려면
-        # `company_size_products()` 가 검증된 인용을 요구해야 하고 그것은 재생에서 -0.002838 이다.
-        # 그 선택이 서기 전에는 v20 실험의 채택 게이트를 열지 않는다.
+        # 수리 뒤 기준선은 검증된 인용을 가진 6셀이고, 법령으로 바꾸면 그 6셀마저 선다는 근거를 잃는다.
+        self.assertEqual(len(base), 6)
+        self.assertEqual(combined, {})
+        self.assertEqual([i for i in combined if i not in base], [])
 
-    def test_v13_evidence_is_already_ungrounded_without_the_injection(self):
-        """같은 구멍이 후보 없이도 이미 3셀에서 발화한다 — A8 이 만든 회귀가 아니다."""
+    def test_every_v13_cell_now_carries_a_verified_notice_quote(self):
+        """수리 전에는 이 구멍이 후보 없이도 3셀에서 발화했다 — A8 이 만든 회귀가 아니었다.
+
+        수리 뒤에는 company 경로가 쓰는 v13 이 전부 공고 원문으로 검증된 인용을 갖는다.
+        """
         _, products = script.load_sme_reference(str(pilot.ROOT/'open/data'))
         events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
         chars = {e['id']: e['max_chars'] for e in events if e['event'] == 'company_size_input'}
@@ -305,8 +300,8 @@ class LawQuotationTests(unittest.TestCase):
             quote = cell['근거문구']
             if not (quote and quote in visible and any(quote in d['text'] for d in rec['docs'])):
                 ungrounded.append(rec['id'])
-        self.assertEqual(len(written), 9)
-        self.assertEqual(ungrounded, ['PPS-DEV-16', 'PPS-DEV-148', 'PPS-DEV-198'])
+        self.assertEqual(len(written), 6)
+        self.assertEqual(ungrounded, [])
 
     def test_injected_law_span_is_not_accepted_as_a_notice_clause(self):
         article, annex = candidate.segments()
