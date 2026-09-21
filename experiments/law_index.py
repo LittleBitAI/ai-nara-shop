@@ -64,6 +64,10 @@
   `chapter(law, 장, 절, 번호)` 로 직접 부르면 내려간다.
 - 호(`1.`)·목(`가.`) 층은 예규 경로에서만 쓴다. 법률 조문 안의 각 호는 조 전문에 포함해 돌려준다.
 - 같은 장 제목이 속표지와 본문에 반복되면 **가장 긴 블록**을 고른다. 휴리스틱이다.
+- **미등록 법령 탐지는 최선의 추정이다.** `_split_region` 은 조·항·별표 뒤에
+  `법`·`시행령`·`예규` 처럼 끝나는 덩어리가 오면 경계로 본다. 그 접미사 없이 끝나는
+  미등록 법령 이름은 여전히 앞 법령에 귀속된다. 한글 덩어리 전부를 경계로 쓰면
+  `제12조 경쟁입찰의 참가자격 제21조` 같은 **정상 인용이 잘려서** 그렇게 못 한다.
 
 ## 조각내기 규칙
 
@@ -316,7 +320,7 @@ ADDRESS = re.compile(
     r"제\s?\d+조(?:의\s?\d+)?"           # 제21조 · 제2조의2
     r"|제\s?\d+장(?:의\s?\d+)?"
     r"|제\s?\d+절(?:의\s?\d+)?"
-    r"|제\s?\d+항|\d+항"
+    r"|제\s?\d+항|(?<![\d\-−–—])\d+항"      # `제-1항` 의 `1항` 을 항으로 읽지 않는다
     r"|별표\s*\d+"
     r"|(?<![\d가-힣])\d+\.(?=\s)"         # 예규의 `7.`
     r"|(?<![가-힣])[가-힣]\.(?=\s)"       # 예규의 `나.`
@@ -349,11 +353,22 @@ def _law_spans(citation: str, data_dir: str) -> List[Tuple[int, int, str]]:
     return sorted(spans)
 
 
-# 조·항·별표 뒤에 한글 덩어리가 끼고 다시 조/장/별표가 오면 그 사이에 **이름 모를 법령**이 있다.
-# 장·절·번호 뒤의 한글은 그 단위의 제목이므로 이 규칙에서 뺀다.
-HANGUL_RUN = re.compile(r"[가-힣]{2,}")
+# 조·항·별표 뒤에 **법령 이름처럼 끝나는** 덩어리가 끼고 다시 조/장/별표가 오면
+# 그 사이에 이름 모를 법령이 있다. 장·절·번호 뒤의 한글은 그 단위의 제목이라 제외한다.
+#
+# **한글 덩어리 전부를 경계로 쓰면 정상 인용을 자른다.** 조문 제목을 같이 적은
+# `제12조 경쟁입찰의 참가자격 제21조 …` 와 `및 같은 법 제22조` 가 그렇게 잘렸다.
+# 그래서 접미사로 좁혔다 — 이것은 **최선의 추정이지 증명이 아니다.**
+# 접미사 없이 끝나는 미등록 법령은 여전히 앞 법령에 귀속된다. 아래 「한계」 참조.
+LAW_TAIL = re.compile(r"[가-힣]{2,}(?:법률|법|시행령|시행규칙|예규|지침|기준|요령|고시)(?![가-힣])")
+# 다음 조를 같은 법령 안에서 잇는 연결어. 법령 이름이 아니다.
+SAME_LAW = re.compile(r"(?:같은|동일한|이)\s*법|동법")
 CLOSES_ADDRESS = re.compile(r"^(제\d+조|제?\d+항|별표)")
 OPENS_ADDRESS = re.compile(r"^(제\d+조|제\d+장|별표)")
+
+
+# 주소를 흉내 냈지만 주소가 아닌 표기. 토큰으로 안 잡혀 **조용히 사라지던** 것들이다.
+MALFORMED = re.compile(r"제\s*[^\d\s가-힣]*\s*항|제\s*[-−–—]\s*\d+\s*항|제\s*조")
 
 
 def _split_region(region: str) -> Tuple[List[str], List[str]]:
@@ -369,10 +384,15 @@ def _split_region(region: str) -> Tuple[List[str], List[str]]:
     cut = False
     for match in ADDRESS.finditer(region):
         token = match.group(0).replace(" ", "")
-        if not cut and previous is not None and OPENS_ADDRESS.match(token)                 and CLOSES_ADDRESS.match(previous)                 and HANGUL_RUN.search(region[previous_end:match.start()]):
-            cut = True
+        if not cut and previous is not None and OPENS_ADDRESS.match(token)                 and CLOSES_ADDRESS.match(previous):
+            gap = region[previous_end:match.start()]
+            if LAW_TAIL.search(SAME_LAW.sub(" ", gap)):
+                cut = True
         (orphans if cut else mine).append(token)
         previous, previous_end = token, match.end()
+    # `제항` · `제-1항` 처럼 주소를 흉내 낸 표기는 토큰이 안 되어 조용히 사라졌다.
+    # 그대로 두면 `제21조 제항` 이 조 **전문**으로 성공한다.
+    orphans.extend(m.group(0).strip() for m in MALFORMED.finditer(region))
     return mine, orphans
 
 

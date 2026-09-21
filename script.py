@@ -623,17 +623,15 @@ def restore_spacing(quote, rec, visible):
     flat_quote = _QUOTE_SPACE.sub("", quote or "")
     if len(flat_quote) < QUOTE_MIN_RESTORE:
         return None
+    if quote in visible:
+        return None                              # 모델이 본 그대로다 — 되돌릴 것이 없다
+    # **정확 일치는 `visible` 에서만 판단한다.** 문서 단위로 보면, 잘려서 안 보이는
+    # 뒷부분에 무공백 표기가 있는 것만으로 그 문서를 통째로 건너뛰어 **보이는 앞부분의
+    # 공백 변형을 찾지도 않고** None 을 돌려줬다. 호출자는 원래 인용으로 물러서는데
+    # 그것은 `visible` 에 없으므로 검증된 인용이 통째로 떨어지고 기본 판정이 남는다.
     best = None
     for doc in rec["docs"]:
         text = doc["text"]
-        if quote in text and quote in visible:
-            return None                          # 이미 원문 그대로이고 모델이 그렇게 봤다
-        if quote in text:
-            # **모델이 못 본 문서의 정확 일치는 복원을 취소하지 않는다.** 예산에 잘려
-            # 안 보이는 첨부에 무공백 표기가 있으면, 보이는 문서에서 찾아 둔 복원까지
-            # 버리고 None을 돌려줬다 — 호출자는 원래 인용으로 물러서는데 그것은
-            # `visible`에 없으므로 검증된 인용이 통째로 떨어진다.
-            continue
         where = [i for i, ch in enumerate(text) if not ch.isspace()]
         flat = "".join(text[i] for i in where)
         start = flat.find(flat_quote)

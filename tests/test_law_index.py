@@ -218,6 +218,35 @@ class LawIndex(unittest.TestCase):
         kept = law_index.resolve("국가계약법 시행령 제21조 없는법 제22조", DATA, strict=False)
         self.assertEqual([s.path for s in kept], [("제21조",)])
 
+    def test_a_same_law_continuation_is_not_cut_as_an_unknown_law(self):
+        """조문 제목과 `같은 법` 연결어가 **정상 인용을 자르면 안 된다.**
+
+        한글 덩어리 전부를 경계로 쓴 첫 수정이 이 둘을 미등록 법령으로 잘랐다 —
+        고치려던 것보다 넓은 회귀였다.
+        """
+        titled = law_index.resolve(
+            "국가계약법 시행령 제12조 경쟁입찰의 참가자격 제21조 제한경쟁입찰에 의할 계약과 "
+            "제한사항등", DATA)
+        self.assertEqual([s.path for s in titled], [("제12조",), ("제21조",)])
+        linked = law_index.resolve("국가계약법 시행령 제21조 제1항 및 같은 법 제22조", DATA)
+        self.assertEqual([s.path for s in linked], [("제21조", "①"), ("제22조",)])
+        with self.assertRaises(ValueError):     # 진짜 미등록 법령은 여전히 잡힌다
+            law_index.resolve("국가계약법 시행령 제21조 없는법 제22조", DATA)
+
+    def test_malformed_paragraph_markers_are_not_silently_dropped(self):
+        """`제항` 은 토큰이 안 되고 `제-1항` 은 `1항` 으로 잡혔다.
+
+        둘 다 **조 전문 또는 엉뚱한 항**을 성공으로 돌려줬다. 주소를 흉내 낸 표기는
+        토큰이 안 되더라도 미소비로 남아야 한다.
+        """
+        for citation in ("국가계약법 시행령 제21조 제항", "국가계약법 시행령 제21조 제-1항"):
+            with self.assertRaises(ValueError, msg=citation):
+                law_index.resolve(citation, DATA)
+        self.assertEqual([s.path for s in law_index.resolve("국가계약법 시행령 제21조 제1항", DATA)],
+                         [("제21조", "①")])
+        self.assertEqual([s.path for s in law_index.resolve("지방계약법 시행령 제43조 7항", DATA)],
+                         [("제43조", "⑦")])
+
     def test_a_trailing_law_without_an_address_means_the_whole_file(self):
         """마지막에 주소 없이 놓인 이름은 그 법령 전체를 가리킨다 — 고시금액이 그렇다."""
         found = law_index.resolve(

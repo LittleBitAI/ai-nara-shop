@@ -228,6 +228,19 @@ class RestoreSpacingHiddenDoc(unittest.TestCase):
         rec = {"docs": [{"text": self.VISIBLE}, {"text": "앞부분 " + self.QUOTE + " 뒷부분"}]}
         self.assertEqual(SCRIPT.restore_spacing(self.QUOTE, rec, self.VISIBLE), self.VISIBLE)
 
+    def test_a_hidden_tail_in_the_same_document_does_not_block_the_search(self):
+        """같은 문서의 **잘린 뒷부분**에 정확 일치가 있어도 보이는 앞부분을 찾아야 한다.
+
+        문서 단위로 `quote in text` 를 보면 그 문서를 통째로 건너뛰어 공백 변형을
+        찾지도 않고 None 을 돌려줬다 — 첫 수정이 못 막은 자리다.
+        """
+        text = self.VISIBLE + " 중간채움" * 20 + " " + self.QUOTE
+        rec = {"docs": [{"doc_id": "D0", "type": "공고문", "text": text}]}
+        visible = SCRIPT.build_context(rec, 45)
+        self.assertIn(self.VISIBLE, visible)
+        self.assertNotIn(self.QUOTE, visible)
+        self.assertEqual(SCRIPT.restore_spacing(self.QUOTE, rec, visible), self.VISIBLE)
+
     def test_an_exact_match_the_model_saw_still_needs_no_restoration(self):
         text = "앞부분 " + self.QUOTE + " 뒷부분"
         self.assertIsNone(SCRIPT.restore_spacing(self.QUOTE, {"docs": [{"text": text}]}, text))
