@@ -297,6 +297,13 @@ v18 양성 7건의 `qualification_role`은 checklist 5 · eligibility 1 · none 
 
 ## 8. 결과
 
+**2026-09-21 H3 GPU 파일럿 준비:** [조건 관측 실행 계약](../../reports/team-c/a5-label-definition/h3-scope-observation.md).
+서버 여유 820초→dev 증가 92.193초를 다시 계산한 뒤 기존 company_size 안에 조건 관측을 추가했다.
+CPU 검사 5개, 기존 HEAD/H2 CSV 바이트 재현 통과. 운영 소스·H2 소비자는 변경하지 않았다.
+고정 1735330 코드로 대조군/후보 각 dev 200 + 진단 5, 별도 런타임 반복을 실행하는 Colab 준비 완료.
+사용자 요구에 따라 회차 ID·Macro/항목별 F1·환경·시간·오답·실패 상태를 자동 기록한다.
+새 모델 성능·시간은 아직 미측정이다. 혼합 재생과 전체 GPU·서버 성과를 구분하며 채택 보류·머지 없음.
+
 **2026-09-21 브리프 3 대조:** [품목 조건 감사](../../reports/team-c/a5-label-definition/catalog-findings.md).
 메타 목록 17/34·코드 적중 15/34·특이사항 5건을 재현하고 추가 네 건의 규격을 확인했다.
 서버 CPU 개수/주파수, 햄 사양서 부재, 드론 OR 조건 때문에 네 건을 새 반례로 확정하지 않는다.

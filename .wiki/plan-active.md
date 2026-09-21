@@ -7,6 +7,12 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
+**2026-09-21 A5 H3 실행 준비:** [조건 관측 파일럿](../reports/team-c/a5-label-definition/h3-scope-observation.md).
+기존 한 호출의 조건 인용/상태를 먼저 출력하는 후보와 대조군을 dev 200 + 진단 5건씩 잰다.
+Colab 코드 1735330 고정, CPU 검사 5개·기존 CSV 바이트 재현 통과, 실제 GPU 미측정.
+이번부터 회차 ID·F1·24항목 지표·환경·시간·오답·실패 상태를 자동 기록한다.
+서버 추가 호출 0, company_size 단계 계획 상한 339.178초. 기존 H2 연속 수집 종료·채택 보류 유지.
+
 **2026-09-21 A5 브리프 3:** [품목 조건 대조](../reports/team-c/a5-label-definition/catalog-findings.md).
 메타 적중 15/34·특이사항 5건 재현. 추가 네 건은 CPU 개수/주파수·혼합 구매·사양서 미제공·
 드론 중량 OR 고도 조건을 구분해야 하며, 새 scope 반례로 확정하지 않았다. 조항호내용 필터 기각.

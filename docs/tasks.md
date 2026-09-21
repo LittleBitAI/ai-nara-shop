@@ -27,6 +27,13 @@
 
 ## 첫 작업 큐
 
+`a5-label-definition-wall / H3`: [동일 호출 조건 관측 파일럿](../reports/team-c/a5-label-definition/h3-scope-observation.md).
+시간 예산 선계산·후보/실행기·Colab 준비·CPU 검사 5개 완료. 고정 코드 1735330, GPU 미측정.
+이번부터 회차 ID·F1/24항목 지표·환경·시간·오답·실패 상태를 JSON/Markdown으로 자동 기록한다.
+대조군/후보 dev 200건 + 진단 5건씩, 새 런타임에서 순서를 바꿔 반복한다. 기존 H2 소비자는 유지한다.
+조건 인용은 진단에만 쓰고 새 강제 게이트는 넣지 않는다. 같은 호출 교체·추가 서버 호출 0.
+실행 결과는 고정 기본/SME 응답을 결합한 혼합 CPU 재생이며 전체 GPU 점수와 구분한다.
+
 `a5-label-definition-wall / 브리프 3`: [메타·규격 대조](../reports/team-c/a5-label-definition/catalog-findings.md).
 발화 34건의 메타 적중 15·특이사항 5를 재현, 추가 네 건의 서버/햄/드론 규격 감사 완료.
 조항호내용 필수 조건은 무라벨 발화 0·dev TP 하나 손실이라 기각한다. 메타 조회는 이미 입력에 있다.
