@@ -27,6 +27,14 @@
 
 ## 첫 작업 큐
 
+`a5-v18-scope-review`: **ready**, [새 셀 착수서](tasks/a5-v18-scope-review.md).
+한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
+후보·CPU 계약 검사·Colab 준비·회차 기록·push/PR까지 진행하며 머지는 하지 않는다.
+[독립 분석](../reports/team-c/a5-label-definition/five-stuck-analysis.md)과
+[방법](../reports/team-c/a5-label-definition/five-stuck-how.md)이 이 주제를 소유한다.
+계획 상한 339.178초/200건, 새 후보 GPU 미실행. 기존 H3는 등록 회차에서 실행됐으며
+아래 H3 “GPU 미측정”은 준비 당시 이력이다.
+
 `a5-label-definition-wall`: 착수·진행 중. 배정 2026-09-21, astra. **v11 · v13 · v24** — 라벨 기준이 벽인 셋.
 `18f07e5`(dev 0.599316 / 서버 0.508414)를 항목별로 갈랐다. v11은 오탐을 0으로 해도 최대 F1 0.500이고,
 v13은 금액 구간·`scope`·`qualification`·`qualification_role`·직생 언급·인용 문장 **여섯 축이 전부
