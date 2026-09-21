@@ -27,6 +27,11 @@
 
 ## 첫 작업 큐
 
+`a5-label-definition-wall / 브리프 3`: [메타·규격 대조](../reports/team-c/a5-label-definition/catalog-findings.md).
+발화 34건의 메타 적중 15·특이사항 5를 재현, 추가 네 건의 서버/햄/드론 규격 감사 완료.
+조항호내용 필수 조건은 무라벨 발화 0·dev TP 하나 손실이라 기각한다. 메타 조회는 이미 입력에 있다.
+조건 분해의 진단 자료로 사용하되 새 정답·scope 반례 네 건으로 세지 않는다. H2 채택 보류 유지.
+
 `a5-label-definition-wall / 회차 2`: [재계산·판단](../reports/team-c/a5-label-definition/round2-decision.md).
 후속 [원문 감사](../reports/team-c/a5-label-definition/observation-findings.md)에서 실제 발화의
 240kW/고시 50kW 모순과 입력 분포 차이를 확인했다. 검증 완화·같은 H2 연속 수집은 기각했다.

@@ -7,6 +7,11 @@ reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tas
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
 
+**2026-09-21 A5 브리프 3:** [품목 조건 대조](../reports/team-c/a5-label-definition/catalog-findings.md).
+메타 적중 15/34·특이사항 5건 재현. 추가 네 건은 CPU 개수/주파수·혼합 구매·사양서 미제공·
+드론 중량 OR 고도 조건을 구분해야 하며, 새 scope 반례로 확정하지 않았다. 조항호내용 필터 기각.
+기존 입력에 메타/고시 조건이 이미 있어 조회 추가만으로 고쳐지지 않는다. H2 채택 보류 유지.
+
 **2026-09-21 A5 회차 2 판단:** [재계산과 결정](../reports/team-c/a5-label-definition/round2-decision.md).
 후속 [83건 근거 감사](../reports/team-c/a5-label-definition/observation-findings.md)에서
 발화한 240kW 충전기와 고시 50kW 조건의 모순을 확인했다. 두 정보 모두 모델 입력에 있었다.

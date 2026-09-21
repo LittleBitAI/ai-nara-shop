@@ -1,0 +1,303 @@
+{
+  "model_called": false,
+  "source_zip_sha256": "4ab84fa5b53faa7c9e6de2cfa8e64deee2e8a352888a8e9d8b336518265a82a3",
+  "catalogue_rows": 616,
+  "coded_rows": 615,
+  "conditional_rows": 185,
+  "counts": {
+    "fired": {
+      "count": 34,
+      "meta_present": 17,
+      "code_matched": 15,
+      "conditional_ids": [
+        "PPS-D-000732",
+        "PPS-D-001333",
+        "PPS-D-002069",
+        "PPS-D-002106",
+        "PPS-D-002151"
+      ]
+    },
+    "rejected": {
+      "count": 49,
+      "meta_present": 12,
+      "code_matched": 10,
+      "conditional_ids": [
+        "PPS-D-000190",
+        "PPS-D-000860",
+        "PPS-D-001622",
+        "PPS-D-001722"
+      ]
+    }
+  },
+  "clause_population_ids": {
+    "dev": [
+      "PPS-DEV-11",
+      "PPS-DEV-13",
+      "PPS-DEV-061",
+      "PPS-DEV-103"
+    ],
+    "train_unlabeled": [
+      "PPS-D-000256",
+      "PPS-D-000538",
+      "PPS-D-000634",
+      "PPS-D-001358",
+      "PPS-D-001359",
+      "PPS-D-001510"
+    ]
+  },
+  "fired_clause_ids": [
+    "PPS-DEV-061"
+  ],
+  "fired_clause_counts": {
+    "[판로지원법 시행령] 소기업,소상공인제한": 2,
+    "중소벤처기업부장관이 지정 공고한 물품": 1,
+    "특수한 기술이 요구되는 용역계약": 3,
+    "기획재정부령 금액미만시 영업소재지(지역제한)": 2,
+    "추정가격 1억원 미만 물품·용역(소기업, 소상공인, 벤처기업, 창업자)": 2,
+    "경쟁참가자의 재무상태": 1,
+    "경쟁은 입찰의 방법으로 행함": 2,
+    "협상에 의한 계약": 7,
+    "규격,가격 동시입찰": 6,
+    "규격또는기술입찰 후 가격입찰(2단계경쟁)": 3,
+    "행정안전부령 금액 미만 본점소재지": 2,
+    "추정가격 2천만원 이하 물품 또는 용역": 1,
+    "예정가격이하 최저가격순 계약이행능력 심사": 1,
+    "추정가격 2천만원 초과 1억원 이하 물품·용역(소기업 소상공인 계약)": 1
+  },
+  "cases": [
+    {
+      "id": "PPS-D-000732",
+      "documents": [
+        "D0",
+        "D1",
+        "D2"
+      ],
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "catalog": [
+        {
+          "대분류번호": "43",
+          "대분류": "정보기술방송및통신기",
+          "제품명번호": "432115",
+          "제품명": "컴퓨터",
+          "세부품명번호": "4321150102",
+          "세부품명": "컴퓨터서버",
+          "특이사항": "x86 서버 CPU 1개 전체, CPU 2개 중 Clock(기본주파수) 3.2GHz 이하 제품에 한함",
+          "공사용자재직접구매": ""
+        }
+      ],
+      "conditions_in_reconstructed_input": true,
+      "evidence": [
+        {
+          "doc_id": "D1",
+          "start": 378,
+          "end": 405,
+          "text": "CPU: Intel® Xeon® 6458Q * 2",
+          "in_reconstructed_input": true
+        },
+        {
+          "doc_id": "D1",
+          "start": 408,
+          "end": 426,
+          "text": "Clk: 3.1GHz-4.0GHz",
+          "in_reconstructed_input": true
+        }
+      ]
+    },
+    {
+      "id": "PPS-D-001333",
+      "documents": [
+        "D0"
+      ],
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "catalog": [
+        {
+          "대분류번호": "50",
+          "대분류": "식음료품및담배제품",
+          "제품명번호": "501120",
+          "제품명": "가공육류및조리육류",
+          "세부품명번호": "5011209904",
+          "세부품명": "햄류",
+          "특이사항": "햄(부대찌개용 햄 포함)에 한함",
+          "공사용자재직접구매": ""
+        }
+      ],
+      "conditions_in_reconstructed_input": true,
+      "evidence": [
+        {
+          "doc_id": "D0",
+          "start": 119,
+          "end": 149,
+          "text": "나. 품목 및 예정량 : 별첨 입찰품목 및 사양서 참조",
+          "in_reconstructed_input": true
+        },
+        {
+          "doc_id": "D0",
+          "start": 434,
+          "end": 452,
+          "text": "계약은 품목별 단가로 체결합니다.",
+          "in_reconstructed_input": true
+        }
+      ]
+    },
+    {
+      "id": "PPS-D-002069",
+      "documents": [
+        "D0",
+        "D1"
+      ],
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "catalog": [
+        {
+          "대분류번호": "43",
+          "대분류": "정보기술방송및통신기",
+          "제품명번호": "432115",
+          "제품명": "컴퓨터",
+          "세부품명번호": "4321150102",
+          "세부품명": "컴퓨터서버",
+          "특이사항": "x86 서버 CPU 1개 전체, CPU 2개 중 Clock(기본주파수) 3.2GHz 이하 제품에 한함",
+          "공사용자재직접구매": ""
+        },
+        {
+          "대분류번호": "43",
+          "대분류": "정보기술방송및통신기",
+          "제품명번호": "432115",
+          "제품명": "컴퓨터",
+          "세부품명번호": "4321150701",
+          "세부품명": "데스크톱컴퓨터",
+          "특이사항": "",
+          "공사용자재직접구매": ""
+        }
+      ],
+      "conditions_in_reconstructed_input": true,
+      "evidence": [
+        {
+          "doc_id": "D1",
+          "start": 207,
+          "end": 223,
+          "text": "데스크탑\n\n스탠다드형\n\n41대",
+          "in_reconstructed_input": true
+        },
+        {
+          "doc_id": "D1",
+          "start": 2056,
+          "end": 2099,
+          "text": "Intel Xeon 6507P 3.5GHz(8-core) * 1EA 이상 제공",
+          "in_reconstructed_input": true
+        },
+        {
+          "doc_id": "D1",
+          "start": 2103,
+          "end": 2116,
+          "text": "최대 2CPU 장착 가능",
+          "in_reconstructed_input": true
+        }
+      ]
+    },
+    {
+      "id": "PPS-D-002106",
+      "documents": [
+        "D0",
+        "D1"
+      ],
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "catalog": [
+        {
+          "대분류번호": "25",
+          "대분류": "상용,군용,개인용운송기구및액세서리와부품",
+          "제품명번호": "251318",
+          "제품명": "특수항공기",
+          "세부품명번호": "2513189901",
+          "세부품명": "드론",
+          "특이사항": "1. 고정익, 군사용, 수소드론 제외 2. 자체중량 25㎏ 이하 또는 운용상승고도 150m 이하의 무인비행장치에 한함",
+          "공사용자재직접구매": ""
+        }
+      ],
+      "conditions_in_reconstructed_input": true,
+      "evidence": [
+        {
+          "doc_id": "D1",
+          "start": 371,
+          "end": 385,
+          "text": "56 kg (배터리 포함)",
+          "in_reconstructed_input": true
+        },
+        {
+          "doc_id": "D1",
+          "start": 1095,
+          "end": 1108,
+          "text": "14.7 ± 0.3 kg",
+          "in_reconstructed_input": true
+        },
+        {
+          "doc_id": "D1",
+          "start": 748,
+          "end": 764,
+          "text": "최대설정가능 비행반경\n\n2km",
+          "in_reconstructed_input": true
+        },
+        {
+          "doc_id": "D1",
+          "start": 834,
+          "end": 855,
+          "text": "프로펠러 크기 및 수\n\n62인치 / 4",
+          "in_reconstructed_input": true
+        }
+      ]
+    },
+    {
+      "id": "PPS-D-002151",
+      "documents": [
+        "D0",
+        "D1"
+      ],
+      "input_completeness": {
+        "공고문_실재": true,
+        "추출_성공": true,
+        "무탈락": true,
+        "완전관측": true
+      },
+      "catalog": [
+        {
+          "대분류번호": "26",
+          "대분류": "회전기기및경전기",
+          "제품명번호": "261117",
+          "제품명": "배터리,전지및보조용품",
+          "세부품명번호": "2611170403",
+          "세부품명": "전기자동차용충전장치",
+          "특이사항": "50kW 이하에 한함",
+          "공사용자재직접구매": "o"
+        }
+      ],
+      "conditions_in_reconstructed_input": true,
+      "evidence": [
+        {
+          "doc_id": "D0",
+          "start": 340,
+          "end": 353,
+          "text": "240kW 급속충전기2기",
+          "in_reconstructed_input": true
+        }
+      ]
+    }
+  ]
+}
