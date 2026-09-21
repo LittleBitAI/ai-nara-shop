@@ -1,6 +1,15 @@
 # A8 — v20 별표 주입 착수서
 
-**이 문서를 읽고 진행한다.** RAG 주입 파이프라인의 **2단계(주입)** 이고,
+> **이 파일은 `docs/tasks/a8-v20-annex-injection.md` 다.**
+> 새 세션은 이 경로를 그대로 받아 시작한다:
+>
+> ```
+> docs/tasks/a8-v20-annex-injection.md 를 읽고 진행하라.
+> ```
+>
+> 작업 폴더는 `C:\Users\dasdk\orca\workspaces\ai-nara-shop\coffinfish` 다.
+
+RAG 주입 파이프라인의 **2단계(주입)** 이고,
 1단계(조회)는 [PR #81](https://github.com/LittleBitAI/ai-nara-shop/pull/81) 로 `main` 에 들어갔다.
 
 읽는 순서: 이 문서 → [조회 보고서](../../reports/team-c/law-index/README.md) →
