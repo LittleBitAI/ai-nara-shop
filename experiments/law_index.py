@@ -64,10 +64,10 @@
   `chapter(law, 장, 절, 번호)` 로 직접 부르면 내려간다.
 - 호(`1.`)·목(`가.`) 층은 예규 경로에서만 쓴다. 법률 조문 안의 각 호는 조 전문에 포함해 돌려준다.
 - 같은 장 제목이 속표지와 본문에 반복되면 **가장 긴 블록**을 고른다. 휴리스틱이다.
-- **미등록 법령 탐지는 최선의 추정이다.** `_split_region` 은 조·항·별표 뒤에
-  `법`·`시행령`·`예규` 처럼 끝나는 덩어리가 오면 경계로 본다. 그 접미사 없이 끝나는
-  미등록 법령 이름은 여전히 앞 법령에 귀속된다. 한글 덩어리 전부를 경계로 쓰면
-  `제12조 경쟁입찰의 참가자격 제21조` 같은 **정상 인용이 잘려서** 그렇게 못 한다.
+- **아는 법령 뒤에 온 미등록 법령의 주소는 앞 법령 것으로 풀린다.**
+  문자열만으로는 못 가른다 — `_split_region` 의 docstring 에 두 번의 실패와 함께 적었다.
+  경계는 계약으로 옮겼다: 항목표 31개는 검사가 전수 고정하고, 그 밖의 문자열에는
+  `resolve()` 대신 `article()`·`chapter()`·`annex()` 를 쓴다.
 
 ## 조각내기 규칙
 
@@ -320,7 +320,9 @@ ADDRESS = re.compile(
     r"제\s?\d+조(?:의\s?\d+)?"           # 제21조 · 제2조의2
     r"|제\s?\d+장(?:의\s?\d+)?"
     r"|제\s?\d+절(?:의\s?\d+)?"
-    r"|제\s?\d+항|(?<![\d\-−–—])\d+항"      # `제-1항` 의 `1항` 을 항으로 읽지 않는다
+    r"|제\s?\d+항|(?<![^\s])\d+항"          # bare `7항` 은 공백·문두 뒤에서만.
+    # `제-1항`·`제+1항`·`제/1항` 의 `1항` 을 항으로 읽지 않는다. 기호 목록을 늘리는
+    # 대신 **경계**를 요구한다 — 목록은 다음 기호에서 또 샌다.
     r"|별표\s*\d+"
     r"|(?<![\d가-힣])\d+\.(?=\s)"         # 예규의 `7.`
     r"|(?<![가-힣])[가-힣]\.(?=\s)"       # 예규의 `나.`
@@ -353,47 +355,43 @@ def _law_spans(citation: str, data_dir: str) -> List[Tuple[int, int, str]]:
     return sorted(spans)
 
 
-# 조·항·별표 뒤에 **법령 이름처럼 끝나는** 덩어리가 끼고 다시 조/장/별표가 오면
-# 그 사이에 이름 모를 법령이 있다. 장·절·번호 뒤의 한글은 그 단위의 제목이라 제외한다.
-#
-# **한글 덩어리 전부를 경계로 쓰면 정상 인용을 자른다.** 조문 제목을 같이 적은
-# `제12조 경쟁입찰의 참가자격 제21조 …` 와 `및 같은 법 제22조` 가 그렇게 잘렸다.
-# 그래서 접미사로 좁혔다 — 이것은 **최선의 추정이지 증명이 아니다.**
-# 접미사 없이 끝나는 미등록 법령은 여전히 앞 법령에 귀속된다. 아래 「한계」 참조.
-LAW_TAIL = re.compile(r"[가-힣]{2,}(?:법률|법|시행령|시행규칙|예규|지침|기준|요령|고시)(?![가-힣])")
-# 다음 조를 같은 법령 안에서 잇는 연결어. 법령 이름이 아니다.
-SAME_LAW = re.compile(r"(?:같은|동일한|이)\s*법|동법")
-CLOSES_ADDRESS = re.compile(r"^(제\d+조|제?\d+항|별표)")
-OPENS_ADDRESS = re.compile(r"^(제\d+조|제\d+장|별표)")
-
-
-# 주소를 흉내 냈지만 주소가 아닌 표기. 토큰으로 안 잡혀 **조용히 사라지던** 것들이다.
-MALFORMED = re.compile(r"제\s*[^\d\s가-힣]*\s*항|제\s*[-−–—]\s*\d+\s*항|제\s*조")
+# 기형 항 표기를 찾는 그물. 정상 토큰이 덮는 자리는 빼고 남은 것만 주소 흉내로 본다.
+SUSPECT_PARAGRAPH = re.compile(r"제\s*[^가-힣\s]{0,3}\s*\d*\s*항")
 
 
 def _split_region(region: str) -> Tuple[List[str], List[str]]:
-    """한 법령 뒤의 주소 구간을 (그 법령 것, 주인 모를 것) 으로 가른다.
+    """한 법령 뒤의 주소 구간에서 (주소 토큰, 주소를 흉내 낸 표기) 를 가른다.
 
-    `_law_spans` 는 **아는 법령만** 찾으므로 `… 제21조 없는법 제22조` 에서 `제22조` 까지
-    앞 법령의 토큰으로 넘어온다. strict 가 실패하지 않고 **다른 법령의 원문**을 돌려줬다.
-    라운드 2 수정은 법령 span 이 0개인 경우만 막았다.
+    ## 안 하는 것 — **미등록 법령을 이름 모양으로 찾지 않는다**
+
+    `_law_spans` 는 아는 법령만 찾으므로 `… 제21조 없는법 제22조` 의 `제22조` 가 앞 법령의
+    토큰으로 넘어온다. 두 라운드 동안 "한글 덩어리" → "법령 접미사로 끝나는 덩어리" 로
+    좁혀 가며 막으려 했고 **둘 다 정상 인용을 잘랐다.**
+
+    - 한글 덩어리 전부: `제12조 경쟁입찰의 참가자격 제21조` 와 `및 같은 법 제22조` 가 잘렸다.
+    - 법령 접미사: 제공 법령의 **조문 제목 43종**이 `기준`·`요령`·`방법` 으로 끝난다.
+      `제25조 제한경쟁입찰의 제한기준 제27조 …` 가 잘렸다.
+
+    **문자열만으로는 못 가른다.** `제22조` 는 앞 법령에도 실제로 존재하므로 어느 쪽을
+    가리켰는지 텍스트가 말해 주지 않는다. 그래서 이 판별을 **하지 않는다.**
+
+    대신 경계를 계약으로 옮긴다.
+
+    - 항목표의 31개 인용은 `tests/test_law_index.py` 가 전수로 고정한다.
+    - **그 밖의 문자열에는 `resolve()` 를 쓰지 않는다.** 법령과 주소를 아는 호출자는
+      `article()` · `chapter()` · `annex()` 를 직접 부른다. 거기에는 이 모호함이 없다.
+    - 법령을 하나도 못 찾았는데 주소 토큰이 있으면 여전히 실패한다(`resolve` 의 검사).
+
+    남는 구멍: **아는 법령 뒤에 온 미등록 법령의 주소는 앞 법령 것으로 풀린다.**
     """
-    mine: List[str] = []
-    orphans: List[str] = []
-    previous = None
-    cut = False
-    for match in ADDRESS.finditer(region):
-        token = match.group(0).replace(" ", "")
-        if not cut and previous is not None and OPENS_ADDRESS.match(token)                 and CLOSES_ADDRESS.match(previous):
-            gap = region[previous_end:match.start()]
-            if LAW_TAIL.search(SAME_LAW.sub(" ", gap)):
-                cut = True
-        (orphans if cut else mine).append(token)
-        previous, previous_end = token, match.end()
-    # `제항` · `제-1항` 처럼 주소를 흉내 낸 표기는 토큰이 안 되어 조용히 사라졌다.
+    mine = [m.group(0).replace(" ", "") for m in ADDRESS.finditer(region)]
+    covered = [(m.start(), m.end()) for m in ADDRESS.finditer(region)]
+    # `제항` · `제-1항` · `제+1항` 처럼 주소를 흉내 낸 표기는 토큰이 안 되어 조용히 사라졌다.
     # 그대로 두면 `제21조 제항` 이 조 **전문**으로 성공한다.
-    orphans.extend(m.group(0).strip() for m in MALFORMED.finditer(region))
-    return mine, orphans
+    # 정상 토큰이 덮는 자리는 뺀다 — `제조` 같은 보통명사를 잡던 `제\s*조` 그물은 버렸다.
+    malformed = [m.group(0).strip() for m in SUSPECT_PARAGRAPH.finditer(region)
+                 if not any(a <= m.start() and m.end() <= b for a, b in covered)]
+    return mine, malformed
 
 
 def resolve(citation: str, data_dir: str = "open/data", *, strict: bool = True) -> List[Segment]:
