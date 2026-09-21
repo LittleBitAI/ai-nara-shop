@@ -75,6 +75,19 @@ class V24MetaDiffCandidate(unittest.TestCase):
     def setUp(self):
         self.before, self.after, self.truth = _rows(BEFORE), _rows(AFTER), _truth()
 
+    def test_the_candidate_still_produces_the_recorded_csv(self):
+        """**저장 CSV 를 세기만 하면 가짜 초록이다.** `postprocess` 를 no-op 으로 바꿔도
+        4/12/4 와 대상 밖 0셀은 그대로 통과한다. 보관 원응답에 **지금 후보를 적용해**
+        바이트 동일인지 본다 — 배선이 끊기면 여기서 빨개진다.
+        """
+        replay_run = _load("replay_run", ROOT / "tools" / "replay_run.py")
+        result = replay_run.replay(script, ROOT / "reports/runs/colab-1789902969401579900/dev-debug",
+                                   input_path=str(ROOT / "open/dev.jsonl"),
+                                   data_dir=str(ROOT / "open/data"),
+                                   postprocess=candidate.postprocess)
+        self.assertEqual(replay_run.to_csv_bytes(script, result["rows"]), AFTER.read_bytes(),
+                         "지금 후보의 출력이 보관된 candidate-replay/submission.csv 와 다르다")
+
     def test_v24_counts_match_the_recorded_replay(self):
         self.assertEqual(_counts(self.before, self.truth, "v24"), EXPECTED["before"])
         self.assertEqual(_counts(self.after, self.truth, "v24"), EXPECTED["after"])
@@ -88,6 +101,18 @@ class V24MetaDiffCandidate(unittest.TestCase):
         raised = [i for i in self.before
                   if self.before[i]["v24"] == "0" and self.after[i]["v24"] == "1"]
         self.assertEqual(raised, [], "이 후보는 내리기만 한다")
+
+    def test_industry_axis_checks_the_restriction_flag_before_the_code_set(self):
+        """등록이 `업종제한여부=N` 인데 본문이 업종을 걸면 그것 자체가 불일치다.
+
+        목록에 같은 코드가 남아 있어 집합 차이가 비면 침묵하던 자리 —
+        `region_diff` 가 플래그를 먼저 보는 것과 비대칭이었다.
+        """
+        clash = {"업종제한여부": "N", "면허업종제한목록": "[학술연구용역(1169)]"}
+        self.assertIsNotNone(candidate.industry_diff({}, "입찰참가자격: 업종코드 1169", clash))
+        agree = {"업종제한여부": "Y", "면허업종제한목록": "[학술연구용역(1169)]"}
+        self.assertIsNone(candidate.industry_diff({}, "업종코드 1169", agree))
+        self.assertIsNotNone(candidate.industry_diff({}, "업종코드 5210", agree))
 
     def test_each_axis_finds_its_case(self):
         records = _records()

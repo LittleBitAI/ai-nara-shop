@@ -169,12 +169,21 @@ def amount_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optiona
 
 
 def industry_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optional[str]:
-    """공고가 요구하는 면허업종 코드가 등록 목록에 없는가."""
+    """공고가 업종을 거는데 등록이 제한 없음이거나, 요구 코드가 등록 목록에 없는가.
+
+    **제한 플래그를 코드 집합보다 먼저 본다.** `region_diff` 가 하는 순서와 같다.
+    본문이 `업종코드 1169` 를 참가자격으로 걸고 메타가 `업종제한여부=N` 인데
+    `면허업종제한목록` 에 1169 가 남아 있으면 집합 차이가 비어 침묵했다 —
+    공고의 제한과 등록 플래그가 **정면으로 다른** v24 사례를 음성으로 내리는 경로다.
+    """
     demanded = {m.group(1) for m in DOC_INDUSTRY.finditer(body)}
     if not demanded:
         return None
+    restricted = meta.get("업종제한여부") == "Y"
     registered = set(META_INDUSTRY.findall(str(meta.get("면허업종제한목록") or "")))
-    if meta.get("업종제한여부") == "Y" and not registered:
+    if not restricted:
+        return next(DOC_INDUSTRY.finditer(body)).group(0)    # 본문은 거는데 등록은 제한 없음
+    if not registered:
         return None                                 # 등록은 제한이라는데 코드를 못 읽었다 — 단정하지 않는다
     missing = demanded - registered
     if not missing:

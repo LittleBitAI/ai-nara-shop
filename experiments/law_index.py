@@ -24,26 +24,38 @@
 ## 이 모듈이 지키는 것
 
 **항목표의 인용 31개가 전부 비어 있지 않은 원문으로 풀린다 — 31/31.** 그것이 통과 조건이고
-`tests/test_law_index.py` 의 9개 검사가 전수로 고정한다. 새 조문을 발명하지 않는다 —
+`tests/test_law_index.py` 의 14개 검사가 전수로 고정한다. 새 조문을 발명하지 않는다 —
 제공 스냅샷의 원문 부분문자열만 돌려준다(검사가 부분문자열임을 확인한다).
 
 ## 항목별 조문 크기 — 주입이 가능한가
 
-`baseline` 프롬프트 토큰 중앙값이 9,356 이고 예산이 14,272 이므로 **여유는 4,916 토큰**이다.
-항목의 근거 조문을 다 모으면 서로 다른 조각 33개 · 170,332자라 전부는 못 넣는다.
-그러나 **가장 약한 두 항목은 들어간다.**
+`baseline` 프롬프트 토큰 중앙값 **9,356**, 예산 14,272 → **중앙값 여유 4,916 토큰**
+(회차 `colab-1789902969401579900` 의 실측 `prompt_tokens`).
 
-| 항목 | dev F1 | 조문 | ≈토큰 | 여유 안에 |
-| --- | ---: | ---: | ---: | --- |
-| **v20** | 0.200 | **934자** | **623** | **들어감** — 지침 제2조 + 별표 1 |
-| **v23** | 0.286 | 6,445자 | 4,297 | 들어감 |
-| v18·v16·v14·v15·v17 | 0.200~0.833 | 7,752자 | 5,168 | 안 들어감 |
-| v6·v7·v8 | 0.462~1.000 | 7,806자 | 5,204 | 안 들어감 |
-| v9 | 0.435 | 13,516자 | 9,011 | 안 들어감 |
-| v24 | 0.204 | 0자 | 0 | 조문 없는 대조형 항목 |
+**그러나 중앙값으로 판단하면 안 된다.** 200건의 실제 분포로 세면 조각 크기마다 예산을
+넘기는 공고 수가 다르고, 넘기면 `fit_to_budget` 이 **공고**를 줄인다.
 
-**v20 이 비용 대비 가장 유리하다** — 판정 규칙 전체가 623토큰짜리 표 하나이고,
-그 표가 없으면 사업금액 하한을 알 방법이 없다.
+| 항목 | dev F1 | 조각 | 글자 | ≈토큰 | 예산 초과 공고 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| **v20** | **0.200** | 2 | **934** | **623** | **0 / 200** |
+| v24 | 0.204 | 0 | 0 | 0 | — (조문 없는 대조형) |
+| v10 | 0.400 | 2 | 3,312 | 2,208 | 6 / 200 |
+| v13 | 0.400 | 3 | 5,507 | 3,671 | 48 / 200 |
+| v23 | 0.286 | 2 | 6,445 | 4,297 | **94 / 200** |
+| v9 | 0.435 | 2 | 6,495 | 4,330 | **94 / 200** |
+| v11 | 0.364 | 4 | 7,378 | 4,919 | 안 들어감 |
+| v6 | 0.462 | 3 | 7,595 | 5,063 | 안 들어감 |
+| v18 | 0.200 | 4 | 7,752 | 5,168 | 안 들어감 |
+| v21 · v4 | 0.667 · 0.800 | 2 | 44,509 · 72,582 | 29,673 · 48,388 | 안 들어감 |
+
+**v20 만이 200건 전부에서 예산을 안 넘긴다.** 623토큰이고 그 표가 없으면 사업금액 하한을
+알 방법이 없다 — 비용 대비 가장 유리하다.
+
+서로 다른 조각 32개 · union 163,072자라 전부는 못 넣는다.
+
+초판은 주소를 평탄하게 소비해 부모·자식을 둘 다 돌려줬고 v9 를 13,516자로 부풀렸다.
+계층 소비로 고친 뒤 6,495자다. 수치와 근거는
+[보고서](../reports/team-c/law-index/README.md)가 소유한다.
 
 ## 알려진 한계
 
@@ -100,8 +112,10 @@ ISSUER = re.compile(r"\((?:계약예규|행안부예규)\)\s*")
 ANNEX = re.compile(r"\[별표\s*(\d+)\]")
 # 별표 구역의 시작. 번호 없는 단독 줄이라 본문 안 `[별표1]` 참조와 갈린다.
 ANNEX_SECTION = re.compile(r"^[ 	]*\[별표\][ 	]*$", re.M)
-CHAPTER = re.compile(r"^제\s?(\d+)장(?:의\s?\d+)?\s*(\S[^\n]*)?$", re.M)
-SECTION = re.compile(r"^제\s?(\d+)절(?:의\s?\d+)?\s*(\S[^\n]*)?$", re.M)
+# 번호가 아니라 **라벨 전체**를 잡는다. 숫자만 비교하면 `제3장의2` 가 `제3장` 으로 풀린다 —
+# 다른 장의 원문을 조용히 돌려주는 자리였다.
+CHAPTER = re.compile(r"^(제\s?\d+장(?:의\s?\d+)?)\s*(\S[^\n]*)?$", re.M)
+SECTION = re.compile(r"^(제\s?\d+절(?:의\s?\d+)?)\s*(\S[^\n]*)?$", re.M)
 ARTICLE = re.compile(r"^제\s?(\d+)조(?:의\s?(\d+))?\s*[(（]", re.M)
 PARAGRAPH = re.compile(r"^\s*([①-⑳])", re.M)
 NUMBERED = re.compile(r"^\s*(\d+)\.\s*\S", re.M)
@@ -189,26 +203,26 @@ def _strip_annexes(text: str) -> Tuple[str, Dict[str, str]]:
     return text[:anchor.start()], out
 
 
-def _headers(text: str, pattern: re.Pattern) -> List[Tuple[int, int, str]]:
-    """(시작, 번호, 제목). 목차 줄(점선+쪽번호)은 뺀다."""
+def _headers(text: str, pattern: re.Pattern) -> List[Tuple[int, str, str]]:
+    """(시작, 라벨, 제목). 목차 줄(점선+쪽번호)은 뺀다."""
     found = []
     for match in pattern.finditer(text):
-        line = match.group(0)
-        if TOC_LEADER.search(line):
+        if TOC_LEADER.search(match.group(0)):
             continue                            # 목차
-        found.append((match.start(), int(match.group(1)), (match.group(2) or "").strip()))
+        found.append((match.start(), _flat(match.group(1)), (match.group(2) or "").strip()))
     return found
 
 
-def _block(text: str, headers, number: int) -> Optional[Tuple[int, int]]:
+def _block(text: str, headers, label: str) -> Optional[Tuple[int, int]]:
     """그 번호의 헤더가 여는 블록 (시작, 끝). 같은 헤더가 여러 번이면 **가장 긴 블록**을 쓴다.
 
     예규는 같은 `제5장 …` 을 속표지와 본문에서 반복하고, 부칙은 문장 안에서 인용한다.
     줄머리 헤더만 남겨도 속표지가 남으므로 길이로 고른다.
     """
     best = None
+    wanted = _flat(label)
     for index, (start, value, _) in enumerate(headers):
-        if value != number:
+        if value != wanted:
             continue
         end = headers[index + 1][0] if index + 1 < len(headers) else len(text)
         if best is None or end - start > best[1] - best[0]:
@@ -225,19 +239,30 @@ def annex(law: str, number, data_dir: str = "open/data") -> Optional[Segment]:
     return Segment(name, (f"별표 {number}",), block) if block else None
 
 
+def _article_in(body: str, number: str) -> Optional[str]:
+    head = re.escape(number.replace(" ", ""))
+    found = re.search(r"^" + head + r"\s*[(（].*?(?=^제\s?\d+조|\Z)", body, re.M | re.S)
+    return found.group(0).rstrip() if found else None
+
+
 def article(law: str, number: str, paragraph: Optional[str] = None,
-            data_dir: str = "open/data") -> Optional[Segment]:
-    """`제21조` · `제2조의2` 를 조 전문으로. `paragraph` 를 주면 그 항만."""
+            data_dir: str = "open/data", within: Optional["Segment"] = None) -> Optional[Segment]:
+    """`제21조` · `제2조의2` 를 조 전문으로. `paragraph` 를 주면 그 항만.
+
+    `within` 을 주면 그 조각 안에서만 찾는다 — 예규의 `제2장 … 제5조` 처럼 장이 조를 품는다.
+    """
     name = resolve_law(law, data_dir)
     if name is None:
         return None
-    body, _ = _strip_annexes(laws(data_dir)[name])
-    head = re.escape(number.replace(" ", ""))
-    found = re.search(r"^" + head + r"\s*[(（].*?(?=^제\s?\d+조|\Z)", body, re.M | re.S)
-    if not found:
+    if within is not None:
+        body, prefix = within.text, within.path
+    else:
+        body, _ = _strip_annexes(laws(data_dir)[name])
+        prefix = ()
+    text = _article_in(body, number)
+    if text is None:
         return None
-    text = found.group(0).rstrip()
-    path: Tuple[str, ...] = (number,)
+    path: Tuple[str, ...] = prefix + (number,)
     if paragraph:
         marks = list(PARAGRAPH.finditer(text))
         for index, mark in enumerate(marks):
@@ -249,33 +274,38 @@ def article(law: str, number: str, paragraph: Optional[str] = None,
     return Segment(name, path, text)
 
 
-def chapter(law: str, number: int, section: Optional[int] = None,
-            item: Optional[str] = None, data_dir: str = "open/data") -> Optional[Segment]:
-    """예규의 `제N장 > 제N절 > N. > 가.` 경로. 있는 층까지만 내려간다."""
+def chapter(law: str, label: str, section: Optional[str] = None,
+            items: Tuple[str, ...] = (), data_dir: str = "open/data") -> Optional[Segment]:
+    """예규의 `제N장 > 제N절 > N. > 가.` 경로를 **요청한 깊이까지** 내려간다.
+
+    `label` 은 `"제5장"` · `"제3장의2"` 처럼 라벨 문자열이다. 숫자만 받으면
+    `제3장의2` 가 `제3장` 으로 풀린다 — 다른 장의 원문을 조용히 돌려주는 자리였다.
+    """
     name = resolve_law(law, data_dir)
     if name is None:
         return None
     body, _ = _strip_annexes(laws(data_dir)[name])
-    span = _block(body, _headers(body, CHAPTER), number)
+    span = _block(body, _headers(body, CHAPTER), label)
     if span is None:
         return None
     text = body[span[0]:span[1]]
-    path: Tuple[str, ...] = (f"제{number}장",)
+    path: Tuple[str, ...] = (label,)
     if section is not None:
         inner = _block(text, _headers(text, SECTION), section)
         if inner is None:
             return None
         text = text[inner[0]:inner[1]]
-        path += (f"제{section}절",)
-    if item is not None:
-        pattern = NUMBERED if item.isdigit() else LETTERED
-        marks = [m for m in pattern.finditer(text) if m.group(1) == item]
+        path += (section,)
+    for item in items:                          # `1.` 다음 `가.` 처럼 여러 층을 내려간다
+        key = item.rstrip(".")
+        pattern = NUMBERED if key.isdigit() else LETTERED
+        marks = [m for m in pattern.finditer(text) if m.group(1) == key]
         if not marks:
             return None
         mark = marks[0]
         rest = pattern.search(text, mark.end())
         text = text[mark.start():rest.start() if rest else len(text)]
-        path += (f"{item}.",)
+        path += (f"{key}.",)
     return Segment(name, path, text.strip())
 
 
@@ -296,6 +326,7 @@ CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳"
 # 통째로 빠졌다. 종류는 머리로 가른다.
 IS_ARTICLE = re.compile(r"^제\d+조")
 IS_CHAPTER = re.compile(r"^제\d+장")
+IS_SECTION = re.compile(r"^제\d+절")
 
 
 def _law_spans(citation: str, data_dir: str) -> List[Tuple[int, int, str]]:
@@ -318,10 +349,15 @@ def _law_spans(citation: str, data_dir: str) -> List[Tuple[int, int, str]]:
     return sorted(spans)
 
 
-def resolve(citation: str, data_dir: str = "open/data") -> List[Segment]:
-    """항목표의 인용 문자열 하나 → 원문 조각들. 못 푸는 조각은 조용히 빼지 않고 생략한다."""
+def resolve(citation: str, data_dir: str = "open/data", *, strict: bool = True) -> List[Segment]:
+    """항목표의 인용 문자열 하나 → 원문 조각들.
+
+    `strict` 면 **주소를 못 푼 토큰이 하나라도 있을 때 예외**다. 조용히 빼면
+    `제5장 제3절 1. 나.` 의 `나.` 가 사라진 것을 아무도 모른다.
+    """
     spans = _law_spans(citation or "", data_dir)
     out: List[Segment] = []
+    unconsumed: List[str] = []
     for index, (_, end, raw) in enumerate(spans):
         stop = spans[index + 1][0] if index + 1 < len(spans) else len(citation)
         tokens = [t.replace(" ", "") for t in ADDRESS.findall(citation[end:stop])]
@@ -335,35 +371,67 @@ def resolve(citation: str, data_dir: str = "open/data") -> List[Segment]:
             if index == len(spans) - 1:
                 out.append(Segment(law, (), laws(data_dir)[law]))
             continue
-        out.extend(_segments_for(law, tokens, data_dir))
+        found, unused = _segments_for(law, tokens, data_dir)
+        out.extend(found)
+        unconsumed.extend(f"{law} {token}" for token in unused)
+    if unconsumed and strict:
+        raise ValueError("주소를 못 푼 토큰: " + " · ".join(unconsumed))
     return [s for s in out if s and s.text]
 
 
-def _segments_for(law: str, tokens: List[str], data_dir: str) -> List[Segment]:
-    """한 법령에 붙은 주소 토큰들을 조각으로. `제21조 제1항` 처럼 이어지면 묶고, 병렬이면 쪼갠다."""
+def _segments_for(law: str, tokens: List[str], data_dir: str) -> Tuple[List[Segment], List[str]]:
+    """한 법령에 붙은 주소 토큰을 **계층 경로**로 소비한다. (조각들, 소비 못 한 토큰).
+
+    인용의 주소는 평탄한 목록이 아니라 경로다. `제2장 제한경쟁입찰의 운용 제5조` 는
+    **제2장 안의 제5조** 한 곳을 가리키지, 제2장 전체와 제5조 둘을 가리키지 않는다.
+    평탄하게 소비하면 부모(7,021자)와 자식(2,292자)을 둘 다 돌려줘 같은 원문이 두 번 들어가고,
+    `제5장 제3절 1. 나.` 의 `나.` 처럼 **더 깊은 주소가 조용히 버려진다.**
+
+    소비 못 한 토큰은 돌려준다 — 호출자가 조용히 넘기지 않게 하려는 것이다.
+    """
     out: List[Segment] = []
+    unused: List[str] = []
     index = 0
     while index < len(tokens):
         token = tokens[index]
         index += 1
         if token.startswith("별표"):
-            out.append(annex(law, re.sub(r"\D", "", token), data_dir))
-        elif IS_ARTICLE.match(token):
-            paragraph = None
-            if index < len(tokens) and tokens[index].endswith("항"):
-                number = int(re.sub(r"\D", "", tokens[index]))
-                paragraph = CIRCLED[number - 1] if 1 <= number <= len(CIRCLED) else None
-                index += 1
-            found = article(law, token, paragraph, data_dir)
-            out.append(found or article(law, token, None, data_dir))
+            found = annex(law, re.sub(r"\D", "", token), data_dir)
         elif IS_CHAPTER.match(token):
-            section = item = None
-            if index < len(tokens) and tokens[index].endswith("절"):
-                section = int(re.sub(r"\D", "", tokens[index])); index += 1
-            if index < len(tokens) and tokens[index].endswith("."):
-                item = tokens[index][:-1]; index += 1
-            number = int(IS_CHAPTER.match(token).group(0)[1:-1])
-            out.append(chapter(law, number, section, item, data_dir)
-                       or chapter(law, number, section, None, data_dir)
-                       or chapter(law, number, None, None, data_dir))
-    return [s for s in out if s]
+            section = None
+            if index < len(tokens) and IS_SECTION.match(tokens[index]):
+                section = tokens[index]; index += 1
+            if index < len(tokens) and IS_ARTICLE.match(tokens[index]):
+                # 예규는 장이 조를 품는다. 장 전체가 아니라 그 안의 조가 인용의 대상이다.
+                inner = chapter(law, token, section, (), data_dir)
+                article_token = tokens[index]; index += 1
+                paragraph, index = _paragraph(tokens, index)
+                found = (inner and article(law, article_token, paragraph, data_dir, within=inner))
+            else:
+                items: List[str] = []
+                while index < len(tokens) and tokens[index].endswith("."):
+                    items.append(tokens[index]); index += 1
+                found = chapter(law, token, section, tuple(items), data_dir)
+        elif IS_ARTICLE.match(token):
+            paragraph, index = _paragraph(tokens, index)
+            found = article(law, token, paragraph, data_dir) or article(law, token, None, data_dir)
+        elif token.endswith("."):
+            # 장·절 문맥 없는 `22.` 은 주소가 아니라 날짜다 —
+            # `제43조 7항 삭제 (’22. 9. 20. …)`. 주소로 세면 영원히 못 푼다.
+            continue
+        else:
+            found = None
+        if found:
+            out.append(found)
+        else:
+            unused.append(token)
+    return out, unused
+
+
+def _paragraph(tokens: List[str], index: int) -> Tuple[Optional[str], int]:
+    """`제1항` · `6항` 을 동그라미 숫자로. 항 토큰이 아니면 소비하지 않는다."""
+    if index >= len(tokens) or not tokens[index].endswith("항"):
+        return None, index
+    number = int(re.sub(r"\D", "", tokens[index]))
+    mark = CIRCLED[number - 1] if 1 <= number <= len(CIRCLED) else None
+    return mark, index + 1
