@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/wiki-rag-temvm92p/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/wiki-rag-temvm92p/repo/requirements.txt"
+  ],
+  "cwd": "/content/wiki-rag-temvm92p",
+  "started": 1789985973.2952993,
+  "returncode": 0,
+  "elapsed_seconds": 0.5906693935394287
+}

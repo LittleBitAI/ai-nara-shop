@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "pip",
+    "install",
+    "uv"
+  ],
+  "cwd": "/content/wiki-rag-temvm92p",
+  "started": 1789985677.079323,
+  "returncode": 0,
+  "elapsed_seconds": 4.3083717823028564
+}

@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/wiki-rag-tx9v4yj0/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/wiki-rag-tx9v4yj0",
+  "started": 1789984130.9842656,
+  "returncode": 0,
+  "elapsed_seconds": 0.37803149223327637
+}
