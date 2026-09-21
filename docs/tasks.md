@@ -27,8 +27,13 @@
 
 ## 첫 작업 큐
 
-`a8-v20-annex-injection`: **착수 대기 / RAG 주입 파이프라인 2단계**,
-[착수서](tasks/a8-v20-annex-injection.md). **그 문서를 읽고 진행한다.**
+`a8-v20-annex-injection`: **in_progress / 후보·CPU 계약 완료, GPU 미실행**,
+[착수서](tasks/a8-v20-annex-injection.md) · [보고서](../reports/team-c/a8-v20-annex/README.md) ·
+[실행 안내](../reports/team-c/a8-v20-annex/run-request.md).
+후보 `experiments/a8_v20_annex.py`는 프롬프트 문자열만 바꾼다. 붙는 블록은 **실측 1,568자**
+(법령 934자 + 영어 지시 634자)이고 **실제 토큰은 GPU 생성 전 검사에서 잰다**.
+OFF/ON 혼합 재생은 24항목 CSV 바이트 동일·바뀐 셀 0(배선 검사). 고정 회차 v20 TP 상한 2 재확인.
+검사 12개, 재사용 기존 검사 포함 80개 통과. 독립 리뷰·GPU 두 회차·무라벨·서버는 미실행이다.
 1단계(법령 구조 인지 조회)는 PR #81로 `main`에 들어갔다 — 항목표 인용 31/31,
 검사 23개, 독립 리뷰 9라운드에서 P1 21건을 잡고 `머지 허용`.
 2단계는 「중소 소프트웨어사업자의 사업 참여 지원에 관한 지침」 제2조와 `[별표 1]`을

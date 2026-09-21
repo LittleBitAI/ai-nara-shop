@@ -1,0 +1,147 @@
+{
+  "execution_mode": "cpu_only",
+  "model_success_count": 0,
+  "actual_token_measurement": false,
+  "full_pipeline_gpu_macro_f1": null,
+  "candidate_gpu_stage_seconds": null,
+  "server_macro_f1": null,
+  "independent_review": false,
+  "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
+  "pinned_code_commit": null,
+  "pinned_notebook_commit": null,
+  "environment": {
+    "os": "Windows",
+    "python": "3.13.9"
+  },
+  "injection": {
+    "law": "중소 소프트웨어사업자의 사업 참여 지원에 관한 지침",
+    "article_chars": 305,
+    "annex_chars": 629,
+    "law_text_chars": 934,
+    "article_sha256": "18609dd3d09ababa25234cae3c1cc7b5519d04cb649c20c4f71edc2fe7a57ed7",
+    "annex_sha256": "ce7c05c2e69c89d7529f18fa25394914fb38f944de205f875fe89c444aa948ed",
+    "both_substrings_of_provided_text": true,
+    "floors_present": [
+      "80억원",
+      "40억원",
+      "20억원"
+    ],
+    "block_chars": 1568,
+    "block_sha256": "c0d6fcb3c25b62092c96e5afddb195796df79708acf1c185d13d1c2aa3a0cd28",
+    "control_prompt_chars": 9357,
+    "control_prompt_sha256": "a4afe5ca49dc690308ae429fd04184d7c4e81a7d368e53f6be09028831266b1f",
+    "candidate_prompt_chars": 10925,
+    "candidate_prompt_sha256": "7fb9f5489af45ac307215d414e3db4f39af0c77f7b183e684d3f9d6a4174badc",
+    "schema_unchanged": true,
+    "consumer_unchanged": true,
+    "observation_gate_unchanged": true,
+    "estimated_tokens_not_measured": "934자/1.5 ≈ 623은 추정이며 이 구현에서 확인하지 않았다"
+  },
+  "replay_off_on": {
+    "both_equal_h4_baseline_bytes": true,
+    "changed_cells": [],
+    "v20_tp_fp_fn": [
+      1,
+      4,
+      4
+    ],
+    "macro_f1": 0.5938461654151134,
+    "meaning": "wiring/regression only; not an injection effect"
+  },
+  "reachable_v20_tp_ceiling": {
+    "h4_tp": [
+      "PPS-DEV-133"
+    ],
+    "h4_fp": [
+      "PPS-DEV-056",
+      "PPS-DEV-064",
+      "PPS-DEV-068",
+      "PPS-DEV-144"
+    ],
+    "fn_blockers": {
+      "PPS-DEV-24": {
+        "software_business": "yes",
+        "requirements_complete": "no",
+        "완전관측": false,
+        "dropped_doc_counts": {
+          "제안요청서": 1
+        },
+        "blocked_by": "input_documents"
+      },
+      "PPS-DEV-131": {
+        "software_business": "yes",
+        "requirements_complete": "no",
+        "완전관측": false,
+        "dropped_doc_counts": {
+          "제안요청서": 1
+        },
+        "blocked_by": "input_documents"
+      },
+      "PPS-DEV-132": {
+        "software_business": "no",
+        "requirements_complete": "yes",
+        "완전관측": true,
+        "dropped_doc_counts": {},
+        "blocked_by": "software_business"
+      },
+      "PPS-DEV-134": {
+        "software_business": "yes",
+        "requirements_complete": "no",
+        "완전관측": false,
+        "dropped_doc_counts": {
+          "제안요청서": 1
+        },
+        "blocked_by": "input_documents"
+      }
+    },
+    "ceiling": 2,
+    "note": "프롬프트가 못 바꾸는 입력 사실로 FN 3건이 막힌다. 남은 132는 software_business=no다."
+  },
+  "time_budget": {
+    "server_measured_seconds": 6380,
+    "server_limit_seconds": 7200,
+    "factor": 8.894400000000001,
+    "baseline_stage_seconds": 246.985,
+    "stage_limit_seconds": 339.1778404389279
+  },
+  "input_bundle": {
+    "path": "artifacts/a8-v20-annex/a8-v20-inputs.zip",
+    "files": 30,
+    "bytes": 3264446,
+    "all_member_sha256_verified": true
+  },
+  "notebook_sha256": "8eb244f6541801d8dc8782f72a009285bcfcb6d4353cdfe2e8cf261303bb1964",
+  "notebook_code_cells_compile": true,
+  "production_script_unchanged": true,
+  "checks": [
+    {
+      "command": "python -m pytest -q tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py",
+      "phase": "before implementation",
+      "passed": 32,
+      "seconds": 23.61
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py",
+      "passed": 12,
+      "seconds": 18.64,
+      "note": "조각 실패 5종은 한 검사 안의 subTest"
+    },
+    {
+      "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
+      "passed": 80,
+      "seconds": 58.22
+    },
+    {
+      "command": "python -m pytest -q tests/",
+      "passed": 287,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 99.32,
+      "preexisting_failures": {
+        "tests/test_a5_scope_pilot.py::ScopePilotTests::test_full_pilot_replays_200_rows_and_preserves_outputs": "이 워크트리에 gitignore 된 open/train_unlabeled.jsonl 이 없다. h3 경로이며 A8 변경과 무관하다",
+        "tests/test_setup_agents.py": "워크트리에 gitignore 된 도구 설정이 없다"
+      }
+    }
+  ]
+}
