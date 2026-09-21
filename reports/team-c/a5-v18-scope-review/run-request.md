@@ -1,7 +1,12 @@
 # A5 v18 Colab 실행 안내
 
-상태: CPU 검증·코드 고정 진행 중. 실제 후보 GPU 미실행.
-실행 코드와 노트북 링크는 커밋 고정 후 이 문서에 기록한다.
+상태: **GPU 실행 준비 완료**. CPU 계약 33개 검증. 실제 후보 GPU 미실행.
+
+- 실행 코드 `44f5e4b8c9a9d8b7b0e83b51f546c04be5e3316e` (`REPO_REF`).
+- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/dd99efacb80b645adecae689ebd62cb9cf99ed05/notebooks/colab-a5-v18-scope-review.ipynb).
+- 노트북 커밋 `dd99efacb80b645adecae689ebd62cb9cf99ed05`.
+  소스·검사·입력 명세 12개 파일은 실행 코드 커밋과 바이트 동일함을 확인했다.
+  노트북은 해당 코드 커밋에서 `REPO_REF`만 고정한 사본이며 모든 코드 셀 컴파일을 통과했다.
 
 ## 입력 준비
 

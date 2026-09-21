@@ -27,7 +27,7 @@
 
 ## 첫 작업 큐
 
-`a5-v18-scope-review`: **in_progress**, [작업서](tasks/a5-v18-scope-review.md).
+`a5-v18-scope-review`: **review / GPU 실행 준비 완료**, [작업서](tasks/a5-v18-scope-review.md).
 한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
 후보·CPU 계약 검사·Colab 준비·회차 기록·push/PR까지 진행하며 머지는 하지 않는다.
 [독립 분석](../reports/team-c/a5-label-definition/five-stuck-analysis.md)과
@@ -35,7 +35,7 @@
 계획 상한 339.178초/200건, 새 후보 GPU 미실행. 기존 H3는 등록 회차에서 실행됐으며
 아래 H3 “GPU 미측정”은 준비 당시 이력이다.
 후보·OFF/ON 재생·두 회차 비교·dev 전용 노트북 구현, CPU 계약 33개 검증을 완료했다.
-실행 소스 커밋 고정과 PR 게시를 진행한다.
+실행 소스 `44f5e4b`, 고정 노트북 `dd99efa`. 독립 리뷰·실제 GPU는 미실행이며 PR은 머지하지 않는다.
 입력·출력·허용 경로·통과 조건은 작업서 §3~6, 실행 안내는
 [v18 파일럿](../reports/team-c/a5-v18-scope-review/run-request.md)이 소유한다.
 
