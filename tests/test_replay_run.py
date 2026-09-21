@@ -69,6 +69,12 @@ class CsvCellDiffTests(unittest.TestCase):
             # 헤더보다 길거나 짧은 행은 선언된 열만 순회하면 조용히 통과한다.
             ((self.HEADER + "A,0,,EXTRA\nB,1,근거\n").encode(), "길다"),
             ((self.HEADER + "A,0\nB,1,근거\n").encode(), "짧다"),
+            # 양쪽이 똑같이 비어 있거나 뒤틀려도 [] 를 돌려주면 안 된다.
+            (b"", "헤더가 없다"),
+            (self.HEADER.encode(), "행이 없다"),
+            (("v1,e1\n" + "0,\n").encode(), "첫 열이 id"),
+            (("id,v1,v1\n" + "A,0,0\n").encode(), "중복 열"),
+            ((self.HEADER + ",0,\nB,1,근거\n").encode(), "빈 id"),
         ]:
             with self.assertRaises(ValueError) as caught:
                 replay_run.csv_cell_diff(data, base)

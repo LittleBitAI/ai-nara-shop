@@ -163,6 +163,13 @@ def csv_cell_diff(left: bytes, right: bytes):
 
     def read(data, side):
         reader = _csv.DictReader(_io.StringIO(data.decode("utf-8-sig")))
+        columns = reader.fieldnames
+        if not columns:
+            raise ValueError(f"{side} CSV 에 헤더가 없다")
+        if columns[0] != "id":
+            raise ValueError(f"{side} CSV 의 첫 열이 id 가 아니다: {columns[0]!r}")
+        if len(set(columns)) != len(columns):
+            raise ValueError(f"{side} CSV 의 헤더에 중복 열이 있다")
         rows = {}
         for row in reader:
             # 헤더보다 긴 행은 여분 값을 `None` 키에 넣고, 짧은 행은 결측을 `None` 값으로 넣는다.
@@ -171,10 +178,14 @@ def csv_cell_diff(left: bytes, right: bytes):
                 raise ValueError(f"{side} CSV 의 행이 헤더보다 길다: {row['id']}")
             if any(value is None for value in row.values()):
                 raise ValueError(f"{side} CSV 의 행이 헤더보다 짧다: {row['id']}")
+            if not row["id"].strip():
+                raise ValueError(f"{side} CSV 에 빈 id 행이 있다")
             if row["id"] in rows:
                 raise ValueError(f"{side} CSV 에 id 가 중복된다: {row['id']}")
             rows[row["id"]] = row
-        return reader.fieldnames, rows
+        if not rows:
+            raise ValueError(f"{side} CSV 에 행이 없다")
+        return columns, rows
 
     left_columns, a = read(left, "왼쪽")
     right_columns, b = read(right, "오른쪽")
