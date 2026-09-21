@@ -2,10 +2,30 @@
 scope: project
 severity: contract
 triggers: ["계획", "현재", "할 일", "팀원", "업무", "0.6", "48시간", "다음", "이어서", "로드맵", "작업", "진행", "plan", "next", "resume"]
-reads: [docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tasks.md, docs/runs.md]
+reads: [docs/tasks/a8-v20-annex-injection.md, docs/tasks/team-handoff.md, reports/team-score-audit/result.md, docs/tasks.md, docs/runs.md]
 ---
 
 # 현재 계획 — 4인 팀, 1주 0.60 도전
+
+## 다음 작업은 A8 이다 — 착수서를 읽고 시작한다
+
+**`docs/tasks/a8-v20-annex-injection.md`** — RAG 주입 파이프라인 **2단계(주입)**.
+새 세션은 그 경로 한 줄을 받아 시작한다. 이 항목이 끝나기 전에는 다른 주입 항목을 열지 않는다.
+
+**1단계(조회)는 끝났다.** PR #81 로 `main`(`f04e8c7`)에 있다 —
+[`experiments/law_index.py`](../experiments/law_index.py), 항목표 인용 **31/31**, 검사 23개,
+독립 리뷰 **9라운드에서 P1 21건**을 잡고 `머지 허용`.
+근거는 [조회 보고서](../reports/team-c/law-index/README.md)가 소유한다.
+같은 PR 의 v24 메타 대조 후보(`a7_v24_meta_diff`)는 재생 **+0.005385**(v24 5/36/3 → 4/12/4)이며
+**채택 전**이고 예산 축은 꺼져 있다.
+
+2단계가 노리는 것: 「중소 소프트웨어사업자의 사업 참여 지원에 관한 지침」 제2조 + `[별표 1]` 을
+company_size 프롬프트에만 넣는다. **934자는 직접 조회 확인, 약 623토큰과 baseline 초과 0/200은 추정**이다.
+실제 company 입력의 토큰·추가 절단은 미측정이다. 별표는 20억·40억·80억 하한을 담지만
+v20 규칙 전체가 아니며, 기존 소비자는 금액 비교 대신 SW 사실·안내 조항·완전관측을 확인한다.
+**PR #83 검토로 TP≥3 전제를 정정했다.** 고정 H4 혼합 비교에서 누락 문서 게이트를 유지하면
+TP 상한은 2다. 두 회차의 TP/FP 개선과 대상 밖 회귀를 비교하며 과거 Macro 차이를 허용선으로 쓰지 않는다.
+입력·출력·허용 범위·통과 조건은 착수서가 소유한다. A8 구현·GPU 실행은 아직 하지 않았다.
 
 **2026-09-21 A5 v18 두 회차 완료·미채택:** [실제 결과와 24항목 F1](../reports/team-c/a5-v18-scope-review/results.md).
 `44f5e4b` 후보 혼합 F1은 회차1 0.600586987945, 최신 회차2 0.598735136094다.
