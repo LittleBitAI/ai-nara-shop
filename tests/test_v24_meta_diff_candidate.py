@@ -40,6 +40,7 @@ EXPECTED = {"before": (5, 36, 3), "after": (4, 12, 4)}
 # 축이 어느 공고에서 무엇을 잡아야 하는가. 정답 양성에서 고른 실제 사례다.
 AXIS_CASES = {
     "PPS-DEV-057": "계약방법·예산",      # 제목 `(일반경쟁·1억원미만)` 이 등록 계약방법과 다르다
+    # 예산 축(`amount_diff`)은 꺼져 있어 여기 없다 — `test_the_amount_axis_is_disabled`.
     "PPS-DEV-071": "지역제한",           # `본점소재지` 제한인데 등록은 지역제한 없음
     "PPS-DEV-072": "지역제한",           # 등록은 `경기도` 하나인데 본문은 "경기도 … 또는 제주도"
     "PPS-DEV-079": "업종",               # 본문 `업종코드: 5210` 이 등록 목록에 없다
@@ -113,6 +114,37 @@ class V24MetaDiffCandidate(unittest.TestCase):
         agree = {"업종제한여부": "Y", "면허업종제한목록": "[학술연구용역(1169)]"}
         self.assertIsNone(candidate.industry_diff({}, "업종코드 1169", agree))
         self.assertIsNotNone(candidate.industry_diff({}, "업종코드 5210", agree))
+
+    def test_the_amount_axis_is_disabled(self):
+        """예산 축은 **의도적으로 `AXES` 에 없다.** 세 라운드 연속 P1 을 냈다.
+
+        그리고 dev 에서 무력하다 — 남은 발화 3건이 전부 baseline 예측 v24=0 이라
+        필터 결과를 한 셀도 안 바꾼다. 축을 빼도 v24 는 `4/12/4` 그대로다.
+        항목표가 예산 대조를 명시하므로 **코드는 남긴다.** 재활성화 기준은
+        `experiments/a7_v24_meta_diff.py` 의 「왜 예산 축을 껐나」에 있다.
+        """
+        self.assertEqual(candidate.DISABLED_AXES, ("예산",))
+        self.assertNotIn("예산", [name for name, _ in candidate.AXES])
+        self.assertIn("계약방법·예산", [name for name, _ in candidate.AXES],
+                      "제목 태그의 금액 구간은 다른 기계다 — 그쪽은 남는다")
+
+    def test_the_disabled_amount_axis_still_has_both_known_defects(self):
+        """**재활성화의 문턱을 구체적으로 박아 둔다.** 둘 다 무라벨 실측 반례다.
+
+        ① 한 필드의 일치가 다른 필드의 불일치를 지운다.
+           `PPS-D-001198`: 기초금액 26,600,000 대 등록 배정 2,660,000 (10배)
+           인데 추정가격 24,181,819 ≈ 등록 24,181,818 이라 침묵한다.
+        ② `ROUNDING_WON = 1` 이 표시 반올림보다 좁다.
+           `PPS-D-000043`: 기초금액 74,460,960 대 등록 배정 74,460,958 (2원, 10원 단위 표시).
+        """
+        hides = {"배정예산금액": 2_660_000, "입찰추정가격": 24_181_818}
+        self.assertIsNone(candidate.amount_diff(
+            {}, "기초금액: 금26,600,000원(추정가격 24,181,819원, 부가가치세 2,418,181원)", hides),
+            "①이 고쳐졌으면 이 축을 다시 켤 수 있다 — AXES 와 이 검사를 같이 갱신해라")
+        rounds = {"배정예산금액": 74_460_958, "입찰추정가격": 67_691_780}
+        self.assertIsNotNone(candidate.amount_diff(
+            {}, "기초금액: 금74,460,960원(금칠천사백사십육만구백육십원) ※부가가치세 포함", rounds),
+            "②가 고쳐졌으면 이 축을 다시 켤 수 있다")
 
     def test_the_amount_axis_reads_only_the_amount_attached_to_its_label(self):
         """같은 줄의 **부가세**를 예산 불일치로 읽으면 안 된다.
