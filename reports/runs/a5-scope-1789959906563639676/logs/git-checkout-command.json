@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/a5-scope-3dd7smm4/repo",
+  "started": 1789958464.7210255,
+  "returncode": 0,
+  "elapsed_seconds": 0.37195825576782227
+}

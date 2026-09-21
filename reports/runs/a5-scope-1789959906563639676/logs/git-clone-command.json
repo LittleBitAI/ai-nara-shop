@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "/content/a5-scope-3dd7smm4/repo"
+  ],
+  "cwd": "/content/a5-scope-3dd7smm4",
+  "started": 1789958463.251483,
+  "returncode": 0,
+  "elapsed_seconds": 0.9929602146148682
+}

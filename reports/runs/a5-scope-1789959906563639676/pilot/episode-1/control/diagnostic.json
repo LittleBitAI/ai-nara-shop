@@ -1,0 +1,45 @@
+{
+  "contract_sha256": "21aac1bef082ac6764dcda3fac0cfb8394872746454e32620d2c3b78cf54cda8",
+  "payload_sha256": "0afddbb437350c17ed00265dac7c291a363dd9aaa060ba1b5ccc0093cea3d9cc",
+  "payload": {
+    "rows": [
+      {
+        "id": "PPS-D-000732",
+        "response_text": "{\"company_size\": {\"scope\": \"competitive\", \"scope_quote\": \"대학 연구용 서버 구입\", \"qualification_role\": \"checklist\", \"qualification_quote\": \"가. 「국가를당사자로하는계약에관한법률시행령」 제12조에 의한 유자격자로서 입찰참가신청기한 내에 입찰등록서류(상기, 4-다. 구비서류)를 정상적으로 제출한 업체\", \"qualification_complete\": \"yes\", \"qualification\": \"unrestricted\", \"priority_exception\": \"no\", \"priority_exception_quote\": null, \"size_exception\": \"none\", \"size_exception_quote\": null, \"requirements_complete\": \"yes\", \"direct_production_quote\": null, \"software_business\": \"yes\", \"software_business_quote\": \"Miruware DL Docker Framework (출고 시 설치)\", \"software_participation_quote\": null}}",
+        "prompt_tokens": 6458,
+        "max_chars": 16000,
+        "h2_fired": true
+      },
+      {
+        "id": "PPS-D-001333",
+        "response_text": "{\n  \"company_size\": {\n    \"scope\": \"competitive\",\n    \"scope_quote\": \"2026년도 식재료 구매 전자입찰 공고\",\n    \"qualification_role\": \"checklist\",\n    \"qualification_quote\": \"3. 입찰참가자격 가. 「지방자치단체를 당사자로하는 계약에 관한 법률」시행령 제13조 및 같은 법 시행규칙 제14조에 의하여 자격을 구비하고 식품위생법 제37조에 의한 집단급식소 식품판매업 신고 등을 필한 업체이어야 합니다.\",\n    \"qualification_complete\": \"yes\",\n    \"qualification\": \"unrestricted\",\n    \"priority_exception\": \"no\",\n    \"priority_exception_quote\": null,\n    \"size_exception\": \"none\",\n    \"size_exception_quote\": null,\n    \"requirements_complete\": \"yes\",\n    \"direct_production_quote\": null,\n    \"software_business\": \"no\",\n    \"software_business_quote\": null,\n    \"software_participation_quote\": null\n  }\n}",
+        "prompt_tokens": 4914,
+        "max_chars": 16000,
+        "h2_fired": true
+      },
+      {
+        "id": "PPS-D-002069",
+        "response_text": "{\"company_size\": {\"scope\": \"competitive\", \"scope_quote\": \"대학 미디어아트센터 , 창의IT센터 고성능, 고사양 데스크탑, 모니터, 노트북, 서버 구입\", \"qualification_role\": \"checklist\", \"qualification_quote\": \"가. 「국가를 당사자로 하는 계약에 관한 법률 시행령」제12조(경쟁입찰의 참가 자격) 및 동 법 시행규칙 제14조(입찰 참가 자격요건의 증명)에 따른 요건을 갖춘 자\", \"qualification_complete\": \"yes\", \"qualification\": \"unrestricted\", \"priority_exception\": \"no\", \"priority_exception_quote\": null, \"size_exception\": \"none\", \"size_exception_quote\": null, \"requirements_complete\": \"yes\", \"direct_production_quote\": null, \"software_business\": \"no\", \"software_business_quote\": null, \"software_participation_quote\": null}}",
+        "prompt_tokens": 7649,
+        "max_chars": 16000,
+        "h2_fired": true
+      },
+      {
+        "id": "PPS-D-002106",
+        "response_text": "{\"company_size\": {\"scope\": \"competitive\", \"scope_quote\": \"대학 방제 드론 등 기자재 구입\", \"qualification_role\": \"none\", \"qualification_quote\": \"가. 「국가를 당사자로 하는 계약에 관한 법률 시행령」제12조(경쟁입찰의 참가 자격) 및 동 법 시행규칙 제14조(입찰 참가 자격요건의 증명)에 따른 요건을 갖춘 자\", \"qualification_complete\": \"yes\", \"qualification\": \"unrestricted\", \"priority_exception\": \"no\", \"priority_exception_quote\": null, \"size_exception\": \"none\", \"size_exception_quote\": null, \"requirements_complete\": \"yes\", \"direct_production_quote\": null, \"software_business\": \"no\", \"software_business_quote\": null, \"software_participation_quote\": null}}",
+        "prompt_tokens": 6560,
+        "max_chars": 16000,
+        "h2_fired": true
+      },
+      {
+        "id": "PPS-D-002151",
+        "response_text": "{\"company_size\": {\"scope\": \"competitive\", \"scope_quote\": \"기타기관 전기상용차의 충전 트렌드_ 여객본사차고지 급속 전기차 충전기 구매 입찰(일반경쟁·1억원미만)\", \"qualification_role\": \"eligibility\", \"qualification_quote\": \"｢전기자동차용충전장치(2611170403)를 제조 물품으로 입찰 참가 등록한 자.\", \"qualification_complete\": \"yes\", \"qualification\": \"unknown\", \"priority_exception\": \"no\", \"priority_exception_quote\": null, \"size_exception\": \"none\", \"size_exception_quote\": null, \"requirements_complete\": \"yes\", \"direct_production_quote\": null, \"software_business\": \"no\", \"software_business_quote\": null, \"software_participation_quote\": null}}",
+        "prompt_tokens": 4789,
+        "max_chars": 16000,
+        "h2_fired": false
+      }
+    ],
+    "inference_seconds": 4.807176582000011,
+    "stage_seconds": 4.875532452000016
+  }
+}

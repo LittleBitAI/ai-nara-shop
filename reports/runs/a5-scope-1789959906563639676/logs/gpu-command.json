@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "nvidia-smi",
+    "--query-gpu=name,memory.total,driver_version",
+    "--format=csv,noheader"
+  ],
+  "cwd": "/content/a5-scope-3dd7smm4",
+  "started": 1789958494.0672567,
+  "returncode": 0,
+  "elapsed_seconds": 0.021562814712524414
+}

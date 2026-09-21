@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/a5-scope-3dd7smm4/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/a5-scope-3dd7smm4",
+  "started": 1789958720.6520967,
+  "returncode": 0,
+  "elapsed_seconds": 0.37875866889953613
+}

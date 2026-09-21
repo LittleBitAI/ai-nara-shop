@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/a5-scope-3dd7smm4/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/a5-scope-3dd7smm4/repo/requirements.txt"
+  ],
+  "cwd": "/content/a5-scope-3dd7smm4",
+  "started": 1789958720.044874,
+  "returncode": 0,
+  "elapsed_seconds": 0.6065969467163086
+}
