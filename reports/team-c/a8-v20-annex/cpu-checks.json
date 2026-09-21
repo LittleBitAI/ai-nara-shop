@@ -18,10 +18,11 @@
                          "results": "artifacts/review/a8-v20-annex-round-{1,2,3,4}-result.md",
                          "resolved": "v13 근거 수리는 이 PR 에서 완료. 라운드 4 의 P1 셋과 P2 하나도 반영."},
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "d2c5f54a9365a76de9d938970dd34018ac823058",
-  "pinned_notebook_commit": "d616c4aaa048d796f45fd56ce7e4be5af3ab5188",
+  "pinned_code_commit": "b139807723c22ec570d65635b0d654ba5e6149e2",
+  "pinned_notebook_commit": null,
   "notebook_only_change_from_code_commit": "REPO_REF",
-  "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전"],
+  "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
+                      "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -194,7 +195,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "cbf8ff0e16e2e1914969934269cae1c0ddb352f5b4497b693fccb8044082e850",
+  "notebook_sha256": "59da78455269f28f5f53be2621eb098c70b0aafcda7893ce5ebe57742310cf34",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": true,
   "checks": [
