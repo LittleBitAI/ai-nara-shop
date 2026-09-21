@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+import datetime
 import gzip
 import hashlib
 from importlib.metadata import PackageNotFoundError, version
@@ -1925,9 +1926,142 @@ def apply_qualification_rules(judgment, rec):
     return out
 
 
+# ===== 6-2. 적용범위 게이트 (A4) =====
+# 후처리 **뒤**에 도는 단계다. v6·v9의 적용범위 밖 오탐을 내리고, v23은 조문이 정한
+# 공고기간으로 코드가 판정한다. 채택 근거·무라벨 배율은 reports/team-c/a4-scope-gate/README.md.
+#
+# **A7 v24 메타 대조는 넣지 않았다.** dev 재생 +0.005385(v24 FP 36→12)였지만, 그 게이트는
+# 세 축(계약방법·지역·업종)이 침묵하면 양성을 내리는데 **예산 축이 꺼져 있어** 금액만
+# 어긋나는 진짜 양성을 같이 지운다 — `tests/test_baseline.py`가 고정한 계약이 그 사례다.
+# dev에는 그런 공고가 없어 이 손실이 측정치에 잡히지 않았다(예산 축 발화 3건 전부 baseline 0).
+# 후보와 재활성화 기준은 experiments/a7_v24_meta_diff.py 가 보관한다.
+
+# ----- A4 v6: 익명화된 지역 토큰. 입력이 전부 `anon_applied=True` 라 기초 지자체 이름이
+# 이 꼴로 바뀌어 있다. `단위=기초` 가 시·군·구 제한이라는 신호다.
+ANON_REGION = re.compile(r"\[(?:등록)?지역:[^\]]*?단위=(기초|광역)[^\]]*\]")
+# 기초 단위를 이름으로 적은 공고도 있다. 광역시·특별시·특별자치시는 광역이므로 뺀다.
+BASIC_REGION_NAME = re.compile(r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)(?![가-힣])")
+# ----- A4 v9: 항목명이 "과업지시서"다. 공고문 본문의 품명·내역은 과업 명세가 아니다.
+SPEC_DOC_TYPES = ("과업지시서", "규격서", "제안요청서")
+# ----- A4 v23: 제안요청서 설명·현장설명을 여는 말. 예규가 "제안요청서 설명"이고 공고는 여러 이름을 쓴다.
+BRIEFING = re.compile(r"(?:현장|과업|제안요청서|제안|사업)\s*설명(?:회)?")
+BRIEFING_WINDOW = 120                       # 그 말 뒤로 날짜를 찾는 범위
+# 설명을 안 하면 이 조항이 적용되지 않는다. 예규 제3절 2-나가 교부·설명 생략을 예정한다.
+BRIEFING_SKIPPED = re.compile(r"생략|미실시|실시하지\s*(?:않|아니)|갈음|해당\s*없음|없음")
+NOTICE_DATE = re.compile(r"(20\d{2})\s*[.년]\s*(\d{1,2})\s*[.월]\s*(\d{1,2})")
+# 제7장 제3절 2-다: 설명일의 **전일부터 기산하여 7일 전**에 공고. 적법한 최소 간격이 8일이다.
+BRIEFING_NOTICE_DAYS = 8
+BRIEFING_QUOTE_MAX = 300                    # 제출 계약의 e 열 상한 안에서 자른다
+
+
+def _wide_region_names(text: str) -> set:
+    return set(re.findall(WIDE_REGION, text or ""))
+
+
+def _has_basic_unit(text: str) -> bool:
+    """이 인용이 기초(시·군·구) 단위 제한을 가리키는가."""
+    if any(unit == "기초" for unit in ANON_REGION.findall(text or "")):
+        return True
+    # 광역 이름을 먼저 지운다. "서울특별시"의 "특별시"를 기초로 세지 않기 위해서다.
+    return bool(BASIC_REGION_NAME.search(re.sub(WIDE_REGION, " ", text or "")))
+
+
+def v6_not_a_basic_region_limit(evidence: str, rec: Dict[str, Any]) -> bool:
+    """v6 의 근거가 '고시금액 미만 계약의 시·군·구 제한'을 가리키지 못하는가."""
+    if not (evidence or "").strip():
+        return True                                     # ① 근거 없는 양성
+    wide = _wide_region_names(evidence)
+    if not wide and not ANON_REGION.search(evidence):
+        return True                                     # ② 지역제한 문장이 아니다
+    if len(wide) >= 2 and not _has_basic_unit(evidence):
+        return True                                     # ③ 광역 확대 — v7 의 몫이다
+    return False
+
+
+def v9_not_from_spec_document(evidence: str, rec: Dict[str, Any]) -> bool:
+    """v9 의 근거가 과업 명세 문서에서 나오지 않았는가."""
+    if not (evidence or "").strip():
+        return True                                     # ① 근거 없는 양성
+    for doc in rec.get("docs") or []:
+        if doc.get("type") in SPEC_DOC_TYPES and clean_evidence(evidence, doc.get("text") or ""):
+            return False
+    return True                                         # ② 공고문에서만 나왔다
+
+
+def _as_date(value) -> Optional[datetime.date]:
+    text = str(value or "")
+    if len(text) != 8 or not text.isdigit():
+        return None
+    try:
+        return datetime.date(int(text[:4]), int(text[4:6]), int(text[6:8]))
+    except ValueError:
+        return None
+
+
+def v23_applies(rec: Dict[str, Any]) -> bool:
+    """항목명 주석 그대로 — 계약방법 협상 + 계약법 지방인 공고에만 v23 이 성립한다."""
+    meta = rec.get("meta") or {}
+    return ("지방" in str(meta.get("적용계약법") or "")
+            and "협상" in str(meta.get("낙찰방법") or ""))
+
+
+def v23_late_notice(rec: Dict[str, Any]) -> Optional[str]:
+    """설명일까지의 공고기간이 예규 최소선에 못 미치면 그 설명 문장을 돌려준다. 아니면 None.
+
+    설명일을 못 찾으면 None 이다 — 설명을 안 하면 이 조항이 적용되지 않는다.
+    """
+    posted = _as_date((rec.get("meta") or {}).get("공고게시일자"))
+    if posted is None:
+        return None
+    best = None
+    for doc in rec.get("docs") or []:
+        text = doc.get("text") or ""
+        for found in BRIEFING.finditer(text):
+            window = text[found.start(): found.end() + BRIEFING_WINDOW]
+            if BRIEFING_SKIPPED.search(window):
+                continue                                # 설명을 안 한다 — 이 조항이 적용되지 않는다
+            for stamp in NOTICE_DATE.finditer(window):
+                try:
+                    held = datetime.date(int(stamp[1]), int(stamp[2]), int(stamp[3]))
+                except ValueError:
+                    continue
+                if held < posted:
+                    continue                            # 지난 해 일정 등 — 이 공고의 설명일이 아니다
+                gap = (held - posted).days
+                if best is None or gap < best[0]:
+                    best = (gap, text[found.start(): found.start() + BRIEFING_QUOTE_MAX].strip())
+    if best is None or best[0] >= BRIEFING_NOTICE_DAYS:
+        return None
+    return best[1]
+
+
+def apply_scope_gates(out: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    """적용범위 밖에서 난 오탐을 내리고, 조문이 정한 기간 위반을 올린다. 받은 dict 를 고친다."""
+    for item, refuted in (("v6", v6_not_a_basic_region_limit), ("v9", v9_not_from_spec_document)):
+        cell = out.get(item) or {"위반여부": 0, "근거문구": ""}
+        if cell.get("위반여부") == 1 and refuted(cell.get("근거문구") or "", rec):
+            out[item] = {"위반여부": 0, "근거문구": ""}
+
+    # v23 은 코드가 정한다. 범위 밖이면 0, 범위 안에서는 예규의 공고기간이 갈린다.
+    if not v23_applies(rec):
+        out["v23"] = {"위반여부": 0, "근거문구": ""}
+    else:
+        quote = v23_late_notice(rec)
+        evidence = ""
+        if quote:
+            for doc in rec.get("docs") or []:
+                evidence = clean_evidence(quote, doc.get("text") or "")
+                if evidence:
+                    break
+        out["v23"] = ({"위반여부": 1, "근거문구": evidence} if evidence
+                      else {"위반여부": 0, "근거문구": ""})
+    return out
+
+
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """후처리: ① 부재탐지 5항목 근거 빈칸 고정 ② 위반이 아니면 근거 빈칸 ③ 근거문구 원문 대조(NFC)
     ④ 근거가 위반 조건을 스스로 부정하면 양성을 내린다(evidence_refutes)
+    ⑥ 마지막에 적용범위 게이트(v6·v9·v23)와 v24 메타 대조를 적용한다
 
     ⑤는 ①~④보다 먼저 돈다 — 참가자격 규칙이 v8·v7·v4를 올리고 v3을 내린 결과를
     ①~④가 그대로 검사한다. 근거문구 원문 대조도 그 인용에 걸린다."""
@@ -1945,7 +2079,7 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
             if evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
         out[v] = {"위반여부": hit, "근거문구": ev}
-    return out
+    return apply_scope_gates(out, rec)
 
 
 def to_row(rec_id: str, judgment: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:

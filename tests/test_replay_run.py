@@ -1,5 +1,6 @@
 """보관된 원응답 재생을 검증한다. 모델을 부르지 않는다."""
 
+import csv
 import importlib.util
 import json
 from pathlib import Path
@@ -38,6 +39,9 @@ RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
 # 2026-09-20 재고정(sha256 3a0df088…): v5가 고시금액 미만 구간에서 발화하지 않는다.
 # 5셀이 움직였고 대상 밖 변화는 0이다 — v5 오탐 6→1.
 # 근거는 reports/team-b/b1-v19-bid-stage/README.md.
+# 2026-09-21 재고정(sha256 9e415975…): A4 적용범위 게이트를 postprocess 뒤에 채택했다.
+# 12셀이 움직였고 대상 밖 변화는 0이다 — v6 오탐 5→0, v9 오탐 11→8, v23 TP 1→2.
+# 근거는 reports/team-c/a4-scope-gate/README.md.
 HEAD_REPLAY = ROOT / "reports/team-b/b5-port-replay/submission.csv"
 
 CANDIDATE = '''"""검사용 후보. 모든 판정을 0으로 만든다."""
@@ -146,10 +150,19 @@ class ReplayRunTests(unittest.TestCase):
                                    data_dir=ROOT / "open/data")
         self.assertEqual(replay_run.to_csv_bytes(SCRIPT, result["rows"]), HEAD_REPLAY.read_bytes())
         # H3의 null 조항 해석을 H2의 unknown/not_required 원응답에 소급하지 않는다.
+        # **회차 CSV 전체와는 더 이상 비교하지 않는다.** 후처리를 채택하면 HEAD 는 당연히
+        # 옛 회차 CSV 를 재현하지 못하고(그 일은 `--verify` 가 회차 커밋 코드로 한다),
+        # 전체 비교로 걸어 두면 이 소급 금지 가드가 채택마다 같이 깨져 뜻을 잃는다.
+        # 지키려는 것은 부재탐지 세 항목이므로 그 열만 회차 CSV 와 대조한다.
         h2 = ROOT / "reports/runs/colab-1789894949866134428/dev-debug"
         replayed = replay_run.replay(SCRIPT, h2, input_path=ROOT / "open/dev.jsonl",
                                      data_dir=ROOT / "open/data")
-        self.assertEqual(replay_run.to_csv_bytes(SCRIPT, replayed["rows"]), (h2 / "submission.csv").read_bytes())
+        archived = {row["id"]: row for row in csv.DictReader(
+            (h2 / "submission.csv").read_text(encoding="utf-8").splitlines())}
+        for row in replayed["rows"]:
+            for item in ("v10", "v18", "v20"):
+                self.assertEqual(str(row[item]), archived[row["id"]][item],
+                                 f"{row['id']} {item}: H2 원응답의 부재 판정이 소급 변경됐다")
 
     def test_candidate_replaces_only_the_stage_it_defines(self):
         with tempfile.TemporaryDirectory() as tmp:

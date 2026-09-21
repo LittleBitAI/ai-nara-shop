@@ -577,9 +577,11 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(schema["properties"]["v1"]["properties"]["근거문구"]["maxLength"], 500)
 
     def test_evidence_that_refutes_the_item_lowers_only_that_item(self):
-        def judged(item, quote, text=None, meta=None):
+        def judged(item, quote, text=None, meta=None, doc_type=None):
             rec = record()
             rec["docs"][0]["text"] = text or f"앞 문장. {quote} 뒤 문장."
+            if doc_type:
+                rec["docs"][0]["type"] = doc_type
             rec["meta"].update(meta or {})
             obj = valid()
             obj[item] = {"위반여부": 1, "근거문구": quote}
@@ -632,24 +634,30 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(judged("v24", "행사 용역(일반경쟁·3억원미만)", meta=meta), 1)
         self.assertEqual(judged("v24", "행사 용역(제한경쟁·1천만원미만)", meta=meta), 1)
         # v9: 곁에 동등품 허용이 있거나 사양 하한이면 내리고, 모델명만이면 둔다.
+        # 항목명이 "과업지시서"이므로 적용범위 게이트가 명세 문서의 인용만 남긴다.
+        # 여기서 재는 것은 `evidence_refutes` 이므로 규격서에서 인용된 것으로 둔다.
+        spec = dict(doc_type="규격서")
         self.assertEqual(judged("v9", "형식명 : ABC-100",
-                                text="형식명 : ABC-100 (동등 이상의 제품 가능)"), 0)
-        self.assertEqual(judged("v9", "CPU i5-14500 프로세서 이상"), 0)
-        self.assertEqual(judged("v9", "제조사·모델명 : ABC 터보젯"), 1)
+                                text="형식명 : ABC-100 (동등 이상의 제품 가능)", **spec), 0)
+        self.assertEqual(judged("v9", "CPU i5-14500 프로세서 이상", **spec), 0)
+        self.assertEqual(judged("v9", "제조사·모델명 : ABC 터보젯", **spec), 1)
         self.assertEqual(judged("v9", "형식명 : ABC-100",
-                                text="형식명 : ABC-100 과 호환되어야 함"), 1)
+                                text="형식명 : ABC-100 과 호환되어야 함", **spec), 1)
         # 곁의 "상당"은 대개 금액 뜻이라 동등품 허용으로 읽지 않는다.
         self.assertEqual(judged("v9", "형식명 : ABC-100",
-                                text="형식명 : ABC-100 1대 (부가세 상당액 포함)"), 1)
+                                text="형식명 : ABC-100 1대 (부가세 상당액 포함)", **spec), 1)
+        # 같은 인용이 공고문에서만 나오면 적용범위 게이트가 내린다 — 과업 명세가 아니다.
+        self.assertEqual(judged("v9", "제조사·모델명 : ABC 터보젯"), 0)
 
         # 근거가 비었거나 원문에 없는 양성은 근거만으로 내리지 않는다.
+        # v9 만 예외다 — 적용범위 게이트가 근거 없는 양성을 내린다(v9 는 부재탐지가 아니다).
         rec = record()
         obj = valid()
         for item in ("v9", "v19", "v21", "v24"):
             obj[item] = {"위반여부": 1, "근거문구": None}
         obj["v21"]["근거문구"] = "원문에 없는 공동수급 불가"
         out = baseline.postprocess(obj, rec)
-        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [1, 1, 1, 1])
+        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 1, 1, 1])
 
     def test_mock_cli_and_invalid_inputs(self):
         with tempfile.TemporaryDirectory(prefix="t1 한글 ") as tmp:

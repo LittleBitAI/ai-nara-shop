@@ -31,7 +31,10 @@ script = _load("submission", ROOT / "script.py")
 script.load_sme_reference(str(ROOT / "open/data"))
 candidate = _load("v24_meta_diff", ROOT / "experiments" / "a7_v24_meta_diff.py")
 
-BEFORE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug/submission.csv"
+# **회차 CSV 가 아니라 HEAD 재생이 기준이다.** 둘은 `script.py` 가 그 회차 뒤로 안 바뀐
+# 동안만 같았다. A4 적용범위 게이트를 채택한 뒤로는 v6·v9·v23 이 달라, 회차 CSV 를 기준으로
+# 두면 이 후보의 범위 밖 변화로 잘못 읽힌다. 같은 회차의 HEAD 재생을 가리킨다.
+BEFORE = ROOT / "reports/team-c/a5-label-definition/head-replay/submission.csv"
 AFTER = ROOT / "reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv"
 ITEMS = [f"v{i}" for i in range(1, 25)]
 
