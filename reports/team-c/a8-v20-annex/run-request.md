@@ -9,7 +9,8 @@
 - 실행 코드 **`b139807723c22ec570d65635b0d654ba5e6149e2`** (노트북 `REPO_REF`).
   출력 예약 1,024·공통 예산 15,296·CPU 실측 대조 검사·**v13 근거 수리**·라운드 1~4 반영을 포함한다.
   **수리 전 커밋(`d2c5f54`)으로 돌리면 혼합 CSV 가 옛 소비자로 계산돼 채택 게이트를 못 채운다.**
-- 고정 노트북 sha256 `59da7845…`. 커밋 SHA 와 Colab 링크는 push 직후 이 줄에 채운다.
+- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6/notebooks/colab-a8-v20-annex.ipynb),
+  커밋 `a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6`, sha256 `59da7845…`.
   위 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
   `REPO_REF`가 40자리 16진수가 아니면 clone 전에 멈춘다.
 - 모델은 고정 리비전 `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, Python 3.12.13 · vLLM 0.26.0 · CUDA 13.0.

@@ -19,7 +19,7 @@
                          "resolved": "v13 근거 수리는 이 PR 에서 완료. 라운드 4 의 P1 셋과 P2 하나도 반영."},
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
   "pinned_code_commit": "b139807723c22ec570d65635b0d654ba5e6149e2",
-  "pinned_notebook_commit": null,
+  "pinned_notebook_commit": "a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6",
   "notebook_only_change_from_code_commit": "REPO_REF",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전"],
