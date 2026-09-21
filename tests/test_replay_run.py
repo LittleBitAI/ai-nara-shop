@@ -213,5 +213,38 @@ class ReplayRunTests(unittest.TestCase):
             self.assertEqual(replay_run.main(base + ["--verify", "--candidate", str(module)]), 1)
 
 
+class RestoreSpacingHiddenDoc(unittest.TestCase):
+    """모델이 못 본 문서의 정확 일치가 **보이는 문서의 복원을 취소하면 안 된다.**
+
+    예산에 잘려 안 보이는 첨부에 무공백 표기가 있으면 `restore_spacing` 이 즉시 None 을
+    돌려줬다. 호출자는 원래 인용으로 물러서는데 그것은 `visible` 에 없으므로
+    검증된 인용이 통째로 떨어지고 기본 판정이 남는다.
+    """
+
+    VISIBLE = "입 찰 방 법 은 전 자 입 찰"
+    QUOTE = "입찰방법은전자입찰"
+
+    def test_a_hidden_exact_match_does_not_cancel_a_visible_restoration(self):
+        rec = {"docs": [{"text": self.VISIBLE}, {"text": "앞부분 " + self.QUOTE + " 뒷부분"}]}
+        self.assertEqual(SCRIPT.restore_spacing(self.QUOTE, rec, self.VISIBLE), self.VISIBLE)
+
+    def test_a_hidden_tail_in_the_same_document_does_not_block_the_search(self):
+        """같은 문서의 **잘린 뒷부분**에 정확 일치가 있어도 보이는 앞부분을 찾아야 한다.
+
+        문서 단위로 `quote in text` 를 보면 그 문서를 통째로 건너뛰어 공백 변형을
+        찾지도 않고 None 을 돌려줬다 — 첫 수정이 못 막은 자리다.
+        """
+        text = self.VISIBLE + " 중간채움" * 20 + " " + self.QUOTE
+        rec = {"docs": [{"doc_id": "D0", "type": "공고문", "text": text}]}
+        visible = SCRIPT.build_context(rec, 45)
+        self.assertIn(self.VISIBLE, visible)
+        self.assertNotIn(self.QUOTE, visible)
+        self.assertEqual(SCRIPT.restore_spacing(self.QUOTE, rec, visible), self.VISIBLE)
+
+    def test_an_exact_match_the_model_saw_still_needs_no_restoration(self):
+        text = "앞부분 " + self.QUOTE + " 뒷부분"
+        self.assertIsNone(SCRIPT.restore_spacing(self.QUOTE, {"docs": [{"text": text}]}, text))
+
+
 if __name__ == "__main__":
     unittest.main()

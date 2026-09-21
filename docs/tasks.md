@@ -27,6 +27,34 @@
 
 ## 첫 작업 큐
 
+`a8-v20-annex-injection`: **착수 대기 / RAG 주입 파이프라인 2단계**,
+[착수서](tasks/a8-v20-annex-injection.md). **그 문서를 읽고 진행한다.**
+1단계(법령 구조 인지 조회)는 PR #81로 `main`에 들어갔다 — 항목표 인용 31/31,
+검사 23개, 독립 리뷰 9라운드에서 P1 21건을 잡고 `머지 허용`.
+2단계는 「중소 소프트웨어사업자의 사업 참여 지원에 관한 지침」 제2조와 `[별표 1]`을
+company_size 프롬프트에만 넣고 control/후보를 같은 ZIP으로 두 회차 비교한다.
+**934자는 직접 조회 확인, 약 623토큰·baseline 초과 0/200은 추정**이다.
+실제 company 입력의 토큰·추가 절단은 구현 전 미측정이다. 스키마·소비자·관측 게이트는 유지한다.
+PR #83 검토로 판정 경로와 TP≥3 전제를 정정했다. 입력·출력·허용 경로·반복 통과 조건은 착수서가 소유한다.
+조회 근거는 [보고서](../reports/team-c/law-index/README.md)가 소유한다.
+**착수 전에 `wiki-rag-pilot`의 실측을 읽는다** — A8이 넣으려는 제2조+별표 1은
+그 파일럿의 `raw` 블록(12 span·3,843자)의 **부분집합**이고, 그 블록으로도 v20 TP는 control과
+같은 1, FN 4건 불변, 검증된 참여 인용 0건이었다. A8 §5의 "TP 상한 2"도 실측으로 확인됐다.
+공통 예산 계산에 쓸 공고별 실제 토큰은 `reports/runs/wiki-rag-*/pilot/*/budget.json`에 있다.
+
+`a8-pr83-review`: **done / 검토와 필요한 문서 수정**, 사용자 요청 2026-09-21.
+입력: PR #83 `26c38d3` diff, A8 착수서, 제공 원문, 현재 판정 경로와 보관 분석.
+출력: 정정된 착수서·작업 큐·활성 계획, `artifacts/review/a8-pr83-result.md` 검토 근거.
+수정 범위: 위 세 문서와 리뷰 기록. front matter 두 건은 형식·본문 보존만 확인한다.
+통과 조건: 법령 조회/기본 검사, 문서 인코딩·링크·diff, 회차 문서 front matter 검증.
+실제 모델 성과와 추정 분리, 반복 비교와 기존 소비자 보존을 계약으로 확인한다.
+결과: 계획·큐·활성 계획 정정, 법령 조회/재생 37개·기본 검사 19개 통과, repo_lint 새 발견 없음.
+검토 및 원격 본문 정정안은 `artifacts/review/a8-pr83-{result,body}.md`.
+2026-09-21 후속 사용자 지시로 계획 정정 커밋을 진행한다. 기본 checkout의 회차 결정 문서 두 건도
+front matter 누락을 재현해 PR #83과 같은 헤더로 수정했다. 양쪽 repo_lint·허브 lint 통과.
+헤더 수정은 PR #83의 기존 `dd78047`에 이미 포함된다. 기본 checkout에는 동일 수정을 로컬 적용했으며
+그곳의 별도 브랜치는 커밋하지 않는다. push·GPU 실행 없음.
+
 `wiki-rag-pilot`: **done / 두 회차 완료·가설 기각·세 군 모두 미채택**, [실제 결과](../reports/wiki-rag-pilot/results.md).
 2026-09-21 사용자 배정: Codex 설계, Claude 구현. 브랜치 `feat/wiki-rag-pilot`, 실행 코드 `a9fdd0a`.
 v20의 현재 방식·원문 조회·위키 페이지 조회를 같은 공고 입력과 기존 소비 코드로 비교했다.
@@ -36,6 +64,7 @@ v20의 현재 방식·원문 조회·위키 페이지 조회를 같은 공고 �
 남은 원인은 인용 전사 실패와 적용 대상 과탐이며 둘 다 이번 실험 밖이다.
 [착수서](tasks/wiki-rag-pilot.md), [실행 안내](../reports/wiki-rag-pilot/run-request.md),
 [PR #82](https://github.com/LittleBitAI/ai-nara-shop/pull/82). 무라벨·전체 파이프라인·서버·독립 리뷰는 미실행이다.
+이 결과가 `a8-v20-annex-injection`의 가설·예산 전제와 직접 겹친다. A8 착수 전에 먼저 읽는다.
 
 `a5-v18-scope-review`: **done / 두 회차 기록 완료·후보 미채택**, [작업서](tasks/a5-v18-scope-review.md).
 한 company 호출에 별도 scope 재검토 필드를 추가하고 v18에만 소비하는 후속 구현이다.
