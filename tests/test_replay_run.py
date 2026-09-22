@@ -186,7 +186,7 @@ class ReplayRunTests(unittest.TestCase):
         # 보관 CSV는 그 회차가 만든 것이므로 다시 쓰지 않고, 움직인 셀을 여기서 고정한다.
         self.assertEqual(replay_run.csv_cell_diff(replay_run.to_csv_bytes(SCRIPT, replayed["rows"]),
                                                   (h2 / "submission.csv").read_bytes()),
-                         [("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-198", "v13")])
+                         replay_run.DELIBERATE_MOVES_H2)
 
     def test_candidate_replaces_only_the_stage_it_defines(self):
         with tempfile.TemporaryDirectory() as tmp:

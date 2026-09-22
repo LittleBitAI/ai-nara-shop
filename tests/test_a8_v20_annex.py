@@ -103,9 +103,9 @@ class AnnexBlockTests(unittest.TestCase):
             metrics, predictions = pilot.hybrid_replay(payload, output, experiment='a8')
             baseline = BASELINE_CSV.read_bytes()
             for variant in ('off', 'on'):
-                # v13 근거 수리로 보관 CSV와 세 셀이 일부러 갈렸다. v20 은 그대로다.
+                # 일부러 갈린 셀은 `replay_run.DELIBERATE_MOVES` 가 소유한다. v20 은 그 안에 없다.
                 self.assertEqual(pilot.replay_run.csv_cell_diff((output/f'{variant}-hybrid.csv').read_bytes(), baseline),
-                                 [('PPS-DEV-148', 'e13'), ('PPS-DEV-16', 'v13'), ('PPS-DEV-198', 'v13')])
+                                 pilot.replay_run.DELIBERATE_MOVES)
                 item = metrics[variant]['items']['v20']
                 self.assertEqual((item['tp'], item['fp'], item['fn']), (1, 4, 4))
             self.assertEqual(pilot.changes(predictions['off'], predictions['on']), [])

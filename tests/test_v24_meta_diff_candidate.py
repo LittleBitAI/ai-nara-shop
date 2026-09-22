@@ -77,21 +77,32 @@ class V24MetaDiffCandidate(unittest.TestCase):
         self.before, self.after, self.truth = _rows(BEFORE), _rows(AFTER), _truth()
 
     def test_the_candidate_still_produces_the_recorded_csv(self):
-        """**저장 CSV 를 세기만 하면 가짜 초록이다.** `postprocess` 를 no-op 으로 바꿔도
-        4/12/4 와 대상 밖 0셀은 그대로 통과한다. 보관 원응답에 **지금 후보를 적용해**
-        바이트 동일인지 본다 — 배선이 끊기면 여기서 빨개진다.
+        """**저장 CSV 를 세기만 하면 가짜 초록이다.** 보관 원응답을 실제로 재생해 본다.
+
+        A7 대조 축은 이제 `script.py` 의 `evidence_refutes()` 안에 있다. 그래서 둘을 본다.
+
+        1. 후보를 덧씌워도 결과가 같다 — 같은 규칙이 두 곳에 있으니 멱등이어야 한다.
+           달라지면 운영 코드와 후보 모듈이 서로 다른 판정을 하게 된 것이다.
+        2. 보관본과의 차이가 **근거 계약이 움직인 셀만** 남는다. 그 보관본에는 A7 이
+           이미 적용돼 있어 v24 는 상쇄되고, 근거 계약만 나중에 들어왔기 때문이다.
+           배선이 끊기면 목록이 달라져 빨개진다.
         """
         replay_run = _load("replay_run", ROOT / "tools" / "replay_run.py")
-        result = replay_run.replay(script, ROOT / "reports/runs/colab-1789902969401579900/dev-debug",
-                                   input_path=str(ROOT / "open/dev.jsonl"),
-                                   data_dir=str(ROOT / "open/data"),
-                                   postprocess=candidate.postprocess)
-        # `company_size_products()`가 검증된 인용을 요구하면서 보관 CSV와 세 셀이 일부러 갈렸다.
-        # 보관물을 다시 쓰지 않고 움직인 셀을 고정한다 — 배선이 끊기면 목록이 달라져 빨개진다.
-        self.assertEqual(replay_run.csv_cell_diff(replay_run.to_csv_bytes(script, result["rows"]),
-                                                  AFTER.read_bytes()),
-                         [("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-198", "v13")],
-                         "지금 후보의 출력이 보관된 candidate-replay/submission.csv 와 예상 밖으로 다르다")
+        case = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
+
+        def rows(postprocess=None):
+            result = replay_run.replay(script, case, input_path=str(ROOT / "open/dev.jsonl"),
+                                       data_dir=str(ROOT / "open/data"), postprocess=postprocess)
+            return replay_run.to_csv_bytes(script, result["rows"])
+
+        adopted = rows()
+        self.assertEqual(adopted, rows(candidate.postprocess),
+                         "후보를 덧씌우자 결과가 달라졌다 — 운영 코드와 후보의 v24 판정이 갈렸다")
+        moved = replay_run.csv_cell_diff(adopted, AFTER.read_bytes())
+        self.assertEqual(moved, replay_run.DELIBERATE_MOVES_A7,
+                         "지금 출력이 보관된 candidate-replay/submission.csv 와 예상 밖으로 다르다")
+        self.assertFalse([cell for cell in moved if cell[1] in ("v24", "e24")],
+                         "A7 이 양쪽에 다 있으므로 v24 는 한 칸도 남으면 안 된다")
 
     def test_v24_counts_match_the_recorded_replay(self):
         self.assertEqual(_counts(self.before, self.truth, "v24"), EXPECTED["before"])

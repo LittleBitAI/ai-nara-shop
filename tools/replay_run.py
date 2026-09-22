@@ -148,6 +148,77 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             "settings": settings}
 
 
+# 보관 CSV 와 현재 소비자 사이에서 **일부러** 갈린 셀. 보관물을 다시 쓰지 않고 여기에 적는다.
+# 한 벌만 둔다 — 여섯 검사가 각자 베껴 두었더니 소비자를 한 번 고칠 때마다 여섯 군데가 같이
+# 터졌고, v13 수리와 근거 계약에서 실제로 두 번 그랬다. 소비자를 또 고치면 이 목록만 고친다.
+#  - 세 셀: `company_size_products()` 가 검증된 인용을 요구하면서 갈렸다 (PR #84).
+#  - 열여섯 셀: 근거 계약을 부재탐지·v24 밖 전 항목으로 넓히면서 갈렸다. 근거 없는 위반은
+#    D4-4 의 `e` 계약(원문의 연속된 부분문자열)을 못 채우므로 내린다.
+#  - 서른세 셀: v24 대조 축(A7)을 `evidence_refutes()` 에 넣으면서 갈렸다. 코드가 공고와
+#    등록값의 불일치를 하나도 못 찾으면 그 양성을 내린다. `e24` 가 함께 비워진다.
+#
+# 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
+# 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
+# `reports/team-c/a5-label-definition/head-replay/submission.csv` 와 대조할 때
+# (`absence-replay` 와의 대조도 같은 목록이다).
+DELIBERATE_MOVES = [
+    ("PPS-DEV-01", "v1"), ("PPS-DEV-036", "v19"), ("PPS-DEV-038", "v24"),
+    ("PPS-DEV-039", "v21"), ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"),
+    ("PPS-DEV-050", "v9"), ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v24"),
+    ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"), ("PPS-DEV-066", "e24"),
+    ("PPS-DEV-066", "v24"), ("PPS-DEV-068", "e24"), ("PPS-DEV-068", "v24"),
+    ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"), ("PPS-DEV-091", "v24"),
+    ("PPS-DEV-092", "v6"), ("PPS-DEV-099", "v24"), ("PPS-DEV-101", "v1"),
+    ("PPS-DEV-103", "v24"), ("PPS-DEV-122", "e24"), ("PPS-DEV-122", "v24"),
+    ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
+    ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"), ("PPS-DEV-144", "v6"),
+    ("PPS-DEV-145", "v24"), ("PPS-DEV-148", "e13"), ("PPS-DEV-15", "e24"),
+    ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "v24"), ("PPS-DEV-156", "e24"),
+    ("PPS-DEV-156", "v24"), ("PPS-DEV-16", "v13"), ("PPS-DEV-162", "v9"),
+    ("PPS-DEV-170", "v21"), ("PPS-DEV-176", "v24"), ("PPS-DEV-182", "v24"),
+    ("PPS-DEV-187", "v6"), ("PPS-DEV-188", "v21"), ("PPS-DEV-191", "e24"),
+    ("PPS-DEV-191", "v24"), ("PPS-DEV-192", "e24"), ("PPS-DEV-192", "v24"),
+    ("PPS-DEV-195", "v24"), ("PPS-DEV-198", "v13"), ("PPS-DEV-199", "v24"),
+    ("PPS-DEV-28", "v24"),
+]
+
+# `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
+# 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
+# `PPS-DEV-036/v5`·`PPS-DEV-042/v21`·`PPS-DEV-169/v24` 가 있고, 위에 있는
+# `PPS-DEV-170/v21`·`PPS-DEV-038/v24` 등은 여기 없다.
+DELIBERATE_MOVES_H2 = [
+    ("PPS-DEV-01", "v1"), ("PPS-DEV-036", "v19"), ("PPS-DEV-036", "v5"),
+    ("PPS-DEV-042", "v21"), ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"),
+    ("PPS-DEV-050", "v9"), ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v24"),
+    ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"), ("PPS-DEV-066", "e24"),
+    ("PPS-DEV-066", "v24"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
+    ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"), ("PPS-DEV-099", "v24"),
+    ("PPS-DEV-101", "v1"), ("PPS-DEV-122", "e24"), ("PPS-DEV-122", "v24"),
+    ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
+    ("PPS-DEV-130", "v9"), ("PPS-DEV-144", "v6"), ("PPS-DEV-148", "e13"),
+    ("PPS-DEV-15", "e24"), ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "v24"),
+    ("PPS-DEV-156", "e24"), ("PPS-DEV-156", "v24"), ("PPS-DEV-16", "v13"),
+    ("PPS-DEV-162", "v9"), ("PPS-DEV-169", "v24"), ("PPS-DEV-176", "v24"),
+    ("PPS-DEV-187", "v6"), ("PPS-DEV-188", "v21"), ("PPS-DEV-191", "e24"),
+    ("PPS-DEV-191", "v24"), ("PPS-DEV-192", "v24"), ("PPS-DEV-195", "v24"),
+    ("PPS-DEV-198", "v13"), ("PPS-DEV-28", "v24"),
+]
+
+# `reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv` 와 대조할 때.
+# 그 보관본은 이미 A7 대조 축이 적용된 산출물이므로, 지금 `script.py` 와의 차이는
+# **근거 계약이 움직인 셀만 남는다** — A7 이 양쪽에 다 있어 상쇄된다. v24·e24 가 한 칸도
+# 없는 것이 그 증거다. 이 목록이 달라지면 두 규칙 중 하나의 배선이 끊긴 것이다.
+DELIBERATE_MOVES_A7 = [
+    ("PPS-DEV-01", "v1"), ("PPS-DEV-036", "v19"), ("PPS-DEV-039", "v21"),
+    ("PPS-DEV-050", "v9"), ("PPS-DEV-063", "v12"), ("PPS-DEV-092", "v6"),
+    ("PPS-DEV-101", "v1"), ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
+    ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"), ("PPS-DEV-144", "v6"),
+    ("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-162", "v9"),
+    ("PPS-DEV-170", "v21"), ("PPS-DEV-187", "v6"), ("PPS-DEV-188", "v21"),
+    ("PPS-DEV-198", "v13"),
+]
+
+
 def csv_cell_diff(left: bytes, right: bytes):
     """두 제출 CSV 에서 다른 셀을 `(id, 열)` 로 돌려준다.
 

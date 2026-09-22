@@ -226,7 +226,7 @@ class ConsumerTests(unittest.TestCase):
                 # 보관 CSV 는 다시 쓰지 않고 움직인 셀을 고정한다.
                 self.assertEqual(replay_run.csv_cell_diff((arm_dir/(arm + '-hybrid.csv')).read_bytes(),
                                                           HEAD_REPLAY.read_bytes()),
-                                 [('PPS-DEV-148', 'e13'), ('PPS-DEV-16', 'v13'), ('PPS-DEV-198', 'v13')])
+                                 replay_run.DELIBERATE_MOVES)
                 self.assertEqual(len(metrics['items']), 24)
                 self.assertEqual(len(predictions), 200)
                 self.assertTrue((arm_dir/'verification.json').is_file())
