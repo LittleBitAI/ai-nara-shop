@@ -42,11 +42,15 @@ KIND_RUN, KIND_PILOT = "gpu-run", "gpu-pilot"
 TP, FP, FN, TN = "T", "P", "N", "."
 
 
-def load_score():
-    spec = importlib.util.spec_from_file_location("score_tool", ROOT / "tools/score.py")
+def load_module(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def load_score():
+    return load_module("score_tool", ROOT / "tools/score.py")
 
 
 def safe_member(name):
@@ -354,6 +358,55 @@ def item_names():
     return {name: item["name"] for name, item in item_index().items()}
 
 
+def law_map():
+    """항목표의 근거 조문 인용을 제공 법령 원문의 **자리**로 푼다. 조회는 experiments/law_index.py 다.
+
+    화면이 묻는 것은 "v1 의 근거가 어느 법령의 어디인가" 인데, 항목표는 문자열
+    `국가계약법 시행령 제12조 국가계약법 시행령 제21조` 만 준다. 한 항목이 법령 여러 개에
+    걸치고, 같은 조문을 항목 여럿이 나눠 쓴다. 그 대조를 눈으로 하지 않게 여기서 편다.
+
+    조각마다 원문에서의 시작 오프셋을 같이 싣는다. 미니맵이 그걸로 420,768자 문서 안의
+    어디를 인용했는지 그린다. 조각 본문은 `law_index` 가 돌려준 원문 부분문자열 그대로다 —
+    다듬으면 인용 검증과 어긋난다.
+    """
+    law_index = load_module("law_index", ROOT / "experiments/law_index.py")
+    data_dir = str(ROOT / "open/data")
+    texts = law_index.laws(data_dir)
+    table = json.loads((ROOT / "open/data/항목표.json").read_text(encoding="utf-8"))["항목"]
+
+    segments = []
+    seen = {}
+    cites = {}
+    for name, row in table.items():
+        axes = {}
+        for axis, column in (("국가", "국가계약법"), ("지방", "지방계약법")):
+            citation = (row.get(column) or "").strip()
+            entry = {"citation": citation, "segs": []}
+            found = []
+            if citation:
+                try:
+                    found = law_index.resolve(citation, data_dir)
+                except ValueError as exc:
+                    # 조용히 빼면 근거 없는 칸이 "근거 있음" 으로 보인다. 화면에 그대로 띄운다.
+                    entry["error"] = str(exc)
+            for segment in found:
+                key = (segment.law, segment.address)
+                if key not in seen:
+                    seen[key] = len(segments)
+                    segments.append({
+                        "law": segment.law,
+                        "path": list(segment.path),
+                        "at": texts[segment.law].find(segment.text),
+                        "chars": len(segment.text),
+                        "text": segment.text,
+                    })
+                entry["segs"].append(seen[key])
+            axes[axis] = entry
+        cites[name] = axes
+    return {"laws": {law: {"chars": len(text)} for law, text in texts.items()},
+            "segments": segments, "cites": cites}
+
+
 def amount_bands():
     """금액 구간 필터가 쓰는 경계. script.py의 상수가 원본이고 여기서 베끼지 않는다.
 
@@ -414,6 +467,7 @@ def main():
 
     write_json(OUT_DIR.parent / "items.json",
                {"items": item_index(), "bands": amount_bands()})
+    write_json(OUT_DIR.parent / "laws.json", law_map())
     history = refresh_index()
     if args.share:
         names = item_names()

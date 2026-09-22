@@ -1,8 +1,10 @@
-// 화면이 읽는 것은 넷이다.
+// 화면이 읽는 것은 다섯이다.
 //   web/public/runs/*.json   tools/build_report.py 가 score.py 로 채점한 결과
 //   web/public/items.json    docs/items.md 의 24항목 공식 이름·부재탐지
+//   web/public/laws.json     항목표의 근거 조문이 제공 법령의 어디인가 (experiments/law_index.py)
 //   /open/dev.jsonl          공고 원문과 나라장터 등록값 (저장소 원본, 사본 없음)
 //   /open/dev_labels.csv     정답 200건. e열은 양성 153칸 중 54칸만 차 있다.
+//   /open/data/법령패키지/법령/*.txt  법령 전문. 여기도 사본 없이 dev 서버가 그 자리에서 읽어 준다.
 // 여기서 점수를 새로 매기지 않는다. 필터가 걸렸을 때만 grid 를 다시 세어 부분집합 F1 을 낸다.
 
 export const ITEMS = Array.from({ length: 24 }, (_, i) => `v${i + 1}`)
@@ -82,6 +84,26 @@ export function loadCorpus() {
 
 export const loadIndex = () => json('/runs/index.json')
 export const loadRun = (runId) => json(`/runs/${encodeURIComponent(runId)}.json`)
+
+// 법령 지도는 회차와 무관하고 400KB 다. 법령 화면을 처음 열 때 한 번만 받는다.
+let lawsPromise = null
+export const loadLaws = () => (lawsPromise ??= json('/laws.json'))
+
+// 법령 전문은 한 편에 최대 420,768자다. 연 것만 받고, 받은 것은 들고 있는다.
+// NFC 로 맞춰 부른다 — laws.json 의 이름은 NFC 이고 macOS 파일명은 NFD 다.
+const lawTexts = new Map()
+export function loadLawText(name) {
+  const key = name.normalize('NFC')
+  if (!lawTexts.has(key)) {
+    lawTexts.set(key, fetch(`/open/data/법령패키지/법령/${encodeURIComponent(key)}.txt`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`${key}.txt: ${response.status}`)
+        return response.text()
+      })
+      .then((text) => text.normalize('NFC')))
+  }
+  return lawTexts.get(key)
+}
 
 export const f1 = (tp, fp, fn) => (2 * tp + fp + fn ? (2 * tp) / (2 * tp + fp + fn) : 0)
 
