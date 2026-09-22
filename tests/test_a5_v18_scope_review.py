@@ -150,8 +150,8 @@ class ScopeReviewTests(unittest.TestCase):
             self.assertEqual(sum(e['event'] == 'response' and e.get('status') == 'valid' for e in events), 128)
             # Over-budget stage is failed, but scored results remain available.
             collect = pilot.collector.collect
-            def slow(*args):
-                return dict(collect(*args), stage_seconds=pilot.STAGE_LIMIT + 1)
+            def slow(*args, **kwargs):     # 파일럿이 observe= 같은 키워드도 넘긴다
+                return dict(collect(*args, **kwargs), stage_seconds=pilot.STAGE_LIMIT + 1)
             with patch.object(pilot.collector, 'collect', side_effect=slow), \
                     self.assertRaisesRegex(RuntimeError, 'planning limit'):
                 run(root/'slow', 1)

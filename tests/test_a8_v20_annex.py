@@ -18,6 +18,7 @@ from unittest.mock import patch
 import script
 from experiments import a5_scope_pilot as pilot
 from experiments import a8_v20_annex as candidate
+from experiments import a8_v20_audit as audit
 from experiments import law_index
 from tests.test_a5_collect_facts import FakeRunner, records
 
@@ -466,6 +467,117 @@ class PilotWiringTests(unittest.TestCase):
                 for variant in ('off', 'on'):
                     self.assertTrue((root/f'episode-2/repeat-{arm}-{variant}.json').is_file())
 
+    def events_of(self, output):
+        return [json.loads(line) for line in
+                (output/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+
+    def test_unified_log_carries_one_root_and_two_distinguishable_arms(self):
+        """사이드카는 `run_started` 가 없으면 **모든 이벤트를 버린다**(`langfuse_tail.py:91`).
+
+        그래서 루트·군·청크·실제 호출이 한 파일에 순서대로 있어야 관측이 존재한다.
+        """
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            self.run_pilot(root/'episode-1', 1, BudgetFakeRunner())
+            events = self.events_of(root/'episode-1')
+            kinds = [e['event'] for e in events]
+            self.assertEqual(kinds.count('run_started'), 1)
+            self.assertEqual(kinds.count('run_succeeded'), 1)
+            self.assertEqual(kinds[0], 'run_started')
+            self.assertEqual(kinds[-1], 'run_succeeded')
+            self.assertEqual(kinds.count('arm_started'), 2)
+            self.assertEqual(kinds.count('arm_finished'), 2)
+            # 군이 갈린다 — 같은 공고가 두 군에 각각 있다.
+            for kind in ('company_size_input', 'model_call_started', 'model_call_finished', 'response'):
+                arms = {e['arm'] for e in events if e['event'] == kind}
+                self.assertEqual(arms, {'control', 'a8'}, kind)
+                self.assertEqual(sum(1 for e in events if e['event'] == kind), 400, kind)
+            root_event = events[0]
+            self.assertEqual(root_event['capture_protocol'], pilot.CAPTURE_PROTOCOL)
+            self.assertEqual(root_event['dataset'], 'dev')
+            self.assertEqual(len(root_event['dev_ids']), 200)
+            self.assertEqual(root_event['expected_model']['revision'], script.MODEL_REVISION)
+            self.assertEqual(root_event['mode'], 'pending')     # 시작 줄은 live 를 주장하지 않는다
+            loaded = next(e for e in events if e['event'] == 'model_loaded')
+            self.assertEqual(loaded['mode'], 'test_double')     # 실제 mode 는 적재 뒤에 적는다
+            # 같은 공고·같은 군의 입력과 호출이 이어진다.
+            started = [e for e in events if e['event'] == 'model_call_started']
+            self.assertEqual({e['call_kind'] for e in started}, {'initial'})
+            self.assertTrue(all(e['prompt_text'][0]['content'].startswith('Extract facts') for e in started))
+            a8_prompts = {e['prompt_text'][0]['content'] for e in started if e['arm'] == 'a8'}
+            control_prompts = {e['prompt_text'][0]['content'] for e in started if e['arm'] == 'control'}
+            self.assertTrue(all(p.endswith(candidate.block()) for p in a8_prompts))
+            self.assertFalse(any(p.endswith(candidate.block()) for p in control_prompts))
+            # 군별 로그도 그대로 남는다 — 기존 감사 경로가 계속 읽는다.
+            for arm in ('control', 'a8'):
+                self.assertTrue((root/'episode-1'/arm/'dev.events.jsonl').is_file())
+            # 성공을 두 번 세지 않는다.
+            report = json.loads((root/'episode-1/run_report.json').read_text(encoding='utf-8'))
+            self.assertEqual(report['model_success_count'], 0)
+            self.assertEqual(sum(c['valid_json'] for c in report['counts'].values()), 400)
+
+    def test_the_unified_log_actually_projects_into_distinct_spans(self):
+        """로그를 만든 것과 사이드카가 그것을 쓸 수 있는 것은 다른 일이다.
+
+        커밋 1 직후 이 파일을 `plan()`에 넣으면 generation 400개가 **서로 다른 key 200개**로
+        겹쳤다(군이 key 에 없었다). 그 회귀를 여기서 막는다.
+        """
+        from tools import langfuse_tail
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            self.run_pilot(root/'episode-1', 1, BudgetFakeRunner())
+            # 프롬프트 전문 계약을 보려면 수출이 허용된 상태여야 한다. 기본 상태는
+            # 본문을 막으며 그 경계는 tests/test_langfuse_tail.py 가 소유한다.
+            state, ops = langfuse_tail.State(include_prompts=True), []
+            for event in self.events_of(root/'episode-1'):
+                ops += langfuse_tail.plan(event, state)
+            generations = [o for o in ops if o.kind == 'generation' and o.action == 'open']
+            self.assertEqual(len(generations), 400)
+            self.assertEqual(len({o.key for o in generations}), 400)   # 겹치지 않는다
+            opens = {o.key for o in ops if o.action == 'open'}
+            closes = {o.key for o in ops if o.action == 'close'}
+            self.assertEqual(opens, closes)                            # 짝이 맞는다
+            self.assertEqual(state.calls, {})
+            self.assertIn('arm:control:dev', opens)
+            self.assertIn('arm:a8:dev', opens)
+            self.assertEqual(len([o for o in ops if o.key.startswith('parse:')]), 400)
+            self.assertFalse(any(o.key.startswith('gen:') for o in ops))
+            # 두 군의 system 프롬프트가 span 입력에서 갈린다.
+            systems = [json.loads(o.attrs['langfuse.observation.input'])[0]['content']
+                       for o in generations]
+            self.assertEqual(len({o.attrs['langfuse.observation.input'] for o in generations}), 400)
+            self.assertEqual(sum(1 for s in systems if s.endswith(candidate.block())), 200)
+            self.assertEqual(sum(1 for s in systems if s == script.COMPANY_SIZE_PROMPT), 200)
+
+    def test_reserved_event_keys_cannot_be_overwritten(self):
+        rows = []
+        emit = pilot.make_emit(SimpleNamespace(write=rows.append, flush=lambda: None),
+                              run_id='r', episode=1, arm='a8', sample='dev')
+        emit('company_size_input', id='X')
+        self.assertEqual(json.loads(rows[0])['arm'], 'a8')
+        for key in ('arm', 'run_id', 'episode', 'time_unix', 'event', 'sample'):
+            with self.assertRaisesRegex(ValueError, '예약된 이벤트 키'):
+                emit('company_size_input', **{key: 'spoofed'})
+
+    def test_failed_run_leaves_the_root_and_the_reason(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            failing = dict(records=200, conditions_pass=False, additional_shrink=['PPS-DEV-01'])
+            with patch.object(candidate, 'budget_report', return_value=failing), \
+                    self.assertRaises(RuntimeError):
+                self.run_pilot(root/'stopped', 1, BudgetFakeRunner())
+            events = self.events_of(root/'stopped')
+            kinds = [e['event'] for e in events]
+            self.assertEqual(kinds.count('run_started'), 1)
+            self.assertEqual(kinds.count('run_failed'), 1)
+            self.assertEqual(kinds.count('run_succeeded'), 0)
+            self.assertEqual(kinds.count('model_call_started'), 0)   # 생성 전에 멈췄다
+            self.assertEqual(next(e for e in events if e['event'] == 'run_failed')['error_type'],
+                             'RuntimeError')
+
     def test_failed_budget_stops_before_any_generation(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -478,6 +590,256 @@ class PilotWiringTests(unittest.TestCase):
             self.assertEqual(json.loads((output/'budget.json').read_text(encoding='utf-8')), failing)
             self.assertFalse((output/'control').exists())
             self.assertEqual(json.loads((output/'run_report.json').read_text(encoding='utf-8'))['status'], 'failed')
+
+
+class AuditTests(unittest.TestCase):
+    """감사는 문자열 검증과 판정을 가르고, 실제 소비자와 어긋나면 안 된다."""
+
+    def h4_rows(self):
+        script.load_sme_reference(str(pilot.ROOT/'open/data'))
+        events = [json.loads(line) for line in (pilot.CASE/'diagnostics.jsonl').read_text(encoding='utf-8').splitlines()]
+        chars = {e['id']: e['max_chars'] for e in events if e['event'] == 'company_size_input'}
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        out = []
+        for rec in script.iter_records(str(pilot.ROOT/'open/dev.jsonl')):
+            facts = script.parse_judgment(texts[rec['id']], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+            out.append((rec, facts, chars[rec['id']], audit.audit_row(rec, facts, max_chars=chars[rec['id']])))
+        return out
+
+    def test_audit_matches_the_real_consumer_on_all_200_records(self):
+        rows = self.h4_rows()
+        for rec, facts, max_chars, row in rows:
+            writes, reason = script.verify_company_size(facts, rec, max_chars)
+            cell = writes.get('v20')
+            self.assertEqual(row['v20_write'], None if cell is None else cell['위반여부'], rec['id'])
+            self.assertEqual(row['company_reason'], reason, rec['id'])
+        counts = audit._counts([row for *_, row in rows])
+        # H4 의 v20 양성 다섯 건과 정확히 같다 — 감사가 판정을 새로 만들지 않는다.
+        self.assertEqual(counts['v20_write_1'], 5)
+        self.assertEqual([row['id'] for *_, row in rows if row['v20_action'] == 'write_1'],
+                         ['PPS-DEV-056', 'PPS-DEV-064', 'PPS-DEV-068', 'PPS-DEV-133', 'PPS-DEV-144'])
+        # **실패 분모**: 참여 조항 인용이 200건 전부 null 이다. 개선할 양성 인용이 없었다.
+        self.assertEqual(counts['participation_nonnull'], 0)
+        self.assertEqual(counts['software_yes'], 11)
+
+    def test_the_catalogue_global_must_be_filled_or_the_audit_refuses(self):
+        """`_PRODUCTS` 가 빈 상태의 0 은 안전의 증거가 아니다 — 라운드 2에서 내가 틀린 자리다."""
+        with tempfile.TemporaryDirectory() as directory:
+            episode = Path(directory)
+            (episode/'contract.json').write_text('{}', encoding='utf-8')
+            with patch.object(script, '_PRODUCTS', []), \
+                    patch.object(script, 'load_sme_reference', return_value=((), [])), \
+                    self.assertRaisesRegex(ValueError, '카탈로그 전역이 비었다'):
+                audit.audit_episode(episode)
+
+    def test_invalid_quote_is_preserve_not_a_verified_negative(self):
+        rec = {r['id']: r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))}['PPS-DEV-133']
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        facts = script.parse_judgment(texts['PPS-DEV-133'], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+        visible = script.build_context(rec, 16000)
+        real = facts['software_business_quote']
+        self.assertEqual(audit.quote_check(real, rec, visible)['state'], 'exact')
+        for quote, state in [(None, 'null'), ('   ', 'empty'), ('공고에 없는 문장', 'invalid'),
+                             ('「중소기업기본법」제2조의 중소기업', 'invalid')]:
+            self.assertEqual(audit.quote_check(quote, rec, visible)['state'], state, quote)
+        # 참여 인용이 원문 밖이면 판정을 보류한다 — 검증된 비위반(write_0)이 아니다.
+        row = audit.audit_row(rec, dict(facts, software_participation_quote='공고에 없는 문장'),
+                              max_chars=16000)
+        self.assertEqual(row['v20_action'], 'preserve')
+        self.assertEqual(row['software_participation_quote_check']['state'], 'invalid')
+        # null 이고 완전관측이면 부재로 1 을 쓴다.
+        self.assertEqual(audit.audit_row(rec, facts, max_chars=16000)['v20_action'], 'write_1')
+
+    def test_quote_matches_point_at_real_document_spans(self):
+        rec = {r['id']: r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))}['PPS-DEV-133']
+        texts = pilot.replay_run.saved_responses(pilot.CASE)['company_size']
+        facts = script.parse_judgment(texts['PPS-DEV-133'], expected_items=script.COMPANY_SIZE_KEYS)[0]['company_size']
+        checked = audit.quote_check(facts['software_business_quote'], rec, script.build_context(rec, 16000))
+        self.assertTrue(checked['matches'])
+        for match in checked['matches']:
+            doc = rec['docs'][match['doc_index']]
+            self.assertEqual(doc['text'][match['start']:match['end']], checked['effective_quote'])
+            self.assertEqual(match['doc_id'], doc.get('doc_id'))
+
+    def test_fallback_only_change_is_marked_and_not_a_mechanism(self):
+        base = dict(id='X', v20_action='write_1', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        worse = dict(base, v20_action='preserve',
+                     software_participation_quote_check=dict(state='invalid'))
+        verified = dict(base, v20_action='write_0',
+                        software_participation_quote_check=dict(state='exact'))
+        self.assertEqual(audit.paired_changes([base], [worse])[0]['gain_kind'], 'fallback_only')
+        self.assertEqual(audit.paired_changes([base], [verified])[0]['gain_kind'], 'verified_quote')
+        self.assertEqual(audit.paired_changes([base], [base]), [])
+
+    def test_gain_kind_needs_a_real_verdict_transition_not_just_a_quote_state(self):
+        """인용 상태만 보면 두 가지가 기전으로 새어 들어온다. 둘 다 `other` 여야 한다."""
+        base = dict(id='X', v20_action='preserve', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        # 1. 판정이 하나도 안 움직였는데 인용 상태만 바뀐 것 — 우연한 이득이 아니다.
+        still = dict(base, software_participation_quote_check=dict(state='invalid'))
+        change = audit.paired_changes([base], [still])[0]
+        self.assertEqual(change['fields'], {'software_participation_quote_state': ['null', 'invalid']})
+        self.assertEqual(change['gain_kind'], 'other')
+        # 2. v20 이 애초에 안 열리는 공고(`software_business != yes`)의 정확한 인용.
+        #    그 인용은 아무것도 세우지 않았다.
+        unreachable = dict(base, software_business='no', v20_applicable=False,
+                           software_participation_quote_check=dict(state='exact'))
+        self.assertEqual(audit.paired_changes([base], [unreachable])[0]['gain_kind'], 'other')
+        # 3. 적용 가능한데 write_0 으로 전이했고 인용도 검증됐다 — 이것만 기전이다.
+        real = dict(base, v20_action='write_0',
+                    software_participation_quote_check=dict(state='spacing_restored'))
+        self.assertEqual(audit.paired_changes([base], [real])[0]['gain_kind'], 'verified_quote')
+        # 4. 적용 가능하지만 v20 을 계산하지 않은 상태의 write_0 은 기전으로 세지 않는다.
+        self.assertEqual(audit.paired_changes([base], [dict(real, v20_applicable=False)])[0]
+                         ['gain_kind'], 'other')
+
+    def test_gain_kind_names_the_absence_mechanism_and_both_rejection_paths(self):
+        """v20 은 부재탐지 항목이다. 부재 기전을 `other` 로 두면 먼저 볼 숫자가 기전을 놓친다."""
+        base = dict(id='X', v20_action='preserve', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        # 1. preserve → write_1: 소비자가 부재 위반을 새로 썼다. H4 의 v20 양성 5건이 이 모양이다.
+        absence = dict(base, v20_action='write_1')
+        self.assertEqual(audit.paired_changes([base], [absence])[0]['gain_kind'], 'verified_absence')
+        # 2. business 인용이 기각돼 적용성이 무너지며 preserve 로 내려앉은 것도 같은 실패다.
+        wrote = dict(base, v20_action='write_1')
+        broken = dict(base, v20_action='preserve', v20_applicable=False,
+                      software_business_quote_check=dict(state='invalid'))
+        self.assertEqual(audit.paired_changes([wrote], [broken])[0]['gain_kind'], 'fallback_only')
+        # 3. 참여 인용 기각으로 내려앉은 것도 그대로 fallback_only 다.
+        participation = dict(base, v20_action='preserve',
+                             software_participation_quote_check=dict(state='invalid'))
+        self.assertEqual(audit.paired_changes([wrote], [participation])[0]['gain_kind'],
+                         'fallback_only')
+        # 4. 부재인데 적용 불가면 기전이 아니다.
+        self.assertEqual(audit.paired_changes([base], [dict(absence, v20_applicable=False)])[0]
+                         ['gain_kind'], 'other')
+
+    def test_every_write_to_preserve_is_a_fallback_whatever_broke_it(self):
+        """원인을 열거하면 빠지는 것이 생긴다. `requirements_complete` 가 yes → no 로
+        바뀌어 소비자의 `software_complete` 가 막힌 경우가 그랬다(라운드 3 P1)."""
+        base = dict(id='X', v20_action='write_1', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        # 인용도 적용성도 그대로인데 문서 완전성만 무너져 보류가 됐다.
+        incomplete = dict(base, v20_action='preserve', requirements_complete='no')
+        change = audit.paired_changes([base], [incomplete])[0]
+        self.assertEqual(change['gain_kind'], 'fallback_only')
+        # 원인이 fields 에 남아야 한다 — gain_kind 가 원인을 안 들고 있으므로.
+        self.assertEqual(change['fields']['requirements_complete'], ['yes', 'no'])
+
+    def test_v20_applicable_agrees_with_the_consumer_on_both_sides(self):
+        """한 방향만 보면 제품에 새 조건이 생겨도 통과한다. 양쪽 경계를 직접 고정한다."""
+        script.load_sme_reference(str(pilot.ROOT/'open/data'))
+        rec = next(r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))
+                   if any(d['type'] == '공고문' and d['text'].strip() for d in r['docs']))
+        visible = script.build_context(rec, 16000)
+        quote = next(line for line in visible.splitlines() if len(line.strip()) > 12).strip()
+        facts = dict(script.empty_company_size(), software_business='yes',
+                     software_business_quote=quote)
+        # 적용 가능: 소비자가 v20 칸을 계산한다(present/absent 조건과 무관하게 열린다).
+        self.assertTrue(audit.v20_applicable(facts, rec, visible))
+        # 인용이 공고에 없으면 소비자도 v20 을 안 연다.
+        broken = dict(facts, software_business_quote='이 문장은 공고에 없다')
+        self.assertFalse(audit.v20_applicable(broken, rec, visible))
+        self.assertIsNone(script.verify_company_size(broken, rec, 16000)[0].get('v20'))
+        # software_business 가 yes 가 아니어도 안 연다.
+        no = dict(facts, software_business='no')
+        self.assertFalse(audit.v20_applicable(no, rec, visible))
+        self.assertIsNone(script.verify_company_size(no, rec, 16000)[0].get('v20'))
+
+    def test_v20_applicable_matches_the_consumer_on_all_200_records(self):
+        """감사의 `v20_applicable` 이 제품과 갈리면 `gain_kind` 가 조용히 틀린다.
+        소비자가 v20 칸을 쓴 공고는 전부 적용 가능으로 나와야 한다."""
+        rows = self.h4_rows()
+        for rec, facts, chars, row in rows:
+            visible = script.build_context(rec, chars)
+            self.assertEqual(row['v20_applicable'],
+                             audit.v20_applicable(facts, rec, visible), rec['id'])
+            if row['v20_action'] != 'preserve':
+                self.assertTrue(row['v20_applicable'], rec['id'])
+        # 적용 가능한데 보류인 공고는 있을 수 있다(참여 상태 조건 미달). 그 역은 없다.
+        self.assertTrue(any(r['v20_applicable'] for _, _, _, r in rows))
+
+    def test_a_tampered_payload_is_refused_even_when_the_contract_hash_matches(self):
+        """계약 hash 와 공고 집합만 보면 **원응답을 바꿔도 감사가 통과한다.**"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            argv = ['pilot', '--experiment', 'a8', '--model-dir', str(root/script.MODEL_REVISION),
+                    '--output-dir', str(root/'episode-1'), '--episode', '1']
+            with patch.object(sys, 'argv', argv), \
+                    patch.object(script, 'VLLMRunner', return_value=BudgetFakeRunner()):
+                pilot.main()
+            self.assertTrue(audit.audit_episode(root/'episode-1')['complete'])
+            path = root/'episode-1/a8/dev.json'
+            payload = json.loads(path.read_text(encoding='utf-8'))
+            # 계약 hash·id 집합은 그대로 두고 응답 한 줄만 바꾼다.
+            facts = dict(script.empty_company_size(), software_business='yes',
+                         software_business_quote='심어 넣은 문장')
+            payload['payload']['rows'][0]['response_text'] = json.dumps(
+                {'company_size': facts}, ensure_ascii=False)
+            self.assertNotEqual(payload['payload_sha256'], audit._digest(payload['payload']))
+            path.write_text(json.dumps(payload, ensure_ascii=False), encoding='utf-8', newline='\n')
+            with self.assertRaisesRegex(ValueError, '원응답 hash'):
+                audit.audit_episode(root/'episode-1')
+
+    def test_audit_episode_reads_a_real_pilot_output_and_writes_the_ledger(self):
+        """회차 폴더 전체를 감사한다 — 계약 hash·공고 집합·군을 함께 검사한다."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root/script.MODEL_REVISION).mkdir()
+            argv = ['pilot', '--experiment', 'a8', '--model-dir', str(root/script.MODEL_REVISION),
+                    '--output-dir', str(root/'episode-1'), '--episode', '1']
+            with patch.object(sys, 'argv', argv), \
+                    patch.object(script, 'VLLMRunner', return_value=BudgetFakeRunner()):
+                pilot.main()
+            result = audit.audit_episode(root/'episode-1')
+            self.assertEqual(sorted(result['arms']), ['a8', 'control'])
+            self.assertTrue(result['complete'])
+            self.assertFalse(result['semantic_review_complete'])
+            for arm in result['arms'].values():
+                self.assertEqual(arm['counts']['records'], 200)
+                self.assertIsNone(arm['counts']['participation_semantically_applicable'])
+            self.assertEqual(result['execution_mode'], 'cpu_audit')
+            self.assertEqual(audit.main(['--episode-dir', str(root/'episode-1')]), 0)
+            self.assertTrue((root/'episode-1/v20-audit.json').is_file())
+            # 계약 hash 가 어긋나면 감사를 거부한다.
+            payload = json.loads((root/'episode-1/a8/dev.json').read_text(encoding='utf-8'))
+            payload['contract_sha256'] = '0' * 64
+            (root/'episode-1/a8/dev.json').write_text(json.dumps(payload, ensure_ascii=False),
+                                                      encoding='utf-8', newline='\n')
+            with self.assertRaisesRegex(ValueError, '계약 hash'):
+                audit.audit_episode(root/'episode-1')
+
+    def test_sample_takes_the_union_of_runs_plus_label_positives(self):
+        """`software_business=yes` 는 회차 산출물이라 한 회차로 고정하면 표본이 편향된다."""
+        manifest = json.loads((pilot.ROOT/'reports/team-c/a8-v20-annex/api-sample.json')
+                              .read_text(encoding='utf-8'))
+        self.assertEqual(len(manifest['mandatory_ids']), 15)
+        self.assertEqual(len(manifest['random_ids']), 30)
+        self.assertEqual(len(manifest['selected_ids']), 45)
+        self.assertEqual(len(set(manifest['selected_ids'])), 45)
+        self.assertIn('PPS-DEV-132', manifest['mandatory_ids'])        # 라벨 양성 중 yes 밖
+        sources = manifest['sources']
+        self.assertEqual(sources['union_count'], 14)
+        self.assertEqual(sources['intersection_count'], 9)             # 회차마다 흔들린다
+        self.assertEqual(len(sources['per_run']), 3)
+        self.assertFalse(set(manifest['mandatory_ids']) & set(manifest['random_ids']))
+        # 같은 seed 는 같은 표본을 준다.
+        again = audit.select_sample([r['id'] for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))],
+                                   sources['union'], {'PPS-DEV-132'},
+                                   random_n=manifest['random_n'], seed=manifest['seed'])
+        self.assertEqual(sorted(again['random_ids']), sorted(manifest['random_ids']))
+        with self.assertRaisesRegex(ValueError, '입력 밖의 공고'):
+            audit.select_sample(['A', 'B'], {'ZZZ'}, set(), random_n=1)
 
 
 class NotebookTests(unittest.TestCase):

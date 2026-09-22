@@ -71,11 +71,129 @@ cloudflared 임시 터널을 띄우고, 그 주소로 `NEXTAUTH_URL` 을 바꿔 
 - 임시 터널은 주소를 아는 누구나 로그인 화면까지 닿는다. 계정은 난수 비밀번호이고
   이 인스턴스에는 공개 dev 자료만 있다. 그래도 **필요할 때만 열고 닫는다.**
 
+## 프롬프트 전문은 터널로 보내지 않는다
+
+`capture_protocol=1` 회차(A8 관측)의 `diagnostics.jsonl` 에는 **모델에 실제로 보낸
+프롬프트 전문과 응답 전문**이 들어 있다. 아래 터널 주소로 그것을 보내지 마라.
+사이드카는 기본적으로 본문을 **안 싣고** `prompt_capture="withheld"` 만 남긴다.
+
+본문까지 보려면 **회차 뒤에 ZIP 을 받아 로컬에서 재생**한다. 그때만 실린다.
+
+```powershell
+python -X utf8 tools/langfuse_tail.py --diagnostics <받은>/diagnostics.jsonl `
+    --dev-input open/dev.jsonl --include-prompts
+```
+
+`LANGFUSE_HOST` 가 `http://localhost:3002`(또는 `127.0.0.1`·`[::1]`) 그대로가 아니면
+거부한다. userinfo·query·fragment·다른 포트·다른 경로도 거부다 — 로컬처럼 생긴
+주소가 밖으로 리다이렉트할 수 있다. `--follow`·`--from-line` 과도 같이 못 쓴다.
+
+그리고 로그가 **고정 공개 dev 회차**인지 데이터로 대조한다. `run_started.dataset="dev"`,
+dev 파일 실측 sha256 이 로그의 `dataset_sha256` 과 `inputs.json` 고정값과 모두 같고,
+`dev_ids` 가 그 파일의 고유 id 집합과 정확히 같고, 모든 공고 이벤트 id 가 그 집합
+안에 있고, 신원 미확정(`ambiguous`·`unmatched`) 본문이 0건이어야 한다.
+**플래그는 안전의 근거가 아니다 — 이 대조가 근거다.** 접두사만 보면 안 된다.
+
+그리고 **id 가 맞다는 것은 본문이 dev 에서 왔다는 근거가 아니다.** 유효한 공고 id 에
+임의 문자열을 붙인 로그가 위 검사만으로는 통과한다. 그래서 공고별 user 프롬프트와
+문서 본문 hash 를 **실제 dev 파일에서 다시 만들어** 한 글자까지 대조한다.
+프롬프트는 **정확히 두 메시지**(system·user)여야 하고 각 메시지는 `role`·`content`
+두 칸뿐이다 — 형태를 느슨하게 보면 그 사이에 끼운 메시지가 통과하고 배열 전체가 나간다.
+system 은 제품 프롬프트나 후보 블록 중 **가장 긴 것**으로 시작해야 하고(짧은 쪽을
+고르면 후보 블록이 모르는 꼬리가 되어 **진짜 회차가 거부된다**), 꼬리는
+`COMPANY_SIZE_KEYS` 로 만든 분할 재시도 문자열과 정확히 같아야 한다.
+
+전송 자체도 그 호스트에 묶는다. 셋을 막는다.
+
+- **redirect.** `requests` 는 기본적으로 따라가므로 로컬 엔드포인트가 307 로 외부
+  `Location` 을 돌려주면 검사를 통과한 본문이 밖으로 다시 POST 된다.
+- **환경 프록시.** 세션의 `trust_env` 가 참이면 `HTTP_PROXY` 가 있는 환경에서
+  `merge_environment_settings()` 가 **로컬 주소에도** 외부 프록시를 고른다. 본문과
+  인증 헤더가 그쪽으로 간다. `trust_env`·`proxies` 를 끄고 호출마다 비운다.
+- **호스트 위장.** url 을 `urlparse` 해 scheme·hostname·port 를 비교하고 userinfo 를
+  거부한다 — `http://localhost:3002@evil.example/x` 가 문자열 `startswith` 를 통과한다.
+
+세션을 못 잡으면 **수출을 거부한다.** 막았다고 믿는 것이 안 막힌 것보다 나쁘다.
+
+`--session` 기본값도 절대경로를 안 쓴다 — 저장소 안이면 상대경로, 밖이면 파일명 +
+경로 hash 앞자리다. 기본값이 그대로 `langfuse.session.id` 로 실리기 때문이다.
+
+호출 하나도 짝이 맞아야 한다. `capture_protocol=1` 의 **모든 물리 호출**이 결속된
+프롬프트를 가져야 하고, 본문을 내보내는 응답은 그 결속된 시작과 call key 로 짝이
+맞아야 한다 — 시작에서 본문만 빼면 그 호출의 응답 위조가 검증을 건너뛴다.
+
+## 구조화 필드도 위생을 지난다
+
+**"구조화 필드라서 안전하다" 는 근거가 아니다.** `settings` 에 키를 하나 더 넣거나
+`items` 에 다른 문자열을 넣은 로그가 그대로 루트 input·generation metadata 로 실렸다.
+
+`_clean(name, value)` 이 span 으로 나가는 **모든 이벤트 유래 값**에 이름별 규칙을 건다.
+
+| 모양 | 규칙 |
+| --- | --- |
+| 수치 | `int`·`float` 여야 한다. 문자열이면 버린다 |
+| `*_sha256` | 16진수여야 한다 |
+| enum | **값 집합까지** 고정한다(`identity_status`·`transport_status`·`mode`·`stage` 등) |
+| `items`·`groups` | 제품의 항목 목록(`ITEMS`+`COMPANY_SIZE_KEYS`+`SME_ITEMS`)뿐 |
+| `packages` | `이름==버전` 뿐 |
+| 중첩 dict | 키마다 같은 규칙을 다시 건다 |
+| 모르는 이름 | **안 내보낸다** |
+
+`argv` 는 아예 싣지 않는다 — 명령줄에 경로가 들어간다. 짧은 식별자 패턴에서 `/` 와 `:` 를
+뺀 것도 같은 이유다. 이 파일이 만든 고정 문구는 `_fixed()` 로 넣어 위생 대상에서 가른다.
+
+## 구분할 수 없으면 평문을 안 보낸다
+
+패턴을 조여도 **짧은 영문 토큰은 못 가른다.** 버전 자리의 `sk-live-secret123` 은 버전과
+모양이 같다. 그래서 기본이 **요약**(`sha256:앞16`)이고 평문은 근거가 있을 때만이다.
+
+**모양이 값을 증명한다고 볼 수 있는 것은 hash 뿐이다.** 나머지는 생산자 집합과 대조한다 —
+패턴으로 두면 그 자리에 토큰형 비밀이 통과한다.
+
+**모양으로 평문을 통과시키는 자리는 없다.** 평문은 전부 **집합 대조**를 지난다.
+
+| 평문 | 무엇과 대조하나 |
+| --- | --- |
+| enum 값 | 생산자에서 읽는다 — `mode`·`token_count_kind` 는 실행기 클래스, `phase` 는 소스, `arm` 은 `DEV_ONLY`, `error_type` 은 `builtins` 의 예외 클래스 |
+| `MODEL_ID`·`MODEL_REVISION`·`QUANT` | `script.py` 의 상수 |
+| 버전 | 계약의 `pinned_environment`. 모양으로 두면 `123.456.789.012` 가 통과한다 |
+| 공고 id | `open/dev.jsonl` + `open/data/test.jsonl.gz` 의 id 집합(210개). 회차가 **스스로 선언한** `dev_ids` 는 근거가 아니다 — 1층이 안 도는 모드에서 공격자가 자기 allowlist 를 만든다 |
+| 자산 키 | `script.py:2072` 가 만드는 닫힌 집합 |
+| 패키지 이름 | `script.py` 가 버전을 세는 목록 |
+| 항목명 | `ITEMS`+`COMPANY_SIZE_KEYS`+`SME_ITEMS` |
+| hash | **재계산한 digest**. 16진수 모양은 근거가 아니다 — `"deadbeef"*8` 이 같은 모양이다 |
+
+hash 중 재계산할 수 있는 것은 열한 개다 — `script.py`·dev·제출 입력·항목표·
+디코딩 스키마·`SME_FILES` 셋·제품과 후보 system 프롬프트·스키마. 재계산 못 하는 것
+(`chat_template`·`contract`·`visible`·`prompt`)과 **옛 회차의 코드 hash** 는 요약된다.
+그때의 `script.py` 는 지금과 다르므로 재계산할 수 없다. 요약해도 **같은 hash 는 같은
+요약**이라 "회차 간 같은가" 는 답할 수 있고, 핀과 대조할 때는 핀도 같은 방식으로 요약한다.
+
+**요약은 유실이 아니다** — 동일성과 변화는 남으므로 "같은 설정으로 돌았나" 는 답할 수 있다.
+모르는 이름은 요약도 안 하고 아예 버린다. **map 은 값만이 아니라 키도 본다** — 값만 보면
+키에 개인 경로가 남는다. span 이름·key 를 만드는 값도 위생을 지난 것만 쓴다.
+
+## 출구는 하나다
+
+`plan()` 이 돌려주는 모든 Op 가 `guard()` 를 지난다. 어느 분기가 무엇을 넣어도 직렬화
+직전에 `name`·`status`·`key`·`usage_details`·`trace.name` 이 같은 기준을 지난다.
+전송 루프가 span 에 직접 적는 속성도 같은 통로를 쓴다 — **통로를 만든 것과 모두가 그
+통로를 쓰는 것은 다른 일이다.** 규칙은 허브 위키 `craft/gate-the-exit-not-the-callers`,
+경위는 `.wiki/decisions/2026-09-22-087-fix-export-gate-at-one-exit.md` 에 있다.
+
+**예외 메시지와 traceback 도 본문이다.** 개인 절대경로가 들어가므로 metadata 전용
+모드에서는 `error_type`(클래스 이름)만 남기고 나머지는 `withheld` 로 적는다.
+
+계약은 `reports/team-c/a8-v20-annex/observation-contract.json` 이 소유하고
+`tests/test_langfuse_tail.py::PromptExportBoundary` 가 고정한다.
+
 ## Colab 에서 붙이기
 
 노트북이 clone 한 저장소 안에서 사이드카를 띄운다. 제출 ZIP 은
 `script.py` 와 `requirements.txt` **둘뿐**이므로(`tools/package.py` 의 `FILES`)
 이 도구가 제출물에 섞일 수 없다.
+
+아래는 **metadata 전용** 실시간 추종이다. 프롬프트 전문은 위 절을 따른다.
 
 ```python
 # 1) 사이드카 의존성. 제출 requirements.txt 와 무관하다.
@@ -120,25 +238,28 @@ tail.wait(timeout=180)   # 남은 배치를 보내고 끝난다
 프롬프트 본문과 원응답은 `--debug-responses` 로 돌린 **진단 실행에만** 들어간다.
 기본 실행은 토큰 수와 실패 사유만 남긴다.
 
-## B 에게 요청할 한 줄
+### capture_protocol 1 — 실제 호출이 따로 온다
 
-`script.py` 는 실제로 보낸 프롬프트를 남기지 않는다. `system_prompt_sha256` 만 있다.
-계획이 첫 48시간에 확인하라는 `적용 대상 인식 → 전달 문맥 → 사실 추출 → 조건 비교 →
-후처리` 중 **전달 문맥**이 그래서 비어 있다. `script.py:579` 에 한 줄이면 된다.
+A8 관측 회차는 판형 번호 `1` 을 적는다. 그 로그에서는 **물리 호출과 파싱이 갈린다.**
 
-```python
-        if debug_responses:
-            fields["prompt_text"] = batch[i][-1]["content"]   # 실제 전달된 문맥
-            fields["response_text"] = text
-```
+| 진단 이벤트 | Langfuse |
+| --- | --- |
+| `arm_started` → `arm_finished` | 군 span. 같은 공고가 군마다 다른 key 를 받는다 |
+| `model_call_started` → `model_call_finished`/`_failed` | **generation.** 실제 모델 요청 하나다. 분할 재시도는 별도 요청으로 남는다 |
+| `response` | `parse-…` **이벤트.** generation 을 또 만들지 않는다 — 호출 하나가 둘로 세지 않게 한다 |
+| `model_loaded` 의 `mode` | 루트 span 의 이름·metadata 를 고친다. 루트는 생성 전에 `pending` 으로 열리므로 이게 없으면 실제 회차와 대역 실행이 안 갈린다 |
 
-`batch` 는 `run_chunk` 의 인자라 이미 클로저에 있다. dev 진단 실행에서만 켜지고
-200건 × 16,000자 ≈ 3MB 다. 사이드카는 이 필드가 오면 generation 의 input 으로 싣고,
-없으면 그냥 비운다 — `tests/test_langfuse_tail.py` 가 두 경우를 모두 고정한다.
+`schema_sha256` 은 제품이 **실제로 쓴** 파라미터를 가리킨다 — `items` 가 있으면
+`sp` 가 아니라 `parameters_for_items()` 로 제한한 스키마다(`script.py:967`).
+
+판형 번호가 없는 옛 로그는 기존 `response` → generation 투영을 그대로 쓴다.
 
 ## 대회 규칙 경계
 
 - **공개 dev 자료만 보낸다.** 비공개 평가 입력을 넣으면 [R17](rules.md) 즉시 실격이다.
+- **프롬프트 전문은 로컬 주소로만, 고정 dev 대조를 통과할 때만 나간다.** 로컬 주소라는
+  사실만으로 비공개 자료가 허용되는 것은 아니다. 평가 입력·서버 추론 로그에는 이 도구를
+  연결하지 않는다. 비밀키·환경변수 전체·`.env`·개인 절대경로는 span 에 넣지 않는다.
 - 제출 추론은 외부를 호출하지 않는다(R7). 사이드카는 제출물 밖의 별도 프로세스이고
   제출 ZIP 은 `script.py`·`requirements.txt` 둘뿐이다.
 - `requirements.txt` 에 `langfuse`·`opentelemetry` 를 넣지 않는다. 평가 서버에 설치될
@@ -157,3 +278,9 @@ tail.wait(timeout=180)   # 남은 배치를 보내고 끝난다
   닫을 때 `NEXTAUTH_URL` 이 로컬로 자동 복원됨
 - **실제 GPU·Colab 회차에서는 아직 안 돌렸다.** `--follow` 의 실시간 추종도
   완성된 파일로만 확인했다. 팀원 계정 초대와 Member/Viewer 화면도 아직 안 만들었다
+
+2026-09-22 `capture_protocol=1` 투영을 **CPU 재생 로그로만** 확인했다.
+군별 파일럿 로그는 그전까지 `run_started` 가 없어 사이드카가 **모든 이벤트를 버렸다**
+(400 → span 0). 지금은 1,618 이벤트 → 1,618 op, 생성 키 400개 전부 구별, 열고닫은 쌍 408,
+미종료 0 이다. **로컬 스택 적재·UI 확인은 안 했고 GPU 회차에서도 안 돌렸다.**
+프롬프트 수출 검사는 검사 6개로만 확인했으며 실제 적재로 확인한 것이 아니다.

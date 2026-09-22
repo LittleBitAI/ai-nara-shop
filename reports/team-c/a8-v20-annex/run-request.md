@@ -1,16 +1,20 @@
 # A8 v20 별표 주입 Colab 실행 안내
 
 상태: **GPU 미실행.** 두 회차를 실행하면 결과 ZIP 두 개를 받아 감사한다.
-**v13 근거 수리는 이 PR 에 들어왔고 아래 고정 핀이 그것을 포함한다.** 그래서 이 회차의 혼합 CSV 는
-수리된 소비자로 계산된다. 독립 리뷰는 **라운드 7에서 `머지 허용`**을 받았다.
+**v13 근거 수리는 PR #84 로 머지됐고 아래 고정 핀이 그것을 포함한다.** 그래서 이 회차의 혼합 CSV 는
+수리된 소비자로 계산된다. 그 PR 은 독립 리뷰 **라운드 7에서 `머지 허용`**을 받았다.
+아래 핀은 그 뒤 **관측·감사 배선**(`feat/a8-observation-capture`)까지 포함한 커밋이다.
 두 회차 결과는 **다음 게이트**이며, 최종 채택은 착수서 §6 의 무라벨 발화율·시간·독립 리뷰까지 본다.
 후보는 프롬프트만 바꾸며 채택 결정이 아니다. [보고서](README.md)가 준비 근거를 소유한다.
 
-- 실행 코드 **`b139807723c22ec570d65635b0d654ba5e6149e2`** (노트북 `REPO_REF`).
-  출력 예약 1,024·공통 예산 15,296·CPU 실측 대조 검사·**v13 근거 수리**·라운드 1~4 반영을 포함한다.
-  **수리 전 커밋(`d2c5f54`)으로 돌리면 혼합 CSV 가 옛 소비자로 계산돼 채택 게이트를 못 채운다.**
-- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6/notebooks/colab-a8-v20-annex.ipynb),
-  커밋 `a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6`, sha256 `59da7845…`.
+- 실행 코드 **`e6d9b98b7a40c6a6f563802445c24e2e61d9a3af`** (노트북 `REPO_REF`).
+  출력 예약 1,024·공통 예산 15,296·v13 근거 수리·리뷰 7라운드 반영에 더해
+  **실제 모델 호출 관측과 회차 뒤 CPU 감사**, 그리고 **PR #87 라운드 1~10 수리**
+  (수출 경계를 출구 하나로 모은 것·모양 예외 0개·hash 재계산 대조·본문 결속·
+  응답 짝·전송 고정·`payload_sha256`·`gain_kind`·루트 mode)를 포함한다.
+  **더 오래된 커밋으로 돌리면 감사의 `gain_kind` 가 기전을 못 세거나 관측이 없다.**
+- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/9940b50b9186b87c43a746f074277dd93bea3105/notebooks/colab-a8-v20-annex.ipynb),
+  커밋 `9940b50b9186b87c43a746f074277dd93bea3105`, sha256 `f54097bc…`.
   위 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
   `REPO_REF`가 40자리 16진수가 아니면 clone 전에 멈춘다.
 - 모델은 고정 리비전 `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, Python 3.12.13 · vLLM 0.26.0 · CUDA 13.0.
@@ -32,6 +36,11 @@ H4 baseline/SME 보관 응답만 있다. 무라벨 20,000건 파일은 필요하
 4. 실행 셀(인덱스 13): 실행기가 **생성 호출 전에** 예산을 재고 `budget.json`을 남긴다.
    추가 축소가 1건이라도 있으면 거기서 멈춘다 — 그때도 ZIP 셀을 실행해 `budget.json`을 보낸다.
    통과하면 control→a8 각 dev 200건. 군별 단계 상한 **339.178초/200건**이다.
+   회차가 `diagnostics.jsonl`에 **루트·군·청크·실제 호출·파싱**을 순서대로 남기고,
+   같은 셀이 이어서 CPU 감사를 돌려 `v20-audit.json`을 만든다(모델 재호출 없음).
+   감사 출력의 `verified_quote`·`verified_absence` 대 `fallback_only` 를 먼저 본다 —
+   앞의 둘은 기전이고(v20 은 부재탐지 항목이라 `verified_absence` 가 주 기전이다),
+   **`fallback_only` 만 좋아진 것은 기전이 아니다.**
 5. 마지막 ZIP 셀(인덱스 15)을 실행해 결과를 받는다. **실패해도 실행한다.**
 6. 회차 1 완료·시간 통과 후 런타임을 삭제하고 **새 A100 런타임**에서 같은 노트북,
    같은 ATTEMPT, `EPISODE=2`로 처음부터 실행한다. a8→control로 순서를 뒤집는다.
@@ -43,8 +52,9 @@ H4 baseline/SME 보관 응답만 있다. 무라벨 20,000건 파일은 필요하
 ## 결과와 재실행
 
 Drive 결과: `MyDrive/a8/v20-annex-<코드 SHA 앞 12자리>-<ATTEMPT>/episode-1`, `episode-2`.
-회차마다 `contract.json`, `budget.json`, `run_report.json`, `run-record.md`, `summary.json`,
-`environment.json`, 군별 원응답·events·`off-hybrid.csv`/`on-hybrid.csv`·`*-score/`를 남긴다.
+회차마다 `contract.json`, `budget.json`, **`diagnostics.jsonl`**, **`v20-audit.json`**,
+`run_report.json`, `run-record.md`, `summary.json`, `environment.json`,
+군별 원응답·events·`off-hybrid.csv`/`on-hybrid.csv`·`*-score/`를 남긴다.
 회차 2는 `repeat-<군>-<소비자>.json` 네 개를 더 남긴다.
 결과 ZIP은 로컬 다운로드와 같은 Drive 상위 폴더에 `a8-v20-results-<시각>.zip`으로 보존한다.
 실패 중간 events와 `.partial`도 ZIP에 들어간다.

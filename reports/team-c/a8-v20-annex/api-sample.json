@@ -1,0 +1,334 @@
+{
+  "seed": 20260922,
+  "random_n": 30,
+  "mandatory_ids": [
+    "PPS-DEV-04",
+    "PPS-DEV-056",
+    "PPS-DEV-064",
+    "PPS-DEV-068",
+    "PPS-DEV-082",
+    "PPS-DEV-086",
+    "PPS-DEV-088",
+    "PPS-DEV-101",
+    "PPS-DEV-131",
+    "PPS-DEV-132",
+    "PPS-DEV-133",
+    "PPS-DEV-134",
+    "PPS-DEV-135",
+    "PPS-DEV-144",
+    "PPS-DEV-24"
+  ],
+  "random_ids": [
+    "PPS-DEV-02",
+    "PPS-DEV-039",
+    "PPS-DEV-045",
+    "PPS-DEV-046",
+    "PPS-DEV-049",
+    "PPS-DEV-055",
+    "PPS-DEV-057",
+    "PPS-DEV-069",
+    "PPS-DEV-073",
+    "PPS-DEV-081",
+    "PPS-DEV-085",
+    "PPS-DEV-096",
+    "PPS-DEV-105",
+    "PPS-DEV-121",
+    "PPS-DEV-128",
+    "PPS-DEV-139",
+    "PPS-DEV-15",
+    "PPS-DEV-160",
+    "PPS-DEV-161",
+    "PPS-DEV-162",
+    "PPS-DEV-163",
+    "PPS-DEV-164",
+    "PPS-DEV-167",
+    "PPS-DEV-169",
+    "PPS-DEV-171",
+    "PPS-DEV-182",
+    "PPS-DEV-183",
+    "PPS-DEV-193",
+    "PPS-DEV-20",
+    "PPS-DEV-32"
+  ],
+  "selected_ids": [
+    "PPS-DEV-02",
+    "PPS-DEV-04",
+    "PPS-DEV-15",
+    "PPS-DEV-20",
+    "PPS-DEV-24",
+    "PPS-DEV-32",
+    "PPS-DEV-039",
+    "PPS-DEV-045",
+    "PPS-DEV-046",
+    "PPS-DEV-049",
+    "PPS-DEV-055",
+    "PPS-DEV-056",
+    "PPS-DEV-057",
+    "PPS-DEV-064",
+    "PPS-DEV-068",
+    "PPS-DEV-069",
+    "PPS-DEV-073",
+    "PPS-DEV-081",
+    "PPS-DEV-082",
+    "PPS-DEV-085",
+    "PPS-DEV-086",
+    "PPS-DEV-088",
+    "PPS-DEV-096",
+    "PPS-DEV-101",
+    "PPS-DEV-105",
+    "PPS-DEV-121",
+    "PPS-DEV-128",
+    "PPS-DEV-131",
+    "PPS-DEV-132",
+    "PPS-DEV-133",
+    "PPS-DEV-134",
+    "PPS-DEV-135",
+    "PPS-DEV-139",
+    "PPS-DEV-144",
+    "PPS-DEV-160",
+    "PPS-DEV-161",
+    "PPS-DEV-162",
+    "PPS-DEV-163",
+    "PPS-DEV-164",
+    "PPS-DEV-167",
+    "PPS-DEV-169",
+    "PPS-DEV-171",
+    "PPS-DEV-182",
+    "PPS-DEV-183",
+    "PPS-DEV-193"
+  ],
+  "strata_by_id": {
+    "PPS-DEV-02": [
+      "random"
+    ],
+    "PPS-DEV-04": [
+      "software_yes"
+    ],
+    "PPS-DEV-15": [
+      "random"
+    ],
+    "PPS-DEV-20": [
+      "random"
+    ],
+    "PPS-DEV-24": [
+      "software_yes",
+      "label_positive"
+    ],
+    "PPS-DEV-32": [
+      "random"
+    ],
+    "PPS-DEV-039": [
+      "random"
+    ],
+    "PPS-DEV-045": [
+      "random"
+    ],
+    "PPS-DEV-046": [
+      "random"
+    ],
+    "PPS-DEV-049": [
+      "random"
+    ],
+    "PPS-DEV-055": [
+      "random"
+    ],
+    "PPS-DEV-056": [
+      "software_yes"
+    ],
+    "PPS-DEV-057": [
+      "random"
+    ],
+    "PPS-DEV-064": [
+      "software_yes"
+    ],
+    "PPS-DEV-068": [
+      "software_yes"
+    ],
+    "PPS-DEV-069": [
+      "random"
+    ],
+    "PPS-DEV-073": [
+      "random"
+    ],
+    "PPS-DEV-081": [
+      "random"
+    ],
+    "PPS-DEV-082": [
+      "software_yes"
+    ],
+    "PPS-DEV-085": [
+      "random"
+    ],
+    "PPS-DEV-086": [
+      "software_yes"
+    ],
+    "PPS-DEV-088": [
+      "software_yes"
+    ],
+    "PPS-DEV-096": [
+      "random"
+    ],
+    "PPS-DEV-101": [
+      "software_yes"
+    ],
+    "PPS-DEV-105": [
+      "random"
+    ],
+    "PPS-DEV-121": [
+      "random"
+    ],
+    "PPS-DEV-128": [
+      "random"
+    ],
+    "PPS-DEV-131": [
+      "software_yes",
+      "label_positive"
+    ],
+    "PPS-DEV-132": [
+      "label_positive"
+    ],
+    "PPS-DEV-133": [
+      "software_yes",
+      "label_positive"
+    ],
+    "PPS-DEV-134": [
+      "software_yes",
+      "label_positive"
+    ],
+    "PPS-DEV-135": [
+      "software_yes"
+    ],
+    "PPS-DEV-139": [
+      "random"
+    ],
+    "PPS-DEV-144": [
+      "software_yes"
+    ],
+    "PPS-DEV-160": [
+      "random"
+    ],
+    "PPS-DEV-161": [
+      "random"
+    ],
+    "PPS-DEV-162": [
+      "random"
+    ],
+    "PPS-DEV-163": [
+      "random"
+    ],
+    "PPS-DEV-164": [
+      "random"
+    ],
+    "PPS-DEV-167": [
+      "random"
+    ],
+    "PPS-DEV-169": [
+      "random"
+    ],
+    "PPS-DEV-171": [
+      "random"
+    ],
+    "PPS-DEV-182": [
+      "random"
+    ],
+    "PPS-DEV-183": [
+      "random"
+    ],
+    "PPS-DEV-193": [
+      "random"
+    ]
+  },
+  "note": "라벨은 표본 선정과 사후 채점에만 쓴다. 모델 메시지에 넣지 않는다",
+  "sources": {
+    "per_run": {
+      "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl": {
+        "count": 11,
+        "ids": [
+          "PPS-DEV-04",
+          "PPS-DEV-056",
+          "PPS-DEV-064",
+          "PPS-DEV-068",
+          "PPS-DEV-082",
+          "PPS-DEV-131",
+          "PPS-DEV-133",
+          "PPS-DEV-134",
+          "PPS-DEV-135",
+          "PPS-DEV-144",
+          "PPS-DEV-24"
+        ],
+        "source": "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl",
+        "sha256": "c1772af588e86d4850d6484a69aa62e2ca8183626ffcff6002cad5f5b85e4ed7"
+      },
+      "reports/runs/wiki-rag-1789985574572142052/pilot/episode-1/control/dev.json": {
+        "count": 11,
+        "ids": [
+          "PPS-DEV-056",
+          "PPS-DEV-064",
+          "PPS-DEV-068",
+          "PPS-DEV-082",
+          "PPS-DEV-086",
+          "PPS-DEV-101",
+          "PPS-DEV-131",
+          "PPS-DEV-133",
+          "PPS-DEV-134",
+          "PPS-DEV-144",
+          "PPS-DEV-24"
+        ],
+        "source": "reports/runs/wiki-rag-1789985574572142052/pilot/episode-1/control/dev.json",
+        "sha256": "212e479569b0b3f56bdbb05d4d670401143a9541aceb97985b4619a4d02f98b2"
+      },
+      "reports/runs/wiki-rag-1789987435003372430/pilot/episode-2/control/dev.json": {
+        "count": 12,
+        "ids": [
+          "PPS-DEV-056",
+          "PPS-DEV-064",
+          "PPS-DEV-068",
+          "PPS-DEV-082",
+          "PPS-DEV-086",
+          "PPS-DEV-088",
+          "PPS-DEV-101",
+          "PPS-DEV-131",
+          "PPS-DEV-133",
+          "PPS-DEV-134",
+          "PPS-DEV-144",
+          "PPS-DEV-24"
+        ],
+        "source": "reports/runs/wiki-rag-1789987435003372430/pilot/episode-2/control/dev.json",
+        "sha256": "f9ef0d8e54ab3be43c97e69e9321930460a597e6cb5bbf2f246eb6e8a2f5e0e4"
+      }
+    },
+    "union": [
+      "PPS-DEV-04",
+      "PPS-DEV-056",
+      "PPS-DEV-064",
+      "PPS-DEV-068",
+      "PPS-DEV-082",
+      "PPS-DEV-086",
+      "PPS-DEV-088",
+      "PPS-DEV-101",
+      "PPS-DEV-131",
+      "PPS-DEV-133",
+      "PPS-DEV-134",
+      "PPS-DEV-135",
+      "PPS-DEV-144",
+      "PPS-DEV-24"
+    ],
+    "union_count": 14,
+    "intersection": [
+      "PPS-DEV-056",
+      "PPS-DEV-064",
+      "PPS-DEV-068",
+      "PPS-DEV-082",
+      "PPS-DEV-131",
+      "PPS-DEV-133",
+      "PPS-DEV-134",
+      "PPS-DEV-144",
+      "PPS-DEV-24"
+    ],
+    "intersection_count": 9
+  },
+  "dev_input_sha256": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+  "labels_sha256": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
+  "python": "3.13.9",
+  "algorithm": "random.Random(seed).sample(sorted(dev - mandatory), random_n)"
+}

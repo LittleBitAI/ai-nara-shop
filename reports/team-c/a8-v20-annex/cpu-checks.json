@@ -32,11 +32,22 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "b139807723c22ec570d65635b0d654ba5e6149e2",
-  "pinned_notebook_commit": "a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6",
-  "notebook_only_change_from_code_commit": "REPO_REF",
+  "pinned_code_commit": "e6d9b98b7a40c6a6f563802445c24e2e61d9a3af",
+  "pinned_notebook_commit": "9940b50b9186b87c43a746f074277dd93bea3105",
+  "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
-                      "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전"],
+                      "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
+                      "b139807723c22ec570d65635b0d654ba5e6149e2 / a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6 — 관측·감사 배선 전",
+                      "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023 / 2f6e20642e07132cf03dba26f2064b21c2e20deb — 라운드 1 수리 전(수출 경계·gain_kind)",
+                      "ea9ac8a338705a1944a7f193b99735813b5fcdf0 / 516ddb93709e1de30cb0827f4921d2e8c627d637 — 라운드 2 수리 전(본문 결속·redirect·자유 텍스트·부재 기전)",
+                      "01258d3089502e4aafe50681b1a7fd7e48d06413 / cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792 — 라운드 3 수리 전(메시지 형태·환경 프록시·세션 경로·가장 긴 prefix·fallback 원인 열거)",
+                      "3f8bb3c6fd5d8bcd3a97f4b07178ca026c645596 / 6c96064cde2004344dc08a6e58abcae05cb0a14f — 라운드 4 수리 전(응답 결속·구조화 필드 위생)",
+                      "09667115849ad377cadfece7710eea5e30dcb295 / 134e02fb4e58cd639248326a8e05da7a37c6d488 — 라운드 5 수리 전(출구 하나로 모으기 전)",
+                      "c51206339a0304b219b2a52cacb748574c57c7c3 — 라운드 6 수리 전(통로 밖 직접 쓰기·평문 기본)",
+                      "a9e1adf6dfb337a3cf64ffe3891a4e41883b8116 / 261c03d3b9e19ee00abbcd01159e22363dc21bce — 라운드 7 수리 전(map 키·패턴 기반 평문 예외)",
+                      "5422ae514506ae7a08950d30ed2a437225ee1870 / 489f19fb2dd896f846b2f92f30bfffede79777a3 — 라운드 8 수리 전(모양 예외 네 자리)",
+                      "9ed421741c3d170f9c550ce770699c989a7ef0e8 / 0a80cb19ea97bd61c53cdd5662915eb035722519 — 라운드 9 수리 전(hash 모양·생산자 오류형)",
+                      "1fab41a88ea9019400d21f04b8113e5c646c4d6b / cb3493bed51d979e901a95d870bc23a5bf853208 — 라운드 10 수리 전(요약이 trace 이름을 합침)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -184,6 +195,115 @@
     },
     "pinned_by": "tests/test_a8_v20_annex.py::LawQuotationTests 두 검사"
   },
+  "observation": {
+    "file": "observation-contract.json",
+    "capture_protocol": 1,
+    "what": "회차가 실제 모델 요청을 diagnostics.jsonl 한 파일에 기록하고, 회차 뒤 같은 런타임의 CPU 감사가 인용 상태와 v20 판정을 가른다. 추론은 바뀌지 않는다.",
+    "notebook_wiring": "실행 셀(13)이 a8_v20_audit.py --episode-dir 를 이어 돌리고 군별 counts 와 gain_kind 집계를 찍는다. 모델 재호출 0회.",
+    "source_hashes_verified": true,
+    "prompt_export": "기본 withheld. --include-prompts + --dev-input + 로컬 주소 + 고정 dev 대조가 모두 맞을 때만 본문이 나간다.",
+    "round_1_review": {
+      "verdict": "머지 불가 → 수리 완료",
+      "p0": "사이드카가 프롬프트·응답 전문을 조건 없이 임의 host 로 보냈다. 설계 §3.5 미구현. validate_dev_export 를 넣었다.",
+      "p1": ["schema_sha256 이 sp 를 가리켜 실제 제한 스키마를 증명하지 못했다 → effective_parameters()",
+             "감사가 payload_sha256 을 재계산하지 않아 원응답을 바꿔도 통과했다 → 재계산",
+             "gain_kind 가 인용 상태만 봐 두 가지를 오분류했다 → 실제 v20 전이로 판정, v20_applicable 추가",
+             "루트가 mode=pending 으로 끝나 실제 회차와 대역 실행이 안 갈렸다 → update 액션"],
+      "mutation_check": "다섯 가드를 하나씩 되돌려 각각 담당 검사가 빨개지는 것을 확인했다",
+      "round_2": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["id 가 고정 dev 에 있다는 것만 보고 본문 출처를 안 봤다 — 유효 id 에 임의 문자열을 붙인 로그가 통과했다. 공고별 user 프롬프트와 visible hash 를 실제 dev 에서 재구성해 대조하고 system 도 알려진 것으로 제한한다.",
+                "주소 문자열만 막아 redirect 로 빠져나갔다 — requests 기본값이 따라가기다. 세션의 request 를 감싸 allow_redirects 를 강제로 끄고 허용 호스트 밖 url 은 예외로 세운다.",
+                "본문 차단이 두 슬롯만 봐서 run_failed 의 error_message·traceback 이 metadata 전용 모드로 나갔다. 회차 종료 output 을 허용 목록으로 좁히고 예외 메시지·traceback 을 본문으로 취급한다."],
+        "p1": "gain_kind 가 preserve → write_1(부재 기전)을 other 로 뒀다. v20 은 부재탐지 항목이고 H4 양성 5건이 그 분기다 — verified_absence 로 이름을 주고, business 인용 기각으로 적용성이 무너진 preserve 도 fallback_only 로 센다.",
+        "p2": ["v20_applicable 200건 대조가 같은 함수를 자기와 비교하는 동어반복이었다 → 양방향 경계 검사 추가",
+               "루트 없는 로그에서 update 가 조용히 버려졌다 → 이유를 들고 다니고 화면에 적는다"],
+        "mutation_check": "여섯 가드를 하나씩 되돌렸다. 첫 시도에서 본문 결속 mutation 이 초록이어서 검사를 조였다 — system 검사가 먼저 걸려 user 위조를 못 보고 있었다."
+      },
+      "round_3": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["프롬프트 형태를 느슨하게 봐서 system·user 사이에 끼운 assistant 메시지와 메시지 dict 의 추가 필드가 통과했고 배열 전체가 span input 으로 나갔다. 정확히 두 메시지·role·content 두 칸만 허용한다. 재시도 접미사도 정규식 대신 COMPANY_SIZE_KEYS 로 만든 정확한 문자열만 통과시킨다.",
+                "redirect 만 끄고 trust_env 를 뒀다 — HTTP_PROXY 가 있으면 merge_environment_settings() 가 로컬 주소에도 외부 프록시를 고른다. trust_env·proxies 를 끄고, url 검사를 urlparse 비교로 바꿨다(http://localhost:3002@evil.example/x 가 startswith 를 통과했다).",
+                "--session 기본값이 절대경로라 개인 경로가 span 에 실렸다. 저장소 상대경로나 파일명+경로 hash 를 쓴다."],
+        "p1": ["_known_systems 의 두 값 중 set 순서로 첫 prefix 를 골라 후보 블록 1,568자가 모르는 꼬리가 됐다. PYTHONHASHSEED 1~6 중 넷이 그랬다 — 진짜 A8 회차가 seed 마다 거부된다. 가장 긴 prefix 를 고른다.",
+               "gain_kind 가 write_* → preserve 의 원인을 열거해 requirements_complete 변화로 software_complete 가 막힌 경우를 놓쳤다. 원인을 열거하지 않고 전부 fallback_only 로 센다."],
+        "mutation_check": "다섯 가드를 되돌렸다. 세션 이름 mutation 이 초록이어서 함수 대신 run() 배선을 보는 검사로 바꿨다 — 함수가 있는 것과 run() 이 그것을 쓰는 것은 다르다.",
+        "repo_lint": "발견 2건 — gitignore 된 워크트리 훅 설정(.claude/settings.json)의 명령 드리프트다. 추적 파일이 아니고 이 PR 의 변경과 무관하다. 훅 배선 변경은 세션 동작을 바꾸므로 임의로 고치지 않았다."
+      },
+      "round_5": {
+        "verdict": "머지 불가 → 수리 완료. **여기서 접근을 바꿨다**",
+        "diagnosis": "다섯 라운드 P0 열둘이 전부 같은 결함이었다 — 지적된 출구마다 게이트를 달아 열거에서 빠진 면이 다음 라운드에 나왔다. 하나 고치면 둘 생긴 것이 아니라 처음부터 면이 N 개였다.",
+        "fix": "plan() 이 돌려주는 모든 Op 가 guard() 를 지난다. 기준을 추측에서 실측으로 바꿨다(_producer_enums, _DICT_KEYS). 검사를 실제 H4 로그로 바꿨다 — 합성 이벤트로는 라운드 5 의 셋을 하나도 못 잡았다.",
+        "rule": "허브 위키 craft/gate-the-exit-not-the-callers, 경위는 .wiki/decisions/2026-09-22-087"
+      },
+      "round_6": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["출구를 모았다고 했는데 run() 의 전송 루프가 통로를 안 지나고 span 에 네 속성을 직접 적고 있었다. model_loaded 의 mode 도 위생을 안 지나 trace 이름이 오염됐다.",
+                "_fixed() 는 이 파일의 문구 전용인데 orphan 경로가 이벤트에서 조립한 call_key 를 거기 넣어 metadata 로 경로가 나갔다.",
+                "**'값만 보고 구분할 수 없다' 를 평문 허용의 근거로 쓴 것이 틀렸다.** metadata 전용 모드에서는 1층이 안 돌므로 두 층 어디에서도 안 막히는 값이 생겼다. 기본을 요약으로 뒤집었다.",
+                "set(inner) 가 중첩 list·dict 에서 TypeError 로 사이드카를 멈췄다 — 게이트는 fail-closed 여야 한다."],
+        "p1": "groups[].status='split' 은 분할 재시도가 일어났다는 핵심 관측값인데 손으로 적은 집합에서 빠져 조용히 사라졌다. script.py·experiments 를 훑어 드리프트를 잡는 검사를 넣었다.",
+        "mutation_check": "다섯 가드를 되돌렸다. call_key 와 guard 의 trace.name 은 첫 시도에서 초록이라(다른 가드가 가리고 있었다) 각각 직접 거는 검사를 추가했다."
+      },
+      "round_11": {
+        "verdict": "**머지 허용** — 새 발견 없음",
+        "confirmed": ["서로 다른 미등록 코드 hash 가 시작 trace 와 model_loaded 갱신 뒤에도 각각 다른 일곱 자 이름을 유지했다",
+                      "등록된 현재 코드 hash 는 원래 앞 일곱 자를 유지했다",
+                      "company_size_schema() digest 가 재계산 집합의 열두 번째 값으로 평문 보존됐다",
+                      "실제 H4 로그 1,020 이벤트가 625 op 로 투영되고 열고 닫은 span 수가 일치했다",
+                      "repo_lint 강조 과다는 갱신된 외부 검사기의 소급 적용이며, 이 PR 의 결정 기록만 정리하고 나머지를 별건 P2 로 둔 판단에 이견 없음"],
+        "rounds": 11,
+        "totals": "P0 스물셋 · P1 열하나 · P2 넷. P0 는 라운드 8 까지 나왔고 9·10 에서 하나·영으로 줄었다."
+      },
+      "round_10": {
+        "verdict": "머지 불가 → 수리 완료. **P0 없음** — P1 하나·P2 하나다",
+        "p1": "**라운드 9 수리가 만든 회귀다.** hash 를 요약으로 바꾸면서 trace 이름에 붙이는 일곱 자를 요약 문자열 앞에서 잘랐고, 앞 일곱 자가 sha256: 이라 서로 다른 회차가 모두 nara live sha256: 이 됐다 — 과거 회차를 코드 리비전별로 가르던 동작이 사라졌다. _short() 가 접두사 뒤 digest 에서 뽑는다.",
+        "test_lesson": "`_clean()` 반환값만 비교하면 **소비 경로**를 놓친다 — 요약값은 서로 달랐는데 이름이 합쳐졌다. 새 검사는 두 회차를 실제로 투영해 trace 이름이 갈리는지 본다.",
+        "p2": "A8 실행기는 company_size_schema() 쪽 digest 를 내보내는데 전체 스키마만 재계산해 그 값이 요약됐다. '재계산 가능한 digest 는 평문' 이라는 설명과 어긋나므로 둘 다 계산한다.",
+        "repo_lint": "허브 도구가 갱신돼 강조 과다 검사가 새로 들어왔다(발견 293건). 이 PR 이 만든 결정 기록의 발견 4건을 1건으로 줄였고, 나머지는 이 PR 전부터 있던 문서로 별건 정리 대상이다. 훅 드리프트도 2건에서 5건으로 늘었는데 gitignore 된 설정이며 이 PR 의 변경이 아니다.",
+        "mutation_check": "두 가드를 되돌려 담당 검사가 각각 빨개졌다."
+      },
+      "round_9": {
+        "verdict": "머지 불가 → 수리 완료. P0 하나·P1 하나 — 라운드 8 의 절반이다",
+        "p0": "**hash 가 마지막 모양 예외였다.** code_sha256=\"deadbeef\"*8 이 통과했다 — 16진수 비밀·식별자가 같은 모양이다. _known_hashes() 가 재계산할 수 있는 digest 열한 개를 모아 대조하고, 재계산 못 하는 것과 옛 회차의 코드 hash 는 요약한다.",
+        "p1": "error_type 집합을 builtins 만으로 만들어 생산자가 직접 쓰는 ResponseCountMismatch 가 요약으로 사라졌다. 소스의 error_type= 리터럴을 읽어 넣고 드리프트 검사를 추가했다.",
+        "trade_off": "요약해도 동일성 비교는 그대로 된다 — 같은 hash 는 같은 요약이므로 hash 의 용도가 유지되고, 핀과 대조할 때는 핀도 같은 방식으로 요약해 비교한다.",
+        "reviewer_confirmed": ["pinned_environment 가 A8 노트북이 강제 대조하는 버전과 일치해 현재 실행을 막지 않는다",
+                               "lru_cache 된 집합은 이 체크아웃의 불변 입력만 읽고 호출 중 안 바뀌어 plan() 계약과 충돌하지 않는다"],
+        "mutation_check": "두 가드를 되돌려 담당 검사가 각각 빨개졌다. 검사의 가짜 hash 를 실제 digest 로 바꿨다 — hash 를 재계산 대조로 바꾸면 합성 hash 는 요약되므로 검사도 진짜 값을 써야 한다."
+      },
+      "round_8": {
+        "verdict": "머지 불가 → 수리 완료. P1 없음",
+        "p0": ["자산 키를 모양으로 봐서 /home/… ·//host/… ·sk-live-secret123 이 통과했다 → script.py:2072 의 닫힌 집합과 대조",
+                "run_started.dev_ids 를 믿어 공격자가 자기 allowlist 를 만들 수 있었다 → 저장소의 dev + 제출 입력 210개 집합과 대조",
+                "phase_started 가 원본 phase 를, _status()·model_call_failed 가 원본 error_type 을 써서 span 이름·status 로 나갔다 → 위생을 지난 값으로",
+                "버전 모양이 123.456.789.012 를 통과시켰다 → 계약의 pinned_environment 와 대조"],
+        "outcome": "**모양으로 평문을 통과시키는 자리가 0개다.** 남은 정규식은 HEX·TRACE_NAME·NAME 뿐이고 앞의 둘은 조각이 이미 위생을 지났다.",
+        "sweep": "오염 스윕을 넓혔다 — 라운드 6 에서 '짧은 토큰은 1층이 막는다' 로 좁힌 것이 라운드 6~8 P0 의 원인이었다. 이제 본문·경로·토큰 셋을 두 모드에서 본다.",
+        "performance": "집합 생성 함수 아홉 개에 lru_cache. 매 호출마다 gzip·모듈을 읽어 검사가 135초로 늘었고 4초로 돌아왔다.",
+        "mutation_check": "다섯 가드를 되돌렸다. error_type 은 실제 로그에 실패 이벤트가 없어 스윕이 못 덮으므로 실패 경로 검사를 따로 조였다."
+      },
+      "round_7": {
+        "verdict": "머지 불가 → 수리 완료. **P1 없음** — P0 둘이 같은 원리다",
+        "p0": ["sha256·packages map 이 값만 검사해 키에 개인 경로가 평문으로 남았다. 오염 스윕이 기존 키를 바꾸지 않아 이 경로를 못 덮었다. 자료 이름은 드라이브 문자·상대 상승을 거부하는 모양, 패키지 이름은 script.py 가 세는 고정 목록과 대조한다.",
+                "phase·arm·sample·error_type 을 패턴으로 둬서 sk-live-secret123·SecretTokenABC123 이 평문으로 나갔다. _producer_enums() 가 그 집합을 생산자에서 읽는다(phase 는 소스, arm 은 DEV_ONLY, error_type 은 builtins). 숫자 버전도 묶음 길이·접미를 제한해 010.1234.5678 을 막는다."],
+        "notice_id": "고정 dev 집합이 아니라 **회차가 선언한 dev_ids** 로 대조한다 — 고정 dev 로 하면 제출 입력으로 돈 회차의 id 가 전부 요약돼 관측이 못 쓰게 된다.",
+        "lesson": "**모양이 값을 증명한다고 볼 수 있는 것은 hash 뿐이다.** 라운드 6 에서 기본을 요약으로 뒤집었지만 평문 예외를 패턴으로 둔 자리가 남아 있었다.",
+        "mutation_check": "세 가드를 되돌려 담당 검사가 각각 빨개졌다."
+      },
+      "round_4": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["본문 검증이 prompt_text 가 있을 때만 돌아, 시작에서 본문만 빼고 같은 호출의 응답을 위조하면 통과했다. 모든 물리 호출이 결속된 프롬프트를 갖고, 응답은 결속된 시작과 call key 로 짝이 맞아야 한다.",
+                "'구조화 필드라서 안전하다' 가 근거가 아니었다 — settings.note·items 의 임의 문자열이 루트 input·generation metadata 로 실렸다. _clean() 이 이름별 규칙을 걸고 모르는 이름은 안 내보낸다. argv 는 제거했고 TOKEN 에서 /·: 를 빼 경로를 막았다."],
+        "p2_deferred": "OTLP exporter 의 public session= 인자로 private _session 의존을 없애는 것. 지금 버전에서 동작하고 fail-closed 라 경계는 안 열린다 — 후속 후보다.",
+        "mutation_check": "두 가드를 되돌려 담당 검사가 각각 빨개졌다. 오염을 심은 열 이벤트 스윕으로 두 모드 모두 0건을 확인하고, 오염 없는 회차에서 진짜 값이 남는 것도 같이 고정했다."
+      },
+      "confirmed_by_reviewer": ["script.py·후보·law_index 무변경",
+                               "비-system 본문 digest 의 공고 유일성과 호출 키 비중복",
+                               "API 표본 45건 재현", "핀·미실행 목록이 문서와 원장에서 일치"]
+    },
+    "not_evidence_of": "GPU 회차·Langfuse UI 적재. 투영은 CPU 재생 로그로만 확인했다."
+  },
   "cpu_budget_check": {
     "file": "budget-cpu.json",
     "records": 200,
@@ -213,7 +333,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "59da78455269f28f5f53be2621eb098c70b0aafcda7893ce5ebe57742310cf34",
+  "notebook_sha256": "f54097bc8a1f3e67acba327e8975d8735436f5592a7244b9ca5fe7ccd7e54aff",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -284,6 +404,190 @@
       "command": "python -X utf8 tests/test_baseline.py",
       "passed": 19,
       "phase": "최종 오프라인 게이트 — 라운드 7 `머지 허용` 시점"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 342,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 218.84,
+      "phase": "관측·투영·감사 배선 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.865,
+      "phase": "관측·투영·감사 배선 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 0,
+      "phase": "관측·투영·감사 배선 후. 공개 위키 허브에서 실행"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 356,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 238.02,
+      "phase": "라운드 1 P0·P1 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.735,
+      "phase": "라운드 1 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 0,
+      "phase": "라운드 1 수리 후"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 366,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 247.02,
+      "phase": "라운드 2 P0 셋·P1·P2 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 2.236,
+      "phase": "라운드 2 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 0,
+      "phase": "라운드 2 수리 후"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 373,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 261.51,
+      "phase": "라운드 3 P0 셋·P1 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 2.57,
+      "phase": "라운드 3 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 2,
+      "phase": "라운드 3 수리 후. gitignore 된 워크트리 훅 설정 드리프트이며 추적 파일도 이 PR 의 변경도 아니다"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 377,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 276.48,
+      "phase": "라운드 4 P0 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 2.681,
+      "phase": "라운드 4 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 380,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 312.95,
+      "phase": "라운드 5 수리 후 — 출구를 하나로 모으고 검사를 실제 H4 로그로 바꿨다"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 384,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 267.92,
+      "phase": "라운드 6 P0 넷·P1 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.904,
+      "phase": "라운드 6 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 387,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 260.65,
+      "phase": "라운드 7 P0 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.753,
+      "phase": "라운드 7 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 387,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 245.78,
+      "phase": "라운드 8 P0 넷 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.926,
+      "phase": "라운드 8 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 389,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 252.6,
+      "phase": "라운드 9 P0·P1 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 2.303,
+      "phase": "라운드 9 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 391,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 263.11,
+      "phase": "라운드 10 P1·P2 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.991,
+      "phase": "라운드 10 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 293,
+      "phase": "라운드 10. 허브 도구 갱신으로 강조 과다 검사가 새로 들어왔다 — 291건이 그것이고 이 PR 전부터 있던 문서다. 이 PR 이 만든 결정 기록은 4건에서 1건으로 줄였다"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",

@@ -1,0 +1,198 @@
+{
+  "capture_protocol": 1,
+  "pinned_environment": {
+    "_why": "사이드카가 버전을 평문으로 내보낼 때 대조하는 유일한 근거다. 버전 모양만 보면 123.456.789.012 같은 고엔트로피 숫자가 통과한다(라운드 8 P0). 여기 없는 값은 요약으로 나간다 — 다르다는 사실은 남고 값은 안 나간다.",
+    "python": "3.12.13",
+    "vllm": "0.26.0",
+    "cuda": "13.0",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.14.1",
+    "xgrammar": "0.2.3",
+    "tokenizers": "0.22.2"
+  },
+  "why": "파일럿 군별 로그는 run_started 가 없어 사이드카가 모든 이벤트를 버렸다(langfuse_tail.plan 91행). 실측: H4 전체 파이프라인 1,020 이벤트 → 625 span, 파일럿 군별 로그 400 → 0.",
+  "sources": {
+    "experiments/a5_collect_facts.py": "c7239c1bee7ba5a62db25567a4d320e56c29bdf433f7951a329f77f94c55f10a",
+    "experiments/a5_scope_pilot.py": "d95603bc8c2ca39978c53adda435f0a47884f70dbcd23c9d21fabbe13da2b3b4",
+    "experiments/a8_v20_annex.py": "62a3ea53e66f157cc143f9663e6e89802d708ce73df18e0ddd4e04dece8ecaba",
+    "experiments/a8_v20_audit.py": "6c5c878500457f802096fdd08f6b1e205d47554bad4e937969ff6c8ed3957227",
+    "tools/langfuse_tail.py": "6edcbd6afa17e83cb71294813783dbd7d13a5c0d97d0a85fa2bf6682df80aa94",
+    "tools/replay_run.py": "35c235f99b3a2d824c18266b74f88534f033b4036a81ee4ce8611660b6f43895",
+    "script.py": "8e7011e2bfcc8eab2f5463ee16266e3de11ff5115a70c850027af8fcb8667dd4"
+  },
+  "events": {
+    "run": [
+      "run_started",
+      "model_loading",
+      "model_loaded",
+      "run_succeeded",
+      "run_failed"
+    ],
+    "arm": [
+      "arm_started",
+      "phase_started",
+      "arm_finished"
+    ],
+    "notice": [
+      "company_size_input",
+      "response"
+    ],
+    "chunk": [
+      "chunk_started",
+      "chunk_finished"
+    ],
+    "model_call": [
+      "model_call_started",
+      "model_call_finished",
+      "model_call_failed"
+    ],
+    "call_identity": "(run_id, episode, arm, sample, phase, chunk_start, call_seq, call_index)",
+    "reserved_keys": [
+      "event",
+      "time_unix",
+      "run_id",
+      "episode",
+      "arm",
+      "sample"
+    ]
+  },
+  "measured_projection": {
+    "before_commit_2": {
+      "events": 1618,
+      "ops": 414,
+      "generations": 400,
+      "distinct_generation_keys": 200,
+      "model_call_ops": 0,
+      "note": "군이 key 에 없어 control 과 a8 이 200쌍 겹쳤다. 옛 response 투영이었다."
+    },
+    "after_commit_2": {
+      "events": 1618,
+      "ops": 1618,
+      "generations": 400,
+      "distinct_generation_keys": 400,
+      "open_close_pairs": 408,
+      "left_open": 0,
+      "parse_events": 400,
+      "legacy_gen_projection": 0
+    }
+  },
+  "h4_audit_baseline": {
+    "records": 200,
+    "software_yes": 11,
+    "participation_nonnull": 0,
+    "v20_write_1": 5,
+    "v20_write_1_ids": [
+      "PPS-DEV-056",
+      "PPS-DEV-064",
+      "PPS-DEV-068",
+      "PPS-DEV-133",
+      "PPS-DEV-144"
+    ],
+    "v20_write_0": 0,
+    "v20_preserve": 195,
+    "note": "**실패 분모**: H4 에서 참여 조항 인용이 200건 전부 null 이다. 개선할 양성 인용이 없었고 v20 양성은 전부 부재 분기다."
+  },
+  "api_sample": {
+    "file": "api-sample.json",
+    "selected": 45,
+    "mandatory": 15,
+    "random_n": 30,
+    "mandatory_rule": "세 회차의 software_business=yes 합집합 14 + 라벨 양성 PPS-DEV-132",
+    "why_union": "그 집합은 회차 산출물이다 — H4 11 · wiki1 11 · wiki2 12, 교집합 9.",
+    "status": "blocked_q1"
+  },
+  "gpu_status": "not_run",
+  "api_status": "blocked_q1",
+  "prompt_export": {
+    "default": "withheld",
+    "means": "프롬프트·응답 **전문**은 기본적으로 span 에 실리지 않는다. 막았다는 사실은 prompt_capture=\"withheld\" 로 남는다.",
+    "requires": ["--include-prompts", "--dev-input <고정 공개 dev>"],
+    "allowed_hosts": ["http://localhost:3002", "http://127.0.0.1:3002", "http://[::1]:3002"],
+    "checked_before_provider": true,
+    "conditions": ["run_started.dataset == dev",
+                   "dev 파일 실측 sha256 == run_started.dataset_sha256 == inputs.json 고정값",
+                   "dev_ids == 그 파일의 고유 id 집합",
+                   "모든 공고 이벤트 id 가 그 집합에 속함",
+                   "신원 미확정(null·ambiguous·unmatched) 본문 0건",
+                   "prompt_text 가 **정확히 두 메시지**(system·user)이고 각 메시지는 role·content 두 칸뿐",
+                   "capture_protocol 1 의 **모든 물리 호출**이 결속된 프롬프트를 가짐(본문 없는 시작 0건)",
+                   "본문을 내보내는 응답이 결속된 시작과 call key 로 짝이 맞음(짝 없는 output 0건)",
+                   "공고별 user 프롬프트가 실제 dev 파일에서 재구성한 것과 한 글자까지 같음",
+                   "company_size_input 이 주장한 visible_sha256 이 재구성한 것과 같음",
+                   "system 이 제품 프롬프트나 후보 블록(**가장 긴 prefix**)으로 시작하고 꼬리는 COMPANY_SIZE_KEYS 로 만든 분할 재시도 문자열뿐"],
+    "refused_with": ["--follow", "--from-line != 0"],
+    "transport": "OTLP 세션의 request 를 감싸 allow_redirects 를 강제로 끄고, trust_env·proxies 를 비우고, url 을 urlparse 해 scheme·hostname·port 를 비교하며 userinfo 를 거부한다. 세션을 못 잡으면 수출을 거부한다. 주소 문자열만 막으면 307 redirect·환경 프록시·`http://localhost:3002@evil.example/x` 로 빠져나간다.",
+    "free_text": "예외 메시지·traceback 은 본문으로 취급한다. 회차 종료 output 은 허용 목록(RUN_END_FIELDS)만 내보내고 error_type 만 남긴다. `--session` 기본값도 절대경로를 안 쓴다 — 저장소 상대경로나 파일명+경로 hash 다.",
+    "single_exit": {
+      "what": "`plan()` 이 돌려주는 **모든 Op 가 `guard()` 를 지난다.** 직렬화 직전 한 곳에서 name·status·key·usage_details·trace.name 을 같은 기준으로 본다.",
+      "direct_writes": "통로를 만든 것과 모두가 그 통로를 쓰는 것은 다른 일이다. 라운드 5 에서 통로를 만들었는데 `run()` 의 전송 루프가 span 에 네 속성을 직접 적고 있었다(라운드 6 P0). 그 자리도 `_label()` 을 지나고, `guard()` 가 `langfuse.trace.name` 을 직접 본다 — 어느 분기가 잊어도 막힌다.",
+      "why": "라운드 1~5 의 P0 열둘이 전부 같은 결함이었다 — 값이 나가는 경로가 여럿인데 지적된 출구마다 게이트를 달았다. input/output 두 슬롯 → status → metadata → span 이름 → usage_details → key 로 면이 하나씩 나왔다. 호출자를 막으면 막을 목록을 손으로 세게 되고 그 목록은 언제나 모자란다.",
+      "key_is_an_exit": "`run()` 이 이름이 없으면 key 로 span 을 만들고 orphan 경로는 key 를 metadata 에 적는다. 조립에 쓰는 arm·sample·id·phase 를 위생하고, 그래도 모양이 아니면 결정적 hash 로 바꾼다(같은 입력 → 같은 key, open/close 짝 유지).",
+      "rule": "허브 위키 gate-the-exit-not-the-callers. 같은 주제로 P0 가 두 라운드 연속 나오면 막는 자리를 바꾼다."
+    },
+    "threat_layers": {
+      "layer_1": "validate_dev_export() — 이 로그가 고정 공개 dev 회차인가. 어긋나면 수출 자체를 거부한다.",
+      "layer_2": "_clean()·guard() — 통과한 로그에서도 본문·경로·**알려지지 않은 문자열**은 평문으로 안 내보낸다.",
+      "corrected": "라운드 5·6 에서 나는 '짧은 토큰은 값만 보고 구분할 수 없다' 를 **평문 허용의 근거**로 썼다. 그것이 라운드 6 P0 였다 — metadata 전용 모드에서는 1층이 아예 안 돌므로 두 층 어디에서도 안 막히는 값이 생겼다. **구분할 수 없으면 평문을 안 보내는 쪽이 답이다.**",
+      "now": "2층의 기본이 요약(`sha256:앞16`)이다. 평문은 근거가 있을 때만이다 — 아래 plaintext_exceptions."
+    },
+    "plaintext_exceptions": {
+      "producer_enum": "생산자에서 읽은 집합의 값(mode·token_count_kind는 실행기 클래스, status는 소스 스캔 검사가 드리프트를 잡는다)",
+      "producer_constant": "MODEL_ID·MODEL_REVISION·QUANT 와 같은 문자열",
+      "hash_and_items": "**재계산한 digest** 와 제품 항목명. 16진수 모양은 근거가 아니다",
+      "numeric_version": "**계약의 pinned_environment 와 같을 때만** 평문이다(라운드 8 P0). 모양으로 두면 010.1234.5678·123.456.789.012 같은 고엔트로피 숫자가 통과한다. 사이드카는 회차 환경을 모르므로 계약에 적힌 값과 대조한다 — 다른 값은 요약되고, 다르다는 사실은 남는다",
+      "scope_names": "**패턴이 아니라 생산자 집합과 대조한다**(라운드 7 P0). phase 는 소스의 실제 값, arm·experiment 는 DEV_ONLY, sample 은 dev·unlabeled, error_type 은 builtins 의 예외 클래스 **와 소스의 error_type= 리터럴**이다(라운드 9 P1: ResponseCountMismatch 가 빌트인이 아니라 사라졌다). 모양만 보면 sk-live-secret123·SecretTokenABC123 이 평문으로 나간다",
+      "notice_id": "**저장소의 입력 파일에서 읽은 집합**과 대조한다 — open/dev.jsonl 과 open/data/test.jsonl.gz 를 둘 다 읽는다(210개). 회차가 스스로 선언한 dev_ids 는 근거가 아니다 — 1층이 안 도는 모드에서 공격자가 자기 allowlist 를 만든다(라운드 8 P0). dev 만 읽으면 제출 입력으로 돈 H4 회차의 관측이 통째로 요약된다.",
+      "map_keys": "sha256·packages map 은 **키도 대조한다.** 값만 보면 키에 개인 경로가 남는다(라운드 7 P0). 자료 이름은 script.py:2072 가 만드는 닫힌 집합(input·items·decode_schema + SME_FILES), 패키지 이름은 script.py 가 세는 고정 목록이다 — 모양으로 두면 /home/… 과 //host/… 가 통과한다(라운드 8 P0)",
+      "no_shape_exceptions": "**모양으로 평문을 통과시키는 자리는 없다.** hash 도 아니다 — code_sha256=\"deadbeef\"*8 이 통과했다(라운드 9 P0). 16진수 비밀·식별자가 같은 모양이다. 남은 정규식은 TRACE_NAME·NAME 뿐이고 그 조각은 이미 위생을 지났다.",
+      "hashes": "`_known_hashes()` 가 **재계산할 수 있는** digest 열두 개를 모아 대조한다 — script.py·dev·제출 입력·항목표·디코딩 스키마·SME_FILES 셋·제품과 후보 system 프롬프트·전체 스키마·company_size_schema(A8 실행기가 내보내는 쪽, 라운드 10 P2). 재계산 못 하는 것(chat_template·contract·visible·prompt)과 **옛 회차의 코드 hash** 는 요약한다.",
+      "summary_in_names": "요약된 값을 이름에 붙일 때는 `_short()` 로 **접두사 뒤 digest** 에서 일곱 자를 뽑는다. 앞 일곱 자를 그대로 쓰면 전부 `sha256:` 이라 서로 다른 회차가 같은 trace 이름이 된다(라운드 10 P1 — 라운드 9 수리가 만든 회귀). 검사는 `_clean()` 반환값이 아니라 **소비 경로**(실제 trace 이름)를 본다.",
+      "why_summary_keeps_hashes_useful": "요약해도 **동일성 비교는 그대로 된다** — 같은 hash 는 같은 요약이므로 \"회차 간 같은가\" 라는 hash 의 용도가 유지된다. 핀과 대조할 때는 핀도 같은 방식으로 요약해 비교한다. visible·prompt 는 1층이 실제 dev 로 재구성해 대조하므로 2층의 요약이 검증을 약화시키지 않는다.",
+      "old_runs": "옛 회차(H4)의 code_sha256 은 그때의 script.py 라 재계산할 수 없어 요약된다. 그 회차가 어느 코드였는지는 superseded_pins 와 회차 산출물이 들고 있다.",
+      "span_names": "span 이름·key 를 만드는 값도 위생을 지난 것만 쓴다. phase_started 가 원본 phase 를, _status()·model_call_failed 가 원본 error_type 을 쓰고 있었다(라운드 8 P0).",
+      "summarised": "그 밖의 모든 문자열. 동일성·변화는 남고 값은 안 나간다. **요약은 유실이 아니다**",
+      "dropped": "모르는 이름은 요약도 안 하고 아예 버린다"
+    },
+    "value_sanitiser": {
+      "what": "`_clean(name, value)` 이 span 으로 나가는 **모든 이벤트 유래 값**에 규칙을 건다. 타입이 먼저다 — 수치·bool 은 자유 텍스트가 아니므로 통과하고, 문자열만 제한한다.",
+      "rules": ["수치 필드는 int·float", "*_sha256 은 16진수", "enum 은 값 집합까지 고정",
+                "items·groups 는 제품의 항목 목록(ITEMS+COMPANY_SIZE_KEYS+SME_ITEMS)",
+                "packages 는 이름==버전", "중첩 dict 는 키마다 같은 규칙 재적용",
+                "argv 는 아예 안 싣는다 — 명령줄에 경로가 들어간다",
+                "TOKEN 에서 `/`·`:` 를 빼 경로가 토큰으로 통과하지 못하게 했다"],
+      "why": "**\"구조화 필드라서 안전하다\" 는 근거가 아니다** — settings.note·items 에 넣은 임의 문자열이 루트 input 과 generation metadata 로 그대로 실렸다(라운드 4 P0).",
+      "fixed_strings": "이 파일이 만든 고정 문구는 `_fixed()` 로 넣는다. 그래야 \"모르는 이름은 버린다\" 가 규칙으로 성립한다.",
+      "producer_read": "mode·token_count_kind 의 값 집합은 `_producer_enums()` 가 **실행기 클래스에서 읽는다.** 손으로 적어 mock 을 빠뜨렸고 mock 회차의 trace 이름이 깨졌다(라운드 5). _DICT_KEYS 는 H4 실제 회차 로그에서 읽은 키다.",
+      "not_covered": "error_type 은 예외 클래스 이름이라 값 집합을 못 고정한다. 좁힌 TOKEN 이 경로와 본문 조각을 막는다.",
+      "pinned_by": "**실제 H4 회차 로그**(1,020 이벤트) 투영 — 크래시 없음 · 진짜 값 보존 · 오염 차단 셋을 한 검사에서 본다. 합성 이벤트로는 이 결함군이 안 보였다(라운드 5 P1)."
+    },
+    "why": "capture_protocol 1 로그에는 실제 프롬프트 전문이 들어 있다. 플래그는 안전의 근거가 아니고 데이터 대조가 근거다 — **id 가 고정 dev 에 있다는 것은 본문이 dev 에서 왔다는 근거가 아니다.** R17 경계.",
+    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 39개 검사"
+  },
+  "gain_kind": {
+    "verified_quote": "적용 가능하고(software_business=yes + 그 인용 검증) 참여 인용이 검증됐으며 판정이 실제로 write_0 으로 전이했다",
+    "verified_absence": "적용 가능하고 참여 인용이 null 이어서 소비자가 부재 위반을 새로 썼다(write_1 로 전이). **v20 은 부재탐지 항목이라 이쪽이 주 기전이다** — H4 의 v20 양성 5건이 전부 이 분기였다",
+    "fallback_only": "대조군에서 v20 이 쓰였는데 후보에서 보류로 내려앉았다. **원인을 열거하지 않는다** — 인용 기각·적용성 붕괴·requirements_complete 변화로 software_complete 가 막힌 것이 모두 같은 결과다. 원인은 paired_changes 의 fields 가 들고 있다",
+    "other": "나머지. 이름을 붙이지 않는 것이 잘못 붙이는 것보다 낫다",
+    "not": "인용 상태만으로 부르지 않는다. 판정이 안 움직인 인용 변화와 v20 이 열리지도 않는 공고의 정확한 인용은 둘 다 other 다",
+    "pinned_by": "tests/test_a8_v20_annex.py::AuditTests 의 gain_kind 두 검사와 v20_applicable 양방향·200건 검사"
+  },
+  "payload_integrity": "감사가 dev.json 의 contract_sha256 과 payload_sha256 을 **둘 다** 재계산한다. 계약 hash 와 id 집합만 맞춰 원응답을 바꾼 산출물은 거부된다.",
+  "schema_hash": "items 가 주어지면 제품은 parameters_for_items 로 제한한 스키마를 쓴다(script.py:967). 기록도 같은 규칙으로 실제 파라미터를 고른다 — effective_parameters().",
+  "root_mode": "루트는 생성 전에 mode=pending 으로 열리고, model_loaded 가 실제 mode 를 루트 이름·metadata 에 얹는다(update 액션). 종료에도 한 번 더 적어 pending 으로 끝나지 않는다.",
+  "langfuse_status": "projection_verified_on_cpu_only — 로컬 스택 적재·UI 확인은 미실행",
+  "semantic_review": {
+    "file": "semantic-review.jsonl",
+    "rows": 0,
+    "reviewer": null,
+    "note": "사람이 하지 않은 검토의 reviewer 를 채우지 않는다"
+  },
+  "tests": [
+    "tests/test_a5_collect_facts.py",
+    "tests/test_langfuse_tail.py",
+    "tests/test_a8_v20_annex.py",
+    "tests/test_replay_run.py",
+    "tests/test_a5_v18_scope_review.py",
+    "tests/test_wiki_rag_pilot.py"
+  ]
+}
