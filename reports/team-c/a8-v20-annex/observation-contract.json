@@ -1,5 +1,15 @@
 {
   "capture_protocol": 1,
+  "pinned_environment": {
+    "_why": "사이드카가 버전을 평문으로 내보낼 때 대조하는 유일한 근거다. 버전 모양만 보면 123.456.789.012 같은 고엔트로피 숫자가 통과한다(라운드 8 P0). 여기 없는 값은 요약으로 나간다 — 다르다는 사실은 남고 값은 안 나간다.",
+    "python": "3.12.13",
+    "vllm": "0.26.0",
+    "cuda": "13.0",
+    "torch": "2.11.0+cu130",
+    "transformers": "5.14.1",
+    "xgrammar": "0.2.3",
+    "tokenizers": "0.22.2"
+  },
   "why": "파일럿 군별 로그는 run_started 가 없어 사이드카가 모든 이벤트를 버렸다(langfuse_tail.plan 91행). 실측: H4 전체 파이프라인 1,020 이벤트 → 625 span, 파일럿 군별 로그 400 → 0.",
   "sources": {
     "experiments/a5_collect_facts.py": "c7239c1bee7ba5a62db25567a4d320e56c29bdf433f7951a329f77f94c55f10a",

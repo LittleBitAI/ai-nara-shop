@@ -370,18 +370,33 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertIn(secret, end.status)
 
     def test_other_error_paths_also_withhold_the_message(self):
-        events = [ROOT_EVENT,
-                  dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
-                  dict(event="response", time_unix=2.0, arm="control", sample="dev", id="A",
-                       attempt=1, status="invalid", global_index=0, error_type="ValueError",
-                       error_message="C:/Users/dasdk/private/x 실패"),
-                  dict(event="retry_failed", time_unix=2.5, arm="control", sample="dev", id="A",
-                       error_type="ValueError", error_message="C:/Users/dasdk/private/x 실패"),
-                  dict(event="run_succeeded", time_unix=9.0)]
-        ops, _ = ops_for(events, include_prompts=False)
-        blob = json.dumps([[o.attrs, o.status] for o in ops], ensure_ascii=False)
-        self.assertNotIn("C:/Users/dasdk/private", blob)
-        self.assertIn("ValueError", blob)
+        """실패 경로의 `error_type` 도 **생산자 집합과 대조**한다 — 원본을 status 로 쓰면
+        `SecretTokenABC123` 이 그대로 나갔다(라운드 8 P0). 실제 회차 로그에는 실패
+        이벤트가 없어 오염 스윕이 이 경로를 못 덮는다."""
+        notice = "PPS-DEV-01"
+        for kind, leaks in (("ValueError", False), ("SecretTokenABC123", True)):
+            events = [ROOT_EVENT,
+                      dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
+                      dict(event="response", time_unix=2.0, arm="control", sample="dev",
+                           id=notice, attempt=1, status="invalid", global_index=0,
+                           error_type=kind, error_message="C:/Users/dasdk/private/x 실패"),
+                      dict(event="retry_failed", time_unix=2.5, arm="control", sample="dev",
+                           id=notice, error_type=kind,
+                           error_message="C:/Users/dasdk/private/x 실패"),
+                      dict(event="model_call_started", time_unix=2.6, arm="control",
+                           sample="dev", id=notice, call_seq=1, call_index=0),
+                      dict(event="model_call_failed", time_unix=2.7, arm="control",
+                           sample="dev", id=notice, call_seq=1, call_index=0,
+                           error_type=kind, transport_status="failed"),
+                      dict(event="run_failed", time_unix=9.0, error_type=kind,
+                           error_message="C:/Users/dasdk/private/x 실패")]
+            ops, _ = ops_for(events, include_prompts=False)
+            blob = json.dumps([[o.attrs, o.status] for o in ops], ensure_ascii=False)
+            self.assertNotIn("C:/Users/dasdk/private", blob, kind)
+            if leaks:
+                self.assertNotIn("Secret", blob, "예외 클래스 이름도 생산자 집합과 대조한다")
+            else:
+                self.assertIn("ValueError", blob)   # 진짜 클래스 이름은 남는다
 
     def test_the_exporter_cannot_follow_a_redirect_off_the_pinned_host(self):
         """주소 문자열만 막으면 부족하다. requests 는 기본적으로 redirect 를 따라가므로
@@ -617,50 +632,50 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertIn("sampling_params", kept)
         self.assertNotIn("SamplingParams(n=1", kept)
 
-    def test_poisoning_the_real_log_leaks_no_body_and_no_path(self):
+    def test_poisoning_the_real_log_leaks_nothing_in_either_mode(self):
         """오염도 실제 로그에 심는다. 합성 이벤트는 생산자가 쓰는 자리를 다 덮지 못한다.
 
-        **이 층이 막는 것은 본문과 경로다.** 짧은 영문 토큰 자리(`quant`·버전·GPU 이름)에
-        비밀을 심는 것은 패턴으로 구분할 수 없다 — 그것이 버전인지 비밀인지 값만 보고는
-        알 수 없다. 그 위협은 `validate_dev_export()` 가 **수출 자체를 거부**해서 막는다
-        (아래 `test_a_tampered_log_never_reaches_the_projection`). 두 층을 섞어 시험하면
-        이 층에 못 할 일을 요구하게 된다.
+        본문·경로뿐 아니라 **토큰형 비밀**도 심는다. 라운드 6 까지는 "짧은 토큰은
+        1층이 막는다" 로 스윕을 좁혔는데 그것이 라운드 6·7·8 의 P0 였다 —
+        1층이 안 도는 모드가 있고, 모양은 값의 출처를 증명하지 못한다.
+        이제 2층이 알려진 값이 아닌 문자열을 전부 요약하므로 스윕도 토큰을 덮는다.
         """
         body = "제3조(중소기업자간 경쟁제품) 이 문장은 공고 본문이다 " * 4
         path = "C:/Users/dasdk/private/secret.env"
+        token = "sk-live-secret123"
         log = ROOT / "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl"
         events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
 
-        def poison(value):
+        def poison(value, pick):
             if isinstance(value, str):
-                return body if len(value) > 40 else path
+                return body if len(value) > 40 else pick
             if isinstance(value, dict):
-                return {**{k: poison(v) for k, v in value.items()}, "leaked": path}
+                return {**{k: poison(v, pick) for k, v in value.items()}, "leaked": pick}
             if isinstance(value, list):
-                return [poison(v) for v in value] + [body]
+                return [poison(v, pick) for v in value] + [pick]
             return value
 
-        dirty = []
-        for event in events:
-            copy = dict(event)
-            for key, value in event.items():
-                if key not in ("event", "time_unix"):
-                    copy[key] = poison(value)
-            dirty.append(copy)
-
-        for include in (False, True):
-            state, ops = tail.State(include_prompts=include), []
-            for event in dirty:
-                ops += tail.plan(event, state)
-            if include:                    # 본문 슬롯은 허용 상태에서 나갈 수 있다
-                for op in ops:
-                    for slot in ("input", "output"):
-                        op.attrs.pop(f"langfuse.observation.{slot}", None)
-            blob = json.dumps([[op.attrs, op.name, op.status, op.key] for op in ops],
-                              ensure_ascii=False)
-            self.assertNotIn(body[:30], blob, f"include_prompts={include}")
-            self.assertNotIn(path, blob, f"include_prompts={include}")
-            self.assertNotIn("dasdk", blob, f"include_prompts={include}")
+        for pick, needle in ((path, "dasdk"), (token, "secret")):
+            dirty = []
+            for event in events:
+                copy = dict(event)
+                for key, value in event.items():
+                    if key not in ("event", "time_unix"):
+                        copy[key] = poison(value, pick)
+                dirty.append(copy)
+            for include in (False, True):
+                state, ops = tail.State(include_prompts=include), []
+                for event in dirty:
+                    ops += tail.plan(event, state)
+                if include:                # 본문 슬롯은 허용 상태에서 나갈 수 있다
+                    for op in ops:
+                        for slot in ("input", "output"):
+                            op.attrs.pop(f"langfuse.observation.{slot}", None)
+                blob = json.dumps([[op.attrs, op.name, op.status, op.key] for op in ops],
+                                  ensure_ascii=False)
+                where = f"{needle}/include_prompts={include}"
+                self.assertNotIn(body[:30], blob, where)
+                self.assertNotIn(needle, blob.lower(), where)
 
     def test_an_orphan_close_does_not_carry_its_raw_call_key(self):
         """`_fixed()` 는 이 파일이 만든 문구 전용이다. 이벤트에서 조립한 key 를 거기 넣어
@@ -765,11 +780,15 @@ class PromptExportBoundary(unittest.TestCase):
                 self.assertNotIn("secret", json.dumps(clean, ensure_ascii=False), name)
                 self.assertNotIn("made_up", json.dumps(clean, ensure_ascii=False), name)
                 self.assertNotIn("not_an_item", json.dumps(clean, ensure_ascii=False), name)
-        # 순수 숫자 버전은 평문이다 — 그 모양에는 비밀을 담을 엔트로피가 없다.
+        # 버전은 **계약이 고정한 값**과 같을 때만 평문이다. 모양으로 두면
+        # `123.456.789.012` 같은 고엔트로피 숫자가 통과한다(라운드 8 P0).
+        pinned = tail._pinned_versions()
+        self.assertIn("0.26.0", pinned)
         self.assertEqual(tail._clean("vllm", "0.26.0"), "0.26.0")
         self.assertEqual(tail._clean("python", "3.12.13"), "3.12.13")
         self.assertEqual(tail._clean("torch", "2.11.0+cu130"), "2.11.0+cu130")
-        self.assertTrue(str(tail._clean("vllm", "sk-live-1")).startswith("sha256:"))
+        for bad in ("sk-live-1", "123.456.789.012", "0.99.0", "1234567890123"):
+            self.assertTrue(str(tail._clean("vllm", bad)).startswith("sha256:"), bad)
         # 분할 재시도의 `split` 은 생산자가 내는 핵심 관측값이다(라운드 6 P1).
         self.assertEqual(tail._clean("groups", [{"items": ["v1"], "status": "split",
                                                  "stage": "parse"}]),
@@ -783,20 +802,20 @@ class PromptExportBoundary(unittest.TestCase):
     def test_map_keys_are_checked_not_just_values(self):
         """`sha256`·`packages` map 은 값만 검사해 **키에 개인 경로가 남았다**(라운드 7 P0).
         오염 스윕이 기존 키를 바꾸지 않아 이 경로를 덮지 못했다."""
-        path = "C:/Users/dasdk/private/secret.env"
-        for name, inner in (("sha256", "a" * 64), ("packages", "1.2.3")):
-            clean = tail._clean(name, {path: inner})
-            blob = json.dumps(clean, ensure_ascii=False)
-            self.assertNotIn("dasdk", blob, name)
-            self.assertIn(inner, blob, name)       # 값은 남는다 — 키만 요약된다
-        # 진짜 키는 그대로다. 제공 자료 이름과 `script.py` 가 세는 패키지 이름이다.
-        self.assertEqual(tail._clean("sha256", {"법령패키지/법령/x.txt": "a" * 64}),
-                         {"법령패키지/법령/x.txt": "a" * 64})
+        # POSIX·UNC 절대경로와 토큰형 비밀도 **키 자리**에서 막혀야 한다(라운드 8 P0).
+        for path in ("C:/Users/dasdk/private/secret.env", "/home/dasdk/private/secret.env",
+                     "//host/share/secret.env", "sk-live-secret123"):
+            for name, inner in (("sha256", "a" * 64), ("packages", "0.26.0")):
+                blob = json.dumps(tail._clean(name, {path: inner}), ensure_ascii=False)
+                self.assertNotIn("dasdk", blob, f"{name}:{path}")
+                self.assertNotIn("secret", blob.lower(), f"{name}:{path}")
+        # 진짜 키는 그대로다 — `script.py` 가 만드는 닫힌 집합이다.
+        assets = tail._known_assets()
+        self.assertEqual(len(assets), 6)
+        for key in assets:
+            self.assertEqual(tail._clean("sha256", {key: "a" * 64}), {key: "a" * 64})
         self.assertEqual(tail._clean("packages", {"vllm": "0.26.0"}), {"vllm": "0.26.0"})
         self.assertIn("vllm", tail._known_packages())
-        # 드라이브 문자와 상대 상승은 자료 이름이 아니다.
-        for bad in ("C:/x", "../../etc/passwd"):
-            self.assertFalse(tail.ASSET_NAME.match(bad), bad)
 
     def test_scope_and_class_names_are_matched_against_the_producer(self):
         """모양이 값을 증명한다고 볼 수 있는 것은 hash 뿐이다. `phase`·`error_type` 을
@@ -815,25 +834,29 @@ class PromptExportBoundary(unittest.TestCase):
                             ("error_type", "ValueError"), ("experiment", "a8")):
             self.assertEqual(tail._clean(name, value), value)
 
-    def test_the_notice_id_uses_the_set_the_run_declared(self):
-        """고정 dev 집합으로 대조하면 **제출 입력으로 돈 회차의 id 가 전부 요약**돼
-        관측이 못 쓰게 된다. 회차가 선언한 집합을 쓰고, 없으면 공고 id 모양으로 떨어진다."""
-        declared = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                         code_sha256="abc1234", dev_ids=["PPS-DEV-01"]),
-                    dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
-                    dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
-                         id="PPS-DEV-99", max_chars=16000),
-                    dict(event="company_size_input", time_unix=1.2, arm="control", sample="dev",
-                         id="PPS-DEV-01", max_chars=16000)]
+    def test_the_notice_id_comes_from_the_input_files_not_the_log(self):
+        """회차가 **스스로 선언한** `dev_ids` 는 근거가 아니다 — 1층이 안 도는 모드에서
+        공격자가 자기 allowlist 를 만든다(라운드 8 P0). 모양도 근거가 아니다.
+        저장소의 dev 와 제출 입력을 **둘 다** 읽어 대조한다 — dev 만 보면 제출 입력으로
+        돈 회차(H4)의 관측이 통째로 요약된다."""
+        forged = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                       code_sha256="abc1234", dev_ids=["sk-live-secret123"]),
+                  dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
+                  dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
+                       id="sk-live-secret123", max_chars=16000),
+                  dict(event="company_size_input", time_unix=1.2, arm="control", sample="dev",
+                       id="PPS-sk-live-secret123", max_chars=16000)]
         state, ops = tail.State(), []
-        for event in declared:
+        for event in forged:
             ops += tail.plan(event, state)
-        blob = json.dumps([[op.attrs, op.name] for op in ops], ensure_ascii=False)
-        self.assertIn("PPS-DEV-01", blob)
-        self.assertNotIn("PPS-DEV-99", blob)       # 선언 밖의 id 는 요약된다
-        # 선언이 없는 옛 판형은 모양으로 떨어진다 — H4 는 제출 입력으로 돌았다.
-        self.assertTrue(tail.NOTICE.match("PPS-S-0001"))
-        self.assertFalse(tail.NOTICE.match("sk-live-secret123"))
+        blob = json.dumps([[op.attrs, op.name, op.key] for op in ops], ensure_ascii=False)
+        self.assertNotIn("secret", blob.lower())
+        # 두 입력 파일의 id 는 평문이다 — dev 와 제출용을 둘 다 읽는다.
+        known = tail._known_notices()
+        self.assertIn("PPS-DEV-01", known)
+        self.assertGreater(len(known), 200)
+        for identifier in ("PPS-DEV-01", sorted(known)[0]):
+            self.assertEqual(tail._clean("id", identifier), identifier)
 
     def test_the_status_enum_matches_what_the_producer_writes(self):
         """손으로 적은 집합은 드리프트한다 — `split` 을 빼서 분할 재시도 관측이 사라졌다.

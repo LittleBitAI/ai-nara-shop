@@ -31,6 +31,7 @@ import sys
 from urllib.parse import urlparse
 import time
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
@@ -47,6 +48,7 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
 def _retry_suffixes() -> set:
     """분할 재시도가 system 뒤에 붙이는 **정확한 문자열들**(`script.py` 의 `retry_chat`).
 
@@ -87,6 +89,7 @@ def _rebuild_dev_prompts(dev_path, wanted: dict, data_dir) -> dict:
     return out
 
 
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
 def _known_systems(data_dir) -> set:
     """내보내도 되는 system 프롬프트. 제품 프롬프트와 이 저장소의 후보 블록뿐이다."""
     sys.path.insert(0, str(ROOT))
@@ -416,11 +419,8 @@ _TOKENS = frozenset((
     "platform", "python", "model_loaded", "detail_capture", "prompt_capture",
     "truncated", "quant", "seed", "chunk", "call_key"))
 _TOKEN_LISTS = frozenset(("ids", "indices", "dev_ids", "order", "arms", "argv"))
-# **순수 숫자 버전만** 평문으로 둔다. 각 묶음은 세 자리까지다 — 길이를 안 막으면
-# `010.1234.5678` 같은 전화번호나 긴 숫자 비밀이 통과한다(라운드 7 P0).
-# 어느 vLLM 으로 돌았는지는 회차 판정의 근거이므로 이 자리는 요약하지 않는다.
-VERSION = re.compile(r"^\d{1,3}(\.\d{1,3}){0,3}([+\-][A-Za-z][A-Za-z0-9]{0,11})?$")
-DEVICE = re.compile(r"^[A-Za-z0-9 _.\-]{1,64}$")     # "NVIDIA A100-SXM4-40GB"
+# 버전은 **모양이 아니라 계약이 고정한 값**과 대조한다 — `_pinned_versions()`.
+# 모양으로 두면 `123.456.789.012` 같은 고엔트로피 숫자가 통과한다(라운드 8 P0).
 _VERSIONS = frozenset(("vllm", "python", "cuda", "torch", "transformers", "xgrammar",
                        "tokenizers", "platform", "quant", "revision"))
 _DEVICES = frozenset(("name",))
@@ -429,13 +429,8 @@ _DIGESTED = frozenset(("sampling_params",))          # 본문 대신 hash 로 �
 # 대조한다. 모양만 보면 그 자리에 토큰형 비밀이 통과한다(라운드 7 P0).
 # trace 이름은 `nara <mode> <code7>` 로 조립된다. 조각은 이미 위생을 지났다.
 TRACE_NAME = re.compile(r"^nara [A-Za-z0-9_\-:]{1,64}( [0-9a-f]{0,7})?$")
-# 공고 id 모양. 회차가 id 집합을 선언하지 않은 옛 판형에서만 쓰는 최후 관문이다.
-NOTICE = re.compile(r"^PPS-[A-Za-z0-9\-]{1,24}$")
-# `plan()` 이 세우는 회차 문맥. 진입점이 하나이므로 여기서 한 번 세운다.
-_CONTEXT: dict = {}
+# 공고 id 도 모양이 아니라 **저장소 입력 파일의 집합**과 대조한다 — `_known_notices()`.
 _HASH_MAPS = frozenset(("sha256",))                  # {제공 자료 이름: hash}
-# 제공 자료 이름. 경로 구분자는 허용하지만 드라이브 문자(`C:`)와 상대 상승(`..`)은 막는다.
-ASSET_NAME = re.compile(r"^(?!.*\.\.)(?![A-Za-z]:)[\w가-힣 ._\-/]{1,96}$")
 _VERSION_MAPS = frozenset(("packages",))             # {패키지: 버전}
 # 생산자가 실제로 만드는 키. **실측이다** — H4 회차 로그에서 읽었고 검사가 드리프트를 잡는다.
 # 경로 키(input·output·data_dir·model_dir)는 뺐다. 생산자가 `record_path` 로 치환하지만
@@ -464,6 +459,54 @@ REJECTION_REASONS = frozenset(("unverified_product", "unconfirmed_scope_or_excep
 _FREE = frozenset(("error_message", "traceback"))
 
 
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
+def _known_assets() -> frozenset:
+    """`assets` dict 의 키. `script.py:2072` 가 만드는 **닫힌 집합**이다.
+
+    모양으로 두면 `/home/...` 이나 `sk-live-secret123` 이 통과한다(라운드 8 P0).
+    """
+    sys.path.insert(0, str(ROOT))
+    import script
+    return frozenset(("input", "items", "decode_schema")) | frozenset(script.SME_FILES)
+
+
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
+def _known_notices() -> frozenset:
+    """관측 대상이 될 수 있는 공고 id 전부. **저장소의 입력 파일에서 읽는다.**
+
+    회차가 스스로 선언한 `dev_ids` 는 근거가 아니다 — metadata 전용 모드에서는 1층이
+    안 돌아 공격자가 자기 allowlist 를 만들 수 있다(라운드 8 P0). 그래서 dev 와
+    제출용 입력을 **둘 다** 읽는다. H4 는 `test.jsonl.gz` 로 돌았으므로 dev 만 보면
+    그 회차 관측이 통째로 요약된다.
+    """
+    found = set()
+    dev = ROOT/"open/dev.jsonl"
+    if dev.is_file():
+        found |= {json.loads(line)["id"]
+                  for line in dev.read_text(encoding="utf-8").splitlines() if line.strip()}
+    submission = ROOT/"open/data/test.jsonl.gz"
+    if submission.is_file():
+        import gzip
+        with gzip.open(submission, "rt", encoding="utf-8") as handle:
+            found |= {json.loads(line)["id"] for line in handle if line.strip()}
+    return frozenset(found)
+
+
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
+def _pinned_versions() -> frozenset:
+    """계약이 고정한 환경 버전. 그것과 같을 때만 버전이 평문으로 나간다.
+
+    버전 모양만 보면 `123.456.789.012` 같은 고엔트로피 숫자가 통과한다(라운드 8 P0).
+    사이드카는 회차 환경을 모르므로 **계약 파일에 적힌 값**과 대조한다.
+    """
+    path = ROOT/"reports/team-c/a8-v20-annex/observation-contract.json"
+    if not path.is_file():
+        return frozenset()
+    pinned = json.loads(path.read_text(encoding="utf-8")).get("pinned_environment") or {}
+    return frozenset(str(value) for value in pinned.values() if isinstance(value, (str, int, float)))
+
+
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
 def _known_packages() -> frozenset:
     """`script.py` 가 버전을 세는 패키지 이름. 그 dict 의 키는 이것뿐이다."""
     source = (ROOT/"script.py").read_text(encoding="utf-8")
@@ -473,15 +516,7 @@ def _known_packages() -> frozenset:
                                           "tokenizers"))
 
 
-def _dev_ids() -> frozenset:
-    """고정 공개 dev 의 공고 id 집합. 없으면 빈 집합이고, 그러면 id 는 요약으로 나간다."""
-    path = ROOT/"open/dev.jsonl"
-    if not path.is_file():
-        return frozenset()
-    return frozenset(json.loads(line)["id"]
-                     for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
-
-
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
 def _known_items() -> frozenset:
     """제품이 쓰는 항목 이름 전부. 그 밖의 값은 `items`·`groups` 에 올 수 없다."""
     sys.path.insert(0, str(ROOT))
@@ -489,6 +524,7 @@ def _known_items() -> frozenset:
     return frozenset(script.ITEMS) | frozenset(script.COMPANY_SIZE_KEYS) | frozenset(script.SME_ITEMS)
 
 
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
 def _known_strings() -> frozenset:
     """생산자가 상수로 들고 있어 그대로 내보내도 되는 문자열.
 
@@ -500,6 +536,7 @@ def _known_strings() -> frozenset:
     return frozenset((script.MODEL_ID, script.MODEL_REVISION, script.QUANT))
 
 
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
 def _producer_enums() -> dict:
     """평문으로 나가는 값의 집합을 **생산자에서 읽는다.**
 
@@ -573,19 +610,16 @@ def _clean_str(name: str, value: str, nested: bool) -> Optional[str]:
     if name in _ITEM_LISTS:
         return value if value in _known_items() else _summary(value)
     if name == "id":
-        # 공고 id 는 **그 회차가 선언한 집합**과 대조한다. 패턴만 보면 그 자리에
-        # 임의 토큰이 통과한다(라운드 7 P0). 고정 dev 집합으로 대조하면 제출 입력으로
-        # 돈 회차(`test.jsonl.gz`)의 id 가 전부 요약돼 관측이 못 쓰게 되므로,
-        # `run_started.dev_ids` 를 기준으로 쓴다. 그 값이 실제 파일과 맞는지는 1층이 본다.
-        # 그 선언이 없는 옛 판형 로그는 공고 id 모양으로 떨어진다.
-        declared = _CONTEXT.get("ids") or frozenset()
-        if declared:
-            return value if value in declared else _summary(value)
-        return value if NOTICE.match(value) else _summary(value)
+        # 공고 id 는 **저장소의 입력 파일에서 읽은 집합**과 대조한다. 회차가 스스로
+        # 선언한 `dev_ids` 는 근거가 아니다 — 그것을 믿으면 공격자가 자기 allowlist 를
+        # 만든다(라운드 8 P0). 모양도 근거가 아니다 — `PPS-sk-live-secret123` 이 통과했다.
+        return value if value in _known_notices() else _summary(value)
+    if name in _VERSIONS:
+        # 모양만 보면 `123.456.789.012` 같은 고엔트로피 숫자가 통과한다(라운드 8 P0).
+        # 계약이 고정한 값과 같을 때만 평문이다.
+        return value if value in _pinned_versions() else _summary(value)
     if name == "trace_name":
         return value if TRACE_NAME.match(value) else "nara " + _summary(value)
-    if name in _VERSIONS:
-        return value if VERSION.match(value) else _summary(value)
     if name in _TOKENS or name in _TOKEN_LISTS or name in _DEVICES:
         return _summary(value)                       # 장비명·그 밖의 알려진 이름
     if name in _DIGESTED:
@@ -646,12 +680,13 @@ def _clean(name: str, value: Any, *, nested: bool = False, _depth: int = 0) -> A
                 # **키도 이벤트에서 온다.** 값만 보면 키에 개인 경로가 남는다(라운드 7 P0).
                 # 제공 자료 이름은 고정 목록이 아니므로 모양을 좁히고, 아니면 요약한다.
                 if isinstance(inner, str) and HEX.match(inner):
-                    kept[key if ASSET_NAME.match(key) else _summary(key)] = inner
+                    kept[key if key in _known_assets() else _summary(key)] = inner
                 continue
             if name in _VERSION_MAPS:                # {패키지: 버전}
-                # 패키지 이름은 `script.py` 가 세는 고정 목록이다 — 그것과 대조한다.
-                if isinstance(inner, str) and VERSION.match(inner):
-                    kept[key if key in _known_packages() else _summary(key)] = inner
+                # 키는 `script.py` 가 세는 고정 목록, 값은 계약이 고정한 버전과 대조한다.
+                if isinstance(inner, str):
+                    kept[key if key in _known_packages() else _summary(key)] = (
+                        inner if inner in _pinned_versions() else _summary(inner))
                 continue
             clean = _clean(key, inner, nested=True, _depth=_depth + 1)
             if clean is not None:
@@ -701,7 +736,12 @@ def _detail(state: "State", value: Any) -> Any:
 
 
 def _status(state: "State", event: dict) -> str:
-    kind = event.get("error_type") or "error"
+    """상태 문구도 **위생을 지난 값**으로만 만든다.
+
+    원본 `error_type` 을 쓰면 `SecretTokenABC123` 이 status message 로 그대로
+    나갔다(라운드 8 P0). 중앙 출구가 이름 모양만 보는 것으로는 부족하다.
+    """
+    kind = _clean("error_type", event.get("error_type")) or "error"
     message = _detail(state, event.get("error_message"))
     return f"{kind}: {message}" if message else str(kind)
 
@@ -727,7 +767,6 @@ def plan(event: dict, state: State) -> list:
     이 한 줄이 라운드 1~5 의 반복을 끝내는 자리다 — 어느 분기가 무엇을 넣어도
     출구는 하나다. 자세한 이유는 `guard()` 의 주석에 있다.
     """
-    _CONTEXT["ids"] = state.notice_ids
     return [guard(op) for op in _plan(event, state)]
 
 
@@ -822,7 +861,8 @@ def _plan(event: dict, state: State) -> list:
         return ops
 
     if kind == "phase_started":
-        state.phase = event.get("phase", phase)
+        # 위생을 지난 `phase` 를 쓴다. 원본을 쓰면 span 이름과 key 로 그대로 나갔다(라운드 8 P0).
+        state.phase = phase
         return [Op("point", f"phase:{state.arm or 'run'}:{state.phase}", f"phase {state.phase}",
                    "event", state.arm or "run", now, now,
                    attrs=_meta(arm=event.get("arm"), sample=event.get("sample"),
@@ -920,7 +960,7 @@ def _plan(event: dict, state: State) -> list:
             attrs.update(_fixed(usage_note="한쪽만 보고돼 total 을 만들지 않았다"))
         _body(state, attrs, "output", event.get("response_text"))
         return [Op("close", key, end=now, attrs=attrs, level="ERROR" if failed else None,
-                   status=f"{event.get('error_type')}" if failed else "")]
+                   status=_status(state, event) if failed else "")]
 
     if kind == "response" and state.capture_protocol:
         # 새 판형에서 물리 생성은 `model_call_*` 가 소유한다. 여기서 또 generation 을 만들면
