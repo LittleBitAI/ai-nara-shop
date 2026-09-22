@@ -6,7 +6,7 @@
     "experiments/a5_scope_pilot.py": "d95603bc8c2ca39978c53adda435f0a47884f70dbcd23c9d21fabbe13da2b3b4",
     "experiments/a8_v20_annex.py": "62a3ea53e66f157cc143f9663e6e89802d708ce73df18e0ddd4e04dece8ecaba",
     "experiments/a8_v20_audit.py": "6c5c878500457f802096fdd08f6b1e205d47554bad4e937969ff6c8ed3957227",
-    "tools/langfuse_tail.py": "422f2e6d4e65187b734af9f4d6524a13812d46cdd4975bb2b90a0009a13be9bb",
+    "tools/langfuse_tail.py": "88f2002f3a96daf186eca6824010fc3d133d8ea12b04ea55e732126c0d6cce77",
     "tools/replay_run.py": "35c235f99b3a2d824c18266b74f88534f033b4036a81ee4ce8611660b6f43895",
     "script.py": "8e7011e2bfcc8eab2f5463ee16266e3de11ff5115a70c850027af8fcb8667dd4"
   },
@@ -130,9 +130,10 @@
       "producer_enum": "생산자에서 읽은 집합의 값(mode·token_count_kind는 실행기 클래스, status는 소스 스캔 검사가 드리프트를 잡는다)",
       "producer_constant": "MODEL_ID·MODEL_REVISION·QUANT 와 같은 문자열",
       "hash_and_items": "16진수 hash, 제품 항목명",
-      "numeric_version": "순수 숫자 버전(0.26.0·2.11.0+cu130·3.12.13·13.0). 그 모양에는 비밀을 담을 엔트로피가 없고, 어느 vLLM 으로 돌았는지는 회차 판정의 근거다",
-      "scope_names": "key·span 이름을 만드는 짧은 식별자(id·arm·sample·phase). 요약하면 trace 를 못 읽는다 — 그 자리의 위조는 1층이 dev id·군 대조로 막는다",
-      "class_name": "error_type 의 CamelCase 예외 클래스 이름",
+      "numeric_version": "순수 숫자 버전. 각 묶음 세 자리까지, 접미는 영문자로 시작(0.26.0·2.11.0+cu130·3.12.13·13.0). 길이를 안 막으면 010.1234.5678 같은 것이 통과했다(라운드 7 P0). 어느 vLLM 으로 돌았는지는 회차 판정의 근거이므로 이 자리는 요약하지 않는다",
+      "scope_names": "**패턴이 아니라 생산자 집합과 대조한다**(라운드 7 P0). phase 는 소스의 실제 값, arm·experiment 는 DEV_ONLY, sample 은 dev·unlabeled, error_type 은 builtins 의 예외 클래스다. 모양만 보면 sk-live-secret123·SecretTokenABC123 이 평문으로 나간다",
+      "notice_id": "회차가 선언한 dev_ids 집합과 대조한다. 고정 dev 로 대조하면 제출 입력으로 돈 회차의 id 가 전부 요약돼 관측이 못 쓰게 된다 — 그 선언이 실제 파일과 맞는지는 1층이 본다. 선언이 없는 옛 판형은 공고 id 모양(PPS-…)으로 떨어진다",
+      "map_keys": "sha256·packages map 은 **키도 대조한다.** 값만 보면 키에 개인 경로가 남는다(라운드 7 P0). 자료 이름은 드라이브 문자·상대 상승을 거부하는 모양, 패키지 이름은 script.py 가 세는 고정 목록이다",
       "summarised": "그 밖의 모든 문자열. 동일성·변화는 남고 값은 안 나간다. **요약은 유실이 아니다**",
       "dropped": "모르는 이름은 요약도 안 하고 아예 버린다"
     },
@@ -150,7 +151,7 @@
       "pinned_by": "**실제 H4 회차 로그**(1,020 이벤트) 투영 — 크래시 없음 · 진짜 값 보존 · 오염 차단 셋을 한 검사에서 본다. 합성 이벤트로는 이 결함군이 안 보였다(라운드 5 P1)."
     },
     "why": "capture_protocol 1 로그에는 실제 프롬프트 전문이 들어 있다. 플래그는 안전의 근거가 아니고 데이터 대조가 근거다 — **id 가 고정 dev 에 있다는 것은 본문이 dev 에서 왔다는 근거가 아니다.** R17 경계.",
-    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 32개 검사"
+    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 35개 검사"
   },
   "gain_kind": {
     "verified_quote": "적용 가능하고(software_business=yes + 그 인용 검증) 참여 인용이 검증됐으며 판정이 실제로 write_0 으로 전이했다",

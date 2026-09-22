@@ -32,8 +32,8 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "a9e1adf6dfb337a3cf64ffe3891a4e41883b8116",
-  "pinned_notebook_commit": "261c03d3b9e19ee00abbcd01159e22363dc21bce",
+  "pinned_code_commit": "5422ae514506ae7a08950d30ed2a437225ee1870",
+  "pinned_notebook_commit": "489f19fb2dd896f846b2f92f30bfffede79777a3",
   "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
@@ -43,7 +43,8 @@
                       "01258d3089502e4aafe50681b1a7fd7e48d06413 / cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792 — 라운드 3 수리 전(메시지 형태·환경 프록시·세션 경로·가장 긴 prefix·fallback 원인 열거)",
                       "3f8bb3c6fd5d8bcd3a97f4b07178ca026c645596 / 6c96064cde2004344dc08a6e58abcae05cb0a14f — 라운드 4 수리 전(응답 결속·구조화 필드 위생)",
                       "09667115849ad377cadfece7710eea5e30dcb295 / 134e02fb4e58cd639248326a8e05da7a37c6d488 — 라운드 5 수리 전(출구 하나로 모으기 전)",
-                      "c51206339a0304b219b2a52cacb748574c57c7c3 — 라운드 6 수리 전(통로 밖 직접 쓰기·평문 기본)"],
+                      "c51206339a0304b219b2a52cacb748574c57c7c3 — 라운드 6 수리 전(통로 밖 직접 쓰기·평문 기본)",
+                      "a9e1adf6dfb337a3cf64ffe3891a4e41883b8116 / 261c03d3b9e19ee00abbcd01159e22363dc21bce — 라운드 7 수리 전(map 키·패턴 기반 평문 예외)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -241,6 +242,14 @@
         "p1": "groups[].status='split' 은 분할 재시도가 일어났다는 핵심 관측값인데 손으로 적은 집합에서 빠져 조용히 사라졌다. script.py·experiments 를 훑어 드리프트를 잡는 검사를 넣었다.",
         "mutation_check": "다섯 가드를 되돌렸다. call_key 와 guard 의 trace.name 은 첫 시도에서 초록이라(다른 가드가 가리고 있었다) 각각 직접 거는 검사를 추가했다."
       },
+      "round_7": {
+        "verdict": "머지 불가 → 수리 완료. **P1 없음** — P0 둘이 같은 원리다",
+        "p0": ["sha256·packages map 이 값만 검사해 키에 개인 경로가 평문으로 남았다. 오염 스윕이 기존 키를 바꾸지 않아 이 경로를 못 덮었다. 자료 이름은 드라이브 문자·상대 상승을 거부하는 모양, 패키지 이름은 script.py 가 세는 고정 목록과 대조한다.",
+                "phase·arm·sample·error_type 을 패턴으로 둬서 sk-live-secret123·SecretTokenABC123 이 평문으로 나갔다. _producer_enums() 가 그 집합을 생산자에서 읽는다(phase 는 소스, arm 은 DEV_ONLY, error_type 은 builtins). 숫자 버전도 묶음 길이·접미를 제한해 010.1234.5678 을 막는다."],
+        "notice_id": "고정 dev 집합이 아니라 **회차가 선언한 dev_ids** 로 대조한다 — 고정 dev 로 하면 제출 입력으로 돈 회차의 id 가 전부 요약돼 관측이 못 쓰게 된다.",
+        "lesson": "**모양이 값을 증명한다고 볼 수 있는 것은 hash 뿐이다.** 라운드 6 에서 기본을 요약으로 뒤집었지만 평문 예외를 패턴으로 둔 자리가 남아 있었다.",
+        "mutation_check": "세 가드를 되돌려 담당 검사가 각각 빨개졌다."
+      },
       "round_4": {
         "verdict": "머지 불가 → 수리 완료",
         "p0": ["본문 검증이 prompt_text 가 있을 때만 돌아, 시작에서 본문만 빼고 같은 호출의 응답을 위조하면 통과했다. 모든 물리 호출이 결속된 프롬프트를 갖고, 응답은 결속된 시작과 call key 로 짝이 맞아야 한다.",
@@ -283,7 +292,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "6f51e1c6e7e51d7f8564cd21ecd863a9c9db8e4811a005a33e92744cf8271554",
+  "notebook_sha256": "e4cfba436f139cf42384a968d2c5c0adbb5d828cd9377b9813bf084ef6723a33",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -473,6 +482,21 @@
       "passed": 19,
       "seconds": 1.904,
       "phase": "라운드 6 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 387,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 260.65,
+      "phase": "라운드 7 P0 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.753,
+      "phase": "라운드 7 수리 후 오프라인 게이트"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
