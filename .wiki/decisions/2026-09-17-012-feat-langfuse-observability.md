@@ -23,17 +23,17 @@ branch: "feat/langfuse-observability"
 이 도구가 섞일 수 없다.
 
 왜 기존 스택을 재사용하지 않았나. 같은 기계의 `ai-companion-voice-agent` 스택
-ClickHouse 에는 그 제품의 사용자 화면 모델 원문이 **107,635건** 있다. 이 저장소는
+ClickHouse 에는 그 제품의 사용자 화면 모델 원문이 107,635건 있다. 이 저장소는
 Colab 수집 때문에 터널로 밖에 열어야 하므로, 같은 인스턴스를 쓰면 그 원문이 팀원용
-로그인 뒤에 놓인다. Langfuse 의 **프로젝트 단위 역할은 유료(Enterprise) 기능**이라
+로그인 뒤에 놓인다. Langfuse 의 프로젝트 단위 역할은 유료(Enterprise) 기능이라
 무료 셀프호스트에서 조직 멤버는 그 조직의 모든 프로젝트를 본다 — 프로젝트를 나누는
 것으로는 못 막고 인스턴스를 갈라야 한다. compose 파일·비밀값 생성 규칙·운영 지식은
 그 스택에서 그대로 들여왔고 고친 것은 포트뿐이다(project name `langfuse-nara`,
 web 3002 · worker 3031 · clickhouse 8124/9002 · minio 9092/9093 · redis 6380).
 
-지켜야 할 것. 이 인스턴스에 **다른 프로젝트를 만들지 않는다.** 팀원은 Member 또는
+지켜야 할 것. 이 인스턴스에 다른 프로젝트를 만들지 않는다. 팀원은 Member 또는
 Viewer 로 초대하고 `LANGFUSE_INIT_USER_*` Owner 계정은 공유하지 않는다. 터널이 여는
-것은 웹 3002 하나뿐이고 clickhouse·minio·redis 는 루프백에 남는다. **공개 dev 자료만**
+것은 웹 3002 하나뿐이고 clickhouse·minio·redis 는 루프백에 남는다. 공개 dev 자료만
 보낸다. `requirements.txt` 에 langfuse·opentelemetry 를 넣지 않는다.
 `~/.wslconfig` 상한을 5500MB → 11000MB 로 올렸으며, 대회가 끝나 이 스택을 내리면
 되돌린다(그 파일 주석에 과거 OOM 사고 기록과 함께 적었다).

@@ -12,7 +12,7 @@ Colab 결과를 넣으면 v1~v24 항목별 F1과, dev 200건 중 어디를 맞�
 | macOS | 저장소 루트의 **`report.command`** 를 Finder 에서 더블클릭 |
 | 그 밖 | `./report.command` |
 
-**ZIP 파일명을 적을 곳은 없다.** 런처가 `artifacts/inbox/` 에서 가장 최근
+ZIP 파일명을 적을 곳은 없다. 런처가 `artifacts/inbox/` 에서 가장 최근
 `colab-results-<숫자>.zip` 을 골라 채점하고 화면을 띄운다. 채점 → `npm install`(처음 한 번)
 → 브라우저 열기까지 한 번에 간다.
 
@@ -41,9 +41,9 @@ cd web; npm install; npm run dev                # http://localhost:5310
 
 | 파일 | 몫 |
 | --- | --- |
-| `report.cmd` | 파이썬을 찾는 것까지. **순수 ASCII·CRLF** — cmd.exe 가 배치 파일을 바이트 오프셋으로 되읽어서, 한글이 섞이면 주석 조각이 명령으로 실행된다 |
+| `report.cmd` | 파이썬을 찾는 것까지. 순수 ASCII·CRLF — cmd.exe 가 배치 파일을 바이트 오프셋으로 되읽어서, 한글이 섞이면 주석 조각이 명령으로 실행된다 |
 | `report.command` | 파이썬을 찾는 것까지. LF·실행 비트. 이름만 잡히고 안 도는 파이썬(Store 별칭·끊긴 심 링크)을 한 번 돌려 본다 |
-| `tools/report.py` | **순서 로직 전부.** 런처 둘이 이걸 나눠 갖지 않는다 |
+| `tools/report.py` | 순서 로직 전부. 런처 둘이 이걸 나눠 갖지 않는다 |
 
 ## 팀에 넘길 때
 
@@ -52,7 +52,7 @@ python -X utf8 tools/build_report.py --run <run-id> --share
 #   → reports/runs/<run-id>/share.html
 ```
 
-요약 HTML에는 **Macro F1·24항목 막대·TP/FP/FN·오답 목록·회차 추이**만 들어간다.
+요약 HTML에는 Macro F1·24항목 막대·TP/FP/FN·오답 목록·회차 추이만 들어간다.
 공고 원문·근거 문구·모델 원응답은 빠진다. Slack에 그대로 던져도 열린다.
 
 ## 무엇을 어디서 읽는가

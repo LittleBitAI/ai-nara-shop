@@ -9,21 +9,21 @@
 | D2 | v7 지역제한 인접 확대 | 채택 대기 | [d2.md](d2.md) |
 | D3 | v4 특정기관·특정실적 | 채택 대기 | [d3.md](d3.md) |
 | D4 | — | 이관 (C7) | [d4.md](d4.md) |
-| D5 | v23 현장설명회 공고기간 | **반려** | [d5.md](d5.md) |
+| D5 | v23 현장설명회 공고기간 | 반려 | [d5.md](d5.md) |
 | D6 | v3 실적제한 1배수 이상 | 채택 대기 | [d6-v3.md](d6-v3.md) |
-| D6 | v2 고시금액 미만 실적제한 | **대기** (규칙 미작성) | [d6-v2.md](d6-v2.md) |
+| D6 | v2 고시금액 미만 실적제한 | 대기 (규칙 미작성) | [d6-v2.md](d6-v2.md) |
 
 ## 공통 입력과 해시
 
 | 항목 | 값 |
 | --- | --- |
-| 증거 수준 | **저장 응답 재사용 (CPU 재생)**. 새 모델 실행·서버 제출이 아니다 |
+| 증거 수준 | 저장 응답 재사용 (CPU 재생). 새 모델 실행·서버 제출이 아니다 |
 | 기준 회차 | `colab-1789655036303880754` · `dev-debug` |
 | 회차 커밋 | `b1134257d221cc066c09e5c31d439a3e6c098ef0` |
 | 모델 | `google/gemma-4-26B-A4B-it` rev `4d7ae4984b7db7de8f8457170b3f1a419ee76d52` |
 | 회차 제출 ZIP sha256 | `a5e038ea0113286877f84bf9eeef319b547f996951fa5736bcd40bb49c08b669` |
 
-**입력·코드·산출물 해시는 [final/hashes.json](final/hashes.json)이 소유한다.**
+입력·코드·산출물 해시는 [final/hashes.json](final/hashes.json)이 소유한다.
 본문에 손으로 적으면 코드를 한 번 더 고칠 때 조용히 낡는다. 실제로 PR #34 리뷰에서
 후보 코드 해시가 어떤 커밋의 것도 아닌 값으로 남아 있었다. 그래서 파일로 옮기고
 `tools/record_team_d_hashes.py`가 적는다. `tests/test_qualification_candidate.py`의
@@ -38,12 +38,12 @@ python -X utf8 tools/record_team_d_hashes.py --check  # 낡았는지만 본다
 
 `tools/replay_run.py`가 보관된 원응답으로 모델 뒤 단계만 다시 돌린 결과다.
 후보가 후처리만 바꾸므로 같은 응답을 쓴 GPU 회차와 결과가 같다.
-**새 GPU 실행도, 서버 제출도 하지 않았다.** `final/replay/manifest.json`의
+새 GPU 실행도, 서버 제출도 하지 않았다. `final/replay/manifest.json`의
 `model_called: false`가 이것을 기록한다.
 
 ### 비교 기준은 HEAD 재생이다
 
-`--verify`는 **보관 원응답 무결성 검사**이며 회차가 기록한 커밋의 코드로 재현한다.
+`--verify`는 보관 원응답 무결성 검사이며 회차가 기록한 커밋의 코드로 재현한다.
 HEAD를 검사하지 않는다(PR #30).
 
 **보관 회차의 `submission.csv`를 `--before`로 쓰지 않는다.** 그 뒤에 병합된 후처리
@@ -74,7 +74,7 @@ Macro F1 0.235731 → 0.360884 (+0.125153). 바뀐 셀 24 / 4800, 대상 밖 0.
 
 | 경로 | 내용 |
 | --- | --- |
-| [final/head-c5055e4-replay/](final/head-c5055e4-replay/) | **기준** — 후보 없이 HEAD 코드로 돌린 재생 CSV |
+| [final/head-c5055e4-replay/](final/head-c5055e4-replay/) | 기준 — 후보 없이 HEAD 코드로 돌린 재생 CSV |
 | [final/replay/](final/replay/) | 후보를 끼운 재생 CSV와 `manifest.json` (`model_called: false`) |
 | [final/score/](final/score/) | 후보 채점 |
 | [final/score-before/](final/score-before/) | HEAD 기준 재생의 채점 |
@@ -92,10 +92,10 @@ Macro F1 0.235731 → 0.360884 (+0.125153). 바뀐 셀 24 / 4800, 대상 밖 0.
 
 ## 공통으로 확인되지 않은 것
 
-- **네 규칙 모두 공개 dev 200건을 보고 만들었다.** 저장소에 다른 **라벨 세트**가 없어
+- 네 규칙 모두 공개 dev 200건을 보고 만들었다. 저장소에 다른 라벨 세트가 없어
   일반화를 수치로 검증할 방법이 없다.
   라벨 없는 공고는 `open/data/test.jsonl.gz`의 샘플 10건이 있고 git으로 추적된다.
-  dev 발화 19건이 전부 정답 양성이므로 **오탐을 찾을 로컬 재료는 그 10건뿐이다.**
+  dev 발화 19건이 전부 정답 양성이므로 오탐을 찾을 로컬 재료는 그 10건뿐이다.
   사람 검토 시트를 둘 다 뽑아 두었다 —
   [review/firings-dev.md](review/firings-dev.md) (발화 19건, 전부 정답 양성),
   [review/firings-test-sample.md](review/firings-test-sample.md) (발화 1건, 읽은 결과 오탐 아님).
