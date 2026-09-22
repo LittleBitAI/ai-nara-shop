@@ -7,14 +7,14 @@
 두 회차 결과는 **다음 게이트**이며, 최종 채택은 착수서 §6 의 무라벨 발화율·시간·독립 리뷰까지 본다.
 후보는 프롬프트만 바꾸며 채택 결정이 아니다. [보고서](README.md)가 준비 근거를 소유한다.
 
-- 실행 코드 **`9ed421741c3d170f9c550ce770699c989a7ef0e8`** (노트북 `REPO_REF`).
+- 실행 코드 **`1fab41a88ea9019400d21f04b8113e5c646c4d6b`** (노트북 `REPO_REF`).
   출력 예약 1,024·공통 예산 15,296·v13 근거 수리·리뷰 7라운드 반영에 더해
-  **실제 모델 호출 관측과 회차 뒤 CPU 감사**, 그리고 **PR #87 라운드 1~8 수리**
-  (수출 경계를 출구 하나로 모은 것·모양 예외 0개·본문 결속·응답 짝·전송 고정·
-  `schema_sha256`·`payload_sha256`·`gain_kind`·루트 mode)를 포함한다.
+  **실제 모델 호출 관측과 회차 뒤 CPU 감사**, 그리고 **PR #87 라운드 1~9 수리**
+  (수출 경계를 출구 하나로 모은 것·모양 예외 0개·hash 재계산 대조·본문 결속·
+  응답 짝·전송 고정·`payload_sha256`·`gain_kind`·루트 mode)를 포함한다.
   **더 오래된 커밋으로 돌리면 감사의 `gain_kind` 가 기전을 못 세거나 관측이 없다.**
-- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/0a80cb19ea97bd61c53cdd5662915eb035722519/notebooks/colab-a8-v20-annex.ipynb),
-  커밋 `0a80cb19ea97bd61c53cdd5662915eb035722519`, sha256 `1496c68b…`.
+- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/cb3493bed51d979e901a95d870bc23a5bf853208/notebooks/colab-a8-v20-annex.ipynb),
+  커밋 `cb3493bed51d979e901a95d870bc23a5bf853208`, sha256 `dcc2df28…`.
   위 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
   `REPO_REF`가 40자리 16진수가 아니면 clone 전에 멈춘다.
 - 모델은 고정 리비전 `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, Python 3.12.13 · vLLM 0.26.0 · CUDA 13.0.
