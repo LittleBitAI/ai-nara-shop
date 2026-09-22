@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/a8-v20-unx1r2xd/repo",
+  "started": 1790056053.8158948,
+  "returncode": 0,
+  "elapsed_seconds": 0.5236635208129883
+}

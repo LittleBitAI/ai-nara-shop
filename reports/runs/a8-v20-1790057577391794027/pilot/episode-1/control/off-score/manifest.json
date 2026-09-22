@@ -1,0 +1,60 @@
+{
+  "artifact_id": "score-off-score",
+  "version": 1,
+  "status": "draft",
+  "run_id": "off-score",
+  "baseline_run": null,
+  "created_at": "2026-09-22T06:08:33.041742+00:00",
+  "sources": [
+    {
+      "role": "truth",
+      "path": "open/dev_labels.csv",
+      "sha256": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35"
+    },
+    {
+      "role": "pred",
+      "path": "<외부>/off-hybrid.csv",
+      "sha256": "4d35ed280e3db0f975485bce74012355294ba0e6d6cac29fd4230122d2d1321a"
+    }
+  ],
+  "generator": {
+    "path": "tools/score.py",
+    "sha256": "17cb568c299239e52d3c843a668cc0d1436b18b2b68656f929f5e5a2d8e5b7a3",
+    "argv": [
+      "python",
+      "tools/score.py",
+      "--truth",
+      "open/dev_labels.csv",
+      "--pred",
+      "<외부>/off-hybrid.csv",
+      "--output-dir",
+      "<외부>/off-score"
+    ],
+    "command": "& 'python' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' '<외부>/off-hybrid.csv' '--output-dir' '<외부>/off-score'",
+    "settings": {
+      "output_dir": "<외부>/off-score",
+      "zero_division": 0,
+      "items": 24
+    }
+  },
+  "environment": {
+    "python": "3.12.13",
+    "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+    "cwd": "."
+  },
+  "mode": "local_scoring",
+  "model": null,
+  "prompt_hash": null,
+  "seed": null,
+  "parents": [],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "execution_status": "complete",
+  "validation": {
+    "csv_contract": true,
+    "evidence_substring": false,
+    "evidence_quality": false
+  },
+  "elapsed_seconds_before_publish": 0.02577057300004526
+}

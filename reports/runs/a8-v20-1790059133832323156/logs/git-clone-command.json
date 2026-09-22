@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "/content/a8-v20-qfigf1mj/repo"
+  ],
+  "cwd": "/content/a8-v20-qfigf1mj",
+  "started": 1790057707.3553967,
+  "returncode": 0,
+  "elapsed_seconds": 1.358088493347168
+}

@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/a8-v20-unx1r2xd/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/a8-v20-unx1r2xd",
+  "started": 1790056285.31425,
+  "returncode": 0,
+  "elapsed_seconds": 0.3765695095062256
+}

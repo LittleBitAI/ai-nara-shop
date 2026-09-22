@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/a8-v20-unx1r2xd/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/a8-v20-unx1r2xd/repo/requirements.txt"
+  ],
+  "cwd": "/content/a8-v20-unx1r2xd",
+  "started": 1790056284.7013817,
+  "returncode": 0,
+  "elapsed_seconds": 0.6122474670410156
+}

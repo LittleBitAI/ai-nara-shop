@@ -86,11 +86,19 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `a5-v18-1789971728366885632` | `44f5e4b` | episode-2 control 0.596128605198 · v18 0.598735136094 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/a5-v18-1789971728366885632/](../reports/runs/a5-v18-1789971728366885632/) |
 | `wiki-rag-1789985574572142052` | `a9fdd0a` | episode-1 control 0.590035679232 · raw 0.579480092032 · wiki 0.590312886688 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/wiki-rag-1789985574572142052/](../reports/runs/wiki-rag-1789985574572142052/) |
 | `wiki-rag-1789987435003372430` | `a9fdd0a` | episode-2 control 0.588936972870 · raw 0.579480092032 · wiki 0.590312886688 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/wiki-rag-1789987435003372430/](../reports/runs/wiki-rag-1789987435003372430/) |
+| `a8-v20-1790057577391794027` | `e6d9b98` | episode-1 control 0.591008188119 · a8 0.588468081167 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 일부 | [reports/runs/a8-v20-1790057577391794027/](../reports/runs/a8-v20-1790057577391794027/) |
+| `a8-v20-1790059133832323156` | `e6d9b98` | episode-2 a8 0.589442740036 · control 0.586932341938 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 일부 | [reports/runs/a8-v20-1790059133832323156/](../reports/runs/a8-v20-1790059133832323156/) |
 
 `a5-scope-…`는 제출 파이프라인 회차가 아닙니다. `company_size` 한 단계만 GPU로 돌리고
 나머지는 보관 원응답으로 재생한 A/B이며 제출 ZIP이 없습니다. 위 네 값을 위 행들의
 전체 GPU 점수와 같은 저울로 읽지 않습니다. `register_run.py`는 `colab-results-*.zip`과
 `submit.zip` 한 쌍만 받으므로 이 회차는 보관 규약대로 손으로 등록했습니다.
+
+`a8-v20-…` 두 회차는 v20 별표 주입 파일럿입니다. 네 군 모두 v20 TP/FP/FN이 1/4/4로 같아
+가설은 기각됐습니다 — [결과](../reports/team-c/a8-v20-annex/results.md). 원응답 `일부`는
+군별 `dev.json`은 넣고 물리 호출 원문 `dev.events.jsonl`·`diagnostics.jsonl`은 크기로 뺐다는 뜻이며,
+빠진 파일의 경로·크기·sha256은 각 회차 `manifest.json`의 `raw_responses`에 있습니다.
+회차당 70.2MB로 보관선 50MB 아래지만 두 회차 143MB를 넣지 않기로 한 결정입니다.
 
 `a5-v18-…` 두 회차도 같은 부분 GPU/혼합 재생 등록입니다. 최신 ZIP에 함께 들어 있는
 episode-1 파일 32개는 첫 ZIP과 바이트 동일하며 원형 보존하되 `canonical_episodes`로
