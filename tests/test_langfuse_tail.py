@@ -116,7 +116,7 @@ class LangfuseTail(unittest.TestCase):
         self.assertEqual([o.key for o in ops if o.action == "close"], ["chunk:baseline:0", "run"])
 
 
-def captured(arm, *, ids=("A", "B"), chunk_start=0, seq=1, fail=None):
+def captured(arm, *, ids=("PPS-DEV-01", "PPS-DEV-02"), chunk_start=0, seq=1, fail=None):
     """capture_protocol 1 판형의 한 군을 흉내낸 이벤트 묶음."""
     out = [dict(event="arm_started", time_unix=1.0, arm=arm, sample="dev", selected_count=len(ids),
                 system_prompt_sha256=f"prompt-{arm}", schema_sha256="schema",
@@ -189,7 +189,7 @@ class CapturedRunProjection(unittest.TestCase):
     def test_same_notice_in_two_arms_does_not_share_a_key(self):
         ops, _ = ops_for([ROOT_EVENT] + captured("control") + captured("a8") +
                          [dict(event="run_succeeded", time_unix=9.0)])
-        for identifier in ("A", "B"):
+        for identifier in ("PPS-DEV-01", "PPS-DEV-02"):
             keys = {o.key for o in ops if o.kind == "generation" and o.name == identifier}
             self.assertEqual(len(keys), 2, identifier)     # 군마다 하나
         prompts = {json.loads(o.attrs["langfuse.observation.input"])[0]["content"]
@@ -204,7 +204,7 @@ class CapturedRunProjection(unittest.TestCase):
         self.assertFalse(any(o.key.startswith("gen:") for o in ops))   # 옛 투영이 겹치지 않는다
 
     def test_failed_call_closes_with_an_error_and_no_invented_usage(self):
-        ops, _ = ops_for([ROOT_EVENT] + captured("control", fail="B") +
+        ops, _ = ops_for([ROOT_EVENT] + captured("control", fail="PPS-DEV-02") +
                          [dict(event="run_succeeded", time_unix=9.0)])
         closed = [o for o in ops if o.action == "close" and o.key.startswith("call:")]
         self.assertEqual(len(closed), 2)
@@ -308,7 +308,7 @@ class PromptExportBoundary(unittest.TestCase):
             out.append((rec["id"], messages, visible))
         return out
 
-    def _events(self, tmp, *, notices=("A", "B"), real=True, **overrides):
+    def _events(self, tmp, *, notices=("PPS-DEV-01", "PPS-DEV-02"), real=True, **overrides):
         event = dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
                      dataset="dev", code_sha256="abc1234def")
         event.update(overrides)
@@ -779,6 +779,61 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertIsNone(tail._clean("items", [[{"x": 1}]]))
         # 중첩이라도 값이 항목명뿐이면 크래시 없이 그대로 둔다.
         self.assertEqual(tail._clean("groups", [{"items": [["v1"]]}]), [{"items": [["v1"]]}])
+
+    def test_map_keys_are_checked_not_just_values(self):
+        """`sha256`·`packages` map 은 값만 검사해 **키에 개인 경로가 남았다**(라운드 7 P0).
+        오염 스윕이 기존 키를 바꾸지 않아 이 경로를 덮지 못했다."""
+        path = "C:/Users/dasdk/private/secret.env"
+        for name, inner in (("sha256", "a" * 64), ("packages", "1.2.3")):
+            clean = tail._clean(name, {path: inner})
+            blob = json.dumps(clean, ensure_ascii=False)
+            self.assertNotIn("dasdk", blob, name)
+            self.assertIn(inner, blob, name)       # 값은 남는다 — 키만 요약된다
+        # 진짜 키는 그대로다. 제공 자료 이름과 `script.py` 가 세는 패키지 이름이다.
+        self.assertEqual(tail._clean("sha256", {"법령패키지/법령/x.txt": "a" * 64}),
+                         {"법령패키지/법령/x.txt": "a" * 64})
+        self.assertEqual(tail._clean("packages", {"vllm": "0.26.0"}), {"vllm": "0.26.0"})
+        self.assertIn("vllm", tail._known_packages())
+        # 드라이브 문자와 상대 상승은 자료 이름이 아니다.
+        for bad in ("C:/x", "../../etc/passwd"):
+            self.assertFalse(tail.ASSET_NAME.match(bad), bad)
+
+    def test_scope_and_class_names_are_matched_against_the_producer(self):
+        """모양이 값을 증명한다고 볼 수 있는 것은 hash 뿐이다. `phase`·`error_type` 을
+        패턴으로 두어 토큰형 비밀이 평문으로 나갔다(라운드 7 P0)."""
+        for name in ("phase", "arm", "sample", "error_type", "experiment"):
+            clean = tail._clean(name, "sk-live-secret123")
+            self.assertTrue(str(clean).startswith("sha256:"), f"{name}={clean}")
+        self.assertTrue(str(tail._clean("error_type", "SecretTokenABC123")).startswith("sha256:"))
+        # 생산자 값은 평문이다 — 대조가 관측을 비우면 쓸 수 없다.
+        produced = tail._producer_enums()
+        self.assertIn("company_size", produced["phase"])
+        self.assertIn("split", produced["phase"])
+        self.assertIn("ValueError", produced["error_type"])
+        self.assertIn("control", produced["arm"])
+        for name, value in (("phase", "company_size"), ("arm", "control"), ("sample", "dev"),
+                            ("error_type", "ValueError"), ("experiment", "a8")):
+            self.assertEqual(tail._clean(name, value), value)
+
+    def test_the_notice_id_uses_the_set_the_run_declared(self):
+        """고정 dev 집합으로 대조하면 **제출 입력으로 돈 회차의 id 가 전부 요약**돼
+        관측이 못 쓰게 된다. 회차가 선언한 집합을 쓰고, 없으면 공고 id 모양으로 떨어진다."""
+        declared = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                         code_sha256="abc1234", dev_ids=["PPS-DEV-01"]),
+                    dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
+                    dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
+                         id="PPS-DEV-99", max_chars=16000),
+                    dict(event="company_size_input", time_unix=1.2, arm="control", sample="dev",
+                         id="PPS-DEV-01", max_chars=16000)]
+        state, ops = tail.State(), []
+        for event in declared:
+            ops += tail.plan(event, state)
+        blob = json.dumps([[op.attrs, op.name] for op in ops], ensure_ascii=False)
+        self.assertIn("PPS-DEV-01", blob)
+        self.assertNotIn("PPS-DEV-99", blob)       # 선언 밖의 id 는 요약된다
+        # 선언이 없는 옛 판형은 모양으로 떨어진다 — H4 는 제출 입력으로 돌았다.
+        self.assertTrue(tail.NOTICE.match("PPS-S-0001"))
+        self.assertFalse(tail.NOTICE.match("sk-live-secret123"))
 
     def test_the_status_enum_matches_what_the_producer_writes(self):
         """손으로 적은 집합은 드리프트한다 — `split` 을 빼서 분할 재시도 관측이 사라졌다.
