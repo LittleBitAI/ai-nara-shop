@@ -303,6 +303,28 @@ class BuildReportTests(unittest.TestCase):
         self.assertEqual(report["evidence"][identifier], {"v1": "인용"})
         self.assertEqual(len(report["evidence"]), 1)
 
+    def test_law_map_points_at_the_real_text(self):
+        """법령 지도의 조각이 제공 원문의 **그 자리**에 있다.
+
+        오프셋이 틀리면 미니맵은 멀쩡히 그려지고 엉뚱한 곳을 가리킨다 — 화면에서는
+        안 보이는 종류의 오류다. 조각 본문이 그 오프셋의 원문과 글자까지 같은지 본다.
+        """
+        payload = build_report.law_map()
+        law_index = build_report.load_module("law_index", ROOT / "experiments/law_index.py")
+        texts = law_index.laws(str(ROOT / "open/data"))
+        self.assertTrue(payload["segments"])
+        for segment in payload["segments"]:
+            at, size = segment["at"], segment["chars"]
+            self.assertGreaterEqual(at, 0, segment["law"])
+            self.assertEqual(texts[segment["law"]][at:at + size], segment["text"])
+
+        # 인용이 있는 칸은 조각이 있어야 한다. "해당 없음" 은 조문이 없다고 적은 칸이다.
+        for item, axes in payload["cites"].items():
+            for axis, entry in axes.items():
+                self.assertNotIn("error", entry, f"{item} {axis}")
+                if entry["citation"] and "해당 없음" not in entry["citation"]:
+                    self.assertTrue(entry["segs"], f"{item} {axis} 의 인용이 조각으로 안 풀렸다")
+
 
 if __name__ == "__main__":
     unittest.main()

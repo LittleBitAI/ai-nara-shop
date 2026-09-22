@@ -22,7 +22,7 @@ typography:
   steps: 8
 spacing: [4, 6, 8, 10, 12, 14, 16, 24, 32, 48]
 rounded: { lg: 10, md: 6, sm: 4 }
-components: [ItemList, Strip, Detail, StackedBars, Trend, EvidenceAudit, InputSplit, AbsencePanel, ResponseHealth]
+components: [ItemList, Strip, Detail, StackedBars, Trend, EvidenceAudit, InputSplit, AbsencePanel, ResponseHealth, LawView]
 ---
 
 # 회차 진단 화면
@@ -34,6 +34,16 @@ components: [ItemList, Strip, Detail, StackedBars, Trend, EvidenceAudit, InputSp
 무엇을 하러: 어느 항목이 낮은지 보고, 그 항목에서 dev 문서를 어떻게 읽었는지 확인하러
 성공:        낮은 항목을 짚고 → 틀린 공고를 눌러 → 원문의 어느 문장이 걸렸는지 본다
 ```
+
+머리줄의 **화면 둘은 다른 질문에 답한다.** 섞지 않는다.
+
+| 화면 | 질문 | 성공 |
+| --- | --- | --- |
+| 회차 진단 | 무엇을 틀렸나 | 낮은 항목 → 틀린 공고 → 공고 원문의 그 문장 |
+| 법령 | 근거가 어디인가 | 항목 → 그 항목이 걸친 법령 → 그 조문 **발췌**(기본) 또는 전문 안의 자리 |
+
+법령 칸을 회차 화면 아래에 덧붙였다가 개요 맨 끝에 묻혔다. 스크롤 끝에 있는 칸은
+없는 칸이다 — 실제로 못 찾았다. 그래서 화면을 갈랐다.
 
 추론하는 화면이 아니다. 이미 나온 결과를 보는 화면이다. 채점은
 `tools/score.py` 가 하고, 이 화면은 그 결과를 그린다. 화면에서 점수를 다시
@@ -117,6 +127,8 @@ TP·FP·FN 세 계열은 dataviz 검증기(`validate_palette.js`)를 라이트·
 | 결과 ZIP 파일명 | `artifacts/inbox/` 의 실물 | 회차마다 바뀌므로 어디에도 안 적는다. `--latest` 가 고른다 |
 | 24항목 이름·부재탐지 | `docs/items.md` | `build_report.py` 가 `items.json` 으로 옮긴다 |
 | 고시금액·1억 경계 | `script.py` 의 상수 | 같은 파일에서 글자로 읽어 `items.json` 에 싣는다 |
+| 항목→근거 조문의 자리 | `open/data/항목표.json` | `experiments/law_index.py` 가 주소를 풀고 `build_report.py` 가 오프셋까지 `laws.json` 에 싣는다 |
+| 법령 전문 | `open/data/법령패키지/법령/*.txt` | Vite가 그 자리에서 서빙. 사본 없음. `전문` 으로 바꿀 때만 받아서 실린 오프셋에 색만 칠한다 |
 | 공고 원문·나라장터 등록값 | `open/dev.jsonl` | Vite가 그 자리에서 서빙. 사본 없음 |
 | 정답 라벨·정답 근거 | `open/dev_labels.csv` | 같음 |
 | churn 실측 범위 | `reports/runs/reproducibility.md` | `tools/compare_runs.py` 와 같은 값을 `data.js` 에 둔다 |

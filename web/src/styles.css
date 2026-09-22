@@ -379,6 +379,91 @@ mark.find, .swatch.mk.find { background: var(--find); }
 .auditlist li { display: flex; gap: 10px; align-items: baseline; font: var(--t-aux); }
 .auditlist q { quotes: none; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* 머리줄의 화면 전환. 회차 진단과 법령은 다른 질문에 답한다 */
+.screens { display: flex; gap: 4px; }
+.screens button {
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  border-radius: var(--r-sm); padding: 3px 12px; font: var(--t-label); cursor: pointer;
+}
+.screens button.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+
+/* 법령 화면. 왼쪽 기둥은 항목 24 + 인용된 법령, 오른쪽은 전문 */
+.lawitem {
+  width: 100%; display: grid; grid-template-columns: 30px 1fr 40px; gap: 8px;
+  align-items: center; border: 0; background: none; cursor: pointer;
+  padding: 5px 8px; border-radius: var(--r-md); text-align: left; color: var(--ink-2);
+}
+.lawitem:hover { background: var(--sunken); }
+.lawitem.on { background: color-mix(in oklab, var(--seq) 14%, var(--surface)); color: var(--ink); }
+.lawitem .label {
+  font: var(--t-aux); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lawitem .label.wide { grid-column: 1 / 3; }
+.lawitem .num { text-align: right; }
+
+/* 조문 점프. 340,000자 문서에서 손으로 찾으라고 하면 이 화면이 없는 것과 같다 */
+.lawjump { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 8px 0 6px; }
+.lawbar {
+  position: relative; display: block; flex: 1 0 100%; height: 10px; border-radius: var(--r-sm);
+  background: var(--sunken); border: 1px solid var(--line);
+}
+.lawbar i { position: absolute; top: 0; bottom: 0; background: var(--seq); border-radius: 1px; }
+.lawbar i.off { background: var(--line-strong); }
+.lawhit {
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  border-radius: var(--r-sm); padding: 2px 8px; font: var(--m-md); cursor: pointer;
+}
+.lawhit:hover { background: var(--sunken); color: var(--ink); }
+.lawhit.mine { border-color: var(--seq); color: var(--ink); }
+.lawhead { font: var(--t-aux); margin: 0 0 2px; }
+.lawcite { display: flex; flex-direction: column; gap: 3px; margin: 6px 0 2px; }
+.lawcite p { margin: 0; display: flex; gap: 8px; align-items: baseline; font: var(--t-aux); }
+.lawcite q { quotes: none; color: var(--ink-2); }
+
+/* 발췌. 인용된 조문만 문서 순서로 선다. 여기가 기본이라 스크롤이 짧다 */
+.lawcut { margin-bottom: 14px; }
+.lawcut h4 {
+  margin: 0 0 4px; font: var(--t-aux); display: flex; gap: 10px; align-items: baseline;
+  flex-wrap: wrap;
+}
+.segcites { display: flex; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.segcites .chip { padding: 0 6px; }
+.cuttext {
+  white-space: pre-wrap; font: var(--t-body); padding: 10px 12px;
+  border: 1px solid var(--line); border-left: 3px solid var(--line-strong);
+  border-radius: var(--r-md); background: var(--sunken);
+}
+/* 고른 항목의 근거. 색이 아니라 왼쪽 선과 바탕으로 가른다 — 5천자 본문을 통째로 칠하면 못 읽는다 */
+.lawcut.mine .cuttext {
+  border-left-color: var(--seq); background: color-mix(in oklab, var(--seq) 8%, var(--surface));
+}
+
+/* 전문. 인용된 곳에 색이 있고, 고른 항목의 것이 진하다.
+   offsetTop 으로 그 자리에 내려야 해서 상자가 기준(position:relative)이어야 한다 */
+.lawfull { position: relative; white-space: pre-wrap; font: var(--t-body); }
+.lawfull mark { background: var(--seq-soft); color: inherit; }
+.lawfull mark.mine { background: var(--find); box-shadow: inset 0 -2px 0 var(--seq); }
+
+/* 법령 × 항목 격자. 24칸을 접으면 "한 항목이 여러 법령에 걸친다" 가 안 보인다 */
+.lawgrid {
+  display: grid; grid-template-columns: 178px repeat(24, minmax(24px, 1fr));
+  gap: 1px; overflow-x: auto; margin: 4px 0 14px;
+}
+.lawcorner { background: transparent; }
+.lawcol, .lawcell, .lawname {
+  border: 0; background: var(--sunken); color: var(--ink-2); cursor: pointer;
+  font: var(--m-sm); padding: 0; min-height: 22px;
+}
+.lawcol { background: transparent; }
+.lawcol:hover, .lawcol.on { color: var(--ink); background: var(--sunken); }
+.lawname {
+  background: transparent; font: var(--t-aux); text-align: left; padding: 0 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lawname:hover { color: var(--ink); background: var(--sunken); }
+.lawcell.on { background: color-mix(in oklab, var(--seq) 18%, var(--surface)); color: var(--ink); }
+.lawcell.on:hover, .lawcell.on.mine { background: color-mix(in oklab, var(--seq) 34%, var(--surface)); }
+
 @media (max-width: 900px) {
   /* 좁은 화면에서는 칸을 둘로 쪼갤 세로가 없다. 평소대로 페이지 하나가 스크롤한다 */
   html, body, #root { height: auto; }
@@ -391,6 +476,9 @@ mark.find, .swatch.mk.find { background: var(--find); }
   .paneScroll { overflow: visible; padding-bottom: 32px; }
   .item { grid-template-columns: 30px 1fr 40px; }
   .delta { display: none; }
+  /* 24칸을 줄이면 못 읽는다. 이름 기둥을 좁히고 격자만 가로로 구른다 */
+  .lawgrid { grid-template-columns: 110px repeat(24, 24px); }
+  .lawfull { max-height: none; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
