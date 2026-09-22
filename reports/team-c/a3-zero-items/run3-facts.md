@@ -12,13 +12,13 @@
 
 | 항목 | 회차 2 `…9904147841755` | 회차 3 `…4949866134428` |
 | --- | --- | --- |
-| v10 | 0/0/7 | **0/1/7** |
-| v18 | 0/1/7 | **1/2/6** (F1 0.200) |
-| v20 | 0/0/5 | **0/0/5** |
+| v10 | 0/0/7 | 0/1/7 |
+| v18 | 0/1/7 | 1/2/6 (F1 0.200) |
+| v20 | 0/0/5 | 0/0/5 |
 
-기준 재생 `6bb692d` 0.547985038075 대비 **0.544041527881 (−0.003943510194)**,
+기준 재생 `6bb692d` 0.547985038075 대비 0.544041527881 (−0.003943510194),
 바뀐 셀 39/4800, 대상 밖 35. 이 차이는 과거 회차 간 실측 churn 범위(17~45셀,
-0.000008~0.010088) **안**이다.
+0.000008~0.010088) 안이다.
 
 ## 2. 새 필드의 200건 분포
 
@@ -34,7 +34,7 @@
 
 ## 3. v10 양성 7건이 막힌 자리
 
-게이트(`scope == "competitive"` + `scope_quote` 원문 검증)는 **7/7 열렸다.**
+게이트(`scope == "competitive"` + `scope_quote` 원문 검증)는 7/7 열렸다.
 
 | 공고 | `scope` | 인용 검증 | `direct_production` |
 | --- | --- | --- | --- |
@@ -46,37 +46,37 @@
 | `PPS-DEV-075` | competitive | 통과 | present |
 | `PPS-DEV-13` | competitive | 통과 | present |
 
-**양성 7건 중 `absent`는 0건이다.**
+양성 7건 중 `absent`는 0건이다.
 
 `scope == "competitive"` 74건 전체의 `direct_production`:
-present 50 · **not_required 15** · unknown 6 · absent 3.
+present 50 · not_required 15 · unknown 6 · absent 3.
 
-`direct_production == "absent"` 36건 전체 중 `scope == "competitive"`는 **3건**,
-v10 정답 양성은 **0건**이다.
+`direct_production == "absent"` 36건 전체 중 `scope == "competitive"`는 3건,
+v10 정답 양성은 0건이다.
 
 ## 4. v20 양성 5건이 막힌 자리
 
 | 공고 | `software_business` | 인용 검증 | `software_participation` |
 | --- | --- | --- | --- |
 | `PPS-DEV-131` | yes | 통과 | unknown |
-| `PPS-DEV-132` | **no** | — | unknown |
-| `PPS-DEV-133` | yes | **실패** (인용이 원문에 없다) | unknown |
+| `PPS-DEV-132` | no | — | unknown |
+| `PPS-DEV-133` | yes | 실패 (인용이 원문에 없다) | unknown |
 | `PPS-DEV-134` | yes | 통과 | unknown |
 | `PPS-DEV-24` | yes | 통과 | unknown |
 
 `software_business == "yes"` 10건 전체의 `software_participation`:
-**unknown 9 · present 1 · absent 0.**
+unknown 9 · present 1 · absent 0.
 그 10건 중 v20 정답 양성은 4건, 음성은 6건이다.
 
 `software_participation == "absent"` 82건 전체 중
-`software_business == "yes"`는 **0건**, v20 정답 양성은 **0건**이다.
+`software_business == "yes"`는 0건, v20 정답 양성은 0건이다.
 
 ## 5. 두 필드에 공통으로 관측된 것
 
 | | `absent` 총 건수 | 그 중 게이트가 열린 것 | 그 중 정답 양성 |
 | --- | ---: | ---: | ---: |
-| `direct_production` | 36 | 3 | **0** |
-| `software_participation` | 82 | 0 | **0** |
+| `direct_production` | 36 | 3 | 0 |
+| `software_participation` | 82 | 0 | 0 |
 
 ## 6. v18 — 첫 TP와 남은 6건의 사유
 
@@ -87,7 +87,7 @@ TP는 `PPS-DEV-041` 1건이다. `verify_company_size`가 각 양성에 대해 �
 | `PPS-DEV-038` | general | sme_allowed | 34,090,909 | `unverified_qualification` | 판정 없음 |
 | `PPS-DEV-039` | competitive | small_only | 63,636,364 | `outside_general_scope` | 0 |
 | `PPS-DEV-040` | competitive | unrestricted | 80,727,273 | `outside_general_scope` | 0 |
-| **`PPS-DEV-041`** | general | unrestricted | 77,272,727 | `decided` | **1** |
+| `PPS-DEV-041` | general | unrestricted | 77,272,727 | `decided` | 1 |
 | `PPS-DEV-043` | general | sme_allowed | 61,264,545 | `decided` | 0 |
 | `PPS-DEV-044` | competitive | sme_allowed | 55,454,545 | `outside_general_scope` | 0 |
 | `PPS-DEV-22` | general | unrestricted | 72,727,273 | `absence_not_observable` | 판정 없음 |
@@ -122,6 +122,6 @@ python -X utf8 tools/compare_runs.py --items v10,v18,v20 `
 
 ## 다음 회차의 요구
 
-**v10·v18·v20의 TP가 셋 다 0을 넘어야 한다.** 발화 건수 증가가 아니라 TP다.
+v10·v18·v20의 TP가 셋 다 0을 넘어야 한다. 발화 건수 증가가 아니라 TP다.
 나머지 통과 조건은 `docs/tasks/a3-zero-items.md`가 소유한다 — 일반화 검사,
 무라벨 발화율(W5), FP 동반 보고, 시간 예산, 같은 ZIP 재실행 churn.

@@ -48,7 +48,7 @@ git -C ../ai-coding-agent-wiki-public checkout --detach $revision
 checkout은 새로 받은 위키에서 수행합니다. 다른 작업에 쓰던 위키가 dirty이거나 버전이 다르면
 작업을 버리지 말고 팀용 checkout을 별도로 준비합니다. 자동 pull·reset은 없습니다.
 
-필수 환경은 Git, **Python 3.11 이상 + PyYAML**, 사용할 호스트의 CLI입니다.
+필수 환경은 Git, Python 3.11 이상 + PyYAML, 사용할 호스트의 CLI입니다.
 Python 자체가 없으면 설치 스크립트도 실행할 수 없으므로 먼저 [Python](https://www.python.org/downloads/)을 준비합니다.
 프로젝트 가상환경을 권장하며 대회 모델의 `requirements`를 설치할 필요는 없습니다.
 
@@ -66,7 +66,7 @@ macOS/Linux에서는 `python3 -m venv .venv`와 `.venv/bin/python`을 사용합�
 호스트 준비:
 
 - Claude Code: [공식 설치 안내](https://code.claude.com/docs/en/setup) 후 `claude --version`.
-  현재 위키의 Windows Claude 명령은 Git Bash 형식입니다. **이 위키 조합에는 Git for Windows의 Git Bash가 필요**합니다.
+  현재 위키의 Windows Claude 명령은 Git Bash 형식입니다. 이 위키 조합에는 Git for Windows의 Git Bash가 필요합니다.
   Claude 자체는 PowerShell만으로도 실행 가능하지만 위키의 명령 형식은 별개입니다.
   Git Bash를 찾지 못하면 `CLAUDE_CODE_GIT_BASH_PATH`를 실제 `bash.exe`로 지정하고
   같은 환경에서 설치와 Claude를 실행합니다. WSL의 `bash.exe`를 지정하지 않습니다.
@@ -77,7 +77,7 @@ macOS/Linux에서는 `python3 -m venv .venv`와 `.venv/bin/python`을 사용합�
 
 ## 한 명령으로 설치
 
-공용화를 포함한 고정 SHA를 받은 뒤 프로젝트 루트에서 사용할 호스트의 명령 **하나**를 실행합니다.
+공용화를 포함한 고정 SHA를 받은 뒤 프로젝트 루트에서 사용할 호스트의 명령 하나를 실행합니다.
 `--wiki`는 필수이며 폴더명으로 위키 위치를 추측하지 않습니다.
 
 ```powershell
@@ -99,7 +99,7 @@ macOS/Linux에서는 `python3 -m venv .venv`와 `.venv/bin/python`을 사용합�
 
 도구는 버전·의존성·CLI·셸을 확인하고 해당 checkout의 `.wiki/adapter.toml`을 직접 읽어,
 선택한 호스트의 기존 `apply.py --write`와 `apply.py --check`를 호출합니다.
-성공은 **종료 코드 0**, 실패는 **2**입니다. PowerShell에서는 `$LASTEXITCODE`로 확인합니다.
+성공은 종료 코드 0, 실패는 2입니다. PowerShell에서는 `$LASTEXITCODE`로 확인합니다.
 변경 없이 검사하려면 같은 명령에 `--check`를 붙입니다.
 
 adapter는 허브에 복사하지 않습니다. 다른 프로젝트·동명 checkout과 슬롯을 공유하지 않습니다.
@@ -136,7 +136,7 @@ python tools/setup_agents.py --wiki ../ai-coding-agent-wiki-public --agent both 
 
 ## 새 세션과 신뢰
 
-설치 성공은 설정 배선의 증거입니다. **호스트 자동 이벤트·실제 선택형 질문 UI 성공은 아닙니다.**
+설치 성공은 설정 배선의 증거입니다. 호스트 자동 이벤트·실제 선택형 질문 UI 성공은 아닙니다.
 
 Claude 사용자:
 
@@ -195,7 +195,7 @@ hooks = true
 default_mode_request_user_input = true
 ```
 
-2026-09-16 로컬 **Codex CLI 0.154.0**에서 프로젝트 루트의 `codex features list`는
+2026-09-16 로컬 Codex CLI 0.154.0에서 프로젝트 루트의 `codex features list`는
 `hooks stable true`, `default_mode_request_user_input under development true`를 출력했습니다.
 후자는 개발 중 기능이며 현재 [공식 설정 참조](https://learn.chatgpt.com/docs/config-file/config-reference)에
 안정된 지원 계약으로 나와 있지 않습니다. CLI 목록·설정 값은 UI 성공을 증명하지 않습니다.
@@ -205,7 +205,7 @@ Default 모드에서 두 선택지 중 “설치 도구까지 공용화” 응�
 이는 이 세션의 실제 동기 질문 호출·선택 반환 증거입니다. 모든 팀원 PC·호스트의 UI나 키 동작을 증명하지 않습니다.
 
 설치 도구는 hooks 기능이 없는 CLI에서는 실패합니다. 질문 플래그가 없거나 Default mode에서 도구가 제공되지 않으면
-현재 호스트 명세에 따라 지원되는 Plan mode로 전환하거나 **텍스트 선택지**로 질문합니다.
+현재 호스트 명세에 따라 지원되는 Plan mode로 전환하거나 텍스트 선택지로 질문합니다.
 IDE·앱·Orca 등 별도 호스트에는 같은 CLI 기능이 노출된다고 보장하지 않습니다.
 위키는 `request_user_input_async`와 `functions.request_user_input_async` 호출을 차단합니다.
 이 도구로 우회하지 않으며 무응답을 승인으로 해석하지 않습니다.
