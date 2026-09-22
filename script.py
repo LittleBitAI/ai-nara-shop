@@ -384,6 +384,24 @@ def load_sme_reference(data_dir):
     return "\n\n".join(excerpts), products
 
 
+# 항목 줄 아래에 붙는 항목별 설명. 항목표.json(제공 데이터)은 고치지 않고 프롬프트에서만 덧붙인다.
+# v2는 모델이 실적제한 문장을 찾아 놓고도 v3에만 붙여 미탐이 나던 항목이다 — 찾는 대상을 정의하고
+# v2·v3 배타 판단을 금지한다. 금액 임계값은 적지 않는다(공고별 고시금액이 제공 자료에 없다).
+ITEM_PROMPT_NOTES: Dict[str, str] = {
+    "v2": """  A 실적제한 is a 참가자격 clause that requires past performance: 실적·수행실적·납품실적·시공실적,
+  typically with a required amount, a lookback window (최근 N년), a 단일건 condition, an ordering-body
+  condition, or a 유사사업·동종업종 scope. Before answering v2, scan the whole 참가자격/입찰참가자격 section
+  and its 별첨·붙임 for such a clause; do not stop at 소기업·소상공인 확인서, 업종·면허·등록, 지역 or other
+  qualification clauses, which are not 실적제한 by themselves. When a 실적제한 clause exists, quote that
+  clause itself as v2 evidence. v2 and v3 test the same kind of clause on different grounds (v2 the
+  고시금액 미만 band, v3 the 사업예산 배수), so one clause can satisfy both: judge v2 on its own and never
+  answer 0 only because the clause was already used for another item. Applicability still requires the
+  notice to fall under the 고시금액 미만 band of its 적용계약법; read the supplied 추정가격·예산 metadata and
+  do not invent a threshold. The word 실적 alone, without an operative restriction on who may bid, is not
+  a violation.""",
+}
+
+
 def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="", items=None) -> str:
     lines = []
     for v in ITEMS if items is None else items:
@@ -391,6 +409,8 @@ def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="", items=None)
         tag = "  [absence detection; evidence=null]" if it["부재탐지"] else ""
         note = f" ({it['비고']})" if it.get("비고") else ""
         lines.append(f"- {v}: {it['항목명']}{note}{tag}")
+        if v in ITEM_PROMPT_NOTES:
+            lines.append(ITEM_PROMPT_NOTES[v])
     reference = ""
     if sme_laws:
         reference = """
