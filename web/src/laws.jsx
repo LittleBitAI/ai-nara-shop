@@ -202,7 +202,10 @@ function LawGrid({ items, view, focus, onItem, onLaw }) {
 /** 법령 하나의 전문. 인용된 조문에 색이 있고, 고른 항목의 것은 진하다. */
 export function LawView({ items, focus, onFocus }) {
   const { map, view, fail } = useLawMap()
-  const [law, setLaw] = useState(null)
+  // 고른 법령은 담고, **보이는 법령은 렌더에서 끌어낸다.** effect 로 뒤늦게 맞추면
+  // 항목을 바꾼 직후 한 렌더가 새 항목의 머리글 아래 옛 법령의 본문을 세운다 —
+  // v24 의 지속 오류를 고쳐도 항목↔법령 사이에는 그 한 렌더가 그대로 남는다.
+  const [picked, setPicked] = useState(null)
   // 전문은 **어느 법령의 것인지와 함께** 담는다. 글자만 담으면 법령을 바꾼 직후 한 번의
   // 렌더에서 옛 법령의 전문이 새 법령의 오프셋으로 칠해져 새 이름표 아래 선다.
   // 세대 카운터는 늦게 온 응답만 막고, 이미 담긴 글자의 주인은 안 본다.
@@ -214,14 +217,17 @@ export function LawView({ items, focus, onFocus }) {
   const body = useRef(null)
   const asked = useRef(0)
 
-  // 항목을 고르면 그 항목이 쓰는 첫 법령을 연다. 이미 그 법령을 보고 있으면 그대로 둔다.
-  // **조문이 없는 항목(v24)이면 닫는다.** 안 닫으면 "연결된 조문이 없는 항목" 이라고 적어 놓고
-  // 그 아래에 직전 법령의 전문이 그대로 남아, 그 법령이 v24 의 근거처럼 보인다.
-  useEffect(() => {
-    if (!view || !focus) return
-    const laws = view.byItem[focus].laws
-    if (!laws.includes(law)) setLaw(laws[0] ?? null)
-  }, [view, focus])                                     // eslint-disable-line react-hooks/exhaustive-deps
+  // 항목을 고르면 그 항목이 쓰는 법령만 연다. 보던 법령이 그 안에 있으면 그대로,
+  // 없으면 첫 법령으로, 쓰는 법령이 없으면(v24) 닫는다. 값 하나로 끝나므로 어긋난 중간 상태가 없다.
+  const usable = focus && view ? view.byItem[focus].laws : null
+  const law = usable ? (usable.includes(picked) ? picked : (usable[0] ?? null)) : picked
+
+  // 법령을 직접 고르면 그 법령을 연다. 고른 법령이 지금 항목의 것이 아니면 항목 선택을 푼다 —
+  // 같은 처리 안에서 둘을 같이 바꾸므로 한 렌더도 어긋나지 않는다.
+  const openLaw = (name) => {
+    setPicked(name)
+    if (focus && !view.byItem[focus].laws.includes(name)) onFocus(null)
+  }
 
   useEffect(() => {
     if (!law || mode !== 'full') { setText(null); return }
@@ -280,7 +286,7 @@ export function LawView({ items, focus, onFocus }) {
   return (
     <main className="split">
       <LawRail items={items} view={view} focus={focus} law={law}
-               onItem={onFocus} onLaw={setLaw} />
+               onItem={onFocus} onLaw={openLaw} />
 
       <section className="pane">
         <div className="paneTop">
@@ -298,7 +304,7 @@ export function LawView({ items, focus, onFocus }) {
             ) : (
               <>
                 {law && (
-                  <button className="linkish" onClick={() => setLaw(null)}>← 법령 × 항목</button>
+                  <button className="linkish" onClick={() => setPicked(null)}>← 법령 × 항목</button>
                 )}
                 <h2>{law ? shortLaw(law) : '법령'}</h2>
                 <span className="dim">{law || '왼쪽에서 항목이나 법령을 고른다'}</span>
@@ -312,7 +318,7 @@ export function LawView({ items, focus, onFocus }) {
             <div className="lawjump">
               {view.byItem[focus].laws.map((name) => (
                 <button key={name} className={`lawhit${name === law ? ' mine' : ''}`}
-                        title={name} onClick={() => setLaw(name)}>
+                        title={name} onClick={() => setPicked(name)}>
                   {shortLaw(name)}
                   <span className="dim"> {[...view.byItem[focus].segs]
                     .filter((index) => map.segments[index].law === name).length}곳</span>
@@ -387,7 +393,7 @@ export function LawView({ items, focus, onFocus }) {
               ? <p className="dim">전문을 못 읽었다. <code>npm run dev</code> 상태인지 본다.</p>
               : <p className="dim">전문 읽는 중… ({row?.chars.toLocaleString()}자)</p>
           ) : (
-            <LawGrid items={items} view={view} focus={focus} onItem={onFocus} onLaw={setLaw} />
+            <LawGrid items={items} view={view} focus={focus} onItem={onFocus} onLaw={openLaw} />
           )}
         </div>
       </section>

@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import re
 import io
 import json
 import os
@@ -9,6 +10,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import unittest
 import zipfile
 
@@ -204,11 +206,25 @@ class BuildReportTests(unittest.TestCase):
         self.assertIn("dev_labels.csv", config)
         self.assertNotIn("startsWith(OPEN", config, "경로 접두사 검사로 되돌아갔다")
         self.assertNotIn("normalize(join(OPEN", config, "경로를 받아 정규화하는 방식으로 되돌아갔다")
-        # 법령 전문은 폴더를 읽어 목록을 만든다. **이름만** 담으면 그 폴더에 저장소 밖을 가리키는
-        # `leak.txt` 링크를 둔 순간 허용 목록이 그 이름을 받아들여 링크 탈출이 되살아난다.
-        # Dirent 의 isFile() 이 링크에 false 인 것이 그 경계다. (리뷰 라운드 1 P0)
-        self.assertIn("withFileTypes: true", config, "법령 목록이 이름만 읽는 방식으로 되돌아갔다")
-        self.assertIn("entry.isFile()", config, "링크를 걸러내는 경계가 사라졌다")
+        # 법령 전문의 이름은 **코드에 못 박는다.** 폴더를 읽어 목록을 만들면 그 폴더에 둔
+        # `leak.txt` 가 무엇이든(하드 링크는 권한 없이 만들어지고 isFile()이 true다, 그냥
+        # 갖다 둔 파일도 마찬가지) 그대로 허용된다. 막아야 할 것은 링크의 종류가 아니라
+        # 목록이 동적이라는 것이다. (리뷰 라운드 1·2 P0)
+        self.assertIn("const LAW_FILES = [", config, "법령 목록이 동적 탐색으로 되돌아갔다")
+        self.assertNotIn("readdirSync(join(OPEN, LAW_DIR))", config,
+                         "폴더가 발견한 이름을 그대로 허용 목록에 넣는다")
+
+    def test_served_law_names_match_the_package(self):
+        """vite 에 못 박은 법령 이름이 제공 스냅샷과 한 글자도 안 다르다.
+
+        못 박은 목록의 값은 안전이지만 대가는 어긋남이다 — 스냅샷이 바뀌면 화면은 403 을
+        받고 이유는 안 보인다. 어긋나면 여기서 터진다.
+        """
+        config = (ROOT / "web/vite.config.js").read_text(encoding="utf-8")
+        listed = set(re.findall(r"^  '(.+\.txt)',$", config, re.M))
+        package = {unicodedata.normalize("NFC", path.name)
+                   for path in (ROOT / "open/data/법령패키지/법령").glob("*.txt")}
+        self.assertEqual(listed, package)
 
     def test_zip_slip_is_refused(self):
         for name in ("../escape.csv", "/abs.csv", "dev/../../out.csv"):

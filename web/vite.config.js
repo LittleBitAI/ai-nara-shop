@@ -19,21 +19,54 @@ const SERVED = new Map([
   ['dev_labels.csv', { type: 'text/csv', file: 'dev_labels.csv' }],
 ])
 
-// 법령 전문 23개도 같은 규칙으로 연다 — **폴더를 읽어 실제 이름만** 목록에 넣는다.
-// 경로를 받아 검사하는 방식으로 돌아가지 않는다. 이름이 목록에 없으면 그 경로 자체가 없다.
+// 법령 전문 23개. **이름을 여기에 못 박는다 — 폴더에서 발견하지 않는다.**
 //
-// **`isFile()` 인 것만 담는다.** 이름만 읽으면 그 폴더에 저장소 밖을 가리키는 `leak.txt`
-// 링크를 둔 순간 목록이 그 이름을 그대로 받아들여, 이름 허용 목록으로 막아 둔 링크 탈출이
-// 동적 목록에서 되살아난다. Dirent 의 `isFile()` 은 링크에 false 다.
-// (이 기계에서는 파일 심볼릭 링크 생성이 EPERM 이라 실물 재현은 못 했다. 기제는
-//  readdir 이 링크 이름을 그대로 주고 createReadStream 이 링크를 따라가는 것이다.)
+// 한 번은 `readdirSync` 로 목록을 만들었다. 그러면 그 폴더에 `leak.txt` 를 둔 순간 목록이
+// 그 이름을 받아들인다. `isFile()` 로 심볼릭 링크만 걸러도 소용이 없다 — **하드 링크는
+// 권한 없이 만들어지고 `isFile()` 이 true 다.** 그냥 갖다 둔 파일도 마찬가지다. 즉 막아야 할
+// 것은 링크의 종류가 아니라 **목록이 동적이라는 것**이다. 목록이 코드에 있으면 새 이름은
+// 무엇이든 403 이고, 이 목록을 고치는 일은 diff 로 보인다.
 //
-// 키는 NFC 로 맞추고 **읽기는 원래 이름으로 한다.** macOS 는 readdir 이 NFD 로 주므로
-// 정규화한 키로 열면 그 경로가 없다 — 화면이 부르는 이름과 디스크의 이름이 다르다.
-for (const entry of readdirSync(join(OPEN, LAW_DIR), { withFileTypes: true })) {
-  if (!entry.isFile() || !entry.name.endsWith('.txt')) continue
-  SERVED.set(`${LAW_DIR}/${entry.name}`.normalize('NFC'),
-             { type: 'text/plain; charset=utf-8', file: `${LAW_DIR}/${entry.name}` })
+// 제공 법령은 대회 입력 스냅샷이라 이름이 안 바뀐다. 폴더와 이 목록이 어긋나면
+// `tests/test_build_report.py::test_served_law_names_match_the_package` 가 터진다.
+const LAW_FILES = [
+  '(계약예규) 공동계약운용요령.txt',
+  '(계약예규) 정부 입찰·계약 집행기준.txt',
+  '국가를 당사자로 하는 계약에 관한 법률 등의 재정경제부장관이 정하는 고시금액.txt',
+  '국가를 당사자로 하는 계약에 관한 법률 시행규칙.txt',
+  '국가를 당사자로 하는 계약에 관한 법률 시행령.txt',
+  '국가를 당사자로 하는 계약에 관한 법률.txt',
+  '소상공인기본법 시행령.txt',
+  '소상공인기본법.txt',
+  '소프트웨어 진흥법 시행령.txt',
+  '소프트웨어 진흥법.txt',
+  '중소 소프트웨어사업자의 사업 참여 지원에 관한 지침.txt',
+  '중소기업기본법 시행령.txt',
+  '중소기업기본법.txt',
+  '중소기업자간 경쟁제품 및 공사용자재 직접구매 대상 품목 지정 내역.txt',
+  '중소기업자간 경쟁제품 직접생산 확인기준.txt',
+  '중소기업제품 구매촉진 및 판로지원에 관한 법률 시행규칙.txt',
+  '중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령.txt',
+  '중소기업제품 구매촉진 및 판로지원에 관한 법률.txt',
+  '지방자치단체 입찰 및 계약 집행기준.txt',
+  '지방자치단체 입찰시 낙찰자 결정기준.txt',
+  '지방자치단체를 당사자로 하는 계약에 관한 법률 시행규칙.txt',
+  '지방자치단체를 당사자로 하는 계약에 관한 법률 시행령.txt',
+  '지방자치단체를 당사자로 하는 계약에 관한 법률.txt',
+]
+
+// 키는 NFC 다. **읽기는 디스크의 실제 이름으로 한다** — macOS 는 readdir 이 NFD 로 주므로
+// 정규화한 이름으로 열면 그 경로가 없다. 그 김에 실물이 일반 파일인지도 여기서 본다.
+const ON_DISK = new Map(
+  readdirSync(join(OPEN, LAW_DIR), { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => [entry.name.normalize('NFC'), entry.name]),
+)
+for (const name of LAW_FILES) {
+  const real = ON_DISK.get(name.normalize('NFC'))
+  if (!real) continue                       // 스냅샷에 없는 이름은 안 연다
+  SERVED.set(`${LAW_DIR}/${name}`.normalize('NFC'),
+             { type: 'text/plain; charset=utf-8', file: `${LAW_DIR}/${real}` })
 }
 
 function serveOpen() {
