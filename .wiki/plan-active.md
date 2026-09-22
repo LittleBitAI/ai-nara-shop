@@ -32,6 +32,8 @@ A4 보고서가 미리 적어 둔 v23 무라벨 배율 0.05 경고가 실측으�
 
 `docs/tasks/a8-v20-annex-injection.md` — RAG 주입 파이프라인 2단계(주입).
 새 세션은 그 경로 한 줄을 받아 시작한다. 이 항목이 끝나기 전에는 다른 주입 항목을 열지 않는다.
+회차 실행·결과 판정 단계로 넘어간 세션은 `docs/tasks/a8-v20-two-episode-run.md` 한 줄을 받는다 —
+두 회차가 무엇을 가르고 무엇을 가르지 못하는지, 결과를 어떤 순서로 감사하는지가 그 문서에 있다.
 
 2026-09-21 A8 구현 완료·GPU 미실행: [보고서](../reports/team-c/a8-v20-annex/README.md) ·
 [실행 안내](../reports/team-c/a8-v20-annex/run-request.md) · PR #84 는 머지됐다.

@@ -29,7 +29,9 @@
 
 `a8-v20-annex-injection`: in_progress / 후보·CPU 계약 완료, GPU 미실행,
 [착수서](tasks/a8-v20-annex-injection.md) · [보고서](../reports/team-c/a8-v20-annex/README.md) ·
-[실행 안내](../reports/team-c/a8-v20-annex/run-request.md).
+[실행 안내](../reports/team-c/a8-v20-annex/run-request.md) ·
+[두 회차 실행 설계](tasks/a8-v20-two-episode-run.md).
+회차 실행·결과 판정 단계의 진입점은 마지막 문서다.
 후보 `experiments/a8_v20_annex.py`는 프롬프트 문자열만 바꾼다. 블록은 실측 1,568자·586토큰이고
 예산은 CPU 에서 확정됐다 — 추가 축소 0/200, 두 군 본문 동일, `token_count_kind=actual`.
 그 전제로 출력 예약을 두 군 모두 1,024로 내렸다(운영 예산에서는 13건이 깎였다).
