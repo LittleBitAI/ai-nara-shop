@@ -32,15 +32,16 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "3f8bb3c6fd5d8bcd3a97f4b07178ca026c645596",
-  "pinned_notebook_commit": "6c96064cde2004344dc08a6e58abcae05cb0a14f",
+  "pinned_code_commit": "09667115849ad377cadfece7710eea5e30dcb295",
+  "pinned_notebook_commit": "134e02fb4e58cd639248326a8e05da7a37c6d488",
   "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
                       "b139807723c22ec570d65635b0d654ba5e6149e2 / a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6 — 관측·감사 배선 전",
                       "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023 / 2f6e20642e07132cf03dba26f2064b21c2e20deb — 라운드 1 수리 전(수출 경계·gain_kind)",
                       "ea9ac8a338705a1944a7f193b99735813b5fcdf0 / 516ddb93709e1de30cb0827f4921d2e8c627d637 — 라운드 2 수리 전(본문 결속·redirect·자유 텍스트·부재 기전)",
-                      "01258d3089502e4aafe50681b1a7fd7e48d06413 / cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792 — 라운드 3 수리 전(메시지 형태·환경 프록시·세션 경로·가장 긴 prefix·fallback 원인 열거)"],
+                      "01258d3089502e4aafe50681b1a7fd7e48d06413 / cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792 — 라운드 3 수리 전(메시지 형태·환경 프록시·세션 경로·가장 긴 prefix·fallback 원인 열거)",
+                      "3f8bb3c6fd5d8bcd3a97f4b07178ca026c645596 / 6c96064cde2004344dc08a6e58abcae05cb0a14f — 라운드 4 수리 전(응답 결속·구조화 필드 위생)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -223,6 +224,13 @@
         "mutation_check": "다섯 가드를 되돌렸다. 세션 이름 mutation 이 초록이어서 함수 대신 run() 배선을 보는 검사로 바꿨다 — 함수가 있는 것과 run() 이 그것을 쓰는 것은 다르다.",
         "repo_lint": "발견 2건 — gitignore 된 워크트리 훅 설정(.claude/settings.json)의 명령 드리프트다. 추적 파일이 아니고 이 PR 의 변경과 무관하다. 훅 배선 변경은 세션 동작을 바꾸므로 임의로 고치지 않았다."
       },
+      "round_4": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["본문 검증이 prompt_text 가 있을 때만 돌아, 시작에서 본문만 빼고 같은 호출의 응답을 위조하면 통과했다. 모든 물리 호출이 결속된 프롬프트를 갖고, 응답은 결속된 시작과 call key 로 짝이 맞아야 한다.",
+                "'구조화 필드라서 안전하다' 가 근거가 아니었다 — settings.note·items 의 임의 문자열이 루트 input·generation metadata 로 실렸다. _clean() 이 이름별 규칙을 걸고 모르는 이름은 안 내보낸다. argv 는 제거했고 TOKEN 에서 /·: 를 빼 경로를 막았다."],
+        "p2_deferred": "OTLP exporter 의 public session= 인자로 private _session 의존을 없애는 것. 지금 버전에서 동작하고 fail-closed 라 경계는 안 열린다 — 후속 후보다.",
+        "mutation_check": "두 가드를 되돌려 담당 검사가 각각 빨개졌다. 오염을 심은 열 이벤트 스윕으로 두 모드 모두 0건을 확인하고, 오염 없는 회차에서 진짜 값이 남는 것도 같이 고정했다."
+      },
       "confirmed_by_reviewer": ["script.py·후보·law_index 무변경",
                                "비-system 본문 digest 의 공고 유일성과 호출 키 비중복",
                                "API 표본 45건 재현", "핀·미실행 목록이 문서와 원장에서 일치"]
@@ -258,7 +266,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "3e6ed334d43edc9639ca6fd1429aaaae4df7c6f13390f46936069556680e18c3",
+  "notebook_sha256": "ed8e29f32b765c5b7b7986e4abbeed144a72b37e86c0e7a4afc3bf7e9faf3c63",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -409,6 +417,21 @@
       "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
       "findings": 2,
       "phase": "라운드 3 수리 후. gitignore 된 워크트리 훅 설정 드리프트이며 추적 파일도 이 PR 의 변경도 아니다"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 377,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 276.48,
+      "phase": "라운드 4 P0 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 2.681,
+      "phase": "라운드 4 수리 후 오프라인 게이트"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
