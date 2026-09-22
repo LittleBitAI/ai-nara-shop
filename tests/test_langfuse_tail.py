@@ -603,10 +603,14 @@ class PromptExportBoundary(unittest.TestCase):
 
         # 진짜 값이 남는다. 지워지면 관측이 비어 쓸 수 없다.
         kept = json.dumps([[op.attrs, op.name] for op in ops], ensure_ascii=False)
-        for good in ("0.26.0", "3.12.13", "13.0", "NVIDIA A100-SXM4-40GB",
-                     "google/gemma-4-26B-A4B-it", "16384", "nara live",
-                     "int8_per_channel_weight_only", "unverified_product"):
+        for good in ("0.26.0", "3.12.13", "13.0", "google/gemma-4-26B-A4B-it", "16384",
+                     "nara live", "int8_per_channel_weight_only", "unverified_product"):
             self.assertIn(good, kept, good)
+        # 장비명처럼 알려진 값 집합이 없는 문자열은 **요약으로** 나간다 — 평문이 아니다.
+        # 어느 GPU 였는지는 `total_memory` 숫자가 들고 있다.
+        self.assertNotIn("NVIDIA A100-SXM4-40GB", kept)
+        self.assertIn("sha256:", kept)
+        self.assertIn("42405855232", kept)
         self.assertEqual(state.trace_name[:10], "nara live ")
         self.assertIn("chat_template_sha256", kept)
         # 긴 자유 문자열은 본문 대신 hash 로 남는다.
@@ -658,6 +662,58 @@ class PromptExportBoundary(unittest.TestCase):
             self.assertNotIn(path, blob, f"include_prompts={include}")
             self.assertNotIn("dasdk", blob, f"include_prompts={include}")
 
+    def test_an_orphan_close_does_not_carry_its_raw_call_key(self):
+        """`_fixed()` 는 이 파일이 만든 문구 전용이다. 이벤트에서 조립한 key 를 거기 넣어
+        `guard()` 가 op.key 만 바꾸는 사이 metadata 로 경로가 나갔다(라운드 6 P0)."""
+        path = "C:/Users/dasdk/private/secret.env"
+        state = tail.State()
+        tail.plan(dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                       code_sha256="abc1234def"), state)
+        ops = tail.plan(dict(event="model_call_finished", time_unix=2.0, phase=path,
+                             call_seq=1, call_index=0, transport_status="returned"), state)
+        self.assertTrue(ops)
+        blob = json.dumps([[op.attrs, op.name, op.key, op.status] for op in ops],
+                          ensure_ascii=False)
+        self.assertNotIn("dasdk", blob)
+        # 그래도 orphan 이라는 사실과 어느 호출인지의 동일성은 남는다.
+        self.assertIn("sha256:", blob)
+        self.assertEqual([op.level for op in ops], ["ERROR"])
+
+    def test_the_mode_from_model_loaded_cannot_poison_the_trace_name(self):
+        """`run_started` 쪽만 위생하고 `model_loaded` 를 잊었다 — trace 이름이 오염됐고
+        `run()` 이 그것을 직접 set_attribute 했다(라운드 6 P0). 출구가 하나여야 한다."""
+        path = "C:/Users/dasdk/private/secret.env"
+        events = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                       code_sha256="abc1234def"),
+                  dict(event="model_loading", time_unix=0.6),
+                  dict(event="model_loaded", time_unix=0.9, mode=path, load_seconds=1.0),
+                  dict(event="run_succeeded", time_unix=3.0, count=1)]
+        state, ops = tail.State(), []
+        for event in events:
+            ops += tail.plan(event, state)
+        blob = json.dumps([[op.attrs, op.name, op.status] for op in ops], ensure_ascii=False)
+        self.assertNotIn("dasdk", blob)
+        self.assertNotIn("dasdk", state.trace_name)
+        self.assertNotIn("dasdk", str(state.actual_mode))
+        self.assertTrue(state.trace_name.startswith("nara sha256:"))
+        # `run()` 이 span 에 직접 쓰는 trace 이름도 같은 통로를 지난다.
+        self.assertNotIn("dasdk", tail._label("trace_name", "nara " + path + " abc"))
+
+    def test_guard_is_the_last_line_even_if_a_branch_forgets(self):
+        """출구가 하나라는 것은 **어느 분기가 잊어도 막힌다**는 뜻이다. 그것을 직접 건다 —
+        위의 mode 위생이 이미 막고 있어 이 줄은 단독으로는 검사되지 않는다."""
+        path = "C:/Users/dasdk/private/secret.env"
+        dirty = tail.Op("update", "run", "nara " + path,
+                        attrs={"langfuse.trace.name": "nara " + path,
+                               "langfuse.observation.usage_details":
+                                   json.dumps({"input": "x", "output": "y", "total": "xy"})},
+                        status=path)
+        clean = tail.guard(dirty)
+        blob = json.dumps([clean.attrs, clean.name, clean.status, clean.key], ensure_ascii=False)
+        self.assertNotIn("dasdk", blob)
+        # 타입이 틀린 usage 는 걷어낸다 — 숫자가 아닌 토큰 수는 관측이 아니다.
+        self.assertNotIn("langfuse.observation.usage_details", clean.attrs)
+
     def test_a_tampered_log_never_reaches_the_projection(self):
         """짧은 토큰 위조는 **1층**이 막는다 — 값만 보고 버전과 비밀을 가를 수 없으므로
         그 로그는 수출 자체가 거부돼야 한다."""
@@ -671,9 +727,15 @@ class PromptExportBoundary(unittest.TestCase):
                     line["settings"] = {"chunk": 128, "quant": "NON_DEV_SECRET"}
             path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
                             encoding="utf-8", newline="\n")
-            # 계약 자체는 멀쩡하므로 1층은 통과한다 — 그 값은 유출이 아니라 잘못된 관측값이다.
+            # 계약이 멀쩡하면 1층은 통과한다. **그래도 그 값은 평문으로 안 나간다** —
+            # 2층이 알려진 값이 아닌 문자열을 요약한다(라운드 6 P0 의 수리).
             good = tail.validate_dev_export(path, dev, host="http://localhost:3002")
             self.assertTrue(good["allowed"], good["reasons"])
+            state, ops = tail.State(), []
+            for line in path.read_text(encoding="utf-8").splitlines():
+                ops += tail.plan(json.loads(line), state)
+            blob = json.dumps([op.attrs for op in ops], ensure_ascii=False)
+            self.assertNotIn("NON_DEV_SECRET", blob)
             # 본문·경로를 건드리면 1층이 거부한다.
             for line in lines:
                 if line["event"] == "model_call_started":
@@ -689,12 +751,49 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertIsNone(tail._clean("max_chars", "16000"))          # 수치 자리에 문자열
         self.assertIsNone(tail._clean("visible_sha256", "not-a-hash"))
         self.assertEqual(tail._clean("visible_sha256", "b" * 64), "b" * 64)
-        self.assertIsNone(tail._clean("identity_status", "made_up"))  # enum 은 값까지
         self.assertEqual(tail._clean("identity_status", "matched"), "matched")
-        self.assertIsNone(tail._clean("items", ["not_an_item"]))
         self.assertEqual(tail._clean("items", ["v13"]), ["v13"])
         self.assertIsNone(tail._clean("nobody_knows_this", "x"))      # 모르는 이름은 버린다
         self.assertFalse(tail.TOKEN.match("C:/Users/dasdk/x"))        # 경로는 토큰이 아니다
+        # **알려진 값이 아닌 문자열은 평문으로 안 나간다.** 값만 보고 버전과 비밀을
+        # 구분할 수 없으므로, 구분 못 하는 쪽을 평문으로 보내지 않는다(라운드 6 P0).
+        for name, value in (("identity_status", "made_up"), ("items", ["not_an_item"]),
+                            ("quant", "sk-live-secret123"), ("vllm", "sk-live-secret123"),
+                            ("name", "sk-live-secret123"), ("stage", "sk-live-secret123"),
+                            ("status", "sk-live-secret123")):
+                clean = tail._clean(name, value)
+                self.assertNotIn("secret", json.dumps(clean, ensure_ascii=False), name)
+                self.assertNotIn("made_up", json.dumps(clean, ensure_ascii=False), name)
+                self.assertNotIn("not_an_item", json.dumps(clean, ensure_ascii=False), name)
+        # 순수 숫자 버전은 평문이다 — 그 모양에는 비밀을 담을 엔트로피가 없다.
+        self.assertEqual(tail._clean("vllm", "0.26.0"), "0.26.0")
+        self.assertEqual(tail._clean("python", "3.12.13"), "3.12.13")
+        self.assertEqual(tail._clean("torch", "2.11.0+cu130"), "2.11.0+cu130")
+        self.assertTrue(str(tail._clean("vllm", "sk-live-1")).startswith("sha256:"))
+        # 분할 재시도의 `split` 은 생산자가 내는 핵심 관측값이다(라운드 6 P1).
+        self.assertEqual(tail._clean("groups", [{"items": ["v1"], "status": "split",
+                                                 "stage": "parse"}]),
+                         [{"items": ["v1"], "status": "split", "stage": "parse"}])
+        # 중첩 list·dict 에서 크래시하지 않는다 — 게이트는 fail-closed 여야 한다.
+        self.assertIsNone(tail._clean("rejected_conditions", {"v13": [[1]]}))
+        self.assertIsNone(tail._clean("items", [[{"x": 1}]]))
+        # 중첩이라도 값이 항목명뿐이면 크래시 없이 그대로 둔다.
+        self.assertEqual(tail._clean("groups", [{"items": [["v1"]]}]), [{"items": [["v1"]]}])
+
+    def test_the_status_enum_matches_what_the_producer_writes(self):
+        """손으로 적은 집합은 드리프트한다 — `split` 을 빼서 분할 재시도 관측이 사라졌다.
+        생산자 소스를 훑어 새 값이 생기면 이 검사가 먼저 깨진다."""
+        import re as _re
+        sources = [ROOT / "script.py"] + sorted((ROOT / "experiments").glob("*.py"))
+        found = set()
+        for source in sources:
+            text = source.read_text(encoding="utf-8")
+            found |= set(_re.findall(r'"status"\]\s*=\s*"([a-z_]+)"', text))
+            found |= set(_re.findall(r'"status":\s*"([a-z_]+)"', text))
+            found |= set(_re.findall(r'status=["\']([a-z_]+)["\']', text))
+        self.assertIn("split", found, "생산자에서 status 값을 못 읽었다")
+        missing = found - tail._ENUMS["status"]
+        self.assertEqual(missing, set(), f"_ENUMS['status'] 에 없는 생산자 값: {missing}")
 
     def test_non_local_host_is_refused(self):
         dev, ids = self._dev_ids()

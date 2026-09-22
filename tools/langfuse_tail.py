@@ -327,6 +327,9 @@ def guard(op: "Op") -> "Op":
         # 게이트를 통과한 상세거나 이 파일의 고정 문구다. 그 밖의 모양은 자른다.
         if not any(op.status.startswith(fixed) for fixed in _FIXED_STATUS):
             op.status = op.status.split(":")[0][:96]
+    name = op.attrs.get("langfuse.trace.name")
+    if name is not None:                   # `_meta()` 를 안 지나는 키다. 여기서 본다.
+        op.attrs["langfuse.trace.name"] = _label("trace_name", name, "nara")
     usage = op.attrs.get("langfuse.observation.usage_details")
     if usage is not None:
         numbers = json.loads(usage) if isinstance(usage, str) else usage
@@ -386,7 +389,10 @@ _ENUMS = {
     "token_count_kind": frozenset(("actual", "estimate", "test_double")),
     "dataset": frozenset(("dev", "unlabeled")),
     "experiment": frozenset(("h3", "v18", "a8")),
-    "status": frozenset(("valid", "invalid", "complete", "incomplete", "failed", "ok")),
+    # 생산자가 실제로 내는 값 전부. `split` 은 분할 재시도가 일어났다는 **핵심 관측값**인데
+    # 손으로 적어 빠뜨렸다(라운드 6 P1). 아래 검사가 `script.py` 를 훑어 드리프트를 잡는다.
+    "status": frozenset(("valid", "invalid", "split", "complete", "incomplete", "failed",
+                         "ok", "returned", "ambiguous", "response_count_mismatch")),
     # `retry_chat` 의 단계와 전략, `sme_fallback` 의 출처. 값은 전부 `script.py` 가 만든다.
     "stage": frozenset(("call", "parse", "response_count")),
     "retry_strategy": frozenset(("split_items",)),
@@ -409,12 +415,23 @@ _TOKENS = frozenset((
     "platform", "python", "model_loaded", "detail_capture", "prompt_capture",
     "truncated", "quant", "seed", "chunk"))
 _TOKEN_LISTS = frozenset(("ids", "indices", "dev_ids", "order", "arms", "argv"))
-VERSION = re.compile(r"^[\w.+\-]{1,32}$")
+# **순수 숫자 버전만** 평문으로 둔다. `0.26.0`·`2.11.0+cu130`·`3.12.13`·`13.0` 이 통과하고
+# `sk-live-secret123` 은 안 통과한다 — 이 모양에는 비밀을 담을 엔트로피가 없다.
+# 어느 vLLM 으로 돌았는지는 회차 판정의 근거이므로 이 자리는 요약하지 않는다.
+VERSION = re.compile(r"^\d+(\.\d+){0,3}([+.\-][A-Za-z0-9.]{1,16})?$")
 DEVICE = re.compile(r"^[A-Za-z0-9 _.\-]{1,64}$")     # "NVIDIA A100-SXM4-40GB"
 _VERSIONS = frozenset(("vllm", "python", "cuda", "torch", "transformers", "xgrammar",
                        "tokenizers", "platform", "quant", "revision"))
 _DEVICES = frozenset(("name",))
 _DIGESTED = frozenset(("sampling_params",))          # 본문 대신 hash 로 요약한다
+# key·span 이름을 만드는 자리. 요약하면 trace 를 읽을 수 없으므로 평문을 두고 모양을 좁힌다.
+_SCOPE_NAMES = frozenset(("id", "arm", "sample", "phase", "dataset", "experiment",
+                          "call_key"))
+SCOPE = re.compile(r"^[A-Za-z0-9_\-]{1,32}$")
+_CLASS_NAMES = frozenset(("error_type",))
+CLASS_NAME = re.compile(r"^[A-Z][A-Za-z0-9]{0,47}$")
+# trace 이름은 `nara <mode> <code7>` 로 조립된다. 조각은 이미 위생을 지났다.
+TRACE_NAME = re.compile(r"^nara [A-Za-z0-9_\-:]{1,64}( [0-9a-f]{0,7})?$")
 _HASH_MAPS = frozenset(("sha256",))                  # {제공 자료 이름: hash}
 _VERSION_MAPS = frozenset(("packages",))             # {패키지: 버전}
 # 생산자가 실제로 만드는 키. **실측이다** — H4 회차 로그에서 읽었고 검사가 드리프트를 잡는다.
@@ -452,10 +469,14 @@ def _known_items() -> frozenset:
 
 
 def _known_strings() -> frozenset:
-    """생산자가 상수로 들고 있어 그대로 내보내도 되는 문자열."""
+    """생산자가 상수로 들고 있어 그대로 내보내도 되는 문자열.
+
+    `QUANT` 처럼 평가 서버 설정을 그대로 적는 값은 읽혀야 한다 — 요약하면
+    어느 설정으로 돌았는지 확인할 수 없다. 대신 **상수와 같을 때만** 평문이다.
+    """
     sys.path.insert(0, str(ROOT))
     import script
-    return frozenset((script.MODEL_ID, script.MODEL_REVISION))
+    return frozenset((script.MODEL_ID, script.MODEL_REVISION, script.QUANT))
 
 
 def _producer_enums() -> dict:
@@ -481,8 +502,21 @@ def _producer_enums() -> dict:
     return {"mode": frozenset(modes), "token_count_kind": frozenset(counts)}
 
 
+def _summary(value: str) -> str:
+    """평문 대신 나가는 요약. 동일성·변화는 남고 값은 안 나간다."""
+    return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
+
+
 def _clean_str(name: str, value: str, nested: bool) -> Optional[str]:
     """문자열은 **모양만으로 통과시키지 않는다.** 자유 텍스트가 올 수 있는 자리다.
+
+    기본이 **요약**이다. 알려진 값(생산자에서 읽은 enum·생산자 상수·hash·항목명·
+    좁은 식별자)만 평문으로 나가고, 그 밖의 문자열은 hash 로 줄인다.
+
+    왜 패턴으로는 안 되나. 버전 자리에 `sk-live-secret123` 을 넣으면 **값만 보고
+    그것이 버전인지 비밀인지 구분할 방법이 없다.** 라운드 5·6 에서 나는 그 구분
+    불가능을 "그러니 평문으로 보낸다" 의 근거로 썼는데, 그것이 라운드 6 P0 였다 —
+    구분할 수 없으면 **평문을 안 보내는 쪽**이 답이다.
 
     중첩 안에서는 최상위 규칙(`_FREE`·enum)을 다시 쓰지 않는다 —
     `settings={"error_message": "C:/..."}` 가 본문 게이트를 그렇게 우회했다(라운드 5 P0).
@@ -491,27 +525,34 @@ def _clean_str(name: str, value: str, nested: bool) -> Optional[str]:
         return value if HEX.match(value) else None
     produced = _producer_enums()
     if name in produced:                             # 생산자에서 읽은 집합이 먼저다
-        return value if value in produced[name] else None
+        return value if value in produced[name] else _summary(value)
     if not nested:
         if name in _FREE:                            # `_detail()` 이 이미 게이트를 걸었다
             return value
         if name in _ENUMS:
-            return value if value in _ENUMS[name] else None
-    if name in _DIGESTED:
-        # 긴 자유 문자열이다(`str(SamplingParams)` 는 스키마까지 들고 온다). 본문을 내보내는
-        # 대신 hash 로 요약한다 — 회차 간 동일성은 남고 본문은 안 나간다.
-        return hashlib.sha256(value.encode("utf-8")).hexdigest()
+            return value if value in _ENUMS[name] else _summary(value)
     if value in _known_strings():                    # 모델 id·리비전 같은 생산자 상수
         return value
-    if name in _VERSIONS and VERSION.match(value):
-        return value
-    if name in _DEVICES and DEVICE.match(value):     # "NVIDIA A100-SXM4-40GB"
-        return value
     if name in _ENUMS:                               # 중첩이라도 값 집합은 통과시킨다
-        return value if value in _ENUMS[name] else None
-    if name in _TOKENS or name in _TOKEN_LISTS or name in _ITEM_LISTS:
-        return value if TOKEN.match(value) else None
-    return None
+        return value if value in _ENUMS[name] else _summary(value)
+    if name in _ITEM_LISTS:
+        return value if value in _known_items() else _summary(value)
+    if name in _SCOPE_NAMES:
+        # key·span 이름을 만드는 자리다. 요약하면 trace 가 읽히지 않으므로 평문을 두되
+        # 모양을 좁힌다. 이 자리의 위조는 1층(`validate_dev_export`)이 dev id·군 대조로
+        # 막는다 — 그 판단을 계약에 적었다.
+        return value if SCOPE.match(value) else _summary(value)
+    if name == "trace_name":
+        return value if TRACE_NAME.match(value) else "nara " + _summary(value)
+    if name in _CLASS_NAMES and CLASS_NAME.match(value):
+        return value                                 # 예외 클래스 이름. CamelCase 만 평문
+    if name in _VERSIONS:
+        return value if VERSION.match(value) else _summary(value)
+    if name in _TOKENS or name in _TOKEN_LISTS or name in _DEVICES:
+        return _summary(value)                       # 장비명·그 밖의 알려진 이름
+    if name in _DIGESTED:
+        return _summary(value)
+    return None                                      # 모르는 이름은 아예 안 내보낸다
 
 
 def _clean(name: str, value: Any, *, nested: bool = False, _depth: int = 0) -> Any:
@@ -537,7 +578,8 @@ def _clean(name: str, value: Any, *, nested: bool = False, _depth: int = 0) -> A
     if isinstance(value, list):
         if name in _ITEM_LISTS:                      # 항목 목록은 고정 집합이다
             flat = [i for e in value for i in (e if isinstance(e, list) else [e])]
-            if flat and all(isinstance(i, str) for i in flat) and set(flat) <= _known_items():
+            known = _known_items()                   # set() 으로 안 묶는다 — 중첩에서 터진다
+            if flat and all(isinstance(i, str) and i in known for i in flat):
                 return value
             # `groups` 는 dict 목록으로도 온다(`script.py:1001`). 그 경로로 내려간다.
             if not all(isinstance(e, dict) for e in value):
@@ -554,7 +596,12 @@ def _clean(name: str, value: Any, *, nested: bool = False, _depth: int = 0) -> A
             if key in items:                         # 항목별 판정·기각 사유
                 if isinstance(inner, bool) or isinstance(inner, int):
                     kept[key] = inner
-                elif isinstance(inner, list) and set(inner) <= REJECTION_REASONS:
+                elif isinstance(inner, list) and all(
+                        isinstance(reason, str) and reason in REJECTION_REASONS
+                        for reason in inner):
+                    # `set(inner)` 로 쓰면 중첩 list·dict 에서 TypeError 로 사이드카가
+                    # 멈춘다(라운드 6 P0). 게이트는 fail-closed 여야 한다 —
+                    # 오염된 값은 버리고 회차는 계속 투영한다.
                     kept[key] = inner
                 continue
             if name in _HASH_MAPS:                   # {파일명: hash}. 키는 제공 자료 이름이다
@@ -688,7 +735,8 @@ def _plan(event: dict, state: State) -> list:
         ops = [Op("close", "model", end=now,
                   attrs=_meta(load_seconds=event.get("load_seconds"),
                               environment=event.get("environment")))]
-        mode = event.get("mode")
+        # `run_started` 쪽만 위생하고 여기를 잊었다 — 그래서 trace 이름이 오염됐다(라운드 6 P0).
+        mode = _clean("mode", event.get("mode"))
         if mode:
             state.actual_mode = mode
             state.trace_name = f"nara {mode} {state.code}".strip()
@@ -803,7 +851,9 @@ def _plan(event: dict, state: State) -> list:
         if key not in state.calls:             # 시작 없는 종료는 관측 계약 실패다. 꾸며 넣지 않는다.
             return [Op("point", f"orphan:{key}:{now}", "orphan model call", "event",
                        state.arm or "run", now, now, level="ERROR",
-                       attrs={**_fixed(call_key=key),
+                       # `_fixed()` 는 이 파일이 만든 문구 전용이다. key 는 이벤트에서
+                       # 조립되므로 여기 넣으면 계약이 깨진다(라운드 6 P0).
+                       attrs={**_meta(call_key=key),
                               **_meta(transport_status=event.get("transport_status"))})]
         state.calls.pop(key, None)
         failed = kind == "model_call_failed"
@@ -1111,7 +1161,9 @@ def run(args: argparse.Namespace) -> int:
                         trace_id, 1, False, TraceFlags(TraceFlags.SAMPLED))))
                 span = tracer.start_span(op.name or op.key, context=context,
                                          start_time=int(op.start * 1_000_000_000))
-                span.set_attribute("langfuse.trace.name", state.trace_name)
+                # `plan()` 을 안 지나는 네 속성도 같은 통로를 지난다 — 여기가
+                # `guard()` 밖의 출구였다(라운드 6 P0). trace 이름은 이벤트 유래다.
+                span.set_attribute("langfuse.trace.name", _label("trace_name", state.trace_name))
                 span.set_attribute("langfuse.session.id", session)
                 span.set_attribute("langfuse.environment", args.environment)
                 span.set_attribute("langfuse.observation.type", op.kind)
