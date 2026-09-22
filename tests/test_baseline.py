@@ -176,7 +176,11 @@ class BaselineTests(unittest.TestCase):
                         self_test.assertEqual(items, ["v13"])
                         self_test.assertNotIn("- v24:", messages[0]["content"])
                         self_test.assertIn("[Provided 고시", messages[1]["content"])
-                    obj = {k: {"위반여부": 1, "근거문구": None} for k in (items or baseline.ITEMS)}
+                    # 두 시험 공고의 본문에 공통으로 있는 구절이다. 근거 계약이 검증된
+                    # 인용을 요구하므로 여기서 빈칸을 내면 baseline 의 v13 양성이 서지 않아
+                    # SME 가 그것을 내렸다는 것을 볼 수 없다.
+                    obj = {k: {"위반여부": 1, "근거문구": "국가종합전자조달시스템"}
+                           for k in (items or baseline.ITEMS)}
                     if items == baseline.SME_ITEMS:
                         obj["v13"]["위반여부"] = 0
                         for cell in obj.values():
@@ -576,6 +580,31 @@ class BaselineTests(unittest.TestCase):
         schema = baseline.decode_schema(str(ROOT / "open/data"))
         self.assertEqual(schema["properties"]["v1"]["properties"]["근거문구"]["maxLength"], 500)
 
+    def test_violation_without_a_verified_quote_is_lowered(self):
+        """D4-4 가 e 를 원문의 연속된 부분문자열로 규정한다. 한 구절도 못 집는 위반은 못 선다.
+
+        부재탐지 5항목은 스키마가 근거문구를 null 로 고정하므로 빈칸이 규정된 모양이고,
+        v24 는 대조형이라 한 구절로 안 잡히는 것이 정상이라 둘 다 예외다.
+        """
+        def judged(item, quote):
+            rec = record()
+            rec["docs"][0]["text"] = "앞 문장. 공고에 실제로 있는 구절. 뒤 문장."
+            obj = valid()
+            obj[item] = {"위반여부": 1, "근거문구": quote}
+            return baseline.postprocess(obj, rec)[item]["위반여부"]
+
+        # 근거가 없거나 원문에 없는 인용이면 위반이 안 선다.
+        self.assertEqual(judged("v1", None), 0)
+        self.assertEqual(judged("v1", ""), 0)
+        self.assertEqual(judged("v1", "공고 어디에도 없는 문장"), 0)
+        # 원문에 있는 인용이면 그대로 선다.
+        self.assertEqual(judged("v1", "공고에 실제로 있는 구절"), 1)
+        # 예외 둘: 부재탐지와 v24 는 빈 근거로도 선다.
+        self.assertEqual(judged("v20", None), 1)
+        self.assertEqual(judged("v24", None), 1)
+        self.assertIn("v24", baseline.EVIDENCE_EXEMPT)
+        self.assertFalse(set(baseline.EVIDENCE_EXEMPT) & set(baseline.ABSENCE))
+
     def test_evidence_that_refutes_the_item_lowers_only_that_item(self):
         def judged(item, quote, text=None, meta=None):
             rec = record()
@@ -642,14 +671,17 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(judged("v9", "형식명 : ABC-100",
                                 text="형식명 : ABC-100 1대 (부가세 상당액 포함)"), 1)
 
-        # 근거가 비었거나 원문에 없는 양성은 근거만으로 내리지 않는다.
+        # 근거가 비었거나 원문에 없는 양성은 내린다 — D4-4 의 근거 계약이고
+        # test_violation_without_a_verified_quote_is_lowered 가 그 규칙을 소유한다.
+        # 여기서는 evidence_refutes 가 못 본 자리도 같은 계약에 걸린다는 것만 본다.
+        # v24 만 예외로 남는다(대조형이라 한 구절로 안 잡힌다).
         rec = record()
         obj = valid()
         for item in ("v9", "v19", "v21", "v24"):
             obj[item] = {"위반여부": 1, "근거문구": None}
         obj["v21"]["근거문구"] = "원문에 없는 공동수급 불가"
         out = baseline.postprocess(obj, rec)
-        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [1, 1, 1, 1])
+        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 0, 0, 1])
 
     def test_mock_cli_and_invalid_inputs(self):
         with tempfile.TemporaryDirectory(prefix="t1 한글 ") as tmp:

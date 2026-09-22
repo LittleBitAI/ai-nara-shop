@@ -90,7 +90,7 @@ class V24MetaDiffCandidate(unittest.TestCase):
         # 보관물을 다시 쓰지 않고 움직인 셀을 고정한다 — 배선이 끊기면 목록이 달라져 빨개진다.
         self.assertEqual(replay_run.csv_cell_diff(replay_run.to_csv_bytes(script, result["rows"]),
                                                   AFTER.read_bytes()),
-                         [("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-198", "v13")],
+                         replay_run.DELIBERATE_MOVES,
                          "지금 후보의 출력이 보관된 candidate-replay/submission.csv 와 예상 밖으로 다르다")
 
     def test_v24_counts_match_the_recorded_replay(self):

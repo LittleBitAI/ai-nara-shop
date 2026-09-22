@@ -52,6 +52,12 @@ ITEMS = [f"v{i}" for i in range(1, 25)]
 EVID = [f"e{i}" for i in range(1, 25)]
 COLUMNS = ["id"] + ITEMS + EVID
 ABSENCE = ["v10", "v11", "v16", "v18", "v20"]          # 부재탐지 항목: 근거 문구 빈칸
+# 부재탐지가 아닌데도 검증된 인용 없이 위반이 설 수 있는 항목. D4-4 가 e 를 원문의 연속된
+# 부분문자열로 규정하므로 한 구절도 못 집는 위반 판정은 그 계약을 못 채운다 — 그래서 기본은
+# 내리는 것이고 여기 적힌 것만 예외다. v24 는 공고서와 나라장터 등록값의 대조형이라 근거가
+# 한 구절로 안 잡히는 것이 정상이고, 조문 없는 항목에 조문형 계약을 씌우지 않는다.
+# 빼면 dev 에서 +0.001497 인데 churn 상한 0.004689 아래라 측정으로 정당화되지 않는다.
+EVIDENCE_EXEMPT = ["v24"]
 
 # ----- 금액 경계: 제공 조문에서 온다 (experiments/sme_candidate.py와 같은 출처) -----
 # 고시금액: 재정경제부장관 고시 1.가 (물품 및 용역) — 국가계약법 시행령 제2조제3호.
@@ -1956,7 +1962,7 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 ev = clean_evidence(cell.get("근거문구"), doc["text"])
                 if ev:
                     break
-            if evidence_refutes(v, ev, rec):
+            if (not ev and v not in EVIDENCE_EXEMPT) or evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
         out[v] = {"위반여부": hit, "근거문구": ev}
     return out

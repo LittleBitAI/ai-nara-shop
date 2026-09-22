@@ -42,13 +42,12 @@ class ScopePilotTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
             pilot.hybrid_replay(payload, output)
+            # 일부러 갈린 셀의 목록은 `replay_run.DELIBERATE_MOVES` 한 벌이 소유한다.
             for name, baseline in [('head', 'head-replay'), ('h2', 'absence-replay')]:
                 expected = pilot.ROOT/'reports/team-c/a5-label-definition'/baseline/'submission.csv'
-                # `company_size_products()`가 검증된 인용을 요구하면서 세 셀이 일부러 갈렸다.
-                # 보관 CSV를 다시 쓰지 않고 움직인 셀만 고정한다.
                 self.assertEqual(pilot.replay_run.csv_cell_diff((output/f'{name}-hybrid.csv').read_bytes(),
                                                                 expected.read_bytes()),
-                                 [('PPS-DEV-148', 'e13'), ('PPS-DEV-16', 'v13'), ('PPS-DEV-198', 'v13')])
+                                 pilot.replay_run.DELIBERATE_MOVES)
 
     def test_schema_restoration_and_grounding_are_separate_from_semantics(self):
         original = script.company_size_schema

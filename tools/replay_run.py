@@ -148,6 +148,39 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             "settings": settings}
 
 
+# 보관 CSV 와 현재 소비자 사이에서 **일부러** 갈린 셀. 보관물을 다시 쓰지 않고 여기에 적는다.
+# 한 벌만 둔다 — 여섯 검사가 각자 베껴 두었더니 소비자를 한 번 고칠 때마다 여섯 군데가 같이
+# 터졌고, v13 수리와 근거 계약에서 실제로 두 번 그랬다. 소비자를 또 고치면 이 목록만 고친다.
+#  - 세 셀: `company_size_products()` 가 검증된 인용을 요구하면서 갈렸다 (PR #84).
+#  - 열여섯 셀: 근거 계약을 부재탐지·v24 밖 전 항목으로 넓히면서 갈렸다. 근거 없는 위반은
+#    D4-4 의 `e` 계약(원문의 연속된 부분문자열)을 못 채우므로 내린다.
+#
+# 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
+# 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
+# `reports/team-c/a5-label-definition/head-replay/submission.csv` 와 대조할 때.
+DELIBERATE_MOVES = [
+    ("PPS-DEV-01", "v1"), ("PPS-DEV-036", "v19"), ("PPS-DEV-039", "v21"),
+    ("PPS-DEV-050", "v9"), ("PPS-DEV-063", "v12"), ("PPS-DEV-092", "v6"),
+    ("PPS-DEV-101", "v1"), ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
+    ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"), ("PPS-DEV-144", "v6"),
+    ("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-162", "v9"),
+    ("PPS-DEV-170", "v21"), ("PPS-DEV-187", "v6"), ("PPS-DEV-188", "v21"),
+    ("PPS-DEV-198", "v13"),
+]
+
+# `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
+# 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
+# `PPS-DEV-036/v5`·`PPS-DEV-042/v21` 이 있고, 위에 있는 `PPS-DEV-170/v21` 은 여기 없다.
+DELIBERATE_MOVES_H2 = [
+    ("PPS-DEV-01", "v1"), ("PPS-DEV-036", "v19"), ("PPS-DEV-036", "v5"),
+    ("PPS-DEV-042", "v21"), ("PPS-DEV-050", "v9"), ("PPS-DEV-063", "v12"),
+    ("PPS-DEV-092", "v6"), ("PPS-DEV-101", "v1"), ("PPS-DEV-127", "v21"),
+    ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-144", "v6"),
+    ("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-162", "v9"),
+    ("PPS-DEV-187", "v6"), ("PPS-DEV-188", "v21"), ("PPS-DEV-198", "v13"),
+]
+
+
 def csv_cell_diff(left: bytes, right: bytes):
     """두 제출 CSV 에서 다른 셀을 `(id, 열)` 로 돌려준다.
 

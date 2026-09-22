@@ -76,8 +76,8 @@ class ScopeReviewTests(unittest.TestCase):
             output = Path(directory)
             pilot.hybrid_replay(payload, output, experiment='v18')
             baseline = (pilot.ROOT/'reports/team-c/a5-label-definition/head-replay/submission.csv').read_bytes()
-            # `company_size_products()`가 검증된 인용을 요구하면서 보관 CSV와 세 셀이 일부러 갈렸다.
-            moved = [('PPS-DEV-148', 'e13'), ('PPS-DEV-16', 'v13'), ('PPS-DEV-198', 'v13')]
+            # 일부러 갈린 셀은 `replay_run.DELIBERATE_MOVES` 한 벌이 소유한다.
+            moved = pilot.replay_run.DELIBERATE_MOVES
             self.assertEqual(pilot.replay_run.csv_cell_diff((output/'off-hybrid.csv').read_bytes(), baseline), moved)
             self.assertEqual(pilot.replay_run.csv_cell_diff((output/'on-hybrid.csv').read_bytes(), baseline), moved)
             case = pilot.ROOT/'reports/runs/a5-scope-1789959906563639676/pilot/episode-1'
