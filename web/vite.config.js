@@ -57,11 +57,23 @@ const LAW_FILES = [
 
 // 키는 NFC 다. **읽기는 디스크의 실제 이름으로 한다** — macOS 는 readdir 이 NFD 로 주므로
 // 정규화한 이름으로 열면 그 경로가 없다. 그 김에 실물이 일반 파일인지도 여기서 본다.
-const ON_DISK = new Map(
-  readdirSync(join(OPEN, LAW_DIR), { withFileTypes: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => [entry.name.normalize('NFC'), entry.name]),
-)
+//
+// **정규화하면 같아지는 이름이 둘이면 연다는 판단 자체가 틀린 것이므로 시작을 멈춘다.**
+// NFC 와 NFD 는 디스크에서 서로 다른 파일이고(NTFS 에서 둘 다 만들어지는 것을 확인했다),
+// 맵으로 접으면 둘 중 어느 것이 허용된 URL 로 나갈지 **열거 순서**가 정한다. 집합 비교만
+// 하는 검사도 이 중복을 못 본다. 조용히 다른 실물을 내보내느니 안 뜨는 편이 낫다.
+const ON_DISK = new Map()
+for (const entry of readdirSync(join(OPEN, LAW_DIR), { withFileTypes: true })) {
+  if (!entry.isFile()) continue
+  const key = entry.name.normalize('NFC')
+  const twin = ON_DISK.get(key)
+  if (twin !== undefined) {
+    throw new Error(`${LAW_DIR} 에 정규화하면 같아지는 이름이 둘이다: `
+                  + `${JSON.stringify(twin)} 와 ${JSON.stringify(entry.name)}. `
+                  + '어느 것을 내보낼지 정할 수 없어 멈춘다.')
+  }
+  ON_DISK.set(key, entry.name)
+}
 for (const name of LAW_FILES) {
   const real = ON_DISK.get(name.normalize('NFC'))
   if (!real) continue                       // 스냅샷에 없는 이름은 안 연다

@@ -221,10 +221,15 @@ class BuildReportTests(unittest.TestCase):
         받고 이유는 안 보인다. 어긋나면 여기서 터진다.
         """
         config = (ROOT / "web/vite.config.js").read_text(encoding="utf-8")
-        listed = set(re.findall(r"^  '(.+\.txt)',$", config, re.M))
-        package = {unicodedata.normalize("NFC", path.name)
-                   for path in (ROOT / "open/data/법령패키지/법령").glob("*.txt")}
-        self.assertEqual(listed, package)
+        listed = re.findall(r"^  '(.+\.txt)',$", config, re.M)
+        files = [path.name for path in (ROOT / "open/data/법령패키지/법령").glob("*.txt")]
+        package = {unicodedata.normalize("NFC", name) for name in files}
+        self.assertEqual(set(listed), package)
+        # **접기 전후로 수가 같아야 한다.** NFC 와 NFD 는 디스크에서 서로 다른 파일이고,
+        # 집합으로 접으면 둘이 하나로 보여 허용된 URL 이 어느 실물을 내보낼지 열거 순서가
+        # 정하게 된다. vite 는 그 경우 시작을 멈춘다. (리뷰 라운드 3 P0)
+        self.assertEqual(len(files), len(package), "정규화하면 같아지는 법령 파일이 둘이다")
+        self.assertEqual(len(listed), len(set(listed)), "못 박은 목록에 같은 이름이 두 번 있다")
 
     def test_zip_slip_is_refused(self):
         for name in ("../escape.csv", "/abs.csv", "dev/../../out.csv"):
