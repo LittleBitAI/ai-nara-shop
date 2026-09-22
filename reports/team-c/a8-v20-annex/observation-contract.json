@@ -16,7 +16,7 @@
     "experiments/a5_scope_pilot.py": "d95603bc8c2ca39978c53adda435f0a47884f70dbcd23c9d21fabbe13da2b3b4",
     "experiments/a8_v20_annex.py": "62a3ea53e66f157cc143f9663e6e89802d708ce73df18e0ddd4e04dece8ecaba",
     "experiments/a8_v20_audit.py": "6c5c878500457f802096fdd08f6b1e205d47554bad4e937969ff6c8ed3957227",
-    "tools/langfuse_tail.py": "38b5a9881f0bacd622999f2a4dccbb7339e43865954f41cbae52dd9c54cc628d",
+    "tools/langfuse_tail.py": "6edcbd6afa17e83cb71294813783dbd7d13a5c0d97d0a85fa2bf6682df80aa94",
     "tools/replay_run.py": "35c235f99b3a2d824c18266b74f88534f033b4036a81ee4ce8611660b6f43895",
     "script.py": "8e7011e2bfcc8eab2f5463ee16266e3de11ff5115a70c850027af8fcb8667dd4"
   },
@@ -145,7 +145,8 @@
       "notice_id": "**저장소의 입력 파일에서 읽은 집합**과 대조한다 — open/dev.jsonl 과 open/data/test.jsonl.gz 를 둘 다 읽는다(210개). 회차가 스스로 선언한 dev_ids 는 근거가 아니다 — 1층이 안 도는 모드에서 공격자가 자기 allowlist 를 만든다(라운드 8 P0). dev 만 읽으면 제출 입력으로 돈 H4 회차의 관측이 통째로 요약된다.",
       "map_keys": "sha256·packages map 은 **키도 대조한다.** 값만 보면 키에 개인 경로가 남는다(라운드 7 P0). 자료 이름은 script.py:2072 가 만드는 닫힌 집합(input·items·decode_schema + SME_FILES), 패키지 이름은 script.py 가 세는 고정 목록이다 — 모양으로 두면 /home/… 과 //host/… 가 통과한다(라운드 8 P0)",
       "no_shape_exceptions": "**모양으로 평문을 통과시키는 자리는 없다.** hash 도 아니다 — code_sha256=\"deadbeef\"*8 이 통과했다(라운드 9 P0). 16진수 비밀·식별자가 같은 모양이다. 남은 정규식은 TRACE_NAME·NAME 뿐이고 그 조각은 이미 위생을 지났다.",
-      "hashes": "`_known_hashes()` 가 **재계산할 수 있는** digest 열한 개를 모아 대조한다 — script.py·dev·제출 입력·항목표·디코딩 스키마·SME_FILES 셋·제품과 후보 system 프롬프트·스키마. 재계산 못 하는 것(chat_template·contract·visible·prompt)과 **옛 회차의 코드 hash** 는 요약한다.",
+      "hashes": "`_known_hashes()` 가 **재계산할 수 있는** digest 열두 개를 모아 대조한다 — script.py·dev·제출 입력·항목표·디코딩 스키마·SME_FILES 셋·제품과 후보 system 프롬프트·전체 스키마·company_size_schema(A8 실행기가 내보내는 쪽, 라운드 10 P2). 재계산 못 하는 것(chat_template·contract·visible·prompt)과 **옛 회차의 코드 hash** 는 요약한다.",
+      "summary_in_names": "요약된 값을 이름에 붙일 때는 `_short()` 로 **접두사 뒤 digest** 에서 일곱 자를 뽑는다. 앞 일곱 자를 그대로 쓰면 전부 `sha256:` 이라 서로 다른 회차가 같은 trace 이름이 된다(라운드 10 P1 — 라운드 9 수리가 만든 회귀). 검사는 `_clean()` 반환값이 아니라 **소비 경로**(실제 trace 이름)를 본다.",
       "why_summary_keeps_hashes_useful": "요약해도 **동일성 비교는 그대로 된다** — 같은 hash 는 같은 요약이므로 \"회차 간 같은가\" 라는 hash 의 용도가 유지된다. 핀과 대조할 때는 핀도 같은 방식으로 요약해 비교한다. visible·prompt 는 1층이 실제 dev 로 재구성해 대조하므로 2층의 요약이 검증을 약화시키지 않는다.",
       "old_runs": "옛 회차(H4)의 code_sha256 은 그때의 script.py 라 재계산할 수 없어 요약된다. 그 회차가 어느 코드였는지는 superseded_pins 와 회차 산출물이 들고 있다.",
       "span_names": "span 이름·key 를 만드는 값도 위생을 지난 것만 쓴다. phase_started 가 원본 phase 를, _status()·model_call_failed 가 원본 error_type 을 쓰고 있었다(라운드 8 P0).",
@@ -166,7 +167,7 @@
       "pinned_by": "**실제 H4 회차 로그**(1,020 이벤트) 투영 — 크래시 없음 · 진짜 값 보존 · 오염 차단 셋을 한 검사에서 본다. 합성 이벤트로는 이 결함군이 안 보였다(라운드 5 P1)."
     },
     "why": "capture_protocol 1 로그에는 실제 프롬프트 전문이 들어 있다. 플래그는 안전의 근거가 아니고 데이터 대조가 근거다 — **id 가 고정 dev 에 있다는 것은 본문이 dev 에서 왔다는 근거가 아니다.** R17 경계.",
-    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 37개 검사"
+    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 39개 검사"
   },
   "gain_kind": {
     "verified_quote": "적용 가능하고(software_business=yes + 그 인용 검증) 참여 인용이 검증됐으며 판정이 실제로 write_0 으로 전이했다",

@@ -32,8 +32,8 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "1fab41a88ea9019400d21f04b8113e5c646c4d6b",
-  "pinned_notebook_commit": "cb3493bed51d979e901a95d870bc23a5bf853208",
+  "pinned_code_commit": "e6d9b98b7a40c6a6f563802445c24e2e61d9a3af",
+  "pinned_notebook_commit": "9940b50b9186b87c43a746f074277dd93bea3105",
   "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
@@ -46,7 +46,8 @@
                       "c51206339a0304b219b2a52cacb748574c57c7c3 — 라운드 6 수리 전(통로 밖 직접 쓰기·평문 기본)",
                       "a9e1adf6dfb337a3cf64ffe3891a4e41883b8116 / 261c03d3b9e19ee00abbcd01159e22363dc21bce — 라운드 7 수리 전(map 키·패턴 기반 평문 예외)",
                       "5422ae514506ae7a08950d30ed2a437225ee1870 / 489f19fb2dd896f846b2f92f30bfffede79777a3 — 라운드 8 수리 전(모양 예외 네 자리)",
-                      "9ed421741c3d170f9c550ce770699c989a7ef0e8 / 0a80cb19ea97bd61c53cdd5662915eb035722519 — 라운드 9 수리 전(hash 모양·생산자 오류형)"],
+                      "9ed421741c3d170f9c550ce770699c989a7ef0e8 / 0a80cb19ea97bd61c53cdd5662915eb035722519 — 라운드 9 수리 전(hash 모양·생산자 오류형)",
+                      "1fab41a88ea9019400d21f04b8113e5c646c4d6b / cb3493bed51d979e901a95d870bc23a5bf853208 — 라운드 10 수리 전(요약이 trace 이름을 합침)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -244,6 +245,14 @@
         "p1": "groups[].status='split' 은 분할 재시도가 일어났다는 핵심 관측값인데 손으로 적은 집합에서 빠져 조용히 사라졌다. script.py·experiments 를 훑어 드리프트를 잡는 검사를 넣었다.",
         "mutation_check": "다섯 가드를 되돌렸다. call_key 와 guard 의 trace.name 은 첫 시도에서 초록이라(다른 가드가 가리고 있었다) 각각 직접 거는 검사를 추가했다."
       },
+      "round_10": {
+        "verdict": "머지 불가 → 수리 완료. **P0 없음** — P1 하나·P2 하나다",
+        "p1": "**라운드 9 수리가 만든 회귀다.** hash 를 요약으로 바꾸면서 trace 이름에 붙이는 일곱 자를 요약 문자열 앞에서 잘랐고, 앞 일곱 자가 sha256: 이라 서로 다른 회차가 모두 nara live sha256: 이 됐다 — 과거 회차를 코드 리비전별로 가르던 동작이 사라졌다. _short() 가 접두사 뒤 digest 에서 뽑는다.",
+        "test_lesson": "`_clean()` 반환값만 비교하면 **소비 경로**를 놓친다 — 요약값은 서로 달랐는데 이름이 합쳐졌다. 새 검사는 두 회차를 실제로 투영해 trace 이름이 갈리는지 본다.",
+        "p2": "A8 실행기는 company_size_schema() 쪽 digest 를 내보내는데 전체 스키마만 재계산해 그 값이 요약됐다. '재계산 가능한 digest 는 평문' 이라는 설명과 어긋나므로 둘 다 계산한다.",
+        "repo_lint": "허브 도구가 갱신돼 강조 과다 검사가 새로 들어왔다(발견 293건). 이 PR 이 만든 결정 기록의 발견 4건을 1건으로 줄였고, 나머지는 이 PR 전부터 있던 문서로 별건 정리 대상이다. 훅 드리프트도 2건에서 5건으로 늘었는데 gitignore 된 설정이며 이 PR 의 변경이 아니다.",
+        "mutation_check": "두 가드를 되돌려 담당 검사가 각각 빨개졌다."
+      },
       "round_9": {
         "verdict": "머지 불가 → 수리 완료. P0 하나·P1 하나 — 라운드 8 의 절반이다",
         "p0": "**hash 가 마지막 모양 예외였다.** code_sha256=\"deadbeef\"*8 이 통과했다 — 16진수 비밀·식별자가 같은 모양이다. _known_hashes() 가 재계산할 수 있는 digest 열한 개를 모아 대조하고, 재계산 못 하는 것과 옛 회차의 코드 hash 는 요약한다.",
@@ -314,7 +323,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "dcc2df28460806e1b2ef7579a7c94186d74d3113f7b75f3b5d8d4f22f3861d36",
+  "notebook_sha256": "f54097bc8a1f3e67acba327e8975d8735436f5592a7244b9ca5fe7ccd7e54aff",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -549,6 +558,26 @@
       "passed": 19,
       "seconds": 2.303,
       "phase": "라운드 9 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 391,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 263.11,
+      "phase": "라운드 10 P1·P2 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.991,
+      "phase": "라운드 10 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 293,
+      "phase": "라운드 10. 허브 도구 갱신으로 강조 과다 검사가 새로 들어왔다 — 291건이 그것이고 이 PR 전부터 있던 문서다. 이 PR 이 만든 결정 기록은 4건에서 1건으로 줄였다"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
