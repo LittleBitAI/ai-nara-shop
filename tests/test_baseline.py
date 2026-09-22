@@ -599,11 +599,28 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(judged("v1", "공고 어디에도 없는 문장"), 0)
         # 원문에 있는 인용이면 그대로 선다.
         self.assertEqual(judged("v1", "공고에 실제로 있는 구절"), 1)
-        # 예외 둘: 부재탐지와 v24 는 빈 근거로도 선다.
+        # 예외 둘. 부재탐지는 빈 근거가 규정된 모양이라 그대로 선다.
         self.assertEqual(judged("v20", None), 1)
-        self.assertEqual(judged("v24", None), 1)
+        # v24 는 근거 계약에서 빠지지만 대신 대조 검사를 받는다 — 코드가 공고와 등록값의
+        # 불일치를 하나도 못 찾으면 근거가 있든 없든 내려간다.
         self.assertIn("v24", baseline.EVIDENCE_EXEMPT)
         self.assertFalse(set(baseline.EVIDENCE_EXEMPT) & set(baseline.ABSENCE))
+        self.assertEqual(judged("v24", None), 0)            # 불일치 없음 → 내려간다
+
+        def judged_v24(text, meta):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update(meta)
+            obj = valid()
+            obj["v24"] = {"위반여부": 1, "근거문구": None}
+            return baseline.postprocess(obj, rec)["v24"]["위반여부"]
+
+        # 본문은 업종을 거는데 등록은 제한 없음 — 대조로 설명되는 불일치다. 근거가 비어도 선다.
+        self.assertEqual(judged_v24("입찰참가자격 업종코드 1169 보유 업체",
+                                    {"업종제한여부": "N"}), 1)
+        # 같은 본문이라도 등록이 그 코드를 제한으로 갖고 있으면 불일치가 아니다.
+        self.assertEqual(judged_v24("입찰참가자격 업종코드 1169 보유 업체",
+                                    {"업종제한여부": "Y", "면허업종제한목록": "(1169)"}), 0)
 
     def test_evidence_that_refutes_the_item_lowers_only_that_item(self):
         def judged(item, quote, text=None, meta=None):
@@ -650,16 +667,23 @@ class BaselineTests(unittest.TestCase):
                                 meta={**local, "공동도급구성방식": "분담이행"}), 0)
         # "단독"만으로는 내리지 않는다(특수관계인 지분 조항 등).
         self.assertEqual(judged("v21", "단독으로 또는 합산하여 발행주식 총수의 100분의 30 이상"), 1)
-        # v24: 같은 뜻의 메타 값과 일치할 때만 내린다.
+        # v24 는 인용 검사와 대조 검사를 함께 받는다. 인용이 메타와 일치하면 내리고,
+        # 일치하지 않더라도 **코드가 축에서 불일치를 하나도 못 찾으면** 내린다.
+        # 그래서 `judged("v24", ...)` 의 1 은 "이 인용이 어긋난다" 가 아니라
+        # "어긋나고, 그 어긋남을 코드도 축에서 확인했다" 는 뜻이다.
         meta = {"배정예산금액": 30000000, "입찰추정가격": 27272727, "계약방법": "제한경쟁",
                 "지역제한여부": "Y", "제한지역코드목록": "경상남도"}
         self.assertEqual(judged("v24", "입찰금액 : 30,000,000원(부가세포함)", meta=meta), 0)
-        self.assertEqual(judged("v24", "용역금액: 금37,930,000원", meta=meta), 1)
         self.assertEqual(judged("v24", "지역제한(경상남도)", meta=meta), 0)
         self.assertEqual(judged("v24", "지역제한(경상남도, 부산광역시)", meta=meta), 1)
         self.assertEqual(judged("v24", "행사 용역(제한경쟁·3억원미만)", meta=meta), 0)
         self.assertEqual(judged("v24", "행사 용역(일반경쟁·3억원미만)", meta=meta), 1)
         self.assertEqual(judged("v24", "행사 용역(제한경쟁·1천만원미만)", meta=meta), 1)
+        # 금액만 어긋나는 인용은 이제 내려간다. 예산 축이 `DISABLED_AXES` 로 꺼져 있어
+        # 코드가 그 어긋남을 확인해 주지 못하기 때문이다 — 그 축이 세 라운드 연속으로
+        # 부가세·산식 구성값·표시 반올림을 불일치로 읽었다. 의도된 교환이다.
+        self.assertIn("예산", baseline.DISABLED_AXES)
+        self.assertEqual(judged("v24", "용역금액: 금37,930,000원", meta=meta), 0)
         # v9: 곁에 동등품 허용이 있거나 사양 하한이면 내리고, 모델명만이면 둔다.
         self.assertEqual(judged("v9", "형식명 : ABC-100",
                                 text="형식명 : ABC-100 (동등 이상의 제품 가능)"), 0)
@@ -674,14 +698,15 @@ class BaselineTests(unittest.TestCase):
         # 근거가 비었거나 원문에 없는 양성은 내린다 — D4-4 의 근거 계약이고
         # test_violation_without_a_verified_quote_is_lowered 가 그 규칙을 소유한다.
         # 여기서는 evidence_refutes 가 못 본 자리도 같은 계약에 걸린다는 것만 본다.
-        # v24 만 예외로 남는다(대조형이라 한 구절로 안 잡힌다).
+        # v24 는 그 계약에서 빠지지만 대조 검사가 대신 받는다 — 이 기록에는 축이 찾을
+        # 불일치가 없으므로 결국 같이 내려간다. 네 자리 모두 0 인 이유가 서로 다르다.
         rec = record()
         obj = valid()
         for item in ("v9", "v19", "v21", "v24"):
             obj[item] = {"위반여부": 1, "근거문구": None}
         obj["v21"]["근거문구"] = "원문에 없는 공동수급 불가"
         out = baseline.postprocess(obj, rec)
-        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 0, 0, 1])
+        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 0, 0, 0])
 
     def test_mock_cli_and_invalid_inputs(self):
         with tempfile.TemporaryDirectory(prefix="t1 한글 ") as tmp:
