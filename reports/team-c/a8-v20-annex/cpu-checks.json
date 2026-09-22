@@ -32,8 +32,8 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "09667115849ad377cadfece7710eea5e30dcb295",
-  "pinned_notebook_commit": "134e02fb4e58cd639248326a8e05da7a37c6d488",
+  "pinned_code_commit": "a9e1adf6dfb337a3cf64ffe3891a4e41883b8116",
+  "pinned_notebook_commit": "261c03d3b9e19ee00abbcd01159e22363dc21bce",
   "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
@@ -41,7 +41,9 @@
                       "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023 / 2f6e20642e07132cf03dba26f2064b21c2e20deb — 라운드 1 수리 전(수출 경계·gain_kind)",
                       "ea9ac8a338705a1944a7f193b99735813b5fcdf0 / 516ddb93709e1de30cb0827f4921d2e8c627d637 — 라운드 2 수리 전(본문 결속·redirect·자유 텍스트·부재 기전)",
                       "01258d3089502e4aafe50681b1a7fd7e48d06413 / cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792 — 라운드 3 수리 전(메시지 형태·환경 프록시·세션 경로·가장 긴 prefix·fallback 원인 열거)",
-                      "3f8bb3c6fd5d8bcd3a97f4b07178ca026c645596 / 6c96064cde2004344dc08a6e58abcae05cb0a14f — 라운드 4 수리 전(응답 결속·구조화 필드 위생)"],
+                      "3f8bb3c6fd5d8bcd3a97f4b07178ca026c645596 / 6c96064cde2004344dc08a6e58abcae05cb0a14f — 라운드 4 수리 전(응답 결속·구조화 필드 위생)",
+                      "09667115849ad377cadfece7710eea5e30dcb295 / 134e02fb4e58cd639248326a8e05da7a37c6d488 — 라운드 5 수리 전(출구 하나로 모으기 전)",
+                      "c51206339a0304b219b2a52cacb748574c57c7c3 — 라운드 6 수리 전(통로 밖 직접 쓰기·평문 기본)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -224,6 +226,21 @@
         "mutation_check": "다섯 가드를 되돌렸다. 세션 이름 mutation 이 초록이어서 함수 대신 run() 배선을 보는 검사로 바꿨다 — 함수가 있는 것과 run() 이 그것을 쓰는 것은 다르다.",
         "repo_lint": "발견 2건 — gitignore 된 워크트리 훅 설정(.claude/settings.json)의 명령 드리프트다. 추적 파일이 아니고 이 PR 의 변경과 무관하다. 훅 배선 변경은 세션 동작을 바꾸므로 임의로 고치지 않았다."
       },
+      "round_5": {
+        "verdict": "머지 불가 → 수리 완료. **여기서 접근을 바꿨다**",
+        "diagnosis": "다섯 라운드 P0 열둘이 전부 같은 결함이었다 — 지적된 출구마다 게이트를 달아 열거에서 빠진 면이 다음 라운드에 나왔다. 하나 고치면 둘 생긴 것이 아니라 처음부터 면이 N 개였다.",
+        "fix": "plan() 이 돌려주는 모든 Op 가 guard() 를 지난다. 기준을 추측에서 실측으로 바꿨다(_producer_enums, _DICT_KEYS). 검사를 실제 H4 로그로 바꿨다 — 합성 이벤트로는 라운드 5 의 셋을 하나도 못 잡았다.",
+        "rule": "허브 위키 craft/gate-the-exit-not-the-callers, 경위는 .wiki/decisions/2026-09-22-087"
+      },
+      "round_6": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["출구를 모았다고 했는데 run() 의 전송 루프가 통로를 안 지나고 span 에 네 속성을 직접 적고 있었다. model_loaded 의 mode 도 위생을 안 지나 trace 이름이 오염됐다.",
+                "_fixed() 는 이 파일의 문구 전용인데 orphan 경로가 이벤트에서 조립한 call_key 를 거기 넣어 metadata 로 경로가 나갔다.",
+                "**'값만 보고 구분할 수 없다' 를 평문 허용의 근거로 쓴 것이 틀렸다.** metadata 전용 모드에서는 1층이 안 돌므로 두 층 어디에서도 안 막히는 값이 생겼다. 기본을 요약으로 뒤집었다.",
+                "set(inner) 가 중첩 list·dict 에서 TypeError 로 사이드카를 멈췄다 — 게이트는 fail-closed 여야 한다."],
+        "p1": "groups[].status='split' 은 분할 재시도가 일어났다는 핵심 관측값인데 손으로 적은 집합에서 빠져 조용히 사라졌다. script.py·experiments 를 훑어 드리프트를 잡는 검사를 넣었다.",
+        "mutation_check": "다섯 가드를 되돌렸다. call_key 와 guard 의 trace.name 은 첫 시도에서 초록이라(다른 가드가 가리고 있었다) 각각 직접 거는 검사를 추가했다."
+      },
       "round_4": {
         "verdict": "머지 불가 → 수리 완료",
         "p0": ["본문 검증이 prompt_text 가 있을 때만 돌아, 시작에서 본문만 빼고 같은 호출의 응답을 위조하면 통과했다. 모든 물리 호출이 결속된 프롬프트를 갖고, 응답은 결속된 시작과 call key 로 짝이 맞아야 한다.",
@@ -266,7 +283,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "ed8e29f32b765c5b7b7986e4abbeed144a72b37e86c0e7a4afc3bf7e9faf3c63",
+  "notebook_sha256": "6f51e1c6e7e51d7f8564cd21ecd863a9c9db8e4811a005a33e92744cf8271554",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -432,6 +449,30 @@
       "passed": 19,
       "seconds": 2.681,
       "phase": "라운드 4 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 380,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 312.95,
+      "phase": "라운드 5 수리 후 — 출구를 하나로 모으고 검사를 실제 H4 로그로 바꿨다"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 384,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 267.92,
+      "phase": "라운드 6 P0 넷·P1 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 1.904,
+      "phase": "라운드 6 수리 후 오프라인 게이트"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
