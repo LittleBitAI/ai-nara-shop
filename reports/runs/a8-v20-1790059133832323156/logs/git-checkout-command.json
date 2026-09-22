@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/a8-v20-qfigf1mj/repo",
+  "started": 1790057709.2304459,
+  "returncode": 0,
+  "elapsed_seconds": 0.5430457592010498
+}

@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "nvidia-smi",
+    "--query-gpu=name,memory.total,driver_version",
+    "--format=csv,noheader"
+  ],
+  "cwd": "/content/a8-v20-qfigf1mj",
+  "started": 1790057728.5568585,
+  "returncode": 0,
+  "elapsed_seconds": 0.021581649780273438
+}

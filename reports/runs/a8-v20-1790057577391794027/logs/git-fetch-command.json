@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "e6d9b98b7a40c6a6f563802445c24e2e61d9a3af"
+  ],
+  "cwd": "/content/a8-v20-unx1r2xd/repo",
+  "started": 1790056053.2182076,
+  "returncode": 0,
+  "elapsed_seconds": 0.597346305847168
+}

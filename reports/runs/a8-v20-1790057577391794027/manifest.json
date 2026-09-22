@@ -1,0 +1,168 @@
+{
+ "artifact_id": "run-a8-v20-1790057577391794027",
+ "version": 1,
+ "status": "draft",
+ "run_id": "a8-v20-1790057577391794027",
+ "zip_name": "a8-v20-results-1790057577391794027.zip",
+ "zip_sha256": "c967b6a7db9aa74dc9989589e4da9d44cc0bec224bc616fec628b4dd9803b05a",
+ "kind": "a8 v20 별표 주입 파일럿 — company_size 관측 A/B. 제출 ZIP 없음",
+ "episode": 1,
+ "execution_order": [
+  "control",
+  "a8"
+ ],
+ "execution_mode": "live",
+ "status_from_run": "complete",
+ "error_type": null,
+ "code": {
+  "commit": "e6d9b98b7a40c6a6f563802445c24e2e61d9a3af",
+  "requested_ref": "e6d9b98b7a40c6a6f563802445c24e2e61d9a3af"
+ },
+ "environment": {
+  "gpu": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+  "cuda": "13.0",
+  "python": "3.12.13",
+  "packages": {
+   "torch": "2.11.0+cu130",
+   "vllm": "0.26.0",
+   "transformers": "5.14.1",
+   "xgrammar": "0.2.3"
+  },
+  "model": "google/gemma-4-26B-A4B-it",
+  "model_revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+  "model_load_seconds": 441.65606117248535
+ },
+ "inputs": {
+  "input_check_status": "verified",
+  "files": 30,
+  "spec": "reports/team-c/a8-v20-annex/inputs.json",
+  "episode": 1,
+  "attempt": null,
+  "attempt_note": "회차 산출물 어디에도 ATTEMPT 가 없다. ZIP 이 v20-annex-<커밋12>-<ATTEMPT> 상위 폴더 없이 pilot/ 부터 담겼다"
+ },
+ "budget": {
+  "output_reserved": 1024,
+  "prompt_budget": 15296,
+  "additional_shrink": 0,
+  "visible_differs": 0,
+  "control_truncated": 0,
+  "candidate_truncated": 0,
+  "conditions_pass": true
+ },
+ "cases": {
+  "control": {
+   "macro_f1": {
+    "off": 0.5910081881189317,
+    "on": 0.5910081881189317
+   },
+   "v20": {
+    "off": {
+     "tp": 1,
+     "fp": 4,
+     "fn": 4
+    },
+    "on": {
+     "tp": 1,
+     "fp": 4,
+     "fn": 4
+    }
+   },
+   "seconds": {
+    "dev_stage": 259.8250608170001,
+    "dev_inference": 255.4133294369999,
+    "projected_server_conditional": 6494.204636930725
+   },
+   "counts": {
+    "dev_h2_fired": 3,
+    "audit": {
+     "participation_nonnull": 0,
+     "participation_exact": 0,
+     "participation_invalid": 0,
+     "software_yes": 11,
+     "v20_write_1": 5,
+     "v20_write_0": 0,
+     "v20_preserve": 195
+    }
+   },
+   "within_stage_planning_limit": true,
+   "off_to_on_changes": 0
+  },
+  "a8": {
+   "macro_f1": {
+    "off": 0.5884680811670601,
+    "on": 0.5884680811670601
+   },
+   "v20": {
+    "off": {
+     "tp": 1,
+     "fp": 4,
+     "fn": 4
+    },
+    "on": {
+     "tp": 1,
+     "fp": 4,
+     "fn": 4
+    }
+   },
+   "seconds": {
+    "dev_stage": 252.49743556900012,
+    "dev_inference": 248.10628924599996,
+    "projected_server_conditional": 6429.029806924915
+   },
+   "counts": {
+    "dev_h2_fired": 4,
+    "audit": {
+     "participation_nonnull": 0,
+     "participation_exact": 0,
+     "participation_invalid": 0,
+     "software_yes": 10,
+     "v20_write_1": 5,
+     "v20_write_0": 0,
+     "v20_preserve": 195
+    }
+   },
+   "within_stage_planning_limit": true,
+   "off_to_on_changes": 0
+  }
+ },
+ "audit": {
+  "contract_sha256": "e4a56107eb710ba89b65e945f581fcf45895acda1bdb71385a2ec6e2eeb2776f",
+  "complete": true,
+  "semantic_review_complete": false,
+  "paired_changes": 4,
+  "gain_kind_counts": {
+   "verified_quote": 0,
+   "verified_absence": 0,
+   "fallback_only": 0,
+   "other": 4
+  }
+ },
+ "raw_responses": {
+  "included": true,
+  "what": "군별 dev.json 의 파싱된 응답은 넣었다. 물리 호출 원문인 dev.events.jsonl 과 diagnostics.jsonl 은 크기로 뺐다",
+  "excluded_files": [
+   {
+    "path": "pilot/episode-1/a8/dev.events.jsonl",
+    "bytes": 18132146,
+    "sha256": "c2c94d7ea5ad166d99555a9e5ed57f954fa70d0e58f93c53c6a592a3d8e62425"
+   },
+   {
+    "path": "pilot/episode-1/control/dev.events.jsonl",
+    "bytes": 17020196,
+    "sha256": "b438f61f9abec3f891e46479fb19538b18cd6867248b638f6b46ecb7f18cd15e"
+   },
+   {
+    "path": "pilot/episode-1/diagnostics.jsonl",
+    "bytes": 35164858,
+    "sha256": "e81854b2318a406bee172dce38afc477e2c7fc0836ca732ea8177aba4a18b791"
+   }
+  ],
+  "excluded_reason": "회차당 70.2MB 다. docs/runs.md 의 제외선은 50MB 지만 두 회차 143MB 를 저장소에 넣지 않기로 사용자가 결정했다. 원본 ZIP 은 artifacts/inbox/ 와 Drive 에 있고 위 sha256 으로 대조한다"
+ },
+ "report_variants": [
+  "a8-v20-1790057577391794027.control-off",
+  "a8-v20-1790057577391794027.control-on",
+  "a8-v20-1790057577391794027.a8-off",
+  "a8-v20-1790057577391794027.a8-on"
+ ]
+}

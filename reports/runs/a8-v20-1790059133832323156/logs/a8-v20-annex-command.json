@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/content/a8-v20-qfigf1mj/venv/bin/python",
+    "/content/a8-v20-qfigf1mj/repo/experiments/a5_scope_pilot.py",
+    "--experiment",
+    "a8",
+    "--output-dir",
+    "/content/drive/MyDrive/a8/v20-annex-e6d9b98b7a40-a/episode-2",
+    "--model-dir",
+    "/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "--episode",
+    "2"
+  ],
+  "cwd": "/content/a8-v20-qfigf1mj/repo",
+  "started": 1790058125.0217266,
+  "returncode": 0,
+  "elapsed_seconds": 1007.9120371341705
+}

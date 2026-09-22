@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "pip",
+    "install",
+    "uv"
+  ],
+  "cwd": "/content/a8-v20-qfigf1mj",
+  "started": 1790057728.5864348,
+  "returncode": 0,
+  "elapsed_seconds": 4.276342868804932
+}

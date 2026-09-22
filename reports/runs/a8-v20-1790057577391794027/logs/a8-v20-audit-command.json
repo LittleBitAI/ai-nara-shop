@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/a8-v20-unx1r2xd/venv/bin/python",
+    "/content/a8-v20-unx1r2xd/repo/experiments/a8_v20_audit.py",
+    "--episode-dir",
+    "/content/drive/MyDrive/a8/v20-annex-e6d9b98b7a40-a/episode-1"
+  ],
+  "cwd": "/content/a8-v20-unx1r2xd/repo",
+  "started": 1790057576.5016084,
+  "returncode": 0,
+  "elapsed_seconds": 0.8721694946289062
+}

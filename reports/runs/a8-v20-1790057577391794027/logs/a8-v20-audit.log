@@ -1,0 +1,27 @@
+{
+  "control": {
+    "records": 200,
+    "software_yes": 11,
+    "participation_nonnull": 0,
+    "participation_exact": 0,
+    "participation_spacing_restored": 0,
+    "participation_invalid": 0,
+    "v20_write_0": 0,
+    "v20_write_1": 5,
+    "v20_preserve": 195,
+    "participation_semantically_applicable": null
+  },
+  "a8": {
+    "records": 200,
+    "software_yes": 10,
+    "participation_nonnull": 0,
+    "participation_exact": 0,
+    "participation_spacing_restored": 0,
+    "participation_invalid": 0,
+    "v20_write_0": 0,
+    "v20_write_1": 5,
+    "v20_preserve": 195,
+    "participation_semantically_applicable": null
+  }
+}
+바뀐 공고 4건 → /content/drive/MyDrive/a8/v20-annex-e6d9b98b7a40-a/episode-1/v20-audit.json
