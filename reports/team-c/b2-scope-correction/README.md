@@ -21,7 +21,7 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 기준 commit | `7f3816c` (PR #85 브랜치, `origin/main` `3e3c15d` 위) |
+| 기준 commit | **`c9398ad`** (재베이스 후 재측정). 처음 쟀을 때는 `3e3c15d` 였다 |
 | 기준 CSV | HEAD 재생 `reports/runs/colab-1789902969401579900/dev-debug` |
 | 사실 | 같은 회차의 **저장된 `company_size` 원응답 200건** (모델 호출 0회) |
 | 카탈로그 | `open/data/법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv` · **616 품명** |
@@ -29,6 +29,10 @@
 
 회차 설정의 `company_size_document_checks`·`clause_quotes`·`qualification_role` 이 전부
 `True` 라 legacy 보정 없이 파싱했다. **파싱 실패 0건 · company 무응답 0건.**
+
+**베이스를 `c9398ad` 로 올린 뒤 전부 다시 쟀고 수치가 하나도 안 바뀌었다** —
+`scope` 분포(competitive 78 / general 122), 카탈로그 True 35 · False 1 · None 42,
+후보 대상 30건, 그 30건의 TP 5 · FP 7 · FN 16, 라벨 경쟁제품 양성 7건이 모두 같다.
 
 ## 2. 후보 대상이 몇 건인가
 

@@ -17,7 +17,7 @@ v18 과 같은 위반 구조가 **아니다.** 판로지원법 제4조제2항이
 
 | 항목 | 값 |
 | --- | --- |
-| 기준 commit | `7ab8e17` |
+| 기준 commit | **`c9398ad`** (재베이스 후 §3 표 재확인). 처음 쟀을 때는 `7ab8e17` 였다 |
 | 법령 | `open/data/법령패키지/법령/` 의 제공 스냅샷만 |
 | 회차 | `colab-1789902969401579900/dev-debug` 의 company 원응답 (모델 호출 0회) |
 | 변경 파일 | 이 보고서뿐. `script.py`·`tools/`·`notebooks/` 미변경 |
@@ -72,6 +72,9 @@ v18 과 같은 위반 구조가 **아니다.** 판로지원법 제4조제2항이
 | 039 | 63,636,364 | competitive | small_only | **None** | (비어 있음) | 0 / 0 / **1** |
 | 040 | 80,727,273 | competitive | unrestricted | **None** | (비어 있음) | 0 / 0 / **1** |
 | 044 | 55,454,545 | competitive | sme_allowed | **None** | (비어 있음) | 0 / 0 / **1** |
+
+**베이스를 `c9398ad` 로 올린 뒤 이 표를 다시 쟀고 세 줄이 그대로다** —
+scope·qualification·catalog·세부품명번호목록 전부 같다. v18 도 1/2/6 으로 안 움직였다.
 
 모델이 `competitive` 라 말한 근거(`scope_quote`)는 이렇다.
 

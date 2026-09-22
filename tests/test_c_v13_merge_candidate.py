@@ -17,15 +17,29 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from experiments import c_v13_merge_candidate as candidate
+
+def load_module(name, path):
+    """`sys.path` 를 고친 뒤 실어야 하므로 모듈 최상단 import 를 쓰지 않는다."""
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+candidate = load_module("c_v13_merge_candidate",
+                        ROOT / "experiments/c_v13_merge_candidate.py")
 
 CASE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
 DEV = ROOT / "open/dev.jsonl"
 LABELS = ROOT / "open/dev_labels.csv"
 
 # 재생으로 실측한 값. HEAD 재생이 기준이며 보관 회차의 submission.csv 가 아니다.
-EXPECTED_HEAD = {"tp": 4, "fp": 9, "fn": 2}
-EXPECTED_CANDIDATE = {"tp": 4, "fp": 8, "fn": 2}
+# **베이스가 움직이면 이 값도 움직인다.** `3e3c15d` 에서는 4/9/2 → 4/8/2 였고,
+# `c9398ad` 에서 기준 자체가 3/8/3 으로 바뀌었다(16 이 TP 를, 198 이 FP 를 잃었다).
+# 후보가 닫는 셀은 그대로 PPS-DEV-03 하나다.
+EXPECTED_HEAD = {"tp": 3, "fp": 8, "fn": 3}
+EXPECTED_CANDIDATE = {"tp": 3, "fp": 7, "fn": 3}
 
 # **두 수를 구분한다.**
 # 적용 대상 = company 가 검증된 scope 를 general 로 확정하고 v13 을 쓰지 않은 공고.
@@ -36,11 +50,7 @@ EXPECTED_CHANGED = ["PPS-DEV-03"]
 
 
 def load_script():
-    spec = importlib.util.spec_from_file_location("submission", ROOT / "script.py")
-    module = importlib.util.module_from_spec(spec)
-    sys.modules["submission"] = module
-    spec.loader.exec_module(module)
-    return module
+    return load_module("submission", ROOT / "script.py")
 
 
 class Unit(unittest.TestCase):
