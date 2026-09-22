@@ -900,6 +900,35 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertEqual(tail._clean("code_sha256", started["code_sha256"]),
                          tail._clean("code_sha256", started["code_sha256"]))
 
+    def test_two_unregistered_code_hashes_do_not_share_a_trace_name(self):
+        """`_clean()` 반환값만 비교하면 **소비 경로**를 놓친다. 요약된 값의 앞 일곱 자는
+        `sha256:` 이라 서로 다른 회차가 같은 이름이 됐다(라운드 10 P1 — 내 회귀다)."""
+        names, summaries = [], []
+        for forged in ("0" * 64, "1" * 64):
+            state = tail.State()
+            ops = tail.plan(dict(event="run_started", time_unix=0.5, mode="live",
+                                 code_sha256=forged), state)
+            names.append(state.trace_name)
+            summaries.append(ops[0].attrs["langfuse.observation.metadata.code_sha256"])
+            # 이름이 `nara live sha256:` 로 합쳐지지 않는다.
+            self.assertNotIn("sha256:", state.trace_name)
+            self.assertRegex(state.trace_name, r"^nara live [0-9a-f]{7}$")
+        self.assertNotEqual(names[0], names[1], "다른 코드 hash 가 같은 trace 이름이 됐다")
+        self.assertNotEqual(summaries[0], summaries[1])
+        # 등록된 hash 는 그 앞 일곱 자를 그대로 쓴다.
+        state = tail.State()
+        tail.plan(dict(event="run_started", time_unix=0.5, mode="live", code_sha256=CODE), state)
+        self.assertEqual(state.trace_name, f"nara live {CODE7}")
+
+    def test_the_schema_digest_the_a8_runner_emits_is_recomputable(self):
+        """A8 실행기는 `company_size_schema()` 쪽 digest 를 내보낸다 — 전체 스키마만
+        재계산하면 그 값이 요약된다(라운드 10 P2)."""
+        import hashlib as _h
+        schema = _h.sha256(json.dumps(baseline.company_size_schema(), sort_keys=True,
+                                      ensure_ascii=False).encode()).hexdigest()
+        self.assertIn(schema, tail._known_hashes())
+        self.assertEqual(tail._clean("schema_sha256", schema), schema)
+
     def test_the_error_type_set_includes_what_the_producer_raises(self):
         """`builtins` 만 읽으면 생산자가 직접 쓰는 오류형이 사라진다 —
         `ResponseCountMismatch` 가 요약으로 바뀌었다(라운드 9 P1)."""

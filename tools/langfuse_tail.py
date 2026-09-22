@@ -485,11 +485,13 @@ def _known_hashes() -> frozenset:
     # 제품·후보 system 프롬프트의 digest. 군을 가르는 값이라 평문이어야 읽힌다.
     for system in _known_systems(data):
         found.add(hashlib.sha256(system.encode("utf-8")).hexdigest())
-    try:                                   # 스키마 digest
-        found.add(hashlib.sha256(json.dumps(script.decode_schema(str(data)), sort_keys=True,
-                                            ensure_ascii=False).encode()).hexdigest())
-    except Exception:
-        pass
+    # 스키마 digest 둘. A8 실행기는 `company_size_schema()` 쪽을 내보낸다(라운드 10 P2).
+    for schema in (lambda: script.decode_schema(str(data)), script.company_size_schema):
+        try:
+            found.add(hashlib.sha256(json.dumps(schema(), sort_keys=True,
+                                                ensure_ascii=False).encode()).hexdigest())
+        except Exception:
+            pass
     return frozenset(found)
 
 
@@ -616,6 +618,16 @@ def _producer_enums() -> dict:
 def _summary(value: str) -> str:
     """평문 대신 나가는 요약. 동일성·변화는 남고 값은 안 나간다."""
     return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
+
+
+def _short(value: str) -> str:
+    """trace 이름에 붙이는 일곱 자 표지.
+
+    요약된 값의 앞 일곱 자는 `sha256:` 이라 **서로 다른 회차가 같은 이름이 된다**
+    (라운드 10 P1 — 내가 만든 회귀다). 접두사 뒤의 digest 에서 뽑는다.
+    """
+    body = value.split("sha256:", 1)[-1] if value.startswith("sha256:") else value
+    return body[:7]
 
 
 def _clean_str(name: str, value: str, nested: bool) -> Optional[str]:
@@ -833,7 +845,7 @@ def _plan(event: dict, state: State) -> list:
         state.model = _label("id", (event.get("expected_model") or {}).get("id"),
                              MODEL_FALLBACK)
         mode = _label("mode", event.get("mode", "?"))
-        state.code = _label("code_sha256", event.get("code_sha256"), "")[:7]
+        state.code = _short(_label("code_sha256", event.get("code_sha256"), ""))
         state.trace_name = f"nara {mode} {state.code}".strip()
         # settings 도 통째로 싣지 않는다 — 임의 키를 넣은 로그가 루트 input 으로 나갔다.
         settings = _clean("settings", event.get("settings")) or {}
