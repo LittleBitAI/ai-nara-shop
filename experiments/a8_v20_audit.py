@@ -177,19 +177,32 @@ def gain_kind(before, after) -> str:
 
     - `verified_quote` — 후보에서 v20 이 **적용 가능**하고 참여 인용이 검증됐으며
       판정이 실제로 `write_0` 으로 **전이**했다.
-    - `fallback_only` — 대조군에서 v20 이 쓰였는데(`write_*`) 후보에서 인용이
-      기각돼(`invalid`/`empty`) **`preserve` 로 내려앉았다.** 지표가 좋아졌다면
-      그 자리를 채운 것은 baseline 이지 이 주입이 아니다.
+    - `verified_absence` — 적용 가능하고 참여 인용이 **없어서**(`null`) 소비자가
+      부재 위반을 새로 썼다(`write_1` 으로 전이). **v20 은 부재탐지 항목이라
+      이쪽이 주 기전이다** — H4 의 v20 양성 5건이 전부 이 분기였다.
+      이것을 `other` 로 두면 "먼저 볼 숫자" 가 기전을 놓친다(라운드 2 P1).
+    - `fallback_only` — 대조군에서 v20 이 쓰였는데(`write_*`) 후보에서 **두 필수 인용 중
+      어느 쪽이든** 기각돼(`invalid`/`empty`) 또는 적용성이 무너져 **`preserve` 로 내려앉았다.**
+      지표가 좋아졌다면 그 자리를 채운 것은 baseline 이지 이 주입이 아니다.
     - 나머지는 `other` 다. 이름을 붙이지 않는 것이 잘못 붙이는 것보다 낫다.
     """
-    verified = after["software_participation_quote_check"]["state"] in ("exact", "spacing_restored")
-    moved = before["v20_action"] != after["v20_action"]
-    if moved and after["v20_action"] == "write_0" and after["v20_applicable"] and verified:
+    def state_of(row, field):
+        return row[f"{field}_quote_check"]["state"]
+
+    if before["v20_action"] == after["v20_action"]:
+        return "other"                       # 판정이 안 움직였으면 이득도 손실도 아니다
+    verified = state_of(after, "software_participation") in ("exact", "spacing_restored")
+    if after["v20_applicable"] and after["v20_action"] == "write_0" and verified:
         return "verified_quote"
-    if (moved and before["v20_action"].startswith("write_")
-            and after["v20_action"] == "preserve"
-            and after["software_participation_quote_check"]["state"] in ("invalid", "empty")):
-        return "fallback_only"
+    if (after["v20_applicable"] and after["v20_action"] == "write_1"
+            and state_of(after, "software_participation") == "null"):
+        return "verified_absence"
+    if before["v20_action"].startswith("write_") and after["v20_action"] == "preserve":
+        # 적용성을 세우는 business 인용이든 참여 인용이든, 기각이 보류를 만들었으면 같은 실패다.
+        rejected = any(state_of(after, field) in ("invalid", "empty")
+                       for field in ("software_business", "software_participation"))
+        if rejected or not after["v20_applicable"]:
+            return "fallback_only"
     return "other"
 
 

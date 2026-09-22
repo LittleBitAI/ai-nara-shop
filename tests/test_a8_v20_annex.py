@@ -696,6 +696,48 @@ class AuditTests(unittest.TestCase):
         self.assertEqual(audit.paired_changes([base], [dict(real, v20_applicable=False)])[0]
                          ['gain_kind'], 'other')
 
+    def test_gain_kind_names_the_absence_mechanism_and_both_rejection_paths(self):
+        """v20 은 부재탐지 항목이다. 부재 기전을 `other` 로 두면 먼저 볼 숫자가 기전을 놓친다."""
+        base = dict(id='X', v20_action='preserve', software_business='yes', v20_applicable=True,
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        # 1. preserve → write_1: 소비자가 부재 위반을 새로 썼다. H4 의 v20 양성 5건이 이 모양이다.
+        absence = dict(base, v20_action='write_1')
+        self.assertEqual(audit.paired_changes([base], [absence])[0]['gain_kind'], 'verified_absence')
+        # 2. business 인용이 기각돼 적용성이 무너지며 preserve 로 내려앉은 것도 같은 실패다.
+        wrote = dict(base, v20_action='write_1')
+        broken = dict(base, v20_action='preserve', v20_applicable=False,
+                      software_business_quote_check=dict(state='invalid'))
+        self.assertEqual(audit.paired_changes([wrote], [broken])[0]['gain_kind'], 'fallback_only')
+        # 3. 참여 인용 기각으로 내려앉은 것도 그대로 fallback_only 다.
+        participation = dict(base, v20_action='preserve',
+                             software_participation_quote_check=dict(state='invalid'))
+        self.assertEqual(audit.paired_changes([wrote], [participation])[0]['gain_kind'],
+                         'fallback_only')
+        # 4. 부재인데 적용 불가면 기전이 아니다.
+        self.assertEqual(audit.paired_changes([base], [dict(absence, v20_applicable=False)])[0]
+                         ['gain_kind'], 'other')
+
+    def test_v20_applicable_agrees_with_the_consumer_on_both_sides(self):
+        """한 방향만 보면 제품에 새 조건이 생겨도 통과한다. 양쪽 경계를 직접 고정한다."""
+        script.load_sme_reference(str(pilot.ROOT/'open/data'))
+        rec = next(r for r in script.iter_records(str(pilot.ROOT/'open/dev.jsonl'))
+                   if any(d['type'] == '공고문' and d['text'].strip() for d in r['docs']))
+        visible = script.build_context(rec, 16000)
+        quote = next(line for line in visible.splitlines() if len(line.strip()) > 12).strip()
+        facts = dict(script.empty_company_size(), software_business='yes',
+                     software_business_quote=quote)
+        # 적용 가능: 소비자가 v20 칸을 계산한다(present/absent 조건과 무관하게 열린다).
+        self.assertTrue(audit.v20_applicable(facts, rec, visible))
+        # 인용이 공고에 없으면 소비자도 v20 을 안 연다.
+        broken = dict(facts, software_business_quote='이 문장은 공고에 없다')
+        self.assertFalse(audit.v20_applicable(broken, rec, visible))
+        self.assertIsNone(script.verify_company_size(broken, rec, 16000)[0].get('v20'))
+        # software_business 가 yes 가 아니어도 안 연다.
+        no = dict(facts, software_business='no')
+        self.assertFalse(audit.v20_applicable(no, rec, visible))
+        self.assertIsNone(script.verify_company_size(no, rec, 16000)[0].get('v20'))
+
     def test_v20_applicable_matches_the_consumer_on_all_200_records(self):
         """감사의 `v20_applicable` 이 제품과 갈리면 `gain_kind` 가 조용히 틀린다.
         소비자가 v20 칸을 쓴 공고는 전부 적용 가능으로 나와야 한다."""

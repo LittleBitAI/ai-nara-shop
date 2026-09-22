@@ -26,6 +26,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass, field
@@ -45,7 +46,76 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def validate_dev_export(events_path, dev_path, *, host: str) -> dict:
+# 분할 재시도가 system 뒤에 붙이는 문장(`script.py` 의 `retry_chat`). 그 외 꼬리는 모르는 본문이다.
+RETRY_SUFFIX = re.compile(
+    r"^\n\[Output scope for this call\] Evaluate only these keys, overriding the earlier "
+    r"key list: [\w, ]+\. Return no other keys\. "
+    r"Keep evidence quotations under 100 characters\.$")
+
+
+def _rebuild_dev_prompts(dev_path, wanted: dict, data_dir) -> dict:
+    """공고별 user 프롬프트를 **실제 dev 파일에서 다시 만든다.**
+
+    로그가 뭐라고 적었든 이것이 기준이다. id 가 고정 dev 에 있다는 것만으로는
+    그 자리에 실린 본문이 dev 에서 왔다는 근거가 되지 않는다 —
+    유효한 id 에 임의 문자열을 붙인 로그가 그 검사를 통과한다(라운드 2 P0).
+    """
+    sys.path.insert(0, str(ROOT))
+    import script                                   # 수출 검사에서만 쓴다
+    _, products = script.load_sme_reference(str(data_dir))
+    out = {}
+    for rec in script.iter_records(str(dev_path)):
+        chars = wanted.get(rec["id"])
+        if chars is None:
+            continue
+        # 수집기와 같은 변형이다 — meta 의 `조항호내용` 은 프롬프트에 안 들어간다.
+        company = {**rec, "meta": {k: v for k, v in rec.get("meta", {}).items()
+                                   if k != "조항호내용"}}
+        messages = script.build_messages(company, script.COMPANY_SIZE_PROMPT, chars, products)
+        out[rec["id"]] = (messages[-1]["content"],
+                          hashlib.sha256(script.build_context(company, chars).encode()).hexdigest())
+    return out
+
+
+def _known_systems(data_dir) -> set:
+    """내보내도 되는 system 프롬프트. 제품 프롬프트와 이 저장소의 후보 블록뿐이다."""
+    sys.path.insert(0, str(ROOT))
+    import script
+    systems = {script.COMPANY_SIZE_PROMPT}
+    try:
+        from experiments import a8_v20_annex
+        systems.add(script.COMPANY_SIZE_PROMPT + a8_v20_annex.block(str(data_dir)))
+    except Exception:                                # 후보가 없는 저장소 상태면 제품 것만 허용한다
+        pass
+    return systems
+
+
+def _body_is_bound(event, prompts: dict, systems: set) -> Optional[str]:
+    """이 호출의 프롬프트가 **재구성한 본문과 같은지** 본다. 다르면 이유를 돌려준다."""
+    text = event.get("prompt_text")
+    if text is None:
+        return None
+    if not isinstance(text, list) or not text:
+        return "prompt_shape"
+    roles = [m.get("role") for m in text if isinstance(m, dict)]
+    if len(roles) != len(text) or roles[0] != "system" or roles[-1] != "user":
+        return "prompt_shape"
+    system = text[0].get("content") or ""
+    base = next((known for known in systems if system.startswith(known)), None)
+    if base is None:
+        return "unknown_system"
+    tail = system[len(base):]
+    if tail and not RETRY_SUFFIX.match(tail):
+        return "unknown_system_tail"
+    expected = prompts.get(event.get("id"))
+    if expected is None:
+        return "no_rebuilt_prompt"
+    if text[-1].get("content") != expected[0]:
+        return "prompt_body_mismatch"
+    return None
+
+
+def validate_dev_export(events_path, dev_path, *, host: str, data_dir=None) -> dict:
     """프롬프트 전문을 수출해도 되는지 **provider 를 만들기 전에** 판단한다.
 
     순수 함수다 — 파일을 읽고 판단만 돌려주며 네트워크를 모른다. 거짓이면
@@ -58,6 +128,10 @@ def validate_dev_export(events_path, dev_path, *, host: str) -> dict:
     3. `dev_ids` 가 그 파일의 고유 공고 id 집합과 정확히 같다.
     4. 로그의 모든 공고 이벤트 id 가 그 집합 안에 있다. `null`·`ambiguous` 신원이
        하나라도 있으면 거짓이다 — 어느 공고의 프롬프트인지 모르는 본문은 내보내지 않는다.
+    5. **실린 본문이 그 공고에서 나왔다.** 공고별 user 프롬프트와 문서 본문 hash 를
+       실제 dev 파일에서 다시 만들어 한 글자까지 대조하고, system 은 제품 프롬프트나
+       이 저장소의 후보 블록으로 시작하며 꼬리는 분할 재시도 문장뿐이어야 한다.
+       1~4 만으로는 **유효한 id 에 임의 본문을 붙인 로그가 통과한다**(라운드 2 P0).
     """
     reasons = []
     if host not in LOCAL_HOSTS:
@@ -82,11 +156,16 @@ def validate_dev_export(events_path, dev_path, *, host: str) -> dict:
         reasons.append("dev_input_duplicate_ids")
     known, started = set(dev_ids), None
     seen, unknown = set(), set()
+    inputs, calls = {}, []              # 공고별 문서 예산과, 본문이 실린 호출들
     with events_path.open(encoding="utf-8") as handle:
         for line in handle:
             if not line.strip():
                 continue
             event = json.loads(line)
+            if event.get("event") == "company_size_input" and event.get("id") in known:
+                inputs[event["id"]] = event
+            if event.get("prompt_text") is not None or event.get("response_text") is not None:
+                calls.append(event)
             if event.get("event") == "run_started":
                 if started is not None:
                     reasons.append("multiple_runs")
@@ -112,8 +191,30 @@ def validate_dev_export(events_path, dev_path, *, host: str) -> dict:
         reasons.append("no_run_started")
     if unknown:
         reasons.append("unknown_ids:" + ",".join(sorted(unknown)[:5]))
-    return dict(allowed=not reasons, reasons=reasons, dev_records=len(known),
-                observed_records=len(seen), dev_sha256=actual)
+
+    bound = 0
+    if not reasons and calls:
+        prompts = _rebuild_dev_prompts(dev_path, {i: e["max_chars"] for i, e in inputs.items()},
+                                       data_dir or ROOT/"open/data")
+        systems = _known_systems(data_dir or ROOT/"open/data")
+        # 로그가 주장한 문서 본문 hash 도 재구성한 것과 맞아야 한다.
+        for identifier, event in inputs.items():
+            claimed, rebuilt = event.get("visible_sha256"), prompts.get(identifier)
+            if rebuilt is None:
+                reasons.append(f"no_rebuilt_prompt:{identifier}")
+            elif claimed is not None and claimed != rebuilt[1]:
+                reasons.append(f"visible_sha256_mismatch:{identifier}")
+        problems = set()
+        for event in calls:
+            why = _body_is_bound(event, prompts, systems)
+            if why:
+                problems.add(why)
+            elif event.get("prompt_text") is not None:
+                bound += 1
+        if problems:
+            reasons.append("unbound_body:" + ",".join(sorted(problems)))
+    return dict(allowed=not reasons, reasons=sorted(set(reasons)), dev_records=len(known),
+                observed_records=len(seen), bound_prompts=bound, dev_sha256=actual)
 
 
 @dataclass
@@ -180,6 +281,26 @@ def _io(value: Any) -> str:
     return value if isinstance(value, str) else json.dumps(value, ensure_ascii=False)
 
 
+# 회차 종료 이벤트에서 span output 으로 내보내도 되는 필드. 나머지는 자유 텍스트다.
+RUN_END_FIELDS = ("count", "seconds", "model_success_count", "status", "error_type",
+                  "arms", "episode", "experiment", "stage")
+
+
+def _detail(state: "State", value: Any) -> Any:
+    """예외 메시지·traceback 은 **본문이다.** 개인 절대경로와 입력 조각이 그대로 들어간다.
+
+    클래스 이름(`error_type`)은 안전하지만 메시지는 아니다. metadata 전용 모드에서
+    `run_failed` 의 나머지 필드를 통째로 output 에 실어 경로가 나갔다(라운드 2 P0).
+    """
+    return value if state.include_prompts else None
+
+
+def _status(state: "State", event: dict) -> str:
+    kind = event.get("error_type") or "error"
+    message = _detail(state, event.get("error_message"))
+    return f"{kind}: {message}" if message else str(kind)
+
+
 def _body(state: "State", attrs: dict, slot: str, value: Any) -> dict:
     """프롬프트·응답 **전문**은 수출 검사를 통과했을 때만 싣는다.
 
@@ -242,7 +363,9 @@ def plan(event: dict, state: State) -> list:
             ops.append(Op("update", "run", state.trace_name,
                           attrs={"langfuse.trace.name": state.trace_name,
                                  **_meta(mode=mode, mode_at_start="pending",
-                                         token_count_kind=event.get("token_count_kind"))}))
+                                         token_count_kind=event.get("token_count_kind"))},
+                          # 루트가 없으면 실제 mode 를 잃는다. 그것을 투영 성공처럼 끝내지 않는다.
+                          status="루트 span 이 없어 실제 mode 를 못 적었다"))
         return ops
 
     if kind == "arm_started":
@@ -379,9 +502,9 @@ def plan(event: dict, state: State) -> list:
                                attempt=event.get("attempt", 1), status=event.get("status"),
                                response_chars=event.get("response_chars"),
                                error_type=event.get("error_type"),
-                               error_message=event.get("error_message")),
+                               error_message=_detail(state, event.get("error_message"))),
                    level=None if ok else "ERROR",
-                   status="" if ok else f"{event.get('error_type')}: {event.get('error_message')}")]
+                   status="" if ok else _status(state, event))]
 
     if kind == "response":
         attempt = event.get("attempt", 1)
@@ -409,7 +532,7 @@ def plan(event: dict, state: State) -> list:
                    str(event.get("id") or event.get("global_index")), "generation",
                    state.chunk or "run", state.chunk_start or now, now, attrs=attrs,
                    level=None if ok else "ERROR",
-                   status="" if ok else f"{event.get('error_type')}: {event.get('error_message')}")]
+                   status="" if ok else _status(state, event))]
 
     if kind in ("batch_failed", "retry_failed", "sme_fallback"):
         label = event.get("id") or event.get("chunk_start")
@@ -419,7 +542,7 @@ def plan(event: dict, state: State) -> list:
                    attrs=_meta(phase=phase, stage=event.get("stage"), attempt=event.get("attempt"),
                                source=event.get("source"), global_index=event.get("global_index")),
                    level="WARNING" if kind == "sme_fallback" else "ERROR",
-                   status=f"{event.get('error_type')}: {event.get('error_message')}")]
+                   status=_status(state, event))]
 
     if kind == "sme_verified":
         return [Op("point", f"verify:{event.get('id')}", f"verify {event.get('id')}", "event",
@@ -442,16 +565,19 @@ def plan(event: dict, state: State) -> list:
         state.arms.clear()
         state.arm = None
         failed = kind == "run_failed"
+        # 이벤트를 통째로 싣지 않는다 — `run_failed` 에는 error_message 와 traceback 이 있고
+        # 거기에 개인 절대경로가 들어간다. 허용 목록만 내보낸다.
+        summary = {k: event[k] for k in RUN_END_FIELDS if k in event}
         ops.append(Op("close", "run", end=now,
-                      attrs={"langfuse.observation.output": _io(
-                          {k: v for k, v in event.items() if k not in ("event", "time_unix")}),
-                          # 루트가 `pending` 으로 끝나지 않게 실제 mode 를 마지막에 한 번 더 적는다.
-                          **_meta(mode=state.actual_mode or "pending",
-                                  model_loaded="yes" if state.actual_mode else "no",
-                                  traceback=event.get("traceback"))},
+                      attrs={"langfuse.observation.output": _io(summary),
+                             # 루트가 `pending` 으로 끝나지 않게 실제 mode 를 마지막에 한 번 더 적는다.
+                             **_meta(mode=state.actual_mode or "pending",
+                                     model_loaded="yes" if state.actual_mode else "no",
+                                     error_type=event.get("error_type"),
+                                     detail_capture=None if state.include_prompts else "withheld",
+                                     traceback=_detail(state, event.get("traceback")))},
                       level="ERROR" if failed else None,
-                      status=(f"{event.get('error_type')}: {event.get('error_message')}"
-                              if failed else "")))
+                      status=_status(state, event) if failed else ""))
         return ops
 
     return []
@@ -487,6 +613,31 @@ def follow(path: Path, from_line: int, keep_following: bool, idle: float) -> Ite
             quiet += 0.5
 
 
+def pin_to_host(exporter, host: str) -> None:
+    """수출이 **그 호스트를 떠나지 못하게** 한다.
+
+    주소 문자열만 검사하면 부족하다. `OTLPSpanExporter` 는 `requests.Session.post` 를
+    `allow_redirects` 를 주지 않고 부르고 requests 의 기본값은 따라가기다. 그래서
+    로컬 엔드포인트가 307/308 로 외부 `Location` 을 돌려주면 검사를 통과한 본문이
+    그대로 밖으로 다시 POST 된다(라운드 2 P0). 설계 §3.5 가 금지한 경로다.
+
+    세션을 못 잡으면 **조용히 넘어가지 않고 세운다.** 막았다고 믿는 것이
+    안 막힌 것보다 나쁘다.
+    """
+    session = getattr(exporter, "_session", None)
+    if session is None or not hasattr(session, "request"):
+        raise RuntimeError("OTLP 세션을 못 잡았다. redirect 를 막을 수 없으므로 수출하지 않는다.")
+    original, prefix = session.request, host.rstrip("/")
+
+    def request(method, url, **kwargs):
+        if not str(url).startswith(prefix):
+            raise RuntimeError(f"허용된 호스트 밖으로 보내려 했다: {url}")
+        kwargs["allow_redirects"] = False           # setdefault 가 아니다 — post() 가 이미 True 를 넣는다
+        return original(method, url, **kwargs)
+
+    session.request = request
+
+
 def build_provider(host: str, public: str, secret: str, trace_id: int, service: str):
     """Langfuse 의 OTel 수집 엔드포인트로 바로 내보낸다."""
     from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
@@ -507,9 +658,11 @@ def build_provider(host: str, public: str, secret: str, trace_id: int, service: 
     auth = base64.b64encode(f"{public}:{secret}".encode()).decode()
     provider = TracerProvider(resource=Resource.create({"service.name": service}),
                               id_generator=Fixed())
-    provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(
+    exporter = OTLPSpanExporter(
         endpoint=f"{host.rstrip('/')}/api/public/otel/v1/traces",
-        headers={"Authorization": f"Basic {auth}", "x-langfuse-ingestion-version": "4"})))
+        headers={"Authorization": f"Basic {auth}", "x-langfuse-ingestion-version": "4"})
+    pin_to_host(exporter, host)
+    provider.add_span_processor(BatchSpanProcessor(exporter))
     return provider
 
 
@@ -566,11 +719,14 @@ def run(args: argparse.Namespace) -> int:
             for op in plan(event, state):
                 if op.action == "update":       # 열린 span 을 닫지 않고 고친다
                     span = live.get(op.key)
-                    if span is not None:
-                        for key, value in op.attrs.items():
-                            span.set_attribute(key, value)
-                        if op.name:
-                            span.update_name(op.name)
+                    if span is None:
+                        # 조용히 버리면 실제 mode 를 잃고도 투영이 성공처럼 끝난다.
+                        print(f"[tail] 관측 계약 실패: {op.status or op.key}")
+                        continue
+                    for key, value in op.attrs.items():
+                        span.set_attribute(key, value)
+                    if op.name:
+                        span.update_name(op.name)
                     continue
                 if op.action == "close":
                     span = live.pop(op.key, None)
