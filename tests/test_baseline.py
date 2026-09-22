@@ -580,6 +580,28 @@ class BaselineTests(unittest.TestCase):
         schema = baseline.decode_schema(str(ROOT / "open/data"))
         self.assertEqual(schema["properties"]["v1"]["properties"]["근거문구"]["maxLength"], 500)
 
+    def test_both_quote_gates_restore_spacing_before_judging(self):
+        """줄바꿈이 공백으로 눌린 정확한 인용을 미검증으로 떨어뜨리지 않는다.
+
+        `_company_size_bands()` 와 `verify_document_requirements()` 가 각자 `quoted()` 를
+        갖는데, 한쪽만 `restore_spacing()` 을 부르면 같은 인용을 다르게 판정한다.
+        실제로 `PPS-DEV-043`·`PPS-DEV-22` 가 그래서 `unverified_qualification` 으로 막혔다.
+        모델이 틀린 것이 아니라 게이트가 옆의 복원기를 안 쓴 것이다.
+        """
+        rec = record()
+        rec["docs"][0]["text"] = "가. 참가자격\n\n제한 없음"
+        visible = baseline.build_context(rec, 16000)
+        # 모델이 내는 모양 — 줄바꿈이 공백 하나로 눌려 있다.
+        pressed = "가. 참가자격 제한 없음"
+        self.assertNotIn(pressed, visible)                       # 날문자열로는 못 찾는다
+        restored = baseline.restore_spacing(pressed, rec, visible)
+        self.assertTrue(restored and restored in visible)        # 복원기는 찾아낸다
+
+        import inspect
+        for owner in (baseline._company_size_bands, baseline.verify_document_requirements):
+            self.assertIn("restore_spacing", inspect.getsource(owner),
+                          f"{owner.__name__} 의 인용 검사가 복원기를 부르지 않는다")
+
     def test_violation_without_a_verified_quote_is_lowered(self):
         """D4-4 가 e 를 원문의 연속된 부분문자열로 규정한다. 한 구절도 못 집는 위반은 못 선다.
 
