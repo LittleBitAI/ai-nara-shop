@@ -1621,8 +1621,10 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
         # **이 게이트를 다른 금액 항목에 함께 걸면 손해다.** 같은 방식을 항목명에 금액이
         # 적힌 다섯(v2·v4·v5·v6·v7)에 일괄 적용하면 합계 −0.219다 — v4는 양성 6건 중
         # 2건만 구간 안이고(0.800 → 0.444), v7도 TP를 하나 잃는다. v5만 건다.
-        price = estimated_price(rec)
-        return price is not None and price < NOTICE_AMOUNT_WON
+        # 경계는 계약법·업무구분마다 다르다. 국가 용역물품 2.3억을 지방 공고에 쓰면
+        # 지방의 제한 허용 구간(시행규칙 제24조) 한복판을 v5 로 읽는다.
+        # 표는 `REGION_PRICE_LIMIT` 에 이미 있었고 v7 이 같은 표를 쓴다.
+        return region_restriction_allowed(rec)
     if item == "v19":
         if not v19_demanded_at_bid_stage(rec):
             return True                     # 공고가 입찰 단계에서 요구한 적이 없다
@@ -1968,10 +1970,10 @@ MONEY = re.compile(
     r"\s*(?:([\d,]+))?"
     r"\s*(원)?"
 )
-PERF_WORD = re.compile(r"실적")
-MONEY_REACH = 180      # 실적 문구 앞뒤에서 금액을 찾을 범위
 MONEY_MIN = 1_000_000            # 사람 수·건수를 금액으로 읽지 않기 위한 하한
 MONEY_MAX = 100_000_000_000      # 오독한 큰 수를 버리는 상한
+# 조문은 배수를 비율로도 적게 한다. `예산금액의 100% 이상`은 **1배 이내**라 위반이 아니다.
+PERF_RATIO = re.compile(r"(\d+(?:\.\d+)?)\s*%")
 
 
 def parse_money(match):
@@ -1997,43 +1999,51 @@ def parse_money(match):
     return total
 
 
-def _money_near(text, pos):
-    """실적 문구 근처의 원 단위 금액. 억·천만·만원 표기를 모두 원으로 바꾼다."""
-    segment = text[max(0, pos - MONEY_REACH):pos + MONEY_REACH]
-    values = []
-    for match in MONEY.finditer(segment):
-        value = parse_money(match)
-        if value is not None:
-            values.append(value)
-    return values
+def required_performance(evidence):
+    """근거문구가 요구하는 실적 금액의 최댓값. 읽지 못하면 None.
 
-
-def required_performance(rec):
-    """참가자격이 요구하는 실적 금액의 최댓값. 읽지 못하면 None."""
+    **문서 전체가 아니라 인용 안에서만 읽는다.** 문서 최댓값을 집으면 인용과 무관한
+    다른 조항의 금액으로 v3 을 판정한다 — `PPS-DEV-03` 이 그렇게 본문의 1억(배수 1.12)을
+    집어 3천만원(배수 0.34)을 요구하는 인용을 살렸고, 본문에 `실적`이 한 번도 없는
+    `PPS-DEV-25` 에서는 앵커가 통째로 빗나가 아무것도 못 읽었다.
+    """
     best = None
-    for doc in rec.get("docs", []):
-        text = doc.get("text") or ""
-        for match in PERF_WORD.finditer(text):
-            if not _is_qualification_context(text, match.start()):
-                continue
-            for value in _money_near(text, match.start()):
-                if MONEY_MIN <= value <= MONEY_MAX and (best is None or value > best):
-                    best = value
+    for match in MONEY.finditer(evidence or ""):
+        value = parse_money(match)
+        if value is not None and MONEY_MIN <= value <= MONEY_MAX and (best is None or value > best):
+            best = value
     return best
 
 
-def performance_below_budget(rec):
-    """v3. 요구 실적금액이 계약목적물 추정가격의 1배 미만이면 그 배수를 돌려준다. 아니면 None.
+def performance_below_budget(rec, evidence):
+    """v3. 근거문구가 요구하는 실적이 추정가격의 1배 이내면 그 배수를 돌려준다. 아니면 None.
 
-    기준은 조문대로 추정가격이다(국가·지방 시행규칙 제25조제2항제1호 나목).
-    추정가격이 없으면 배정예산금액으로 물러선다. dev에서는 두 기준의 1배 경계 판정이 같다.
-    금액이나 기준액을 읽지 못하면 None을 돌려준다. 모르는 것을 근거로 내리지 않는다.
+    기준은 조문대로 추정가격이다(국가·지방 시행규칙 제25조제2항제1호 나목
+    `…해당 계약목적물의 추정가격의 1배 이내`). 추정가격이 없으면 배정예산금액으로
+    물러선다. dev에서는 두 기준의 1배 경계 판정이 같다.
+    기준액을 못 읽거나 인용에서 금액도 비율도 못 읽으면 None이다 — 모르는 것을
+    근거로 내리지 않는다.
+
+    세 갈래다.
+    ① 근거문구가 비면 내린다. 근거 없는 양성은 제출 계약의 `e`(원문의 연속된
+       부분문자열)를 채울 수 없다.
+    ② 인용이 배수를 **비율**로 적었으면 그 비율이 100 이하일 때 내린다.
+       조문이 1배 **이내**를 허용하므로 `예산금액의 100% 이상`은 위반이 아니다.
+       비율이 여럿이면 **가장 큰 것**을 요구 배수로 본다. 인용에 부가세율 같은 곁 숫자가
+       섞였을 때 작은 쪽을 집으면 1배 이상을 요구하는 정탐을 내린다.
+    ③ 그 밖에는 인용 안 금액을 기준액과 견준다.
     """
     meta = rec.get("meta") or {}
     basis = meta.get("입찰추정가격") or meta.get("배정예산금액")
     if not basis:
         return None
-    required = required_performance(rec)
+    if not (evidence or "").strip():
+        return 0.0
+    ratios = [float(found) for found in PERF_RATIO.findall(evidence)]
+    if ratios:
+        highest = max(ratios)
+        return highest / 100.0 if highest <= 100.0 else None
+    required = required_performance(evidence)
     if required is None:
         return None
     ratio = required / basis
@@ -2148,15 +2158,51 @@ def apply_qualification_rules(judgment, rec):
     out = dict(judgment)
     for item in QUALIFICATION_ITEMS:
         cell = dict(out.get(item) or {"위반여부": 0, "근거문구": None})
-        if cell.get("위반여부") == 1:
+        # v4 만 음성 결과도 쓴다. 특정기관 한정이 공고 어디에도 없으면 이 항목이 성립하지
+        # 않는다 — 규칙은 이미 매 공고에서 돌고 있었고 그 답을 버리고 있었다.
+        if cell.get("위반여부") == 1 and item != "v4":
             continue
         hit = RULES[item](rec)
+        if cell.get("위반여부") == 1:
+            if hit is None:
+                out[item] = {"위반여부": 0, "근거문구": None}
+            continue
         if hit:
             out[item] = {"위반여부": 1, "근거문구": hit["근거문구"]}
     v3 = dict(out.get("v3") or {"위반여부": 0, "근거문구": None})
-    if v3.get("위반여부") == 1 and performance_below_budget(rec) is not None:
+    if v3.get("위반여부") == 1 and performance_below_budget(rec, v3.get("근거문구")) is not None:
         out["v3"] = {"위반여부": 0, "근거문구": None}
     return out
+
+
+# 익명화된 지역 토큰. dev 입력이 200건 전부 `anon_applied=True` 라 기초 지자체 이름이
+# 이 꼴로 바뀌어 있다. `단위=기초` 가 시·군·구 제한이라는 신호다.
+ANON_REGION = re.compile(r"\[(?:등록)?지역:[^\]]*?단위=(기초|광역)[^\]]*\]")
+# 기초 단위를 이름으로 적은 공고도 있다. 광역시·특별시·특별자치시는 광역이므로 뺀다.
+BASIC_REGION_NAME = re.compile(r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)(?![가-힣])")
+
+
+def _has_basic_unit(text: str) -> bool:
+    """이 인용이 기초(시·군·구) 단위 제한을 가리키는가."""
+    if any(unit == "기초" for unit in ANON_REGION.findall(text or "")):
+        return True
+    # 광역 이름을 먼저 지운다. "서울특별시"의 "특별시"를 기초로 세지 않기 위해서다.
+    return bool(BASIC_REGION_NAME.search(re.sub(WIDE_REGION, " ", text or "")))
+
+
+def v6_not_a_basic_region_limit(evidence: str, rec: Dict[str, Any]) -> bool:
+    """v6 의 근거가 '고시금액 미만 계약의 시·군·구 제한'을 가리키지 못하는가.
+
+    세 조건 전부 항목 정의와 제출 계약에서 나온다(A4 후보에서 v6 만 옮겼다).
+    """
+    if not (evidence or "").strip():
+        return True                                     # ① 근거 없는 양성
+    wide = set(re.findall(WIDE_REGION, evidence))
+    if not wide and not ANON_REGION.search(evidence):
+        return True                                     # ② 지역제한 문장이 아니다
+    if len(wide) >= 2 and not _has_basic_unit(evidence):
+        return True                                     # ③ 광역 확대 — v7 의 몫이다
+    return False
 
 
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
@@ -2178,6 +2224,8 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                     break
             if (not ev and v not in EVIDENCE_EXEMPT) or evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
+        if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
+            hit, ev = 0, ""
         out[v] = {"위반여부": hit, "근거문구": ev}
     return out
 
