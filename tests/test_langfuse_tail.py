@@ -23,6 +23,13 @@ tail = _load("langfuse_tail", ROOT / "tools" / "langfuse_tail.py")
 
 DATA = str(ROOT / "open/data")
 INPUT = str(ROOT / "open/data/test.jsonl.gz")
+# hash 도 모양이 아니라 **재계산한 값**과 대조한다(라운드 9 P0). 그래서 검사도
+# 가짜 hash 를 못 쓴다 — 실제 digest 를 쓰지 않으면 요약으로 나간다.
+import hashlib as _hashlib
+CODE = _hashlib.sha256((ROOT / "script.py").read_bytes()).hexdigest()
+CODE7 = CODE[:7]
+SYSTEM = _hashlib.sha256(baseline.COMPANY_SIZE_PROMPT.encode("utf-8")).hexdigest()
+ASSET = _hashlib.sha256((ROOT / "open/data/항목표.json").read_bytes()).hexdigest()
 
 
 def ops_for(events, *, include_prompts=True):
@@ -94,7 +101,7 @@ class LangfuseTail(unittest.TestCase):
     def test_debug_fields_carry_the_prompt_and_response_when_present(self):
         events = [
             {"event": "run_started", "time_unix": 10.0, "mode": "live",
-             "code_sha256": "abc1234def", "expected_model": {"id": "google/gemma-4-26B-A4B-it"}},
+             "code_sha256": CODE, "expected_model": {"id": "google/gemma-4-26B-A4B-it"}},
             {"event": "chunk_started", "time_unix": 11.0, "chunk_start": 0, "count": 1},
             {"event": "response", "time_unix": 20.0, "chunk_start": 0, "global_index": 0,
              "id": "PPS-DEV-11", "attempt": 1, "status": "valid", "prompt_tokens": 12,
@@ -110,7 +117,7 @@ class LangfuseTail(unittest.TestCase):
                          "google/gemma-4-26B-A4B-it")
         self.assertEqual(json.loads(generation.attrs["langfuse.observation.usage_details"]),
                          {"input": 12, "output": 3, "total": 15})
-        self.assertEqual(state.trace_name, "nara live abc1234")
+        self.assertEqual(state.trace_name, f"nara live {CODE7}")
         # 배치 호출이므로 시작은 청크와 같다. 끝은 그 공고의 응답 시각이다.
         self.assertEqual((generation.start, generation.end), (11.0, 20.0))
         self.assertEqual([o.key for o in ops if o.action == "close"], ["chunk:baseline:0", "run"])
@@ -154,7 +161,7 @@ def captured(arm, *, ids=("PPS-DEV-01", "PPS-DEV-02"), chunk_start=0, seq=1, fai
 
 
 ROOT_EVENT = dict(event="run_started", time_unix=0.5, mode="pending", experiment="a8",
-                  dataset="dev", capture_protocol=1, code_sha256="abc1234def",
+                  dataset="dev", capture_protocol=1, code_sha256=CODE,
                   expected_model={"id": "google/gemma-4-26B-A4B-it", "revision": "rev"})
 
 
@@ -234,7 +241,7 @@ class CapturedRunProjection(unittest.TestCase):
         self.assertEqual(state.calls, {})
 
     def test_old_logs_without_capture_protocol_keep_the_legacy_projection(self):
-        legacy = [dict(event="run_started", time_unix=0.5, mode="live", code_sha256="abc1234"),
+        legacy = [dict(event="run_started", time_unix=0.5, mode="live", code_sha256=CODE),
                   dict(event="chunk_started", time_unix=1.0, phase="baseline", chunk_start=0, count=1),
                   dict(event="response", time_unix=2.0, phase="baseline", global_index=0,
                        id="A", attempt=1, status="valid", response_chars=2,
@@ -248,7 +255,7 @@ class CapturedRunProjection(unittest.TestCase):
     def test_the_real_mode_reaches_the_root_so_live_and_double_are_distinguishable(self):
         """루트는 생성 전에 `pending` 으로 열린다. 실제 mode 가 루트까지 오지 않으면
         Langfuse 에서 실제 모델 회차와 대역 실행이 같은 이름으로 끝난다."""
-        events = [dict(event="run_started", time_unix=0.5, mode="pending", code_sha256="abc1234def",
+        events = [dict(event="run_started", time_unix=0.5, mode="pending", code_sha256=CODE,
                        capture_protocol=1, dataset="dev"),
                   dict(event="model_loading", time_unix=0.6),
                   dict(event="model_loaded", time_unix=0.9, mode="live", load_seconds=12.0,
@@ -256,10 +263,10 @@ class CapturedRunProjection(unittest.TestCase):
                   dict(event="run_succeeded", time_unix=3.0)]
         ops, state = ops_for(events)
         self.assertEqual(state.actual_mode, "live")
-        self.assertEqual(state.trace_name, "nara live abc1234")
+        self.assertEqual(state.trace_name, f"nara live {CODE7}")
         update = next(o for o in ops if o.action == "update")
-        self.assertEqual((update.key, update.name), ("run", "nara live abc1234"))
-        self.assertEqual(update.attrs["langfuse.trace.name"], "nara live abc1234")
+        self.assertEqual((update.key, update.name), ("run", f"nara live {CODE7}"))
+        self.assertEqual(update.attrs["langfuse.trace.name"], f"nara live {CODE7}")
         self.assertEqual(update.attrs["langfuse.observation.metadata.mode"], "live")
         self.assertEqual(update.attrs["langfuse.observation.metadata.mode_at_start"], "pending")
         # 루트가 없는 잘린 로그에서 조용히 버려지지 않게 이유를 들고 다닌다.
@@ -271,7 +278,7 @@ class CapturedRunProjection(unittest.TestCase):
 
     def test_a_run_that_never_loaded_a_model_does_not_claim_a_mode(self):
         ops, state = ops_for([dict(event="run_started", time_unix=0.5, mode="pending",
-                                   code_sha256="abc1234def", capture_protocol=1),
+                                   code_sha256=CODE, capture_protocol=1),
                               dict(event="run_failed", time_unix=1.0, error_type="ValueError",
                                    error_message="budget")])
         self.assertIsNone(state.actual_mode)
@@ -310,7 +317,7 @@ class PromptExportBoundary(unittest.TestCase):
 
     def _events(self, tmp, *, notices=("PPS-DEV-01", "PPS-DEV-02"), real=True, **overrides):
         event = dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                     dataset="dev", code_sha256="abc1234def")
+                     dataset="dev", code_sha256=CODE)
         event.update(overrides)
         lines = [event]
         if real:
@@ -350,7 +357,7 @@ class PromptExportBoundary(unittest.TestCase):
         본문 차단이 두 슬롯만 보면 그것이 임의 host 로 나간다(라운드 2 P0)."""
         secret = "C:/Users/dasdk/private/.env"
         events = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                       code_sha256="abc1234def"),
+                       code_sha256=CODE),
                   dict(event="run_failed", time_unix=2.0, error_type="ValueError", count=3,
                        error_message=f"{secret} 를 못 읽었다",
                        traceback=f'File "{secret}", line 3\n  boom')]
@@ -525,12 +532,12 @@ class PromptExportBoundary(unittest.TestCase):
         path = "C:/Users/dasdk/private"
         probes = [
             dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                 code_sha256="abc1234", settings={"chunk": 128, "note": secret},
+                 code_sha256=CODE, settings={"chunk": 128, "note": secret},
                  argv=["python", f"{path}/x.py"],
                  environment={"vllm": "0.26.0", "leak": secret},
                  expected_model={"id": "m", "note": secret}),
             dict(event="assets", time_unix=0.6, packages=["vllm==0.26.0", secret],
-                 sha256="a" * 64),
+                 sha256={"items": ASSET}),
             dict(event="arm_started", time_unix=1.0, arm="control", sample="dev",
                  system_prompt_sha256=secret),
             dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
@@ -566,15 +573,15 @@ class PromptExportBoundary(unittest.TestCase):
         여기는 새 판형의 군·호출 필드만 본다."""
         clean = [
             dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                 code_sha256="abc1234", settings={"chunk": 128, "max_chars": 16000},
+                 code_sha256=CODE, settings={"chunk": 128, "max_chars": 16000},
                  expected_model={"id": "google/gemma-4-26B-A4B-it"}),
             dict(event="assets", time_unix=0.6,
-                 packages={"vllm": "0.26.0", "torch": "2.11.0+cu130"}, sha256={"input": "a" * 64}),
+                 packages={"vllm": "0.26.0", "torch": "2.11.0+cu130"}, sha256={"items": ASSET}),
             dict(event="model_loading", time_unix=0.7),
             dict(event="model_loaded", time_unix=0.9, mode="live", load_seconds=12.0,
                  token_count_kind="actual", environment={"vllm": "0.26.0", "cuda": "13.0"}),
             dict(event="arm_started", time_unix=1.0, arm="control", sample="dev",
-                 selected_count=200, system_prompt_sha256="d" * 64),
+                 selected_count=200, system_prompt_sha256=SYSTEM),
             dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
                  id="PPS-DEV-01", max_chars=16000, truncated=False, prompt_tokens=9000,
                  token_count_kind="actual", visible_sha256="b" * 64),
@@ -598,7 +605,7 @@ class PromptExportBoundary(unittest.TestCase):
         for good in ("PPS-DEV-01", "company_size", "unverified_product",
                      "returned", "stop", "16000", "0.26.0", "2.11.0+cu130"):
             self.assertIn(good, kept, good)
-        self.assertEqual(state.trace_name, "nara live abc1234")
+        self.assertEqual(state.trace_name, f"nara live {CODE7}")
         self.assertIn("\\\"chunk\\\": 128", kept)
 
     def test_the_real_h4_run_projects_without_loss_or_crash(self):
@@ -683,7 +690,7 @@ class PromptExportBoundary(unittest.TestCase):
         path = "C:/Users/dasdk/private/secret.env"
         state = tail.State()
         tail.plan(dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                       code_sha256="abc1234def"), state)
+                       code_sha256=CODE), state)
         ops = tail.plan(dict(event="model_call_finished", time_unix=2.0, phase=path,
                              call_seq=1, call_index=0, transport_status="returned"), state)
         self.assertTrue(ops)
@@ -699,7 +706,7 @@ class PromptExportBoundary(unittest.TestCase):
         `run()` 이 그것을 직접 set_attribute 했다(라운드 6 P0). 출구가 하나여야 한다."""
         path = "C:/Users/dasdk/private/secret.env"
         events = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                       code_sha256="abc1234def"),
+                       code_sha256=CODE),
                   dict(event="model_loading", time_unix=0.6),
                   dict(event="model_loaded", time_unix=0.9, mode=path, load_seconds=1.0),
                   dict(event="run_succeeded", time_unix=3.0, count=1)]
@@ -764,8 +771,12 @@ class PromptExportBoundary(unittest.TestCase):
     def test_the_sanitiser_keeps_what_the_producer_makes(self):
         self.assertEqual(tail._clean("max_chars", 16000), 16000)
         self.assertIsNone(tail._clean("max_chars", "16000"))          # 수치 자리에 문자열
-        self.assertIsNone(tail._clean("visible_sha256", "not-a-hash"))
-        self.assertEqual(tail._clean("visible_sha256", "b" * 64), "b" * 64)
+        # hash 도 **재계산한 값**과 대조한다 — 모양만 맞는 16진수는 요약된다(라운드 9 P0).
+        self.assertTrue(str(tail._clean("visible_sha256", "not-a-hash")).startswith("sha256:"))
+        self.assertTrue(str(tail._clean("code_sha256", "deadbeef" * 8)).startswith("sha256:"))
+        self.assertEqual(tail._clean("code_sha256", CODE), CODE)
+        self.assertEqual(tail._clean("system_prompt_sha256", SYSTEM), SYSTEM)
+        self.assertIn(ASSET, tail._known_hashes())
         self.assertEqual(tail._clean("identity_status", "matched"), "matched")
         self.assertEqual(tail._clean("items", ["v13"]), ["v13"])
         self.assertIsNone(tail._clean("nobody_knows_this", "x"))      # 모르는 이름은 버린다
@@ -809,11 +820,14 @@ class PromptExportBoundary(unittest.TestCase):
                 blob = json.dumps(tail._clean(name, {path: inner}), ensure_ascii=False)
                 self.assertNotIn("dasdk", blob, f"{name}:{path}")
                 self.assertNotIn("secret", blob.lower(), f"{name}:{path}")
-        # 진짜 키는 그대로다 — `script.py` 가 만드는 닫힌 집합이다.
+        # 진짜 키는 그대로다 — `script.py` 가 만드는 닫힌 집합이다. 값은 재계산한 digest 다.
         assets = tail._known_assets()
         self.assertEqual(len(assets), 6)
         for key in assets:
-            self.assertEqual(tail._clean("sha256", {key: "a" * 64}), {key: "a" * 64})
+            self.assertEqual(tail._clean("sha256", {key: ASSET}), {key: ASSET})
+            # 키가 맞아도 **값이 모양만 맞으면** 요약된다(라운드 9 P0).
+            summarised = tail._clean("sha256", {key: "a" * 64})
+            self.assertTrue(str(summarised[key]).startswith("sha256:"), key)
         self.assertEqual(tail._clean("packages", {"vllm": "0.26.0"}), {"vllm": "0.26.0"})
         self.assertIn("vllm", tail._known_packages())
 
@@ -840,7 +854,7 @@ class PromptExportBoundary(unittest.TestCase):
         저장소의 dev 와 제출 입력을 **둘 다** 읽어 대조한다 — dev 만 보면 제출 입력으로
         돈 회차(H4)의 관측이 통째로 요약된다."""
         forged = [dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
-                       code_sha256="abc1234", dev_ids=["sk-live-secret123"]),
+                       code_sha256=CODE, dev_ids=["sk-live-secret123"]),
                   dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
                   dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
                        id="sk-live-secret123", max_chars=16000),
@@ -857,6 +871,60 @@ class PromptExportBoundary(unittest.TestCase):
         self.assertGreater(len(known), 200)
         for identifier in ("PPS-DEV-01", sorted(known)[0]):
             self.assertEqual(tail._clean("id", identifier), identifier)
+
+    def test_hashes_are_recomputed_not_pattern_matched(self):
+        """**hash 도 모양이 아니다.** 16진수 비밀·식별자가 같은 모양이므로
+        `code_sha256="deadbeef"*8` 이 통과했다(라운드 9 P0). 재계산해 대조한다."""
+        known = tail._known_hashes()
+        self.assertGreaterEqual(len(known), 10)
+        self.assertIn(CODE, known)             # script.py 의 실제 digest
+        self.assertIn(SYSTEM, known)           # 제품 system 프롬프트
+        self.assertIn(ASSET, known)            # 제공 자료
+        for forged in ("deadbeef" * 8, "0" * 64, "a" * 40):
+            self.assertTrue(str(tail._clean("code_sha256", forged)).startswith("sha256:"), forged)
+        # 요약해도 **동일성 비교는 그대로 된다** — 같은 hash 는 같은 요약이다.
+        self.assertEqual(tail._clean("contract_sha256", "f" * 64),
+                         tail._clean("contract_sha256", "f" * 64))
+        self.assertNotEqual(tail._clean("contract_sha256", "f" * 64),
+                            tail._clean("contract_sha256", "e" * 64))
+        # **옛 회차의 코드 hash 는 재계산할 수 없다** — 그때의 `script.py` 는 지금과 다르다.
+        # 그것은 요약으로 나간다. hash 의 용도(같은가 다른가)는 요약이 보존하므로
+        # 핀과 대조할 때는 핀도 같은 방식으로 요약해 비교한다. 이 절충을 계약에 적었다.
+        log = ROOT / "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl"
+        events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+        started = next(e for e in events if e["event"] == "run_started")
+        self.assertNotEqual(started["code_sha256"], CODE)
+        self.assertTrue(str(tail._clean("code_sha256", started["code_sha256"]))
+                        .startswith("sha256:"))
+        # 그래도 같은 회차를 두 번 투영하면 같은 요약이 나온다 — 비교는 된다.
+        self.assertEqual(tail._clean("code_sha256", started["code_sha256"]),
+                         tail._clean("code_sha256", started["code_sha256"]))
+
+    def test_the_error_type_set_includes_what_the_producer_raises(self):
+        """`builtins` 만 읽으면 생산자가 직접 쓰는 오류형이 사라진다 —
+        `ResponseCountMismatch` 가 요약으로 바뀌었다(라운드 9 P1)."""
+        import re as _re
+        produced = tail._producer_enums()["error_type"]
+        found = set()
+        for source in [ROOT / "script.py"] + sorted((ROOT / "experiments").glob("*.py")):
+            found |= set(_re.findall(r'error_type=["\']([A-Za-z_][A-Za-z0-9_]*)["\']',
+                                    source.read_text(encoding="utf-8")))
+        self.assertIn("ResponseCountMismatch", found, "생산자에서 오류형을 못 읽었다")
+        self.assertEqual(found - produced, set(), f"집합에 없는 생산자 오류형: {found - produced}")
+        self.assertEqual(tail._clean("error_type", "ResponseCountMismatch"),
+                         "ResponseCountMismatch")
+        # 실제 실패 경로에서도 평문으로 남는다.
+        events = [ROOT_EVENT,
+                  dict(event="arm_started", time_unix=1.0, arm="control", sample="dev"),
+                  dict(event="model_call_started", time_unix=1.5, arm="control", sample="dev",
+                       id="PPS-DEV-01", call_seq=1, call_index=0),
+                  dict(event="model_call_failed", time_unix=2.0, arm="control", sample="dev",
+                       id="PPS-DEV-01", call_seq=1, call_index=0,
+                       error_type="ResponseCountMismatch",
+                       transport_status="response_count_mismatch")]
+        ops, _ = ops_for(events, include_prompts=False)
+        blob = json.dumps([[o.attrs, o.status] for o in ops], ensure_ascii=False)
+        self.assertIn("ResponseCountMismatch", blob)
 
     def test_the_status_enum_matches_what_the_producer_writes(self):
         """손으로 적은 집합은 드리프트한다 — `split` 을 빼서 분할 재시도 관측이 사라졌다.

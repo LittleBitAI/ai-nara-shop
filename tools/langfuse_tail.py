@@ -460,6 +460,40 @@ _FREE = frozenset(("error_message", "traceback"))
 
 
 @lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
+def _known_hashes() -> frozenset:
+    """**재계산할 수 있는** digest 전부. 그 밖의 hash 는 요약으로 나간다.
+
+    `HEX` 모양만 보면 `code_sha256="deadbeef"*8` 이 통과한다(라운드 9 P0). hash 는
+    모양이 값을 증명한다고 볼 수 있는 마지막 자리였는데, 16진수 비밀·식별자가 같은
+    모양이므로 그것도 아니다. 여기서 실제로 계산해 대조한다.
+
+    재계산 못 하는 것(`chat_template_sha256`·`contract_sha256`·`visible_sha256`·
+    `prompt_sha256`)은 요약한다. `visible`·`prompt` 는 1층이 실제 dev 로 재구성해
+    대조하므로 2층의 요약이 검증을 약화시키지 않는다.
+    """
+    sys.path.insert(0, str(ROOT))
+    import script
+    found = set()
+    for path in (ROOT/"script.py", ROOT/"open/dev.jsonl", ROOT/"open/data/test.jsonl.gz"):
+        if path.is_file():
+            found.add(_sha256(path))
+    data = ROOT/"open/data"
+    for name in ("항목표.json", "정답스키마_디코딩.json", *script.SME_FILES):
+        path = data/name
+        if path.is_file():
+            found.add(_sha256(path))
+    # 제품·후보 system 프롬프트의 digest. 군을 가르는 값이라 평문이어야 읽힌다.
+    for system in _known_systems(data):
+        found.add(hashlib.sha256(system.encode("utf-8")).hexdigest())
+    try:                                   # 스키마 digest
+        found.add(hashlib.sha256(json.dumps(script.decode_schema(str(data)), sort_keys=True,
+                                            ensure_ascii=False).encode()).hexdigest())
+    except Exception:
+        pass
+    return frozenset(found)
+
+
+@lru_cache(maxsize=None)         # 파일·모듈을 매 호출마다 읽지 않는다
 def _known_assets() -> frozenset:
     """`assets` dict 의 키. `script.py:2072` 가 만드는 **닫힌 집합**이다.
 
@@ -567,6 +601,11 @@ def _producer_enums() -> dict:
     errors = {name for name in dir(builtins)
               if isinstance(getattr(builtins, name, None), type)
               and issubclass(getattr(builtins, name), BaseException)}
+    # **생산자가 직접 쓰는 오류형도 있다** — `ResponseCountMismatch` 는 빌트인이 아니라
+    # 수집기가 문자열로 넣는다(라운드 9 P1). 소스에서 읽어 놓친 값이 없게 한다.
+    for source in [ROOT/"script.py"] + sorted((ROOT/"experiments").glob("*.py")):
+        errors |= set(re.findall(r'error_type=["\']([A-Za-z_][A-Za-z0-9_]*)["\']',
+                                 source.read_text(encoding="utf-8")))
     return {"mode": frozenset(modes), "token_count_kind": frozenset(counts),
             "arm": frozenset(experiments), "experiment": frozenset(experiments),
             "sample": frozenset(("dev", "unlabeled")),
@@ -593,8 +632,12 @@ def _clean_str(name: str, value: str, nested: bool) -> Optional[str]:
     중첩 안에서는 최상위 규칙(`_FREE`·enum)을 다시 쓰지 않는다 —
     `settings={"error_message": "C:/..."}` 가 본문 게이트를 그렇게 우회했다(라운드 5 P0).
     """
-    if name.endswith("_sha256"):
-        return value if HEX.match(value) else None
+    if name.endswith("_sha256") or name == "sha256":
+        # **hash 도 모양이 아니다.** `code_sha256="deadbeef"*8` 이 통과했다(라운드 9 P0) —
+        # 16진수 비밀·식별자가 같은 모양일 수 있다. 재계산할 수 있는 digest 만 평문이고
+        # 나머지는 요약한다. 요약해도 **동일성 비교는 그대로 된다** — 같은 hash 는 같은
+        # 요약이 되므로 "회차 간 같은가" 라는 hash 의 용도가 유지된다.
+        return value if value in _known_hashes() else _summary(value)
     produced = _producer_enums()
     if name in produced:                             # 생산자에서 읽은 집합이 먼저다
         return value if value in produced[name] else _summary(value)
@@ -677,10 +720,11 @@ def _clean(name: str, value: Any, *, nested: bool = False, _depth: int = 0) -> A
                     kept[key] = inner
                 continue
             if name in _HASH_MAPS:                   # {파일명: hash}
-                # **키도 이벤트에서 온다.** 값만 보면 키에 개인 경로가 남는다(라운드 7 P0).
-                # 제공 자료 이름은 고정 목록이 아니므로 모양을 좁히고, 아니면 요약한다.
-                if isinstance(inner, str) and HEX.match(inner):
-                    kept[key if key in _known_assets() else _summary(key)] = inner
+                # **키도 값도 이벤트에서 온다.** 키는 생산자의 닫힌 집합(라운드 7·8 P0),
+                # 값은 재계산한 digest 와 대조한다(라운드 9 P0).
+                if isinstance(inner, str):
+                    kept[key if key in _known_assets() else _summary(key)] = (
+                        inner if inner in _known_hashes() else _summary(inner))
                 continue
             if name in _VERSION_MAPS:                # {패키지: 버전}
                 # 키는 `script.py` 가 세는 고정 목록, 값은 계약이 고정한 버전과 대조한다.
