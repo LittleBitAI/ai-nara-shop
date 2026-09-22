@@ -7,13 +7,14 @@
 두 회차 결과는 **다음 게이트**이며, 최종 채택은 착수서 §6 의 무라벨 발화율·시간·독립 리뷰까지 본다.
 후보는 프롬프트만 바꾸며 채택 결정이 아니다. [보고서](README.md)가 준비 근거를 소유한다.
 
-- 실행 코드 **`ea9ac8a338705a1944a7f193b99735813b5fcdf0`** (노트북 `REPO_REF`).
+- 실행 코드 **`01258d3089502e4aafe50681b1a7fd7e48d06413`** (노트북 `REPO_REF`).
   출력 예약 1,024·공통 예산 15,296·v13 근거 수리·리뷰 7라운드 반영에 더해
-  **실제 모델 호출 관측과 회차 뒤 CPU 감사**, 그리고 **PR #87 라운드 1 수리**
-  (프롬프트 수출 경계·`schema_sha256`·`payload_sha256`·`gain_kind`·루트 mode)를 포함한다.
-  **더 오래된 커밋으로 돌리면 감사의 `gain_kind` 가 기전을 잘못 세거나 관측이 없다.**
-- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/516ddb93709e1de30cb0827f4921d2e8c627d637/notebooks/colab-a8-v20-annex.ipynb),
-  커밋 `516ddb93709e1de30cb0827f4921d2e8c627d637`, sha256 `aa8fafcd…`.
+  **실제 모델 호출 관측과 회차 뒤 CPU 감사**, 그리고 **PR #87 라운드 1~2 수리**
+  (프롬프트 수출 경계·본문 결속·redirect 차단·자유 텍스트 차단·`schema_sha256`·
+  `payload_sha256`·`gain_kind`·루트 mode)를 포함한다.
+  **더 오래된 커밋으로 돌리면 감사의 `gain_kind` 가 부재 기전을 못 세거나 관측이 없다.**
+- [고정 Colab 노트북](https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792/notebooks/colab-a8-v20-annex.ipynb),
+  커밋 `cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792`, sha256 `19a6b29b…`.
   위 코드 커밋에서 `REPO_REF` 한 줄만 고정한 사본이며 모든 코드 셀이 컴파일된다.
   `REPO_REF`가 40자리 16진수가 아니면 clone 전에 멈춘다.
 - 모델은 고정 리비전 `4d7ae4984b7db7de8f8457170b3f1a419ee76d52`, Python 3.12.13 · vLLM 0.26.0 · CUDA 13.0.
@@ -37,7 +38,8 @@ H4 baseline/SME 보관 응답만 있다. 무라벨 20,000건 파일은 필요하
    통과하면 control→a8 각 dev 200건. 군별 단계 상한 **339.178초/200건**이다.
    회차가 `diagnostics.jsonl`에 **루트·군·청크·실제 호출·파싱**을 순서대로 남기고,
    같은 셀이 이어서 CPU 감사를 돌려 `v20-audit.json`을 만든다(모델 재호출 없음).
-   감사 출력의 `verified_quote` 대 `fallback_only` 를 먼저 본다 —
+   감사 출력의 `verified_quote`·`verified_absence` 대 `fallback_only` 를 먼저 본다 —
+   앞의 둘은 기전이고(v20 은 부재탐지 항목이라 `verified_absence` 가 주 기전이다),
    **`fallback_only` 만 좋아진 것은 기전이 아니다.**
 5. 마지막 ZIP 셀(인덱스 15)을 실행해 결과를 받는다. **실패해도 실행한다.**
 6. 회차 1 완료·시간 통과 후 런타임을 삭제하고 **새 A100 런타임**에서 같은 노트북,

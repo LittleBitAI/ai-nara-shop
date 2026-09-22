@@ -94,6 +94,19 @@ dev 파일 실측 sha256 이 로그의 `dataset_sha256` 과 `inputs.json` 고정
 안에 있고, 신원 미확정(`ambiguous`·`unmatched`) 본문이 0건이어야 한다.
 **플래그는 안전의 근거가 아니다 — 이 대조가 근거다.** 접두사만 보면 안 된다.
 
+그리고 **id 가 맞다는 것은 본문이 dev 에서 왔다는 근거가 아니다.** 유효한 공고 id 에
+임의 문자열을 붙인 로그가 위 검사만으로는 통과한다. 그래서 공고별 user 프롬프트와
+문서 본문 hash 를 **실제 dev 파일에서 다시 만들어** 한 글자까지 대조하고, system 은
+제품 프롬프트나 후보 블록으로 시작하고 꼬리가 분할 재시도 문장일 때만 통과시킨다.
+
+전송 자체도 그 호스트에 묶는다. `requests` 는 기본적으로 redirect 를 따라가므로,
+로컬 엔드포인트가 307 로 외부 `Location` 을 돌려주면 검사를 통과한 본문이 그대로
+밖으로 다시 POST 된다. 그래서 OTLP 세션을 감싸 `allow_redirects` 를 강제로 끄고
+허용 호스트 밖 url 은 예외로 세운다. 세션을 못 잡으면 **수출을 거부한다.**
+
+**예외 메시지와 traceback 도 본문이다.** 개인 절대경로가 들어가므로 metadata 전용
+모드에서는 `error_type`(클래스 이름)만 남기고 나머지는 `withheld` 로 적는다.
+
 계약은 `reports/team-c/a8-v20-annex/observation-contract.json` 이 소유하고
 `tests/test_langfuse_tail.py::PromptExportBoundary` 가 고정한다.
 

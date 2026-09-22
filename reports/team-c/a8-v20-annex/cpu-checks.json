@@ -32,13 +32,14 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "ea9ac8a338705a1944a7f193b99735813b5fcdf0",
-  "pinned_notebook_commit": "516ddb93709e1de30cb0827f4921d2e8c627d637",
+  "pinned_code_commit": "01258d3089502e4aafe50681b1a7fd7e48d06413",
+  "pinned_notebook_commit": "cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792",
   "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
                       "b139807723c22ec570d65635b0d654ba5e6149e2 / a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6 — 관측·감사 배선 전",
-                      "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023 / 2f6e20642e07132cf03dba26f2064b21c2e20deb — 라운드 1 수리 전(수출 경계·gain_kind)"],
+                      "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023 / 2f6e20642e07132cf03dba26f2064b21c2e20deb — 라운드 1 수리 전(수출 경계·gain_kind)",
+                      "ea9ac8a338705a1944a7f193b99735813b5fcdf0 / 516ddb93709e1de30cb0827f4921d2e8c627d637 — 라운드 2 수리 전(본문 결속·redirect·자유 텍스트·부재 기전)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -201,6 +202,16 @@
              "gain_kind 가 인용 상태만 봐 두 가지를 오분류했다 → 실제 v20 전이로 판정, v20_applicable 추가",
              "루트가 mode=pending 으로 끝나 실제 회차와 대역 실행이 안 갈렸다 → update 액션"],
       "mutation_check": "다섯 가드를 하나씩 되돌려 각각 담당 검사가 빨개지는 것을 확인했다",
+      "round_2": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["id 가 고정 dev 에 있다는 것만 보고 본문 출처를 안 봤다 — 유효 id 에 임의 문자열을 붙인 로그가 통과했다. 공고별 user 프롬프트와 visible hash 를 실제 dev 에서 재구성해 대조하고 system 도 알려진 것으로 제한한다.",
+                "주소 문자열만 막아 redirect 로 빠져나갔다 — requests 기본값이 따라가기다. 세션의 request 를 감싸 allow_redirects 를 강제로 끄고 허용 호스트 밖 url 은 예외로 세운다.",
+                "본문 차단이 두 슬롯만 봐서 run_failed 의 error_message·traceback 이 metadata 전용 모드로 나갔다. 회차 종료 output 을 허용 목록으로 좁히고 예외 메시지·traceback 을 본문으로 취급한다."],
+        "p1": "gain_kind 가 preserve → write_1(부재 기전)을 other 로 뒀다. v20 은 부재탐지 항목이고 H4 양성 5건이 그 분기다 — verified_absence 로 이름을 주고, business 인용 기각으로 적용성이 무너진 preserve 도 fallback_only 로 센다.",
+        "p2": ["v20_applicable 200건 대조가 같은 함수를 자기와 비교하는 동어반복이었다 → 양방향 경계 검사 추가",
+               "루트 없는 로그에서 update 가 조용히 버려졌다 → 이유를 들고 다니고 화면에 적는다"],
+        "mutation_check": "여섯 가드를 하나씩 되돌렸다. 첫 시도에서 본문 결속 mutation 이 초록이어서 검사를 조였다 — system 검사가 먼저 걸려 user 위조를 못 보고 있었다."
+      },
       "confirmed_by_reviewer": ["script.py·후보·law_index 무변경",
                                "비-system 본문 digest 의 공고 유일성과 호출 키 비중복",
                                "API 표본 45건 재현", "핀·미실행 목록이 문서와 원장에서 일치"]
@@ -236,7 +247,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "aa8fafcd3e96fb92f3393ebb0d1e6b4d842ebdd50b84ed5d1d77c18075434d02",
+  "notebook_sha256": "19a6b29b6d09f7bcf32bd429b1f77d5786a7617a1b11e8bedefa5d025518a602",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -347,6 +358,26 @@
       "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
       "findings": 0,
       "phase": "라운드 1 수리 후"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 366,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 247.02,
+      "phase": "라운드 2 P0 셋·P1·P2 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 2.236,
+      "phase": "라운드 2 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 0,
+      "phase": "라운드 2 수리 후"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",
