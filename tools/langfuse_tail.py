@@ -182,7 +182,11 @@ def validate_dev_export(events_path, dev_path, *, host: str, data_dir=None) -> d
             event = json.loads(line)
             if event.get("event") == "company_size_input" and event.get("id") in known:
                 inputs[event["id"]] = event
-            if event.get("prompt_text") is not None or event.get("response_text") is not None:
+            # 본문이 실린 것뿐 아니라 **모든 물리 호출 시작**을 모은다. 본문 없는 시작을
+            # 빼고 보면 그 호출의 응답만 위조한 로그가 통과한다(라운드 4 P0).
+            if (event.get("event") == "model_call_started"
+                    or event.get("prompt_text") is not None
+                    or event.get("response_text") is not None):
                 calls.append(event)
             if event.get("event") == "run_started":
                 if started is not None:
@@ -222,13 +226,24 @@ def validate_dev_export(events_path, dev_path, *, host: str, data_dir=None) -> d
                 reasons.append(f"no_rebuilt_prompt:{identifier}")
             elif claimed is not None and claimed != rebuilt[1]:
                 reasons.append(f"visible_sha256_mismatch:{identifier}")
-        problems = set()
+        problems, started_keys = set(), set()
         for event in calls:
             why = _body_is_bound(event, prompts, systems, suffixes)
             if why:
                 problems.add(why)
-            elif event.get("prompt_text") is not None:
+                continue
+            if event.get("event") == "model_call_started":
+                # **본문 없는 시작은 결속을 건너뛴다.** 그러면 같은 호출의 응답만
+                # 위조해도 통과한다(라운드 4 P0). 모든 물리 호출이 결속된 프롬프트를 갖는다.
+                if event.get("prompt_text") is None:
+                    problems.add("call_without_prompt")
+                    continue
+                started_keys.add(_call_key(event))
                 bound += 1
+            elif event.get("response_text") is not None:
+                # 응답은 **결속된 시작과 짝이 맞을 때만** 내보낸다.
+                if _call_key(event) not in started_keys:
+                    problems.add("unpaired_output")
         if problems:
             reasons.append("unbound_body:" + ",".join(sorted(problems)))
     return dict(allowed=not reasons, reasons=sorted(set(reasons)), dev_records=len(known),
@@ -288,11 +303,134 @@ def _call_key(event: dict) -> str:
             f":{event.get('call_seq')}:{event.get('call_index')}")
 
 
+# 수출해도 되는 값의 모양. **"구조화 필드라서 안전하다" 는 근거가 아니다** —
+# `settings.note` 나 `items` 에 임의 문자열을 넣은 로그가 그대로 실렸다(라운드 4 P0).
+HEX = re.compile(r"^[0-9a-f]{7,64}$")
+# id·군·단계 같은 짧은 식별자. **`/` 와 `:` 를 뺐다** — 그것이 있으면 경로가 통과한다.
+TOKEN = re.compile(r"^[A-Za-z0-9_\-.+]{1,48}$")
+# 값 집합이 정해진 enum. 타입만이 아니라 **값까지** 고정한다.
+_ENUMS = {
+    "identity_status": frozenset(("initial", "matched", "ambiguous", "unmatched")),
+    "call_kind": frozenset(("initial", "retry")),
+    "transport_status": frozenset(("returned", "failed", "response_count_mismatch")),
+    "mode": frozenset(("live", "test_double", "pending", "?")),
+    "mode_at_start": frozenset(("pending",)),
+    "model_loaded": frozenset(("yes", "no")),
+    "detail_capture": frozenset(("withheld",)),
+    "prompt_capture": frozenset(("withheld", "unavailable")),
+    "token_count_kind": frozenset(("actual", "estimate", "test_double")),
+    "dataset": frozenset(("dev", "unlabeled")),
+    "experiment": frozenset(("h3", "v18", "a8")),
+    "status": frozenset(("valid", "invalid", "complete", "incomplete", "failed", "ok")),
+    # `retry_chat` 의 단계와 전략, `sme_fallback` 의 출처. 값은 전부 `script.py` 가 만든다.
+    "stage": frozenset(("call", "parse", "response_count")),
+    "retry_strategy": frozenset(("split_items",)),
+    "source": frozenset(("validated_baseline",)),
+    # vLLM 이 만든다. 모르는 값이면 안 싣는다 — 그 자리는 자유 텍스트가 아니다.
+    "finish_reason": frozenset(("stop", "length", "abort", "tool_calls")),
+}
+# `error_type` 은 예외 **클래스 이름**이라 값 집합을 못 고정한다. 임의 문자열이 올 수 있지만
+# 좁힌 `TOKEN`(공백·`/`·`:` 없음, 48자)이 경로와 본문 조각을 막는다. 메시지는 `_detail()` 이 건다.
+_NUMERIC = frozenset((
+    "attempt", "call_index", "call_seq", "chunk_start", "count", "episode",
+    "failed_response_count", "global_index", "load_seconds", "max_chars", "max_tokens",
+    "output_reserved", "output_tokens", "prompt_budget", "prompt_tokens",
+    "requested_max_chars", "response_chars", "sample_count", "seconds", "selected_count",
+    "skipped_count", "stage_seconds", "valid_response_count"))
+_TOKENS = frozenset((
+    "arm", "call_kind", "dataset", "error_type", "experiment", "finish_reason", "id",
+    "identity_status", "mode", "mode_at_start", "phase", "retry_strategy", "sample",
+    "source", "stage", "status", "stop_reason", "token_count_kind", "transport_status",
+    "platform", "python", "model_loaded", "detail_capture", "prompt_capture",
+    "truncated", "quant", "seed", "chunk"))
+_TOKEN_LISTS = frozenset(("ids", "indices", "dev_ids", "order", "arms"))
+# 항목 이름은 **고정 목록**이다. 토큰 패턴만 보면 그 자리에 임의 문자열이 들어간다.
+_ITEM_LISTS = frozenset(("items", "groups"))
+# `argv` 는 명령줄이라 경로가 들어간다. `packages` 는 `이름==버전` 뿐이다.
+PACKAGE = re.compile(r"^[A-Za-z0-9_.\-\[\]]+==[\w.+\-]+$")
+# `verify_sme` 가 만드는 기각 사유 전부(`script.py:1258`). 그 밖의 문자열은 안 내보낸다.
+REJECTION_REASONS = frozenset(("unverified_product", "unconfirmed_scope_or_exception",
+                               "unverified_small_only_clause",
+                               "clause_includes_medium_enterprises"))
+# 자유 텍스트라 본문 게이트를 지난 것만 나간다. `_detail()` 이 이미 걸렀다.
+_FREE = frozenset(("error_message", "traceback"))
+
+
+def _known_items() -> frozenset:
+    """제품이 쓰는 항목 이름 전부. 그 밖의 값은 `items`·`groups` 에 올 수 없다."""
+    sys.path.insert(0, str(ROOT))
+    import script
+    return frozenset(script.ITEMS) | frozenset(script.COMPANY_SIZE_KEYS) | frozenset(script.SME_ITEMS)
+
+
+def _clean(name: str, value: Any, *, _depth: int = 0) -> Any:
+    """이 값이 생산자가 만드는 모양인지 본다. 아니면 버린다(None).
+
+    이름으로 규칙을 찾는다 — 모르는 이름은 안 내보낸다. 수치는 수치여야 하고,
+    hash 는 16진수여야 하고, 식별자·enum 은 짧은 토큰이어야 하고, 목록은 그 토큰의
+    목록이어야 한다. 중첩 dict 는 키마다 같은 규칙을 다시 건다.
+    """
+    if value is None or _depth > 3:
+        return None
+    if name.endswith("_sha256"):
+        return value if isinstance(value, str) and HEX.match(value) else None
+    if name in _FREE:
+        return value if isinstance(value, str) else None
+    if name in _NUMERIC:
+        return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
+    if name in _ENUMS:
+        return value if value in _ENUMS[name] else None
+    if name in _TOKENS:
+        if isinstance(value, bool) or isinstance(value, (int, float)):
+            return value
+        return value if isinstance(value, str) and TOKEN.match(value) else None
+    if name in _TOKEN_LISTS or name in _ITEM_LISTS or name == "packages":
+        if not isinstance(value, list):
+            return None
+        flat = [item for entry in value for item in (entry if isinstance(entry, list) else [entry])]
+        if name in _ITEM_LISTS:
+            ok = flat and set(flat) <= _known_items()
+        elif name == "packages":
+            ok = all(isinstance(item, str) and PACKAGE.match(item) for item in flat)
+        else:
+            ok = all(isinstance(item, str) and TOKEN.match(item) for item in flat)
+        return value if ok else None
+    if isinstance(value, dict):        # settings·environment·expected_model·flags·rejected_conditions
+        items, kept = _known_items(), {}
+        for key, inner in value.items():
+            if key in items:           # 항목별 판정·기각 사유. 값도 생산자가 만드는 것만.
+                if isinstance(inner, bool) or isinstance(inner, int):
+                    kept[key] = inner
+                elif isinstance(inner, list) and set(inner) <= REJECTION_REASONS:
+                    kept[key] = inner
+                continue
+            clean = _clean(key, inner, _depth=_depth + 1)
+            if clean is not None:
+                kept[key] = clean
+        return kept or None
+    return None                                      # 모르는 이름은 안 내보낸다
+
+
 def _meta(**fields: Any) -> dict:
-    """None 을 걸러 Langfuse 메타데이터 속성으로 만든다."""
-    return {f"langfuse.observation.metadata.{k}":
-            v if isinstance(v, (str, int, float, bool)) else json.dumps(v, ensure_ascii=False)
-            for k, v in fields.items() if v is not None}
+    """이벤트에서 온 값을 메타데이터로 만든다. **위생을 지난 것만 나간다.**
+
+    코드에 박아 넣은 고정 문구는 이 함수를 쓰지 않는다 — `_fixed()` 가 따로 넣는다.
+    그래야 "이름을 모르면 버린다" 가 규칙으로 성립한다.
+    """
+    out = {}
+    for key, value in fields.items():
+        clean = _clean(key, value)
+        if clean is None:
+            continue
+        out[f"langfuse.observation.metadata.{key}"] = (
+            clean if isinstance(clean, (str, int, float, bool))
+            else json.dumps(clean, ensure_ascii=False))
+    return out
+
+
+def _fixed(**fields: str) -> dict:
+    """이 파일이 만든 고정 문구. 이벤트에서 오지 않으므로 위생 대상이 아니다."""
+    return {f"langfuse.observation.metadata.{k}": v for k, v in fields.items() if v is not None}
 
 
 def _io(value: Any) -> str:
@@ -349,10 +487,13 @@ def plan(event: dict, state: State) -> list:
         mode = event.get("mode", "?")
         state.code = (event.get("code_sha256") or "")[:7]
         state.trace_name = f"nara {mode} {state.code}".strip()
+        # settings 도 통째로 싣지 않는다 — 임의 키를 넣은 로그가 루트 input 으로 나갔다.
+        settings = _clean("settings", event.get("settings")) or {}
         return [Op("open", "run", state.trace_name, "span", None, now,
-                   attrs={"langfuse.observation.input": _io(event.get("settings", {})),
+                   attrs={"langfuse.observation.input": _io(settings),
                           **_meta(mode=mode, code_sha256=event.get("code_sha256"),
-                                  argv=event.get("argv"), platform=event.get("platform"),
+                                  # argv 는 안 싣는다 — 명령줄에 개인 경로가 들어간다.
+                                  platform=event.get("platform"),
                                   python=event.get("python"),
                                   expected_model=event.get("expected_model"))})]
 
@@ -430,15 +571,16 @@ def plan(event: dict, state: State) -> list:
         state.inputs[(arm, sample, event.get("id"))] = event
         return [Op("point", f"input:{arm}:{sample}:{event.get('id')}", str(event.get("id")),
                    "event", state.arm or "run", now, now,
-                   attrs=_meta(arm=arm, sample=sample, id=event.get("id"),
-                               max_chars=event.get("max_chars"),
-                               requested_max_chars=event.get("requested_max_chars"),
-                               truncated=event.get("truncated"),
-                               prompt_tokens=event.get("prompt_tokens"),
-                               token_count_kind=event.get("token_count_kind"),
-                               prompt_sha256=event.get("prompt_sha256"),
-                               visible_sha256=event.get("visible_sha256"),
-                               note="입력 예산 관측. 군 간 추가 절단 판정은 budget.json 이 소유한다"))]
+                   attrs={**_meta(arm=arm, sample=sample, id=event.get("id"),
+                                  max_chars=event.get("max_chars"),
+                                  requested_max_chars=event.get("requested_max_chars"),
+                                  truncated=event.get("truncated"),
+                                  prompt_tokens=event.get("prompt_tokens"),
+                                  token_count_kind=event.get("token_count_kind"),
+                                  prompt_sha256=event.get("prompt_sha256"),
+                                  visible_sha256=event.get("visible_sha256")),
+                          **_fixed(note="입력 예산 관측. 군 간 추가 절단 판정은 "
+                                        "budget.json 이 소유한다")})]
 
     if kind == "chunk_started":
         if state.chunk:                        # 청크는 순차적이다. 앞 청크를 닫는다.
@@ -471,9 +613,9 @@ def plan(event: dict, state: State) -> list:
                          call_index=event.get("call_index"),
                          prompt_sha256=event.get("prompt_sha256"),
                          schema_sha256=event.get("schema_sha256"),
-                         max_tokens=event.get("max_tokens"), items=event.get("items"),
-                         # 같은 batch 의 호출들은 시작·종료를 공유한다. 한 건의 지연이 아니다.
-                         duration_note="shared batch latency")}
+                         max_tokens=event.get("max_tokens"), items=event.get("items")),
+                 # 같은 batch 의 호출들은 시작·종료를 공유한다. 한 건의 지연이 아니다.
+                 **_fixed(duration_note="shared batch latency")}
         source = state.inputs.get((event.get("arm"), event.get("sample"), event.get("id")))
         if source is not None:
             attrs.update(_meta(max_chars=source.get("max_chars"),
@@ -487,22 +629,24 @@ def plan(event: dict, state: State) -> list:
         if key not in state.calls:             # 시작 없는 종료는 관측 계약 실패다. 꾸며 넣지 않는다.
             return [Op("point", f"orphan:{key}:{now}", "orphan model call", "event",
                        state.arm or "run", now, now, level="ERROR",
-                       attrs=_meta(call_key=key, transport_status=event.get("transport_status")))]
+                       attrs={**_fixed(call_key=key),
+                              **_meta(transport_status=event.get("transport_status"))})]
         state.calls.pop(key, None)
         failed = kind == "model_call_failed"
         prompt_tokens, output_tokens = event.get("prompt_tokens"), event.get("output_tokens")
-        attrs = _meta(transport_status=event.get("transport_status"),
-                      finish_reason=event.get("finish_reason"), stop_reason=event.get("stop_reason"),
-                      error_type=event.get("error_type"),
-                      note="반환 여부다. JSON 유효 판정은 parse-result 가 소유한다")
+        attrs = {**_meta(transport_status=event.get("transport_status"),
+                         finish_reason=event.get("finish_reason"),
+                         stop_reason=event.get("stop_reason"),
+                         error_type=event.get("error_type")),
+                 **_fixed(note="반환 여부다. JSON 유효 판정은 parse-result 가 소유한다")}
         if prompt_tokens is not None and output_tokens is not None:
             # 둘 다 알 때만 total 을 만든다. 모르는 토큰을 0 으로 쓰지 않는다.
             attrs["langfuse.observation.usage_details"] = json.dumps(
                 {"input": prompt_tokens, "output": output_tokens,
                  "total": prompt_tokens + output_tokens})
         elif prompt_tokens is not None or output_tokens is not None:
-            attrs.update(_meta(prompt_tokens=prompt_tokens, output_tokens=output_tokens,
-                               usage_note="한쪽만 보고돼 total 을 만들지 않았다"))
+            attrs.update(_meta(prompt_tokens=prompt_tokens, output_tokens=output_tokens))
+            attrs.update(_fixed(usage_note="한쪽만 보고돼 total 을 만들지 않았다"))
         _body(state, attrs, "output", event.get("response_text"))
         return [Op("close", key, end=now, attrs=attrs, level="ERROR" if failed else None,
                    status=f"{event.get('error_type')}" if failed else "")]
@@ -536,9 +680,9 @@ def plan(event: dict, state: State) -> list:
                     finish_reason=event.get("finish_reason"), stop_reason=event.get("stop_reason"),
                     max_tokens=event.get("max_tokens"), global_index=event.get("global_index"),
                     chunk_start=event.get("chunk_start"),
-                    retry_strategy=event.get("retry_strategy"), groups=event.get("groups"),
-                    # 배치 호출이라 시작 시각은 청크와 같다. 한 건의 순수 지연이 아니다.
-                    duration_note="batch call; span starts at the chunk start"),
+                    retry_strategy=event.get("retry_strategy"), groups=event.get("groups")),
+            # 배치 호출이라 시작 시각은 청크와 같다. 한 건의 순수 지연이 아니다.
+            **_fixed(duration_note="batch call; span starts at the chunk start"),
         }
         if prompt_tokens is not None or output_tokens is not None:
             attrs["langfuse.observation.usage_details"] = json.dumps(
@@ -565,27 +709,31 @@ def plan(event: dict, state: State) -> list:
     if kind == "sme_verified":
         return [Op("point", f"verify:{event.get('id')}", f"verify {event.get('id')}", "event",
                    "run", now, now,
-                   attrs={"langfuse.observation.output": _io(event.get("flags", {})),
+                   attrs={"langfuse.observation.output": _io(_clean("flags", event.get("flags"))
+                                                             or {}),
                           **_meta(rejected_conditions=event.get("rejected_conditions"))})]
 
     if kind in ("run_succeeded", "run_failed"):
         # 남은 것을 안쪽부터 닫는다 — 호출 → 청크 → 군 → run.
         for key in list(state.calls):
             ops.append(Op("close", key, end=now, level="ERROR", status="no model_call_finished",
-                          attrs=_meta(note="종료 이벤트 없이 회차가 끝났다")))
+                          attrs=_fixed(note="종료 이벤트 없이 회차가 끝났다")))
         state.calls.clear()
         if state.chunk:
             ops.append(Op("close", state.chunk, end=now))
             state.chunk = None
         for key in list(state.arms.values()):
             ops.append(Op("close", key, end=now,
-                          attrs=_meta(status="incomplete", note="arm_finished 없이 회차가 끝났다")))
+                          attrs=_fixed(status="incomplete",
+                                       note="arm_finished 없이 회차가 끝났다")))
         state.arms.clear()
         state.arm = None
         failed = kind == "run_failed"
         # 이벤트를 통째로 싣지 않는다 — `run_failed` 에는 error_message 와 traceback 이 있고
         # 거기에 개인 절대경로가 들어간다. 허용 목록만 내보낸다.
-        summary = {k: event[k] for k in RUN_END_FIELDS if k in event}
+        # 허용 목록의 **값도** 위생을 지난다 — 이름만 맞추고 임의 값을 넣을 수 있다.
+        summary = {k: _clean(k, event[k]) for k in RUN_END_FIELDS if k in event}
+        summary = {k: v for k, v in summary.items() if v is not None}
         ops.append(Op("close", "run", end=now,
                       attrs={"langfuse.observation.output": _io(summary),
                              # 루트가 `pending` 으로 끝나지 않게 실제 mode 를 마지막에 한 번 더 적는다.

@@ -479,6 +479,121 @@ class PromptExportBoundary(unittest.TestCase):
             self.assertNotIn(tmp.replace("\\", "/"), str(name).replace("\\", "/"))
             self.assertTrue(str(name).startswith("diagnostics.jsonl:"), name)
 
+    def test_a_call_without_a_prompt_and_an_unpaired_output_are_refused(self):
+        """본문 검증이 `prompt_text` 가 있을 때만 돌면, 같은 호출의 응답만 위조해도
+        통과한다 — 검증을 건너뛴 시작에 붙은 output 이 그대로 나갔다(라운드 4 P0)."""
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            out = []
+            for line in lines:
+                if line["event"] == "model_call_started":
+                    line.pop("prompt_text")              # 본문 없는 시작
+                    out.append(line)
+                    out.append(dict(line, event="model_call_finished",
+                                    response_text="NON_DEV_SECRET"))
+                    continue
+                out.append(line)
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in out),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertIn("unbound_body:call_without_prompt,unpaired_output", verdict["reasons"])
+        self.assertEqual(verdict["bound_prompts"], 0)
+
+    def test_structured_fields_cannot_carry_free_text(self):
+        """"구조화 필드라서 안전하다" 는 근거가 아니다. `settings.note`·`items`·`argv` 로
+        임의 문자열과 개인 경로가 실렸다(라운드 4 P0). 두 모드 모두에서 본다."""
+        secret = "NON_DEV_SECRET"
+        path = "C:/Users/dasdk/private"
+        probes = [
+            dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                 code_sha256="abc1234", settings={"chunk": 128, "note": secret},
+                 argv=["python", f"{path}/x.py"],
+                 environment={"vllm": "0.26.0", "leak": secret},
+                 expected_model={"id": "m", "note": secret}),
+            dict(event="assets", time_unix=0.6, packages=["vllm==0.26.0", secret],
+                 sha256="a" * 64),
+            dict(event="arm_started", time_unix=1.0, arm="control", sample="dev",
+                 system_prompt_sha256=secret),
+            dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
+                 id="PPS-DEV-01", max_chars=secret, visible_sha256="b" * 64),
+            dict(event="model_call_started", time_unix=1.5, arm="control", sample="dev",
+                 id="PPS-DEV-01", call_seq=1, call_index=0,
+                 items=["company_size", secret], groups=[[secret]], schema_sha256="c" * 64),
+            dict(event="model_call_finished", time_unix=2.0, arm="control", sample="dev",
+                 id="PPS-DEV-01", call_seq=1, call_index=0, finish_reason=secret,
+                 transport_status="returned"),
+            dict(event="response", time_unix=2.1, arm="control", sample="dev", id="PPS-DEV-01",
+                 attempt=1, status="valid", global_index=0, retry_strategy=secret),
+            dict(event="retry_failed", time_unix=2.2, arm="control", sample="dev",
+                 id="PPS-DEV-01", stage=secret, source=secret),
+            dict(event="sme_verified", time_unix=2.5, id="PPS-DEV-01",
+                 flags={"v13": 1, "leak": secret},
+                 rejected_conditions={"v13": ["unverified_product", secret]}),
+            dict(event="run_failed", time_unix=9.0, count=200, stage=secret,
+                 error_message=f"{path}/x", traceback=f"File {path}/x"),
+        ]
+        for include in (False, True):
+            state, ops = tail.State(include_prompts=include), []
+            for event in probes:
+                ops += tail.plan(event, state)
+            blob = json.dumps([[op.attrs, op.status] for op in ops], ensure_ascii=False)
+            self.assertNotIn(secret, blob, f"include_prompts={include}")
+            if not include:
+                self.assertNotIn(path, blob)
+    def test_the_sanitiser_does_not_empty_a_clean_run(self):
+        """위생이 진짜 값을 버리면 관측이 비어 쓸 수 없다. 오염 없는 로그로 확인한다."""
+        clean = [
+            dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
+                 code_sha256="abc1234", settings={"chunk": 128, "max_chars": 16000},
+                 expected_model={"id": "google/gemma-4-26B-A4B-it"}),
+            dict(event="assets", time_unix=0.6, packages=["vllm==0.26.0", "torch==2.9.0"],
+                 sha256="a" * 64),
+            dict(event="model_loading", time_unix=0.7),
+            dict(event="model_loaded", time_unix=0.9, mode="live", load_seconds=12.0,
+                 token_count_kind="actual", environment={"vllm": "0.26.0", "cuda": "13.0"}),
+            dict(event="arm_started", time_unix=1.0, arm="control", sample="dev",
+                 selected_count=200, system_prompt_sha256="d" * 64),
+            dict(event="company_size_input", time_unix=1.1, arm="control", sample="dev",
+                 id="PPS-DEV-01", max_chars=16000, truncated=False, prompt_tokens=9000,
+                 token_count_kind="actual", visible_sha256="b" * 64),
+            dict(event="model_call_started", time_unix=1.5, arm="control", sample="dev",
+                 id="PPS-DEV-01", identity_status="initial", call_kind="initial",
+                 call_seq=1, call_index=0, items=["company_size"], max_tokens=1024,
+                 schema_sha256="c" * 64),
+            dict(event="model_call_finished", time_unix=2.0, arm="control", sample="dev",
+                 id="PPS-DEV-01", identity_status="initial", call_seq=1, call_index=0,
+                 transport_status="returned", finish_reason="stop", prompt_tokens=9000,
+                 output_tokens=400),
+            dict(event="sme_verified", time_unix=2.5, id="PPS-DEV-01", flags={"v13": 1},
+                 rejected_conditions={"v13": ["unverified_product"]}),
+            dict(event="run_succeeded", time_unix=9.0, count=200, seconds=300.0,
+                 model_success_count=200),
+        ]
+        state, ops = tail.State(), []
+        for event in clean:
+            ops += tail.plan(event, state)
+        kept = json.dumps([op.attrs for op in ops], ensure_ascii=False)
+        for good in ("vllm==0.26.0", "PPS-DEV-01", "company_size", "unverified_product",
+                     "returned", "stop", "16000", "0.26.0", "nara live abc1234"):
+            self.assertIn(good, kept, good)
+        self.assertIn("\\\"chunk\\\": 128", kept)
+
+    def test_the_sanitiser_keeps_what_the_producer_makes(self):
+        self.assertEqual(tail._clean("max_chars", 16000), 16000)
+        self.assertIsNone(tail._clean("max_chars", "16000"))          # 수치 자리에 문자열
+        self.assertIsNone(tail._clean("visible_sha256", "not-a-hash"))
+        self.assertEqual(tail._clean("visible_sha256", "b" * 64), "b" * 64)
+        self.assertIsNone(tail._clean("identity_status", "made_up"))  # enum 은 값까지
+        self.assertEqual(tail._clean("identity_status", "matched"), "matched")
+        self.assertIsNone(tail._clean("items", ["not_an_item"]))
+        self.assertEqual(tail._clean("items", ["v13"]), ["v13"])
+        self.assertIsNone(tail._clean("nobody_knows_this", "x"))      # 모르는 이름은 버린다
+        self.assertFalse(tail.TOKEN.match("C:/Users/dasdk/x"))        # 경로는 토큰이 아니다
+
     def test_non_local_host_is_refused(self):
         dev, ids = self._dev_ids()
         with tempfile.TemporaryDirectory() as tmp:
