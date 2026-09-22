@@ -286,9 +286,74 @@ class State:
     calls: dict = field(default_factory=dict)      # call key → 시작 시각
 
 
+def _label(name: str, value: Any, fallback: str = "?") -> str:
+    """span 이름·trace 이름에 쓰는 값. **이름도 수출이다.**
+
+    metadata 만 위생하면 `mode="NON_DEV_SECRET"` 이 span 이름과 `langfuse.trace.name`
+    으로 그대로 나간다(라운드 5 P0). 같은 규칙을 이름에도 건다.
+    """
+    clean = _clean(name, value)
+    return str(clean) if clean is not None else fallback
+
+
+# span 이름·상태 문자열에 남아도 되는 모양. 공고 id 와 군·단계 이름을 붙여 만든다.
+NAME = re.compile(r"^[A-Za-z0-9_\-.+·: ]{1,96}$")
+
+
+def guard(op: "Op") -> "Op":
+    """**모든 Op 가 여기를 지나 밖으로 나간다.** 출구가 하나다.
+
+    왜 이 자리인가. 라운드 1~5 의 P0 열둘이 전부 같은 결함이었다 — 값이 span 으로
+    나가는 경로가 여럿인데 지적된 출구마다 게이트를 달았다. `input`/`output` 두 슬롯 →
+    `status` → `metadata` → **span 이름** → `usage_details` 로 면이 하나씩 나왔다.
+    호출자를 막으면 막을 목록을 손으로 세게 되고 그 목록은 언제나 모자란다.
+
+    그래서 `plan()` 의 어느 분기가 무엇을 넣든 직렬화 **직전에** 여기서 한 번 본다.
+    새 필드가 생겨도 자동으로 이 통로를 지난다 — 열거할 목록이 없다.
+
+    `attrs` 는 이미 `_meta()`·`_fixed()`·`_body()` 가 만든 최종 키다. 여기서는
+    **이름·상태·usage 처럼 metadata 를 안 지나는 자리**를 같은 기준으로 막는다.
+    """
+    if not NAME.match(op.key):
+        # key 도 이름이 된다(`run()` 이 name 이 없으면 key 로 span 을 만든다). 모양이
+        # 아니면 **결정적 hash** 로 바꾼다 — 같은 입력이 같은 key 가 되므로 open/close 짝이
+        # 유지된다. 정상 경로에서는 조립에 쓰는 값이 이미 위생을 지나 여기 안 걸린다.
+        op.key = "op:" + hashlib.sha256(op.key.encode("utf-8")).hexdigest()[:16]
+    if op.name and not NAME.match(op.name):
+        op.name = op.key.split(":")[0]
+    if op.status and not NAME.match(op.status) and not op.attrs.get(
+            "langfuse.observation.metadata.traceback"):
+        # 상태 문구는 `_status()` 가 만들고 본문은 이미 게이트를 지났다. 남은 것은
+        # 게이트를 통과한 상세거나 이 파일의 고정 문구다. 그 밖의 모양은 자른다.
+        if not any(op.status.startswith(fixed) for fixed in _FIXED_STATUS):
+            op.status = op.status.split(":")[0][:96]
+    usage = op.attrs.get("langfuse.observation.usage_details")
+    if usage is not None:
+        numbers = json.loads(usage) if isinstance(usage, str) else usage
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                   for v in numbers.values()):
+            op.attrs.pop("langfuse.observation.usage_details")
+    return op
+
+
+_FIXED_STATUS = ("no model_call_finished", "unfinished: tail stopped",
+                 "루트 span 이 없어")
+
+
 def _scope(event: dict) -> tuple:
-    """군·표본을 포함한 범위. 이 값이 span key 에 들어가야 두 군이 겹치지 않는다."""
-    return event.get("arm"), event.get("sample")
+    """군·표본을 포함한 범위. 이 값이 span key 에 들어가야 두 군이 겹치지 않는다.
+
+    **key 도 출구다** — `run()` 이 이름이 없으면 key 로 span 이름을 만들고, orphan 경로는
+    key 를 metadata 에 적는다. 그래서 여기서 위생한다. 같은 함수를 쓰므로 `state.inputs`
+    조회 키와 span key 가 어긋나지 않는다.
+    """
+    arm, sample = event.get("arm"), event.get("sample")
+    return (_clean("arm", arm), _clean("sample", sample))
+
+
+def _notice(event: dict) -> Optional[str]:
+    """span key·이름에 쓰는 공고 id. 위생을 지나지 않은 id 는 key 로도 안 쓴다."""
+    return _clean("id", event.get("id"))
 
 
 def _arm_key(event: dict) -> Optional[str]:
@@ -343,7 +408,30 @@ _TOKENS = frozenset((
     "source", "stage", "status", "stop_reason", "token_count_kind", "transport_status",
     "platform", "python", "model_loaded", "detail_capture", "prompt_capture",
     "truncated", "quant", "seed", "chunk"))
-_TOKEN_LISTS = frozenset(("ids", "indices", "dev_ids", "order", "arms"))
+_TOKEN_LISTS = frozenset(("ids", "indices", "dev_ids", "order", "arms", "argv"))
+VERSION = re.compile(r"^[\w.+\-]{1,32}$")
+DEVICE = re.compile(r"^[A-Za-z0-9 _.\-]{1,64}$")     # "NVIDIA A100-SXM4-40GB"
+_VERSIONS = frozenset(("vllm", "python", "cuda", "torch", "transformers", "xgrammar",
+                       "tokenizers", "platform", "quant", "revision"))
+_DEVICES = frozenset(("name",))
+_DIGESTED = frozenset(("sampling_params",))          # 본문 대신 hash 로 요약한다
+_HASH_MAPS = frozenset(("sha256",))                  # {제공 자료 이름: hash}
+_VERSION_MAPS = frozenset(("packages",))             # {패키지: 버전}
+# 생산자가 실제로 만드는 키. **실측이다** — H4 회차 로그에서 읽었고 검사가 드리프트를 잡는다.
+# 경로 키(input·output·data_dir·model_dir)는 뺐다. 생산자가 `record_path` 로 치환하지만
+# 사이드카가 다시 내보낼 이유가 없다.
+_DICT_KEYS = {
+    "settings": frozenset((
+        "chunk", "limit", "max_chars", "max_model_len", "max_tokens", "temperature", "thinking",
+        "debug_responses", "seed", "quant", "tp", "gpu_mem", "prompt_language", "sme_facts",
+        "sme_items", "sme_selection", "extra_call_items", "company_size_items", "split_items",
+        "product_items", "company_size_document_checks", "company_size_clause_quotes",
+        "company_size_qualification_role", "prompt_budget", "output_reserved", "episode")),
+    "environment": frozenset(("vllm", "python", "cuda", "gpus", "chat_template_sha256",
+                              "sampling_params")),
+    "expected_model": frozenset(("id", "revision")),
+    "gpus": frozenset(("name", "total_memory")),
+}
 # 항목 이름은 **고정 목록**이다. 토큰 패턴만 보면 그 자리에 임의 문자열이 들어간다.
 _ITEM_LISTS = frozenset(("items", "groups"))
 # `argv` 는 명령줄이라 경로가 들어간다. `packages` 는 `이름==버전` 뿐이다.
@@ -363,52 +451,125 @@ def _known_items() -> frozenset:
     return frozenset(script.ITEMS) | frozenset(script.COMPANY_SIZE_KEYS) | frozenset(script.SME_ITEMS)
 
 
-def _clean(name: str, value: Any, *, _depth: int = 0) -> Any:
+def _known_strings() -> frozenset:
+    """생산자가 상수로 들고 있어 그대로 내보내도 되는 문자열."""
+    sys.path.insert(0, str(ROOT))
+    import script
+    return frozenset((script.MODEL_ID, script.MODEL_REVISION))
+
+
+def _producer_enums() -> dict:
+    """`mode`·`token_count_kind` 의 값은 **실행기 클래스가 들고 있다.**
+
+    집합을 손으로 적으면 안 된다 — `mock` 을 빼서 mock 회차의 trace 이름이 깨졌다.
+    라운드 5 P1 과 같은 실수다: 생산자의 형태를 추측하면 틀린다. 여기서 읽는다.
+    """
+    sys.path.insert(0, str(ROOT))
+    import script
+    runners = [getattr(script, name) for name in dir(script)
+               if isinstance(getattr(script, name, None), type)
+               and hasattr(getattr(script, name), "MODE")]
+    modes = {runner.MODE for runner in runners} | {"pending", "test_double", "?"}
+    counts = {getattr(runner, "TOKEN_COUNT", None) for runner in runners}
+    counts = {value for value in counts if value} | {"test_double", "estimate"}
+    try:                                   # 후보 실행기도 같은 두 상수를 들고 있다
+        from experiments import a8_v20_annex
+        modes.add(a8_v20_annex.TokenizerRunner.MODE)
+        counts.add(a8_v20_annex.TokenizerRunner.TOKEN_COUNT)
+    except Exception:
+        pass
+    return {"mode": frozenset(modes), "token_count_kind": frozenset(counts)}
+
+
+def _clean_str(name: str, value: str, nested: bool) -> Optional[str]:
+    """문자열은 **모양만으로 통과시키지 않는다.** 자유 텍스트가 올 수 있는 자리다.
+
+    중첩 안에서는 최상위 규칙(`_FREE`·enum)을 다시 쓰지 않는다 —
+    `settings={"error_message": "C:/..."}` 가 본문 게이트를 그렇게 우회했다(라운드 5 P0).
+    """
+    if name.endswith("_sha256"):
+        return value if HEX.match(value) else None
+    produced = _producer_enums()
+    if name in produced:                             # 생산자에서 읽은 집합이 먼저다
+        return value if value in produced[name] else None
+    if not nested:
+        if name in _FREE:                            # `_detail()` 이 이미 게이트를 걸었다
+            return value
+        if name in _ENUMS:
+            return value if value in _ENUMS[name] else None
+    if name in _DIGESTED:
+        # 긴 자유 문자열이다(`str(SamplingParams)` 는 스키마까지 들고 온다). 본문을 내보내는
+        # 대신 hash 로 요약한다 — 회차 간 동일성은 남고 본문은 안 나간다.
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()
+    if value in _known_strings():                    # 모델 id·리비전 같은 생산자 상수
+        return value
+    if name in _VERSIONS and VERSION.match(value):
+        return value
+    if name in _DEVICES and DEVICE.match(value):     # "NVIDIA A100-SXM4-40GB"
+        return value
+    if name in _ENUMS:                               # 중첩이라도 값 집합은 통과시킨다
+        return value if value in _ENUMS[name] else None
+    if name in _TOKENS or name in _TOKEN_LISTS or name in _ITEM_LISTS:
+        return value if TOKEN.match(value) else None
+    return None
+
+
+def _clean(name: str, value: Any, *, nested: bool = False, _depth: int = 0) -> Any:
     """이 값이 생산자가 만드는 모양인지 본다. 아니면 버린다(None).
 
-    이름으로 규칙을 찾는다 — 모르는 이름은 안 내보낸다. 수치는 수치여야 하고,
-    hash 는 16진수여야 하고, 식별자·enum 은 짧은 토큰이어야 하고, 목록은 그 토큰의
-    목록이어야 한다. 중첩 dict 는 키마다 같은 규칙을 다시 건다.
+    타입이 먼저다 — 수치·bool 은 자유 텍스트가 아니므로 이름 규칙 없이 통과한다.
+    그래서 `settings.max_model_len` 처럼 **생산자가 실제로 내는 숫자가 사라지지 않는다**
+    (라운드 5 P1: 허용 목록 방식이 진짜 값을 다수 지웠다).
+    문자열만 `_clean_str()` 로 제한하고, 컨테이너는 부모별 허용 키를 따라 내려간다.
+
+    기준은 추측이 아니라 **실측**이다 — H4 실제 회차 로그와 mock A8 회차 로그의
+    이벤트 형태로 검사가 고정한다.
     """
-    if value is None or _depth > 3:
+    if value is None or _depth > 4:
         return None
-    if name.endswith("_sha256"):
-        return value if isinstance(value, str) and HEX.match(value) else None
-    if name in _FREE:
-        return value if isinstance(value, str) else None
-    if name in _NUMERIC:
-        return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
-    if name in _ENUMS:
-        return value if value in _ENUMS[name] else None
-    if name in _TOKENS:
-        if isinstance(value, bool) or isinstance(value, (int, float)):
-            return value
-        return value if isinstance(value, str) and TOKEN.match(value) else None
-    if name in _TOKEN_LISTS or name in _ITEM_LISTS or name == "packages":
-        if not isinstance(value, list):
+    if isinstance(value, bool) or isinstance(value, (int, float)):
+        # 수치 자리에 문자열이 오면 위에서 str 분기로 떨어진다. 그 반대는 막지 않는다.
+        return value
+    if isinstance(value, str):
+        if name in _NUMERIC:                         # 수치 자리의 문자열은 생산자가 안 만든다
             return None
-        flat = [item for entry in value for item in (entry if isinstance(entry, list) else [entry])]
-        if name in _ITEM_LISTS:
-            ok = flat and set(flat) <= _known_items()
-        elif name == "packages":
-            ok = all(isinstance(item, str) and PACKAGE.match(item) for item in flat)
-        else:
-            ok = all(isinstance(item, str) and TOKEN.match(item) for item in flat)
-        return value if ok else None
-    if isinstance(value, dict):        # settings·environment·expected_model·flags·rejected_conditions
+        return _clean_str(name, value, nested)
+    if isinstance(value, list):
+        if name in _ITEM_LISTS:                      # 항목 목록은 고정 집합이다
+            flat = [i for e in value for i in (e if isinstance(e, list) else [e])]
+            if flat and all(isinstance(i, str) for i in flat) and set(flat) <= _known_items():
+                return value
+            # `groups` 는 dict 목록으로도 온다(`script.py:1001`). 그 경로로 내려간다.
+            if not all(isinstance(e, dict) for e in value):
+                return None
+        kept = [_clean(name, item, nested=True, _depth=_depth + 1) for item in value]
+        kept = [item for item in kept if item is not None]
+        return kept or None
+    if isinstance(value, dict):
+        allowed = _DICT_KEYS.get(name)
         items, kept = _known_items(), {}
         for key, inner in value.items():
-            if key in items:           # 항목별 판정·기각 사유. 값도 생산자가 만드는 것만.
+            if allowed is not None and key not in allowed:
+                continue                             # 부모가 만들지 않는 키는 안 내보낸다
+            if key in items:                         # 항목별 판정·기각 사유
                 if isinstance(inner, bool) or isinstance(inner, int):
                     kept[key] = inner
                 elif isinstance(inner, list) and set(inner) <= REJECTION_REASONS:
                     kept[key] = inner
                 continue
-            clean = _clean(key, inner, _depth=_depth + 1)
+            if name in _HASH_MAPS:                   # {파일명: hash}. 키는 제공 자료 이름이다
+                if isinstance(inner, str) and HEX.match(inner):
+                    kept[key] = inner
+                continue
+            if name in _VERSION_MAPS:                # {패키지: 버전}
+                if isinstance(inner, str) and VERSION.match(inner):
+                    kept[key] = inner
+                continue
+            clean = _clean(key, inner, nested=True, _depth=_depth + 1)
             if clean is not None:
                 kept[key] = clean
         return kept or None
-    return None                                      # 모르는 이름은 안 내보낸다
+    return None                                      # 모르는 모양은 안 내보낸다
 
 
 def _meta(**fields: Any) -> dict:
@@ -473,19 +634,31 @@ def _body(state: "State", attrs: dict, slot: str, value: Any) -> dict:
 
 
 def plan(event: dict, state: State) -> list:
+    """이벤트 하나를 span 지시로 바꾼다. **나가는 모든 Op 가 `guard()` 를 지난다.**
+
+    이 한 줄이 라운드 1~5 의 반복을 끝내는 자리다 — 어느 분기가 무엇을 넣어도
+    출구는 하나다. 자세한 이유는 `guard()` 의 주석에 있다.
+    """
+    return [guard(op) for op in _plan(event, state)]
+
+
+def _plan(event: dict, state: State) -> list:
     """이벤트 하나를 span 지시로 바꾼다. 여기까지가 순수 함수다."""
     kind = event.get("event")
     now = float(event.get("time_unix") or state.last or time.time())
     state.last = now
-    phase = event.get("phase") or state.phase
+    # phase 도 key 조립에 들어간다. 위생을 지난 값만 쓴다.
+    phase = _clean("phase", event.get("phase")) or state.phase
     ops: list = []
 
     if kind == "run_started":
         state.run = "run"
         state.capture_protocol = event.get("capture_protocol")
-        state.model = (event.get("expected_model") or {}).get("id") or MODEL_FALLBACK
-        mode = event.get("mode", "?")
-        state.code = (event.get("code_sha256") or "")[:7]
+        # 이름도 수출이다 — 위생을 지난 값으로만 만든다.
+        state.model = _label("id", (event.get("expected_model") or {}).get("id"),
+                             MODEL_FALLBACK)
+        mode = _label("mode", event.get("mode", "?"))
+        state.code = _label("code_sha256", event.get("code_sha256"), "")[:7]
         state.trace_name = f"nara {mode} {state.code}".strip()
         # settings 도 통째로 싣지 않는다 — 임의 키를 넣은 로그가 루트 input 으로 나갔다.
         settings = _clean("settings", event.get("settings")) or {}
@@ -568,8 +741,9 @@ def plan(event: dict, state: State) -> list:
     if kind == "company_size_input" and state.capture_protocol:
         arm, sample = _scope(event)
         # 공고별 입력 예산을 군과 함께 기억한다. `chars < 요청값` 만으로 문서 누락을 단정하지 않는다.
-        state.inputs[(arm, sample, event.get("id"))] = event
-        return [Op("point", f"input:{arm}:{sample}:{event.get('id')}", str(event.get("id")),
+        identifier = _notice(event)
+        state.inputs[(arm, sample, identifier)] = event
+        return [Op("point", f"input:{arm}:{sample}:{identifier}", str(identifier),
                    "event", state.arm or "run", now, now,
                    attrs={**_meta(arm=arm, sample=sample, id=event.get("id"),
                                   max_chars=event.get("max_chars"),
@@ -616,12 +790,12 @@ def plan(event: dict, state: State) -> list:
                          max_tokens=event.get("max_tokens"), items=event.get("items")),
                  # 같은 batch 의 호출들은 시작·종료를 공유한다. 한 건의 지연이 아니다.
                  **_fixed(duration_note="shared batch latency")}
-        source = state.inputs.get((event.get("arm"), event.get("sample"), event.get("id")))
+        source = state.inputs.get((*_scope(event), _notice(event)))
         if source is not None:
             attrs.update(_meta(max_chars=source.get("max_chars"),
                                token_count_kind=source.get("token_count_kind")))
         _body(state, attrs, "input", event.get("prompt_text"))
-        return [Op("open", key, str(event.get("id") or event.get("call_index")), "generation",
+        return [Op("open", key, str(_notice(event) or event.get("call_index")), "generation",
                    state.chunk or state.arm or "run", now, attrs=attrs)]
 
     if kind in ("model_call_finished", "model_call_failed"):
@@ -633,7 +807,9 @@ def plan(event: dict, state: State) -> list:
                               **_meta(transport_status=event.get("transport_status"))})]
         state.calls.pop(key, None)
         failed = kind == "model_call_failed"
-        prompt_tokens, output_tokens = event.get("prompt_tokens"), event.get("output_tokens")
+        # 덧셈 전에 위생한다 — 문자열이 오면 `total` 이 이어붙거나 크래시한다(라운드 5 P0).
+        prompt_tokens = _clean("prompt_tokens", event.get("prompt_tokens"))
+        output_tokens = _clean("output_tokens", event.get("output_tokens"))
         attrs = {**_meta(transport_status=event.get("transport_status"),
                          finish_reason=event.get("finish_reason"),
                          stop_reason=event.get("stop_reason"),
@@ -658,7 +834,7 @@ def plan(event: dict, state: State) -> list:
         ok = event.get("status") == "valid"
         return [Op("point",
                    f"parse:{arm}:{sample}:{event.get('global_index')}:{event.get('attempt', 1)}",
-                   f"parse {event.get('id') or event.get('global_index')}", "event",
+                   f"parse {_notice(event) or event.get('global_index')}", "event",
                    state.chunk or state.arm or "run", now, now,
                    attrs=_meta(arm=arm, sample=sample, id=event.get("id"),
                                attempt=event.get("attempt", 1), status=event.get("status"),
@@ -671,8 +847,8 @@ def plan(event: dict, state: State) -> list:
     if kind == "response":
         attempt = event.get("attempt", 1)
         ok = event.get("status") == "valid"
-        prompt_tokens = event.get("prompt_tokens")
-        output_tokens = event.get("output_tokens")
+        prompt_tokens = _clean("prompt_tokens", event.get("prompt_tokens"))
+        output_tokens = _clean("output_tokens", event.get("output_tokens"))
         attrs = {
             "langfuse.observation.model.name": state.model,
             **_meta(phase=phase, attempt=attempt, status=event.get("status"),
@@ -689,15 +865,16 @@ def plan(event: dict, state: State) -> list:
                 {"input": prompt_tokens or 0, "output": output_tokens or 0,
                  "total": (prompt_tokens or 0) + (output_tokens or 0)})
         _body(state, attrs, "input", event.get("prompt_text"))
+        # `guard()` 가 usage 를 사후에 걷지만, 덧셈 자체가 크래시하면 늦다.
         _body(state, attrs, "output", event.get("response_text"))
         return [Op("point", f"gen:{phase}:{event.get('global_index')}:{attempt}",
-                   str(event.get("id") or event.get("global_index")), "generation",
+                   str(_notice(event) or event.get("global_index")), "generation",
                    state.chunk or "run", state.chunk_start or now, now, attrs=attrs,
                    level=None if ok else "ERROR",
                    status="" if ok else _status(state, event))]
 
     if kind in ("batch_failed", "retry_failed", "sme_fallback"):
-        label = event.get("id") or event.get("chunk_start")
+        label = _notice(event) or event.get("chunk_start")
         return [Op("point",
                    f"{kind}:{phase}:{event.get('global_index')}:{event.get('attempt')}:{now}",
                    f"{kind} {label}", "event", state.chunk or "run", now, now,
@@ -707,7 +884,7 @@ def plan(event: dict, state: State) -> list:
                    status=_status(state, event))]
 
     if kind == "sme_verified":
-        return [Op("point", f"verify:{event.get('id')}", f"verify {event.get('id')}", "event",
+        return [Op("point", f"verify:{_notice(event)}", f"verify {_notice(event)}", "event",
                    "run", now, now,
                    attrs={"langfuse.observation.output": _io(_clean("flags", event.get("flags"))
                                                              or {}),

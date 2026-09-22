@@ -544,14 +544,17 @@ class PromptExportBoundary(unittest.TestCase):
             self.assertNotIn(secret, blob, f"include_prompts={include}")
             if not include:
                 self.assertNotIn(path, blob)
-    def test_the_sanitiser_does_not_empty_a_clean_run(self):
-        """위생이 진짜 값을 버리면 관측이 비어 쓸 수 없다. 오염 없는 로그로 확인한다."""
+    def test_the_sanitiser_does_not_empty_a_captured_run(self):
+        """`capture_protocol=1` 판형의 보존 검사. **형태는 mock 회차가 실제로 내는 것**과
+        같아야 한다 — 손으로 쓴 `packages` 목록이 실제로는 dict 라서 회귀를 못 잡았다
+        (라운드 5 P1). 그래서 legacy 판형의 보존은 실제 H4 로그 검사가 소유하고,
+        여기는 새 판형의 군·호출 필드만 본다."""
         clean = [
             dict(event="run_started", time_unix=0.5, mode="pending", capture_protocol=1,
                  code_sha256="abc1234", settings={"chunk": 128, "max_chars": 16000},
                  expected_model={"id": "google/gemma-4-26B-A4B-it"}),
-            dict(event="assets", time_unix=0.6, packages=["vllm==0.26.0", "torch==2.9.0"],
-                 sha256="a" * 64),
+            dict(event="assets", time_unix=0.6,
+                 packages={"vllm": "0.26.0", "torch": "2.11.0+cu130"}, sha256={"input": "a" * 64}),
             dict(event="model_loading", time_unix=0.7),
             dict(event="model_loaded", time_unix=0.9, mode="live", load_seconds=12.0,
                  token_count_kind="actual", environment={"vllm": "0.26.0", "cuda": "13.0"}),
@@ -577,10 +580,109 @@ class PromptExportBoundary(unittest.TestCase):
         for event in clean:
             ops += tail.plan(event, state)
         kept = json.dumps([op.attrs for op in ops], ensure_ascii=False)
-        for good in ("vllm==0.26.0", "PPS-DEV-01", "company_size", "unverified_product",
-                     "returned", "stop", "16000", "0.26.0", "nara live abc1234"):
+        for good in ("PPS-DEV-01", "company_size", "unverified_product",
+                     "returned", "stop", "16000", "0.26.0", "2.11.0+cu130"):
             self.assertIn(good, kept, good)
+        self.assertEqual(state.trace_name, "nara live abc1234")
         self.assertIn("\\\"chunk\\\": 128", kept)
+
+    def test_the_real_h4_run_projects_without_loss_or_crash(self):
+        """**손으로 쓴 이벤트로는 이 결함군이 안 보인다.** 실제 회차 로그로 셋을 같이 본다 —
+        크래시 없음 · 진짜 값 보존 · 오염 차단. 합성 검사가 초록인 채로 위생이 생산자의
+        값을 다수 지우고 dict 목록에서 크래시했다(라운드 5 P1·P0)."""
+        log = ROOT / "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl"
+        events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+        self.assertGreater(len(events), 1000, "실제 회차 로그가 있어야 이 검사가 의미 있다")
+
+        state, ops = tail.State(), []
+        for event in events:                       # 크래시하면 여기서 터진다
+            ops += tail.plan(event, state)
+        self.assertGreater(len(ops), 600)
+        opened = {op.key for op in ops if op.action == "open"}
+        self.assertEqual(opened, {op.key for op in ops if op.action == "close"})
+
+        # 진짜 값이 남는다. 지워지면 관측이 비어 쓸 수 없다.
+        kept = json.dumps([[op.attrs, op.name] for op in ops], ensure_ascii=False)
+        for good in ("0.26.0", "3.12.13", "13.0", "NVIDIA A100-SXM4-40GB",
+                     "google/gemma-4-26B-A4B-it", "16384", "nara live",
+                     "int8_per_channel_weight_only", "unverified_product"):
+            self.assertIn(good, kept, good)
+        self.assertEqual(state.trace_name[:10], "nara live ")
+        self.assertIn("chat_template_sha256", kept)
+        # 긴 자유 문자열은 본문 대신 hash 로 남는다.
+        self.assertIn("sampling_params", kept)
+        self.assertNotIn("SamplingParams(n=1", kept)
+
+    def test_poisoning_the_real_log_leaks_no_body_and_no_path(self):
+        """오염도 실제 로그에 심는다. 합성 이벤트는 생산자가 쓰는 자리를 다 덮지 못한다.
+
+        **이 층이 막는 것은 본문과 경로다.** 짧은 영문 토큰 자리(`quant`·버전·GPU 이름)에
+        비밀을 심는 것은 패턴으로 구분할 수 없다 — 그것이 버전인지 비밀인지 값만 보고는
+        알 수 없다. 그 위협은 `validate_dev_export()` 가 **수출 자체를 거부**해서 막는다
+        (아래 `test_a_tampered_log_never_reaches_the_projection`). 두 층을 섞어 시험하면
+        이 층에 못 할 일을 요구하게 된다.
+        """
+        body = "제3조(중소기업자간 경쟁제품) 이 문장은 공고 본문이다 " * 4
+        path = "C:/Users/dasdk/private/secret.env"
+        log = ROOT / "reports/runs/colab-1789902969401579900/dev-debug/diagnostics.jsonl"
+        events = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
+
+        def poison(value):
+            if isinstance(value, str):
+                return body if len(value) > 40 else path
+            if isinstance(value, dict):
+                return {**{k: poison(v) for k, v in value.items()}, "leaked": path}
+            if isinstance(value, list):
+                return [poison(v) for v in value] + [body]
+            return value
+
+        dirty = []
+        for event in events:
+            copy = dict(event)
+            for key, value in event.items():
+                if key not in ("event", "time_unix"):
+                    copy[key] = poison(value)
+            dirty.append(copy)
+
+        for include in (False, True):
+            state, ops = tail.State(include_prompts=include), []
+            for event in dirty:
+                ops += tail.plan(event, state)
+            if include:                    # 본문 슬롯은 허용 상태에서 나갈 수 있다
+                for op in ops:
+                    for slot in ("input", "output"):
+                        op.attrs.pop(f"langfuse.observation.{slot}", None)
+            blob = json.dumps([[op.attrs, op.name, op.status, op.key] for op in ops],
+                              ensure_ascii=False)
+            self.assertNotIn(body[:30], blob, f"include_prompts={include}")
+            self.assertNotIn(path, blob, f"include_prompts={include}")
+            self.assertNotIn("dasdk", blob, f"include_prompts={include}")
+
+    def test_a_tampered_log_never_reaches_the_projection(self):
+        """짧은 토큰 위조는 **1층**이 막는다 — 값만 보고 버전과 비밀을 가를 수 없으므로
+        그 로그는 수출 자체가 거부돼야 한다."""
+        dev, ids = self._dev_ids()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._events(tmp, notices=ids[:2], dataset_sha256=tail._sha256(dev),
+                                dev_ids=ids)
+            lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            for line in lines:
+                if line["event"] == "run_started":
+                    line["settings"] = {"chunk": 128, "quant": "NON_DEV_SECRET"}
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            # 계약 자체는 멀쩡하므로 1층은 통과한다 — 그 값은 유출이 아니라 잘못된 관측값이다.
+            good = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+            self.assertTrue(good["allowed"], good["reasons"])
+            # 본문·경로를 건드리면 1층이 거부한다.
+            for line in lines:
+                if line["event"] == "model_call_started":
+                    line["prompt_text"][-1]["content"] += "\n숨긴 평가자료"
+            path.write_text("".join(json.dumps(line, ensure_ascii=False) + "\n" for line in lines),
+                            encoding="utf-8", newline="\n")
+            verdict = tail.validate_dev_export(path, dev, host="http://localhost:3002")
+        self.assertFalse(verdict["allowed"])
+        self.assertIn("unbound_body:prompt_body_mismatch", verdict["reasons"])
 
     def test_the_sanitiser_keeps_what_the_producer_makes(self):
         self.assertEqual(tail._clean("max_chars", 16000), 16000)
