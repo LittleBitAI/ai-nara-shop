@@ -663,6 +663,7 @@ class AuditTests(unittest.TestCase):
 
     def test_fallback_only_change_is_marked_and_not_a_mechanism(self):
         base = dict(id='X', v20_action='write_1', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
                     software_business_quote_check=dict(state='exact'),
                     software_participation_quote_check=dict(state='null'))
         worse = dict(base, v20_action='preserve',
@@ -676,6 +677,7 @@ class AuditTests(unittest.TestCase):
     def test_gain_kind_needs_a_real_verdict_transition_not_just_a_quote_state(self):
         """인용 상태만 보면 두 가지가 기전으로 새어 들어온다. 둘 다 `other` 여야 한다."""
         base = dict(id='X', v20_action='preserve', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
                     software_business_quote_check=dict(state='exact'),
                     software_participation_quote_check=dict(state='null'))
         # 1. 판정이 하나도 안 움직였는데 인용 상태만 바뀐 것 — 우연한 이득이 아니다.
@@ -699,6 +701,7 @@ class AuditTests(unittest.TestCase):
     def test_gain_kind_names_the_absence_mechanism_and_both_rejection_paths(self):
         """v20 은 부재탐지 항목이다. 부재 기전을 `other` 로 두면 먼저 볼 숫자가 기전을 놓친다."""
         base = dict(id='X', v20_action='preserve', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
                     software_business_quote_check=dict(state='exact'),
                     software_participation_quote_check=dict(state='null'))
         # 1. preserve → write_1: 소비자가 부재 위반을 새로 썼다. H4 의 v20 양성 5건이 이 모양이다.
@@ -717,6 +720,20 @@ class AuditTests(unittest.TestCase):
         # 4. 부재인데 적용 불가면 기전이 아니다.
         self.assertEqual(audit.paired_changes([base], [dict(absence, v20_applicable=False)])[0]
                          ['gain_kind'], 'other')
+
+    def test_every_write_to_preserve_is_a_fallback_whatever_broke_it(self):
+        """원인을 열거하면 빠지는 것이 생긴다. `requirements_complete` 가 yes → no 로
+        바뀌어 소비자의 `software_complete` 가 막힌 경우가 그랬다(라운드 3 P1)."""
+        base = dict(id='X', v20_action='write_1', software_business='yes', v20_applicable=True,
+                    requirements_complete='yes',
+                    software_business_quote_check=dict(state='exact'),
+                    software_participation_quote_check=dict(state='null'))
+        # 인용도 적용성도 그대로인데 문서 완전성만 무너져 보류가 됐다.
+        incomplete = dict(base, v20_action='preserve', requirements_complete='no')
+        change = audit.paired_changes([base], [incomplete])[0]
+        self.assertEqual(change['gain_kind'], 'fallback_only')
+        # 원인이 fields 에 남아야 한다 — gain_kind 가 원인을 안 들고 있으므로.
+        self.assertEqual(change['fields']['requirements_complete'], ['yes', 'no'])
 
     def test_v20_applicable_agrees_with_the_consumer_on_both_sides(self):
         """한 방향만 보면 제품에 새 조건이 생겨도 통과한다. 양쪽 경계를 직접 고정한다."""

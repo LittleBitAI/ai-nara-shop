@@ -28,6 +28,7 @@ import json
 import os
 import re
 import sys
+from urllib.parse import urlparse
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -46,11 +47,20 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-# 분할 재시도가 system 뒤에 붙이는 문장(`script.py` 의 `retry_chat`). 그 외 꼬리는 모르는 본문이다.
-RETRY_SUFFIX = re.compile(
-    r"^\n\[Output scope for this call\] Evaluate only these keys, overriding the earlier "
-    r"key list: [\w, ]+\. Return no other keys\. "
-    r"Keep evidence quotations under 100 characters\.$")
+def _retry_suffixes() -> set:
+    """분할 재시도가 system 뒤에 붙이는 **정확한 문자열들**(`script.py` 의 `retry_chat`).
+
+    정규식으로 key 목록을 `[\\w, ]+` 로 열어 두면 안 된다 — 그 자리에 임의 문자열을
+    넣은 system 이 통과한다(라운드 3 P0). 실제로 가능한 key 조합에서 문자열을 만든다.
+    """
+    sys.path.insert(0, str(ROOT))
+    import script
+    out = set()
+    for keys in ([[key] for key in script.COMPANY_SIZE_KEYS] + [list(script.COMPANY_SIZE_KEYS)]):
+        out.add("\n[Output scope for this call] Evaluate only these keys, overriding the "
+                "earlier key list: " + ", ".join(keys) + ". Return no other keys. "
+                "Keep evidence quotations under 100 characters.")
+    return out
 
 
 def _rebuild_dev_prompts(dev_path, wanted: dict, data_dir) -> dict:
@@ -90,22 +100,30 @@ def _known_systems(data_dir) -> set:
     return systems
 
 
-def _body_is_bound(event, prompts: dict, systems: set) -> Optional[str]:
-    """이 호출의 프롬프트가 **재구성한 본문과 같은지** 본다. 다르면 이유를 돌려준다."""
+def _body_is_bound(event, prompts: dict, systems: set, suffixes: set) -> Optional[str]:
+    """이 호출의 프롬프트가 **재구성한 본문과 같은지** 본다. 다르면 이유를 돌려준다.
+
+    형태를 느슨하게 보면 안 된다. 첫 메시지가 system·끝이 user 인 것만 보면
+    그 사이에 `{"role":"assistant","content":"..."}` 를 끼운 배열이 통과하고,
+    배열 전체가 span input 으로 나간다(라운드 3 P0). 실제 호출은 **정확히 두 메시지**이고
+    각 메시지는 `role`·`content` 두 칸뿐이다.
+    """
     text = event.get("prompt_text")
     if text is None:
         return None
-    if not isinstance(text, list) or not text:
+    if (not isinstance(text, list) or len(text) != 2
+            or not all(isinstance(m, dict) and set(m) == {"role", "content"}
+                       and isinstance(m.get("content"), str) for m in text)
+            or [m["role"] for m in text] != ["system", "user"]):
         return "prompt_shape"
-    roles = [m.get("role") for m in text if isinstance(m, dict)]
-    if len(roles) != len(text) or roles[0] != "system" or roles[-1] != "user":
-        return "prompt_shape"
-    system = text[0].get("content") or ""
-    base = next((known for known in systems if system.startswith(known)), None)
+    system = text[0]["content"]
+    # 후보 system 은 제품 프롬프트로도 시작한다 — **가장 긴 것**을 골라야 블록이
+    # 모르는 꼬리로 떨어지지 않는다. set 순서에 맡기면 회차가 seed 마다 거부된다(라운드 3 P1).
+    base = max((known for known in systems if system.startswith(known)), key=len, default=None)
     if base is None:
         return "unknown_system"
     tail = system[len(base):]
-    if tail and not RETRY_SUFFIX.match(tail):
+    if tail and tail not in suffixes:
         return "unknown_system_tail"
     expected = prompts.get(event.get("id"))
     if expected is None:
@@ -196,7 +214,7 @@ def validate_dev_export(events_path, dev_path, *, host: str, data_dir=None) -> d
     if not reasons and calls:
         prompts = _rebuild_dev_prompts(dev_path, {i: e["max_chars"] for i, e in inputs.items()},
                                        data_dir or ROOT/"open/data")
-        systems = _known_systems(data_dir or ROOT/"open/data")
+        systems, suffixes = _known_systems(data_dir or ROOT/"open/data"), _retry_suffixes()
         # 로그가 주장한 문서 본문 hash 도 재구성한 것과 맞아야 한다.
         for identifier, event in inputs.items():
             claimed, rebuilt = event.get("visible_sha256"), prompts.get(identifier)
@@ -206,7 +224,7 @@ def validate_dev_export(events_path, dev_path, *, host: str, data_dir=None) -> d
                 reasons.append(f"visible_sha256_mismatch:{identifier}")
         problems = set()
         for event in calls:
-            why = _body_is_bound(event, prompts, systems)
+            why = _body_is_bound(event, prompts, systems, suffixes)
             if why:
                 problems.add(why)
             elif event.get("prompt_text") is not None:
@@ -613,13 +631,34 @@ def follow(path: Path, from_line: int, keep_following: bool, idle: float) -> Ite
             quiet += 0.5
 
 
-def pin_to_host(exporter, host: str) -> None:
-    """수출이 **그 호스트를 떠나지 못하게** 한다.
+def _session_name(path) -> str:
+    """경로를 span 에 안 싣는 안정 ID. 같은 파일이면 같은 이름이라 trace 가 이어진다."""
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(ROOT).as_posix()
+    except ValueError:
+        digest = hashlib.sha256(str(resolved).encode()).hexdigest()[:12]
+        return f"{resolved.name}:{digest}"
 
-    주소 문자열만 검사하면 부족하다. `OTLPSpanExporter` 는 `requests.Session.post` 를
-    `allow_redirects` 를 주지 않고 부르고 requests 의 기본값은 따라가기다. 그래서
-    로컬 엔드포인트가 307/308 로 외부 `Location` 을 돌려주면 검사를 통과한 본문이
-    그대로 밖으로 다시 POST 된다(라운드 2 P0). 설계 §3.5 가 금지한 경로다.
+
+def _same_host(url: str, host: str) -> bool:
+    """scheme·hostname·port 가 같은지 본다. 문자열 `startswith` 로는 부족하다 —
+    `http://localhost:3002@evil.example/x` 가 그것을 통과한다(라운드 3 P0)."""
+    left, right = urlparse(str(url)), urlparse(host)
+    return (left.scheme == right.scheme and left.hostname == right.hostname
+            and left.port == right.port and not left.username and not left.password)
+
+
+def pin_to_host(exporter, host: str) -> None:
+    """수출이 **그 호스트를 떠나지 못하게** 한다. 셋을 막는다.
+
+    1. **redirect.** `OTLPSpanExporter` 는 `requests.Session.post` 를 `allow_redirects`
+       없이 부르고 requests 의 기본값은 따라가기다. 로컬 엔드포인트가 307/308 로 외부
+       `Location` 을 돌려주면 검사를 통과한 본문이 밖으로 다시 POST 된다(라운드 2 P0).
+    2. **환경 프록시.** 세션의 `trust_env` 가 참이면 `HTTP_PROXY` 가 있는 환경에서
+       `merge_environment_settings()` 가 **로컬 주소에도** 외부 프록시를 고른다.
+       그러면 본문과 인증 헤더가 그 프록시로 간다(라운드 3 P0).
+    3. **호스트 위장.** url 을 파싱해 scheme·hostname·port 를 비교하고 userinfo 를 거부한다.
 
     세션을 못 잡으면 **조용히 넘어가지 않고 세운다.** 막았다고 믿는 것이
     안 막힌 것보다 나쁘다.
@@ -627,12 +666,15 @@ def pin_to_host(exporter, host: str) -> None:
     session = getattr(exporter, "_session", None)
     if session is None or not hasattr(session, "request"):
         raise RuntimeError("OTLP 세션을 못 잡았다. redirect 를 막을 수 없으므로 수출하지 않는다.")
-    original, prefix = session.request, host.rstrip("/")
+    session.trust_env = False                       # 환경 프록시를 안 본다
+    session.proxies = {}
+    original = session.request
 
     def request(method, url, **kwargs):
-        if not str(url).startswith(prefix):
+        if not _same_host(url, host):
             raise RuntimeError(f"허용된 호스트 밖으로 보내려 했다: {url}")
         kwargs["allow_redirects"] = False           # setdefault 가 아니다 — post() 가 이미 True 를 넣는다
+        kwargs["proxies"] = {}
         return original(method, url, **kwargs)
 
     session.request = request
@@ -677,7 +719,9 @@ def run(args: argparse.Namespace) -> int:
     from opentelemetry.trace import NonRecordingSpan, SpanContext, TraceFlags, set_span_in_context
 
     path = Path(args.diagnostics)
-    session = args.session or str(path.resolve())
+    # 기본 실행 이름에 절대경로를 쓰지 않는다 — `C:/Users/<이름>/...` 이 span 에 실린다
+    # (라운드 3 P0). 저장소 안이면 상대경로, 밖이면 파일명 + 경로 hash 앞자리다.
+    session = args.session or _session_name(path)
     trace_id = int.from_bytes(hashlib.sha256(session.encode()).digest()[:16], "big")
 
     # 프롬프트·응답 전문 수출은 **provider 를 만들기 전에** 판단한다.

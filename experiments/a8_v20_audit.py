@@ -147,7 +147,11 @@ def paired_changes(control_rows, candidate_rows) -> list:
     for after in candidate_rows:
         before = by_id[after["id"]]
         fields = {}
-        for field in ("v20_action", "software_business"):
+        # `requirements_complete`·`v20_applicable` 도 함께 본다 — 보류의 **원인**이
+        # 거기 있을 수 있고(소비자의 `software_complete` 게이트), `gain_kind` 는
+        # 원인을 열거하지 않으므로 여기가 원인을 들고 있어야 한다.
+        for field in ("v20_action", "software_business", "requirements_complete",
+                      "v20_applicable"):
             if before[field] != after[field]:
                 fields[field] = [before[field], after[field]]
         for field in ("software_business", "software_participation"):
@@ -181,9 +185,11 @@ def gain_kind(before, after) -> str:
       부재 위반을 새로 썼다(`write_1` 으로 전이). **v20 은 부재탐지 항목이라
       이쪽이 주 기전이다** — H4 의 v20 양성 5건이 전부 이 분기였다.
       이것을 `other` 로 두면 "먼저 볼 숫자" 가 기전을 놓친다(라운드 2 P1).
-    - `fallback_only` — 대조군에서 v20 이 쓰였는데(`write_*`) 후보에서 **두 필수 인용 중
-      어느 쪽이든** 기각돼(`invalid`/`empty`) 또는 적용성이 무너져 **`preserve` 로 내려앉았다.**
-      지표가 좋아졌다면 그 자리를 채운 것은 baseline 이지 이 주입이 아니다.
+    - `fallback_only` — 대조군에서 v20 이 쓰였는데(`write_*`) 후보에서 **보류로
+      내려앉았다.** 원인을 열거하지 않는다 — 인용 기각도, 적용성 붕괴도,
+      `requirements_complete` 가 `yes → no` 로 바뀌어 `software_complete` 가 막힌 것도
+      같은 결과다(라운드 3 P1). 어느 쪽이든 그 자리를 채운 것은 baseline 이지
+      이 주입이 아니다. 원인은 `fields` 가 이미 들고 있다.
     - 나머지는 `other` 다. 이름을 붙이지 않는 것이 잘못 붙이는 것보다 낫다.
     """
     def state_of(row, field):
@@ -198,11 +204,7 @@ def gain_kind(before, after) -> str:
             and state_of(after, "software_participation") == "null"):
         return "verified_absence"
     if before["v20_action"].startswith("write_") and after["v20_action"] == "preserve":
-        # 적용성을 세우는 business 인용이든 참여 인용이든, 기각이 보류를 만들었으면 같은 실패다.
-        rejected = any(state_of(after, field) in ("invalid", "empty")
-                       for field in ("software_business", "software_participation"))
-        if rejected or not after["v20_applicable"]:
-            return "fallback_only"
+        return "fallback_only"
     return "other"
 
 
