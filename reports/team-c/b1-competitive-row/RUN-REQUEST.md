@@ -23,15 +23,47 @@ company 출력에 필드 하나를 더한다.
 
 | 파일 | 내용 |
 | --- | --- |
-| `reports/team-c/b1-competitive-row/competitive-row.diff` | 프롬프트 1 · 스키마 2 · 검증 2 조각 |
+| `reports/team-c/b1-competitive-row/competitive-row.diff` | `script.py` 8조각 + `tools/replay_run.py` 1조각 |
 
-**`script.py` 에 적용하지 않았다.** `git apply --check` 로 적용 가능성만 확인했고
-(`c9398ad`/`1b34786` 기준 통과) 저장소의 `script.py` 는 그대로다.
+**`script.py`·`tools/replay_run.py` 에 적용하지 않았다.** `git apply --check` 로 적용
+가능성만 확인했고(**`c9398ad`·`1b34786` 양쪽 통과**) 저장소의 두 파일은 그대로다.
 
 ```bash
 git apply --check reports/team-c/b1-competitive-row/competitive-row.diff   # 통과 확인됨
 git apply reports/team-c/b1-competitive-row/competitive-row.diff           # 회차 직전에만
 ```
+
+### 0-1. 리뷰 [P1] 수정 — 구 회차에 소급하지 않는다
+
+**첫 판은 보관 회차 재생을 깨뜨렸다.** `competitive_row` 를 `props` 에 무조건 넣어
+`company_size_schema(legacy=True)` 에서도 필수가 됐고, 보관된 옛 원응답에는 그 필드가
+없으므로 재생이 **`company_size: 사실 필드 결손`** 으로 즉시 죽었다.
+
+기존 `clause_quotes`·`qualification_role` 과 **같은 방식**으로 고쳤다.
+
+| 자리 | 무엇 |
+| --- | --- |
+| `script.py` 마커 상수 | `COMPETITIVE_ROW_PATTERN` — 재생기가 `hasattr` 로 코드 능력을 가린다 |
+| `company_size_schema(…, competitive_row=True)` | `competitive_row and not legacy` 일 때만 넣는다 |
+| `parse_judgment(…, company_size_competitive_row=True)` | 스키마에 그대로 넘긴다 |
+| 회차 설정 기록 | `"company_size_competitive_row": True` 를 남겨 **다음 재생이 이 회차의 능력을 안다** |
+| `tools/replay_run.py` | `hasattr(script, "COMPETITIVE_ROW_PATTERN")` 이면 `settings.get(...)` 로 켠다 |
+| `verified_competitive_row()` | 필드 자체가 없으면 **`None`** — 판단하지 않는다 |
+
+**옛 원응답에 기본값을 채워 넣지 않는다.** 필드가 없으면 `None` 이고
+`verify_company_size` 의 조건이 `is False` 라 걸리지 않는다 — 그 회차의 동작이 그대로다.
+
+**실측으로 확인했다.**
+
+| 코드 | 보관 회차 재생 | 제출 CSV |
+| --- | --- | --- |
+| diff **미적용** (저장소 그대로) | 성공 | `sha256 7dd13743d39564db…` |
+| diff **적용** (임시 사본) | **성공** | **같은 `7dd13743d39564db…` · 바이트 동일** |
+| **첫 판 diff** (참고) | **실패** | `company_size: 사실 필드 결손` |
+
+`tests/test_c_competitive_row_diff.py` **10건**이 이것을 고정한다 — 바이트 동일,
+새 경로에서 필수, legacy·플래그 꺼짐 경로에서 제외, 검증 실패 시 `unknown`(`general` 아님),
+그리고 **diff 가 저장소에 적용돼 있지 않음**까지 본다.
 
 ## 1. 왜 이 관측인가 — 입력 신호로는 못 가른다
 
@@ -54,11 +86,19 @@ git apply reports/team-c/b1-competitive-row/competitive-row.diff           # 회
 
 ## 2. 왜 CPU 재생으로 못 재나
 
-프롬프트와 출력 스키마가 바뀐다. 보관 회차의 원응답에는 `competitive_row` 필드가 없으므로
-`tools/replay_run.py` 로 잴 수 없다. 재생기도 그렇게 말한다.
+프롬프트와 출력 스키마가 바뀐다. 보관 회차의 원응답에는 `competitive_row` 필드가 **없다.**
+재생기도 그렇게 말한다.
 
 > 모델을 부르지 않았다. **프롬프트·스키마를 바꾸는 후보는 이 경로로 잴 수 없다.**
 
+**두 가지를 구분한다.**
+
+| | |
+| --- | --- |
+| 보관 회차 재생이 **죽지 않는다** | §0-1 이 고친 것. 바이트 동일까지 확인했다 |
+| 그 재생으로 **이 후보의 효과를 잴 수는 없다** | 옛 원응답에 새 필드가 없어 관측 자체가 없다 |
+
+재생이 도는 것은 **회귀가 없다는 뜻**이지 효과를 쟀다는 뜻이 아니다.
 **GPU 회차가 필요하다.** 그래서 이 요청서다.
 
 ## 3. 실행 절차
@@ -71,8 +111,14 @@ python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <head>/submissi
   --output-dir <head-score>
 #    Macro 0.609274806721 · v14 7/2/1 · v15 4/1/2 · v16 4/2/2 · v17 5/6/1 · v18 1/2/6
 
-# 1) diff 적용
+# 1) diff 적용 — script.py 와 tools/replay_run.py 둘 다 바뀐다
 git apply reports/team-c/b1-competitive-row/competitive-row.diff
+
+# 1-1) 회귀 확인. 적용 후에도 보관 회차 재생이 HEAD 와 바이트 동일해야 한다
+python -X utf8 tools/replay_run.py --case reports/runs/colab-1789902969401579900/dev-debug \
+  --output-dir <regr>
+#    <regr>/submission.csv 와 <head>/submission.csv 가 바이트 동일. 다르면 여기서 멈춘다
+python -X utf8 -m pytest tests/test_c_competitive_row_diff.py -q
 
 # 2) dev 200건 회차 1회 (company_size 단계 포함 전 파이프라인)
 #    같은 ZIP·같은 시드. 노트북 커밋을 회차 기록에 고정한다.
@@ -87,9 +133,13 @@ python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new
   --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp-scope>
 
 # 4) 되돌린다
-git checkout -- script.py
+git checkout -- script.py tools/replay_run.py
 git diff --stat            # 빈 출력이어야 한다
 ```
+
+**회차 기록의 `reproduction.settings` 에 `company_size_competitive_row: true` 가 들어간다.**
+그 회차를 나중에 재생할 때 재생기가 이 키를 읽어 새 스키마로 파싱한다 — 그래서 새 회차도
+옛 회차도 각자의 스키마로 재생된다.
 
 ## 4. 합격 기준 — **회차 전에 고정한다**
 
@@ -162,18 +212,24 @@ git diff --stat            # 빈 출력이어야 한다
 
 | 사건 | 상태 |
 | --- | --- |
-| CPU 재생 | **불가** (프롬프트·스키마 변경) |
+| CPU 재생 — **효과 측정** | **불가** (프롬프트·스키마 변경) |
+| CPU 재생 — **회귀 검사** | **실행함.** 보관 회차가 적용 전후 바이트 동일(`7dd13743d39564db…`) |
 | 실제 GPU 회차 | **미실행** |
 | 대회 서버 | **미실행** |
-| `script.py` 적용 | **안 함.** `git apply --check` 만 통과 |
+| `script.py`·`tools/replay_run.py` 적용 | **안 함.** 임시 사본에서만 적용해 재생을 확인했다 |
 
 **TP/FP/FN 전→후가 없다.** 후보의 효과를 이 문서가 주장하지 않는다.
 `§1` 의 무리별 TP 수는 **현재 회차의 실측**이고 이 관측의 결과가 아니다.
 
 ## 8. 무라벨 배율
 
-**아직 못 잰다.** `open/train_unlabeled.jsonl` 이 저장소·`open/`·홈 어디에도 없다
-(A 티켓 §7 에 찾은 곳을 적었다).
+**아직 못 잰다.** `open/train_unlabeled.jsonl` 이 **이 작업 환경에** 없다.
+`reports/publication.json` 이 `excluded[0].path` 로 기록한 790MB 제외 파일이고,
+**리뷰어 환경에는 있다(수정 시각 2026-09-20).** 찾은 경로와 구분은 A 티켓 §7 에 있다.
+
+**파일이 있어도 이 후보의 배율은 그것만으로 안 나온다.** 발화가 모델의 `competitive_row`
+출력에 걸리므로 **무라벨 입력에 대한 `company_size` 원응답**이 따로 필요하다.
+입력 파일은 "제공 목록에 후보 행이 있는 공고의 비율" 같은 **입력 측 조건**까지만 답한다.
 
 회차가 기준 1~4 를 전부 통과해도 **채택은 무라벨 배율을 잰 뒤**다.
 과거 dev +0.0179 후처리 규칙이 서버에서 −0.0026 이었다.

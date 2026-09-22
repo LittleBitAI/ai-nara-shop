@@ -142,7 +142,9 @@
 ## 8. 무라벨 배율
 
 **해당 없음.** 규칙을 만들지 않았으므로 발화할 것이 없다.
-(만들었다면 `open/train_unlabeled.jsonl` 이 없어 잴 수 없었을 것이다 — A 티켓 §7 참조.)
+(만들었다면 `open/train_unlabeled.jsonl` 이 **이 작업 환경에** 없어 못 쟀을 것이다.
+그 파일은 `reports/publication.json` 의 `excluded[0].path` 이고 리뷰어 환경에는 있다 —
+A 티켓 §7 의 환경·구분 설명을 따른다.)
 
 ## 9. 증거 수준
 
