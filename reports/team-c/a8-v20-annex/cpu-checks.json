@@ -32,12 +32,13 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023",
-  "pinned_notebook_commit": "2f6e20642e07132cf03dba26f2064b21c2e20deb",
+  "pinned_code_commit": "ea9ac8a338705a1944a7f193b99735813b5fcdf0",
+  "pinned_notebook_commit": "516ddb93709e1de30cb0827f4921d2e8c627d637",
   "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
-                      "b139807723c22ec570d65635b0d654ba5e6149e2 / a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6 — 관측·감사 배선 전"],
+                      "b139807723c22ec570d65635b0d654ba5e6149e2 / a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6 — 관측·감사 배선 전",
+                      "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023 / 2f6e20642e07132cf03dba26f2064b21c2e20deb — 라운드 1 수리 전(수출 경계·gain_kind)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -235,7 +236,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "9f41d016c0bea82e3faa9665dfe81c2832971ac0613572148a50843d9d308cdf",
+  "notebook_sha256": "aa8fafcd3e96fb92f3393ebb0d1e6b4d842ebdd50b84ed5d1d77c18075434d02",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
