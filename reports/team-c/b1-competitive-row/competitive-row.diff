@@ -1,0 +1,70 @@
+diff --git a/script.py b/script.py
+index 348849c..21bbac1 100644
+--- a/script.py
++++ b/script.py
+@@ -478,6 +478,12 @@ Return one JSON object with key company_size and these fields:
+   other includes construction, 엔지니어링사업, 건설엔지니어링 and software subject to separate
+   소프트웨어사업자 size rules. Use unknown when the purchased scope cannot be resolved.
+ - scope_quote: exact notice quotation identifying the purchased goods/service.
++- competitive_row: the 세부품명번호 of the ONE supplied row the purchased subject matches,
++  copied exactly from 일치후보 or 서비스보조목록. Return it only when that row's 특이사항
++  conditions are satisfied by this notice. Return null when no supplied row matches, when the
++  supplied lists are empty, or when scope is not competitive. Do not invent a number, do not
++  copy a code from the notice text or its metadata, and do not return a row you did not rely on.
++  This names the evidence for scope=competitive; the number must appear in the supplied lists.
+ - qualification_role: classify the role of the enterprise-size statements BEFORE selecting a
+   category. eligibility = an operative clause connects an enterprise category to permission to
+   bid, including an explicit size-limited competition heading or a certificate explicitly made
+@@ -573,6 +579,8 @@ def company_size_schema(*, legacy=False, clause_quotes=True, qualification_role=
+     props = {
+         "scope": {"type": "string", "enum": ["general", "competitive", "other", "unknown"]},
+         "scope_quote": quote,
++        # 경쟁제품 판정의 근거 행. 제공 목록 안의 세부품명번호 하나 또는 null.
++        "competitive_row": {"type": ["string", "null"], "pattern": "^[0-9]{10}$"},
+         "qualification": {"type": "string", "enum": ["small_only", "sme_allowed", "unrestricted", "unknown"]},
+         "qualification_quote": quote,
+         "qualification_complete": {"type": "string", "enum": ["yes", "no"]},
+@@ -584,6 +592,7 @@ def company_size_schema(*, legacy=False, clause_quotes=True, qualification_role=
+     if qualification_role and not legacy:
+         # 역할·원문 관측을 기업등급보다 먼저 출력한다. 구 회차에는 새 사실을 소급하지 않는다.
+         props = {"scope": props.pop("scope"), "scope_quote": props.pop("scope_quote"),
++                 "competitive_row": props.pop("competitive_row"),
+                  "qualification_role": {"type": "string", "enum": QUALIFICATION_ROLES},
+                  "qualification_quote": props.pop("qualification_quote"),
+                  "qualification_complete": props.pop("qualification_complete"), **props}
+@@ -689,6 +698,23 @@ def company_size_products(facts, rec, visible=None):
+     return out
+
+
++def verified_competitive_row(facts, rec, visible):
++    """모델이 지목한 근거 행이 **그 공고에 제공된 목록** 안에 있는가.
++
++    코드는 대조만 한다 — 그 번호가 경쟁제품인지 다시 판단하지 않는다. 판정은 행의
++    존재로 확인된다. 목록은 그 공고에 실제로 보여 준 것과 같은 함수로 다시 만든다.
++
++    문자열·후보 유무로 scope 를 거르지 않는다. 모델이 **지목한** 행만 본다.
++    """
++    row = facts.get("competitive_row")
++    if not row:
++        return False
++    lookup = sme_product_lookup(rec, visible, _PRODUCTS)
++    supplied = {p["세부품명번호"] for p in lookup.get("일치후보") or ()}
++    supplied |= {r[0] for r in lookup.get("서비스보조목록") or ()}
++    return row in supplied
++
++
+ def verify_company_size(facts, rec, max_chars):
+     """A1 결정표에 scope 축의 v12·v13을 얹어 돌려준다.
+
+@@ -712,6 +738,11 @@ def verify_company_size(facts, rec, max_chars):
+         fixed = restore_spacing(facts.get(key), rec, visible)
+         if fixed is not None:
+             facts[key] = fixed
++    # 경쟁제품은 제공 목록의 행으로 확인한다. 확인되지 않으면 채택하지 않는다.
++    # `unknown` 으로 둔다 — "경쟁제품이 아니다"가 아니라 "확인되지 않았다"이고,
++    # general 로 뒤집는 길은 v10·v11·v12·v13 TP 가 죽어 이미 기각됐다.
++    if facts.get("scope") == "competitive" and not verified_competitive_row(facts, rec, visible):
++        facts["scope"] = "unknown"
+     bands, reason = _company_size_bands(facts, rec, max_chars)
+     out = dict(bands)
+     if reason != "unverified_scope":
