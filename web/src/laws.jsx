@@ -203,6 +203,9 @@ function LawGrid({ items, view, focus, onItem, onLaw }) {
 export function LawView({ items, focus, onFocus }) {
   const { map, view, fail } = useLawMap()
   const [law, setLaw] = useState(null)
+  // 전문은 **어느 법령의 것인지와 함께** 담는다. 글자만 담으면 법령을 바꾼 직후 한 번의
+  // 렌더에서 옛 법령의 전문이 새 법령의 오프셋으로 칠해져 새 이름표 아래 선다.
+  // 세대 카운터는 늦게 온 응답만 막고, 이미 담긴 글자의 주인은 안 본다.
   const [text, setText] = useState(null)
   const [loading, setLoading] = useState(false)
   // 기본은 발췌다. 인용은 150,515자 중 네 곳이고, 그 네 곳을 보려고 전문을 스크롤하는 것이
@@ -212,10 +215,12 @@ export function LawView({ items, focus, onFocus }) {
   const asked = useRef(0)
 
   // 항목을 고르면 그 항목이 쓰는 첫 법령을 연다. 이미 그 법령을 보고 있으면 그대로 둔다.
+  // **조문이 없는 항목(v24)이면 닫는다.** 안 닫으면 "연결된 조문이 없는 항목" 이라고 적어 놓고
+  // 그 아래에 직전 법령의 전문이 그대로 남아, 그 법령이 v24 의 근거처럼 보인다.
   useEffect(() => {
     if (!view || !focus) return
     const laws = view.byItem[focus].laws
-    if (laws.length && !laws.includes(law)) setLaw(laws[0])
+    if (!laws.includes(law)) setLaw(laws[0] ?? null)
   }, [view, focus])                                     // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -223,21 +228,26 @@ export function LawView({ items, focus, onFocus }) {
     const mine = (asked.current += 1)
     setLoading(true)
     loadLawText(law)
-      .then((loaded) => { if (mine === asked.current) { setText(loaded); setLoading(false) } })
-      .catch(() => { if (mine === asked.current) { setText(null); setLoading(false) } })
+      .then((loaded) => {
+        if (mine === asked.current) { setText({ law, text: loaded }); setLoading(false) }
+      })
+      // 실패도 그 법령의 결과다. null 로 지우면 아래가 영영 "읽는 중" 으로 남는다.
+      .catch(() => { if (mine === asked.current) { setText({ law, text: null }); setLoading(false) } })
   }, [law, mode])
 
   const row = view?.rows.get(law)
   const mine = focus ? view?.byItem[focus].segs : null
 
+  const landed = text?.law === law                    // 이 법령의 결과가 왔는가
+  const full = landed ? text.text : null             // 다른 법령의 글자는 안 쓴다
   const painted = useMemo(() => {
-    if (!text || !row) return null
-    return paint(text, row.segs.map((index) => ({
+    if (!full || !row) return null
+    return paint(full, row.segs.map((index) => ({
       at: map.segments[index].at,
       to: map.segments[index].at + map.segments[index].chars,
       rank: mine?.has(index) ? 2 : 1,
     })))
-  }, [text, row, mine, map])
+  }, [full, row, mine, map])
 
   // 연 조문으로 내려 둔다. 340,000자 문서에서 손으로 찾으라고 하면 이 화면이 없는 것과 같다.
   const jump = (at) => {
@@ -372,8 +382,10 @@ export function LawView({ items, focus, onFocus }) {
                       cited={[...view.owners[index]].sort(
                         (a, b) => ITEMS.indexOf(a[0]) - ITEMS.indexOf(b[0]))} />
             ))
-            : loading ? <p className="dim">전문 읽는 중… ({row?.chars.toLocaleString()}자)</p>
-                      : painted ?? <p className="dim">전문을 못 읽었다. <code>npm run dev</code> 상태인지 본다.</p>
+            : painted ? painted
+            : landed && !full
+              ? <p className="dim">전문을 못 읽었다. <code>npm run dev</code> 상태인지 본다.</p>
+              : <p className="dim">전문 읽는 중… ({row?.chars.toLocaleString()}자)</p>
           ) : (
             <LawGrid items={items} view={view} focus={focus} onItem={onFocus} onLaw={setLaw} />
           )}
