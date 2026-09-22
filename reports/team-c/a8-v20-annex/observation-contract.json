@@ -5,8 +5,8 @@
     "experiments/a5_collect_facts.py": "c7239c1bee7ba5a62db25567a4d320e56c29bdf433f7951a329f77f94c55f10a",
     "experiments/a5_scope_pilot.py": "d95603bc8c2ca39978c53adda435f0a47884f70dbcd23c9d21fabbe13da2b3b4",
     "experiments/a8_v20_annex.py": "62a3ea53e66f157cc143f9663e6e89802d708ce73df18e0ddd4e04dece8ecaba",
-    "experiments/a8_v20_audit.py": "b93660ec96cbff3c33a1d8c4919d547afe761207ffcaab743cb10ae6380a677f",
-    "tools/langfuse_tail.py": "afc526cb86f349fbbf1405f44dc9f03bc53fb71dc913e317e2c2076de3580883",
+    "experiments/a8_v20_audit.py": "6c5c878500457f802096fdd08f6b1e205d47554bad4e937969ff6c8ed3957227",
+    "tools/langfuse_tail.py": "110718c3a4825e296d1ca3e7ce537c5aef6cede8fd2f50450f511a3aaf5f93d7",
     "tools/replay_run.py": "35c235f99b3a2d824c18266b74f88534f033b4036a81ee4ce8611660b6f43895",
     "script.py": "8e7011e2bfcc8eab2f5463ee16266e3de11ff5115a70c850027af8fcb8667dd4"
   },
@@ -104,19 +104,20 @@
                    "dev_ids == 그 파일의 고유 id 집합",
                    "모든 공고 이벤트 id 가 그 집합에 속함",
                    "신원 미확정(null·ambiguous·unmatched) 본문 0건",
+                   "prompt_text 가 **정확히 두 메시지**(system·user)이고 각 메시지는 role·content 두 칸뿐",
                    "공고별 user 프롬프트가 실제 dev 파일에서 재구성한 것과 한 글자까지 같음",
                    "company_size_input 이 주장한 visible_sha256 이 재구성한 것과 같음",
-                   "system 이 제품 프롬프트나 후보 블록으로 시작하고 꼬리는 분할 재시도 문장뿐"],
+                   "system 이 제품 프롬프트나 후보 블록(**가장 긴 prefix**)으로 시작하고 꼬리는 COMPANY_SIZE_KEYS 로 만든 분할 재시도 문자열뿐"],
     "refused_with": ["--follow", "--from-line != 0"],
-    "transport": "OTLP 세션의 request 를 감싸 allow_redirects 를 강제로 끄고, 허용 호스트 밖 url 은 예외로 세운다. 세션을 못 잡으면 수출을 거부한다 — 주소 문자열만 막으면 307 로 빠져나간다.",
-    "free_text": "예외 메시지·traceback 은 본문으로 취급한다. 회차 종료 output 은 허용 목록(RUN_END_FIELDS)만 내보내고 error_type 만 남긴다.",
+    "transport": "OTLP 세션의 request 를 감싸 allow_redirects 를 강제로 끄고, trust_env·proxies 를 비우고, url 을 urlparse 해 scheme·hostname·port 를 비교하며 userinfo 를 거부한다. 세션을 못 잡으면 수출을 거부한다. 주소 문자열만 막으면 307 redirect·환경 프록시·`http://localhost:3002@evil.example/x` 로 빠져나간다.",
+    "free_text": "예외 메시지·traceback 은 본문으로 취급한다. 회차 종료 output 은 허용 목록(RUN_END_FIELDS)만 내보내고 error_type 만 남긴다. `--session` 기본값도 절대경로를 안 쓴다 — 저장소 상대경로나 파일명+경로 hash 다.",
     "why": "capture_protocol 1 로그에는 실제 프롬프트 전문이 들어 있다. 플래그는 안전의 근거가 아니고 데이터 대조가 근거다 — **id 가 고정 dev 에 있다는 것은 본문이 dev 에서 왔다는 근거가 아니다.** R17 경계.",
-    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 12개 검사"
+    "pinned_by": "tests/test_langfuse_tail.py::PromptExportBoundary 21개 검사"
   },
   "gain_kind": {
     "verified_quote": "적용 가능하고(software_business=yes + 그 인용 검증) 참여 인용이 검증됐으며 판정이 실제로 write_0 으로 전이했다",
     "verified_absence": "적용 가능하고 참여 인용이 null 이어서 소비자가 부재 위반을 새로 썼다(write_1 로 전이). **v20 은 부재탐지 항목이라 이쪽이 주 기전이다** — H4 의 v20 양성 5건이 전부 이 분기였다",
-    "fallback_only": "대조군에서 v20 이 쓰였는데 후보에서 두 필수 인용 중 어느 쪽이든 기각돼(invalid·empty) 또는 적용성이 무너져 preserve 로 내려앉았다 — 기전이 아니다",
+    "fallback_only": "대조군에서 v20 이 쓰였는데 후보에서 보류로 내려앉았다. **원인을 열거하지 않는다** — 인용 기각·적용성 붕괴·requirements_complete 변화로 software_complete 가 막힌 것이 모두 같은 결과다. 원인은 paired_changes 의 fields 가 들고 있다",
     "other": "나머지. 이름을 붙이지 않는 것이 잘못 붙이는 것보다 낫다",
     "not": "인용 상태만으로 부르지 않는다. 판정이 안 움직인 인용 변화와 v20 이 열리지도 않는 공고의 정확한 인용은 둘 다 other 다",
     "pinned_by": "tests/test_a8_v20_annex.py::AuditTests 의 gain_kind 두 검사와 v20_applicable 양방향·200건 검사"

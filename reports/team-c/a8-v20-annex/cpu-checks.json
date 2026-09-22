@@ -32,14 +32,15 @@
                               "기각된 세 인용은 연속된 공고 구간이 아니다", "inputs.json 30개와 입력 ZIP 일치"]
   },
   "base_commit": "2d894a1f811ef72ae60c62771c0c1cd6906a256a",
-  "pinned_code_commit": "01258d3089502e4aafe50681b1a7fd7e48d06413",
-  "pinned_notebook_commit": "cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792",
+  "pinned_code_commit": "3f8bb3c6fd5d8bcd3a97f4b07178ca026c645596",
+  "pinned_notebook_commit": "6c96064cde2004344dc08a6e58abcae05cb0a14f",
   "notebook_only_change_from_code_commit": "REPO_REF + 회차 뒤 CPU 감사 호출",
   "superseded_pins": ["713aa83c2d0e144b775710a2fee261c3e319a180 — 출력 예약 축소 전",
                       "d2c5f54a9365a76de9d938970dd34018ac823058 / d616c4aaa048d796f45fd56ce7e4be5af3ab5188 — v13 근거 수리 전",
                       "b139807723c22ec570d65635b0d654ba5e6149e2 / a033d5bb1fb74fc5287dd04cb173e0c3b1e168b6 — 관측·감사 배선 전",
                       "d9b647ae3196eb8e4fbb7b3ffa8cafbd06e11023 / 2f6e20642e07132cf03dba26f2064b21c2e20deb — 라운드 1 수리 전(수출 경계·gain_kind)",
-                      "ea9ac8a338705a1944a7f193b99735813b5fcdf0 / 516ddb93709e1de30cb0827f4921d2e8c627d637 — 라운드 2 수리 전(본문 결속·redirect·자유 텍스트·부재 기전)"],
+                      "ea9ac8a338705a1944a7f193b99735813b5fcdf0 / 516ddb93709e1de30cb0827f4921d2e8c627d637 — 라운드 2 수리 전(본문 결속·redirect·자유 텍스트·부재 기전)",
+                      "01258d3089502e4aafe50681b1a7fd7e48d06413 / cf1b8b6ab3a58cba4c5bbd49a21f36eb9fbd2792 — 라운드 3 수리 전(메시지 형태·환경 프록시·세션 경로·가장 긴 prefix·fallback 원인 열거)"],
   "environment": {
     "os": "Windows",
     "python": "3.13.9"
@@ -212,6 +213,16 @@
                "루트 없는 로그에서 update 가 조용히 버려졌다 → 이유를 들고 다니고 화면에 적는다"],
         "mutation_check": "여섯 가드를 하나씩 되돌렸다. 첫 시도에서 본문 결속 mutation 이 초록이어서 검사를 조였다 — system 검사가 먼저 걸려 user 위조를 못 보고 있었다."
       },
+      "round_3": {
+        "verdict": "머지 불가 → 수리 완료",
+        "p0": ["프롬프트 형태를 느슨하게 봐서 system·user 사이에 끼운 assistant 메시지와 메시지 dict 의 추가 필드가 통과했고 배열 전체가 span input 으로 나갔다. 정확히 두 메시지·role·content 두 칸만 허용한다. 재시도 접미사도 정규식 대신 COMPANY_SIZE_KEYS 로 만든 정확한 문자열만 통과시킨다.",
+                "redirect 만 끄고 trust_env 를 뒀다 — HTTP_PROXY 가 있으면 merge_environment_settings() 가 로컬 주소에도 외부 프록시를 고른다. trust_env·proxies 를 끄고, url 검사를 urlparse 비교로 바꿨다(http://localhost:3002@evil.example/x 가 startswith 를 통과했다).",
+                "--session 기본값이 절대경로라 개인 경로가 span 에 실렸다. 저장소 상대경로나 파일명+경로 hash 를 쓴다."],
+        "p1": ["_known_systems 의 두 값 중 set 순서로 첫 prefix 를 골라 후보 블록 1,568자가 모르는 꼬리가 됐다. PYTHONHASHSEED 1~6 중 넷이 그랬다 — 진짜 A8 회차가 seed 마다 거부된다. 가장 긴 prefix 를 고른다.",
+               "gain_kind 가 write_* → preserve 의 원인을 열거해 requirements_complete 변화로 software_complete 가 막힌 경우를 놓쳤다. 원인을 열거하지 않고 전부 fallback_only 로 센다."],
+        "mutation_check": "다섯 가드를 되돌렸다. 세션 이름 mutation 이 초록이어서 함수 대신 run() 배선을 보는 검사로 바꿨다 — 함수가 있는 것과 run() 이 그것을 쓰는 것은 다르다.",
+        "repo_lint": "발견 2건 — gitignore 된 워크트리 훅 설정(.claude/settings.json)의 명령 드리프트다. 추적 파일이 아니고 이 PR 의 변경과 무관하다. 훅 배선 변경은 세션 동작을 바꾸므로 임의로 고치지 않았다."
+      },
       "confirmed_by_reviewer": ["script.py·후보·law_index 무변경",
                                "비-system 본문 digest 의 공고 유일성과 호출 키 비중복",
                                "API 표본 45건 재현", "핀·미실행 목록이 문서와 원장에서 일치"]
@@ -247,7 +258,7 @@
     "bytes": 3264446,
     "all_member_sha256_verified": true
   },
-  "notebook_sha256": "19a6b29b6d09f7bcf32bd429b1f77d5786a7617a1b11e8bedefa5d025518a602",
+  "notebook_sha256": "3e6ed334d43edc9639ca6fd1429aaaae4df7c6f13390f46936069556680e18c3",
   "notebook_code_cells_compile": true,
   "production_script_unchanged": false,
   "production_script_change": "company_size_products() 한 군데 — v13 은 검증된 공고 인용이 있어야 선다. 사용자 결정으로 착수서 §3 제한을 이 건에 한해 해제했다. 위 v13_evidence_hole.fix 가 측정을 소유한다.",
@@ -378,6 +389,26 @@
       "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
       "findings": 0,
       "phase": "라운드 2 수리 후"
+    },
+    {
+      "command": "python -X utf8 -m pytest -q tests/",
+      "passed": 373,
+      "failed": 1,
+      "errors": 2,
+      "skipped": 1,
+      "seconds": 261.51,
+      "phase": "라운드 3 P0 셋·P1 둘 수리 후. 실패·오류는 preexisting_failures 와 같다"
+    },
+    {
+      "command": "python -X utf8 tests/test_baseline.py",
+      "passed": 19,
+      "seconds": 2.57,
+      "phase": "라운드 3 수리 후 오프라인 게이트"
+    },
+    {
+      "command": "python -X utf8 tool/repo_lint.py --repo <coffinfish>",
+      "findings": 2,
+      "phase": "라운드 3 수리 후. gitignore 된 워크트리 훅 설정 드리프트이며 추적 파일도 이 PR 의 변경도 아니다"
     },
     {
       "command": "python -m pytest -q tests/test_a8_v20_annex.py tests/test_a5_v18_scope_review.py tests/test_a5_collect_facts.py tests/test_law_index.py tests/test_replay_run.py tests/test_score.py tests/test_compare_runs.py tests/test_company_size.py",

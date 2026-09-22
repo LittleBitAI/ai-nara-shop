@@ -215,7 +215,18 @@ P1 은 `gain_kind` 가 **v20 의 주 기전인 부재 판정**(`preserve → wri
 둔 것이다 — v20 은 부재탐지 항목이고 H4 양성 5건이 전부 그 분기다. `verified_absence`
 로 이름을 주고, business 인용 기각으로 적용성이 무너진 `preserve` 도 `fallback_only` 로 센다.
 P2 둘도 반영했다(동어반복 검사, 조용히 버려지는 `update`).
-고정 핀은 v13 수리·배선·라운드 1~2 수리를 포함한 코드 `01258d3` · 노트북 `cf1b8b6` 다.
+2026-09-22 PR #87 라운드 3: **P0 셋·P1 둘.** 수출 경계를 또 세 갈래로 우회할 수 있었다 —
+(1) 프롬프트 **형태**를 느슨하게 봐서 system·user 사이에 끼운 메시지와 dict 의 추가 필드가
+통과하고 배열 전체가 span input 으로 나갔다. 정확히 두 메시지·`role`·`content` 두 칸만
+허용하고, 재시도 접미사도 정규식 대신 `COMPANY_SIZE_KEYS` 로 만든 정확한 문자열만 통과시킨다.
+(2) redirect 만 끄고 세션의 `trust_env` 를 뒀다 — `HTTP_PROXY` 가 있으면
+`merge_environment_settings()` 가 **로컬 주소에도** 외부 프록시를 고른다. `trust_env`·
+`proxies` 를 끄고 url 검사를 `urlparse` 비교로 바꿨다(`http://localhost:3002@evil.example/x`
+가 `startswith` 를 통과했다). (3) `--session` 기본값이 절대경로라 개인 경로가 span 에 실렸다.
+P1 둘: `_known_systems` 가 set 순서로 첫 prefix 를 골라 후보 블록 1,568자가 모르는 꼬리가
+됐고(**진짜 회차가 seed 마다 거부된다**), `gain_kind` 가 보류의 원인을 열거해
+`requirements_complete` 로 `software_complete` 가 막힌 경로를 놓쳤다.
+고정 핀은 v13 수리·배선·라운드 1~3 수리를 포함한 코드 `3f8bb3c` · 노트북 `6c96064` 다.
 **다음 게이트는 두 회차 실행**이고 최종 채택 조건은 위 §6 그대로다 —
 유망하면 무라벨 6,000건 발화율·시간·독립 리뷰까지 확인한다. 두 회차만으로 채택하지 않는다.
 dev 전체 GPU 최고 0.599316(`18f07e5`), 서버 최고 0.508414·6,380초는 그대로다.
