@@ -1626,8 +1626,14 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
         # **이 게이트를 다른 금액 항목에 함께 걸면 손해다.** 같은 방식을 항목명에 금액이
         # 적힌 다섯(v2·v4·v5·v6·v7)에 일괄 적용하면 합계 −0.219다 — v4는 양성 6건 중
         # 2건만 구간 안이고(0.800 → 0.444), v7도 TP를 하나 잃는다. v5만 건다.
+        #
+        # 지방 물품·일반용역의 `고시금액`은 2억 3천만원이 아니라 지역제한 상한이다
+        # (시·도 3억 5천만원, 그 밖 5억원 — `region_price_limit`). 공사는 2억 3천만원 그대로다.
+        limit = NOTICE_AMOUNT_WON
+        if _price_scope((rec.get("meta") or {}).get("업무구분")) == "용역물품":
+            limit = region_price_limit(rec) or NOTICE_AMOUNT_WON
         price = estimated_price(rec)
-        return price is not None and price < NOTICE_AMOUNT_WON
+        return price is not None and price < limit
     if item == "v19":
         if not v19_demanded_at_bid_stage(rec):
             return True                     # 공고가 입찰 단계에서 요구한 적이 없다
@@ -1779,13 +1785,14 @@ REGION_WINDOW = 200
 #         → 재정경제부 고시 `물품 및 용역: 2억 3천만 원`
 #   지방: 시행령 제20조제1항제6호 → 시행규칙 제24조제2호 나목
 #
-# 지방 용역·물품 값 5억원은 **조건부 기준을 근사한 값이다.** 나목은 지자체를 둘로 나눈다.
-#   - 법 제5조제1항을 적용받는 지자체: 행정안전부장관이 고시한 금액.
-#     그중 서울·부산·인천의 관할구역 안 군·구만 5억원으로 못 박혀 있다.
-#   - 법 제5조제1항을 적용받지 않는 지자체: 5억원.
-# 행정안전부장관 고시액이 제공 자료에 없어 첫 갈래의 실제 값을 알 수 없다.
-# 그래서 조문에 숫자로 적힌 5억원 하나로 두 갈래를 근사한다.
-# 고시액이 5억원과 다르면 그 지자체의 공고에서 이 게이트가 틀린다.
+# 지방 용역·물품은 발주기관에 따라 둘이다. 나목의 `행정안전부장관이 고시한 금액`은
+# 대회 공지가 제공한 3억 5천만원이다(행정안전부고시 제2024-95호, docs/rules.md 지역제한 금액).
+#   - 시·도(세종 제외): 3억 5천만원.
+#   - 세종·시·군·구·교육청(학교)·지방공기업: 5억원.
+# 발주기관은 익명화 토큰으로 가린다(docs/data.md 가 판정 사용을 허용한다). 공고 머리의
+# 첫 `[수요기관(…)]` 이 발주기관이다. `지방정부` 가 시·도다 — dev 에서 그 토큰으로 시작하는
+# 공고가 서울특별시 `재무공고`(서소문청사)이고, 시·군·구는 `기초자치단체` 로 따로 온다.
+# 시·도인지 모르는 기관(보건·소방·행정기관 등)은 조문의 기본값 5억원을 쓴다.
 #
 # 공사
 #   국가: 시행규칙 제24조제2항제1호 — 건설공사(전문 제외)는 고시금액(공사 88억원),
@@ -1813,14 +1820,32 @@ def _price_scope(work_type):
     return None
 
 
+PROVINCE_LIMIT = 350_000_000          # 시·도(세종 제외) 물품·일반용역
+PROVINCE_AGENCY = ("지방정부", "광역자치단체")
+FIRST_AGENCY = re.compile(r"\[수요기관\(([^)\]|]+)\)")
+
+
+def region_price_limit(rec):
+    """그 공고의 지역제한 상한(항목명의 `고시금액`). 금액을 나눌 갈래를 모르면 None."""
+    meta = rec.get("meta") or {}
+    scope = _price_scope(meta.get("업무구분"))
+    limit = REGION_PRICE_LIMIT.get((meta.get("적용계약법"), scope))
+    if (meta.get("적용계약법"), scope) != ("지방계약법", "용역물품") or meta.get("소관구분") != "지방정부":
+        return limit
+    text = "\n".join(doc.get("text") or "" for doc in rec.get("docs", []))
+    first = FIRST_AGENCY.search(text)
+    if first and first.group(1) in PROVINCE_AGENCY and "광역=세종특별자치시" not in text:
+        return PROVINCE_LIMIT
+    return limit
+
+
 def region_restriction_allowed(rec):
     """추정가격이 지역제한 허용 상한 미만인지. 판단할 수 없으면 True를 돌려준다.
 
     모르는 것을 근거로 막지 않는다. 막는 쪽이 틀리면 정답 양성을 잃는다.
     """
     meta = rec.get("meta") or {}
-    scope = _price_scope(meta.get("업무구분"))
-    limit = REGION_PRICE_LIMIT.get((meta.get("적용계약법"), scope))
+    limit = region_price_limit(rec)
     price = meta.get("입찰추정가격")
     if limit is None or not price:
         return True

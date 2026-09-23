@@ -156,6 +156,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 #    D4-4 의 `e` 계약(원문의 연속된 부분문자열)을 못 채우므로 내린다.
 #  - 서른세 셀: v24 대조 축(A7)을 `evidence_refutes()` 에 넣으면서 갈렸다. 코드가 공고와
 #    등록값의 불일치를 하나도 못 찾으면 그 양성을 내린다. `e24` 가 함께 비워진다.
+#  - 두 셀(`PPS-DEV-11` v5·e5): v5 게이트가 지방 물품·일반용역에 지역제한 금액을 쓰면서 갈렸다.
+#    서울특별시 발주 2억 8,734만원은 시·도 금액 3억 5천만원 미만이라 v5 가 아니다.
 #
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
@@ -169,7 +171,8 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-066", "v24"), ("PPS-DEV-068", "e24"), ("PPS-DEV-068", "v24"),
     ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"), ("PPS-DEV-091", "v24"),
     ("PPS-DEV-092", "v6"), ("PPS-DEV-099", "v24"), ("PPS-DEV-101", "v1"),
-    ("PPS-DEV-103", "v24"), ("PPS-DEV-122", "e24"), ("PPS-DEV-122", "v24"),
+    ("PPS-DEV-103", "v24"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
+    ("PPS-DEV-122", "e24"), ("PPS-DEV-122", "v24"),
     ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
     ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"), ("PPS-DEV-144", "v6"),
     ("PPS-DEV-145", "v24"), ("PPS-DEV-148", "e13"), ("PPS-DEV-15", "e24"),
@@ -193,7 +196,8 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"), ("PPS-DEV-066", "e24"),
     ("PPS-DEV-066", "v24"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
     ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"), ("PPS-DEV-099", "v24"),
-    ("PPS-DEV-101", "v1"), ("PPS-DEV-122", "e24"), ("PPS-DEV-122", "v24"),
+    ("PPS-DEV-101", "v1"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
+    ("PPS-DEV-122", "e24"), ("PPS-DEV-122", "v24"),
     ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
     ("PPS-DEV-130", "v9"), ("PPS-DEV-144", "v6"), ("PPS-DEV-148", "e13"),
     ("PPS-DEV-15", "e24"), ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "v24"),
@@ -211,7 +215,8 @@ DELIBERATE_MOVES_H2 = [
 DELIBERATE_MOVES_A7 = [
     ("PPS-DEV-01", "v1"), ("PPS-DEV-036", "v19"), ("PPS-DEV-039", "v21"),
     ("PPS-DEV-050", "v9"), ("PPS-DEV-063", "v12"), ("PPS-DEV-092", "v6"),
-    ("PPS-DEV-101", "v1"), ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
+    ("PPS-DEV-101", "v1"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
+    ("PPS-DEV-127", "v21"), ("PPS-DEV-127", "v3"),
     ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"), ("PPS-DEV-144", "v6"),
     ("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"), ("PPS-DEV-162", "v9"),
     ("PPS-DEV-170", "v21"), ("PPS-DEV-187", "v6"), ("PPS-DEV-188", "v21"),

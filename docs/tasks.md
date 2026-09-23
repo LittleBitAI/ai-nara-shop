@@ -27,6 +27,9 @@
 
 ## 첫 작업 큐
 
+`c-notice-region-limit`: review / [작업서](tasks/c-notice-region-limit.md). v5~v7 의 지방 고시금액을
+S6 지역제한 금액으로 적용한다. 재생 v5 FP 1→0, Macro +0.002671, 대상 밖 0셀.
+
 `a8-v20-annex-injection`: done / 두 회차 완료·가설 기각·미채택, [실제 결과](../reports/team-c/a8-v20-annex/results.md).
 네 군 모두 v20 TP/FP/FN이 1/4/4로 같고 바뀐 공고 0건이다. 검증된 인용·부재 전이 0건,
 `participation_nonnull`이 400응답에서 0으로 H4와 같아 개선 기전 자체가 서지 않았다.
