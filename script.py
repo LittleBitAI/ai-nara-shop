@@ -1795,7 +1795,7 @@ REGION_WINDOW = 200
 # 시·도인지 모르는 기관(보건·소방·행정기관 등)은 조문의 기본값 5억원을 쓴다.
 # 발주기관은 `공고문` 에서만 읽는다 — 규격서·첨부의 기관·납품 장소는 발주기관이 아니다.
 # 세종은 발주기관 토큰에 걸린 지역(`|지역=rN`)이 세종이거나, 링크가 없으면 공고문의 광역이 세종뿐일 때다.
-# 공고문에 지역 토큰이 하나도 없으면 평문 `세종특별자치시` 로 본다.
+# 공고문에 지역 토큰이 하나도 없으면 평문의 세종 부서(`세종특별자치시 회계과`)나 제한 지역이 세종 하나인지로 본다.
 # 가목의 용역(건설기술·설계감리·엔지니어링 3억 3천만원, 시설물안전법 안전점검·정밀안전진단
 # 1억 5천만원)은 나라장터에서 `기술용역` 이다. meta `업무구분` 이 `일반용역` 이면 가목 밖으로 읽는다.
 # 본문 낱말로 가목을 가리면 `실시설계 및 제작·설치`·`과학실험실 안전 점검` 같은 공고가 잘못 내려간다.
@@ -1831,6 +1831,8 @@ PROVINCE_AGENCY = ("지방정부", "광역자치단체")
 FIRST_AGENCY = re.compile(r"\[수요기관\(([^)\]|]+)\)(?:\|지역=(r\d+))?\]")
 WIDE_OF = re.compile(r"\[지역:(r\d+)\|[^\]]*?광역=([^\]|]+)\]")
 SEJONG = "세종특별자치시"
+# 평문에서 세종을 발주처로 가리키는 문맥. 참가 가능 지역 목록의 `세종특별자치시` 는 발주처가 아니다.
+SEJONG_OFFICE = re.compile(SEJONG + r"\s*(?:회계과|재무과|계약과|분임재무관|재무관|입찰집행관)")
 
 
 def _notice_text(rec):
@@ -1840,15 +1842,19 @@ def _notice_text(rec):
     return notice.get("text") or ""
 
 
-def _is_sejong(text, first):
+def _is_sejong(text, first, meta):
+    """시·도 공고의 발주처가 세종인가. 세종을 언급한 것과 세종이 발주한 것을 가른다."""
     regions = dict(WIDE_OF.findall(text))
     if first.group(2) in regions:
         return regions[first.group(2)] == SEJONG
     if regions:
         return set(regions.values()) == {SEJONG}
-    # 세종 발주 공고는 지역 토큰이 하나도 없고 `세종특별자치시 회계과` 가 평문으로 남기도 한다
-    # (무라벨 `PPS-D-016374`). 지역 토큰이 없을 때만 평문을 본다.
-    return SEJONG in text
+    # 세종 발주 공고는 지역 토큰이 하나도 없기도 하다(무라벨 `PPS-D-016374`). 그때는 둘 중 하나다 —
+    # 평문이 세종의 부서를 발주처로 적었거나(`세종특별자치시 회계과`), 제한 지역이 세종 하나다.
+    # 시·도는 제 관할로만 지역을 제한하므로 후자도 세종 발주다. 대전·세종·충북·충남처럼 세종이
+    # 참가 가능 지역 목록의 하나일 뿐인 공고(`PPS-D-007109`)는 둘 다 아니다.
+    return (bool(SEJONG_OFFICE.search(text))
+            or (meta.get("제한지역코드목록") or "").strip() == SEJONG)
 
 
 def region_price_limit(rec):
@@ -1860,7 +1866,7 @@ def region_price_limit(rec):
         return limit
     text = _notice_text(rec)
     first = FIRST_AGENCY.search(text)
-    if first and first.group(1) in PROVINCE_AGENCY and not _is_sejong(text, first):
+    if first and first.group(1) in PROVINCE_AGENCY and not _is_sejong(text, first, meta):
         return PROVINCE_LIMIT
     return limit
 

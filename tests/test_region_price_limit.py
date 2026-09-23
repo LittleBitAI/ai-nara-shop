@@ -68,6 +68,18 @@ class LocalGoodsServiceLimit(unittest.TestCase):
         rec["docs"][0]["text"] += "\n[지역:r1|단위=기초|광역=충청남도] 청사"
         self.assertEqual(350_000_000, script.region_price_limit(rec))
 
+    def test_sejong_in_a_participation_list_is_not_the_agency(self):
+        """참가 가능 지역 목록의 세종은 발주기관이 아니다(무라벨 `PPS-D-007109`·`PPS-D-010611`)."""
+        rec = notice("지방정부", extra="대전광역시 또는 세종특별자치시 또는 충청북도 또는 충청남도에 둔 자")
+        rec["meta"]["제한지역코드목록"] = "대전광역시, 세종특별자치시, 충청북도, 충청남도"
+        self.assertEqual(350_000_000, script.region_price_limit(rec))
+
+    def test_a_province_restricting_only_to_sejong_is_sejong(self):
+        """시·도는 제 관할로만 지역을 제한한다. 제한 지역이 세종 하나면 세종 발주다."""
+        rec = notice("지방정부", extra="세종특별자치시에 주된 영업소의 소재지를 두고 있어야 함")
+        rec["meta"]["제한지역코드목록"] = "세종특별자치시"
+        self.assertEqual(500_000_000, script.region_price_limit(rec))
+
     def test_document_order_does_not_decide_the_agency(self):
         """발주기관은 공고문에서 읽는다. 배열 순서가 바뀌어도 같은 값이어야 한다."""
         rec = notice("지방정부")
