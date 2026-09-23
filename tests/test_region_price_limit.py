@@ -43,6 +43,43 @@ class LocalGoodsServiceLimit(unittest.TestCase):
         rec = notice("기초자치단체", extra="[수요기관(지방정부)] 보조사업")
         self.assertEqual(500_000_000, script.region_price_limit(rec))
 
+    def test_sejong_elsewhere_in_the_notice_does_not_change_the_agency(self):
+        """세종은 발주기관의 지역일 때만이다. 첨부의 납품 장소는 발주기관이 아니다."""
+        rec = notice("지방정부", extra="[지역:r1|단위=기초|광역=경기도] 청사")
+        rec["docs"].append({"doc_id": "d2", "type": "규격서",
+                            "text": "납품장소 [지역:r2|단위=읍면동|광역=세종특별자치시]"})
+        self.assertEqual(350_000_000, script.region_price_limit(rec))
+        # 공고문 안이라도 납품 장소의 세종은 발주기관이 아니다
+        in_notice = notice("지방정부", extra="[지역:r1|단위=기초|광역=경기도] 청사\n"
+                                           "납품장소 [지역:r2|단위=읍면동|광역=세종특별자치시]")
+        self.assertEqual(350_000_000, script.region_price_limit(in_notice))
+        linked = notice("지방정부", extra="[지역:r1|단위=광역|광역=세종특별자치시] 청사")
+        linked["docs"][0]["text"] = linked["docs"][0]["text"].replace(
+            "[수요기관(지방정부)]", "[수요기관(지방정부)|지역=r1]")
+        self.assertEqual(500_000_000, script.region_price_limit(linked))
+        only_sejong = notice("지방정부", extra="[지역:r1|단위=기초|광역=세종특별자치시] 청사")
+        self.assertEqual(500_000_000, script.region_price_limit(only_sejong))
+
+    def test_document_order_does_not_decide_the_agency(self):
+        """발주기관은 공고문에서 읽는다. 배열 순서가 바뀌어도 같은 값이어야 한다."""
+        rec = notice("지방정부")
+        rec["docs"].insert(0, {"doc_id": "d0", "type": "규격서",
+                               "text": "[수요기관(기초자치단체)] 과업지시서"})
+        self.assertEqual(350_000_000, script.region_price_limit(rec))
+
+    def test_special_services_use_their_own_limit_first(self):
+        """안전점검·정밀안전진단 1억 5천만원, 건설기술·설계·감리·엔지니어링 3억 3천만원."""
+        cases = (("지방정부", "용 역 명: 교량 정밀안전진단 용역", 150_000_000),
+                 ("기초자치단체", "용 역 명: 정밀안전점검 용역", 150_000_000),
+                 ("지방정부", "용 역 명: 도로 실시설계 용역", 330_000_000),
+                 ("기초자치단체", "용 역 명: 하수관로 건설사업관리(감리) 감리용역", 330_000_000))
+        for agency, head, limit in cases:
+            with self.subTest(head):
+                rec = notice(agency, extra=head)
+                self.assertEqual(limit, script.region_price_limit(rec))
+                rec["meta"]["입찰추정가격"] = limit
+                self.assertFalse(script.evidence_refutes("v5", QUALIFICATION, rec))
+
     def test_v7_is_suppressed_from_the_province_limit(self):
         rec = notice("지방정부", price=350_000_000)
         self.assertIsNone(script.detect_region_expansion(rec))
