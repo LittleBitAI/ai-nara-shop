@@ -74,12 +74,15 @@ def main():
         json.dump(out, stream, ensure_ascii=False, indent=1)
         stream.write("\n")
 
+    # f-string 안에서 바깥과 같은 따옴표를 다시 쓰지 않는다. 그 문법은 3.12 부터이고
+    # 이 저장소가 지원하는 3.11 에서는 파싱 자체가 실패한다 — 한 줄도 안 돈다.
     print(f'{"공고":<6}{"군":<7}{"scope":<13}{"지목 행":<12}{"품명":<22}'
           f'{"상한":>13}{"추정가격":>14}{"초과":<6}{"품명 원문":<10}라벨')
     for r in sorted(out, key=lambda x: (x["group"], x["id"])):
+        cap = "{:,}".format(r["상한"]) if r["상한"] else "-"
+        price = "{:,.0f}".format(r["추정가격"]) if r["추정가격"] else "-"
         print(f'{r["id"]:<6}{r["group"]:<7}{str(r["scope"]):<13}{str(r["row"]):<12}'
-              f'{str(r["품명"])[:20]:<22}{("-" if r["상한"] is None else f"{r[chr(49)+chr(48)]:,}") if False else (f"{r["상한"]:,}" if r["상한"] else "-"):>13}'
-              f'{(f"{r["추정가격"]:,.0f}" if r["추정가격"] else "-"):>14}'
+              f'{str(r["품명"])[:20]:<22}{cap:>13}{price:>14}'
               f'{str(r["상한초과"]):<6}{str(r["품명이 원문에"]):<10}{",".join(r["라벨"]) or "-"}')
 
 

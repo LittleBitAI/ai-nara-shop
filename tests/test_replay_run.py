@@ -38,7 +38,10 @@ RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
 # 2026-09-20 재고정(sha256 3a0df088…): v5가 고시금액 미만 구간에서 발화하지 않는다.
 # 5셀이 움직였고 대상 밖 변화는 0이다 — v5 오탐 6→1.
 # 근거는 reports/team-b/b1-v19-bid-stage/README.md.
-HEAD_REPLAY = ROOT / "reports/team-b/b5-port-replay/submission.csv"
+# 2026-09-23 재고정(sha256 fe8e1933…): B6 가 v9 의 `V9_EQUIVALENT` 를 뺐다(운영진 S7-14).
+# 8셀(088·090·110·160 의 v9·e9)이 움직였고 대상 밖 변화는 0이다.
+# 근거는 reports/team-b/b6-v9-equivalent/README.md.
+HEAD_REPLAY =ROOT / "reports/team-b/b5-port-replay/submission.csv"
 
 CANDIDATE = '''"""검사용 후보. 모든 판정을 0으로 만든다."""
 

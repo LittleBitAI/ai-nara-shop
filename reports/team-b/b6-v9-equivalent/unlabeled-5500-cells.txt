@@ -1,0 +1,309 @@
+# 무라벨 5500건(u00~u10, 코드 14f03d1 원응답). u11(500건)은 sme 문서 예산 축소 1건으로 재생 거부 — 제외. 방향은 HEAD 대비. 정답 없음 — 꼴만 본다.
+HEAD vs 회차 CSV 차이 항목: {'v3': 29, 'v5': 57, 'v6': 77}
+HEAD v9=1 385 / 5500
+== off: outside=0 down=0 (0.00%) up=41 (0.75%) e9-only=0 | dev down 0 up 4 (2.0%)
+   UP  PPS-D-020694 | HEAD:  | NEW: 현대 유니버스 수소전기버스
+   UP  PPS-D-014789 | HEAD:  | NEW: CPU : Digital Signal Controller(TMS320F28335)
+   UP  PPS-D-020710 | HEAD:  | NEW: DANFOSS APP 8.2
+   UP  PPS-D-021018 | HEAD:  | NEW: 모델명 : Vanquish core HPLC System (동등 및 상위기종 이상)
+   UP  PPS-D-012173 | HEAD:  | NEW: 국가정보원 CC인증 EAL4 必
+   UP  PPS-D-017552 | HEAD:  | NEW: 모 델 : DH360/300C
+   UP  PPS-D-020494 | HEAD:  | NEW: 구매희망 [NVIDIA] RTX PRO 6000
+   UP  PPS-D-020827 | HEAD:  | NEW: 기존 장례식장에 설치된 냉난방기(삼성전자) 제품과 제어 및 운영상 호환이 가능한 동등 이상의 제품이어야 하므로
+   UP  PPS-D-010127 | HEAD:  | NEW: 시사운드 아키텍처 : 다양한 XDclear 프로브와 새로운 시사운드 Imageformer 결합
+   UP  PPS-D-012248 | HEAD:  | NEW: 양이온성 에멀젼(C-840TBD 동등이상)
+   UP  PPS-D-010519 | HEAD:  | NEW: Mic2 일체(송신기, 윈드스크린, 클립 마그넷)
+   UP  PPS-D-017518 | HEAD:  | NEW: 친환경 eVGT 엔진(Tier-5) 장착된 제품 – 대용량 SCR 배기파이프 적용
+   UP  PPS-D-019926 | HEAD:  | NEW: CM-26dG 또는 동등 이상의 휴대형 분광측색계 본체 1식
+   UP  PPS-D-015599 | HEAD:  | NEW: NESSY (Neutral Electrode Safety System of Erbe Elektromedizin GmbH)
+   UP  PPS-D-020904 | HEAD:  | NEW: 감압밸브, 기수분리기, 트랩은 스파이렉스사코(주) 동등이상품을 사용한다.
+   UP  PPS-D-010797 | HEAD:  | NEW: 뉴질랜드 케이스브룩(Casebrook intermediate School) 학교장의 프로그램에 대한 확인서(Confirmati
+   UP  PPS-D-017523 | HEAD:  | NEW: 4) Nervetrack
+   UP  PPS-D-017936 | HEAD:  | NEW: *체결방법은 힐티제품 S-WD 11 Z M (볼트+공구)로 사용함을 원칙으로 한다.
+   UP  PPS-D-008686 | HEAD:  | NEW: PLA(폴리유산), 디앙스트로우(기존제품 동등이상)
+   UP  PPS-D-005282 | HEAD:  | NEW: MTU16V2000M90엔진
+   UP  PPS-D-018612 | HEAD:  | NEW: GPU: NVIDIA A10 GPU 2개, 총 48GB GPU 메모리, CUDA 지원
+   UP  PPS-D-015091 | HEAD:  | NEW: 1. 이산화황 증류기 AUWII Model SD1000M 12set 2. Water Chiller AUWII Model T4 
+   UP  PPS-D-020801 | HEAD:  | NEW: GPU: NVIDIA RTX 4500 ADA (240 tensor core, 24GB GDDR6, 210W) * 4ea
+   UP  PPS-D-016131 | HEAD:  | NEW: 아. 입찰 진행시 시스템의 구성 내용에 기재되어있는 모델 제품을 사용하여야만 한다.
+   UP  PPS-D-009039 | HEAD:  | NEW: 멀티미디어 내비플러스 | 12.3인치 내비게이션(블루링크, 폰 프로젝션, 인카페이먼트), 고속도로 주행 보조, 내비게이션 기반
+   UP  PPS-D-018062 | HEAD:  | NEW: 모델명 : Smart SPM (Refubrished demo lab unit)
+   UP  PPS-D-013250 | HEAD:  | NEW: 오므론 혈압계 HEM-7142T2
+   UP  PPS-D-007924 | HEAD:  | NEW: K-6691
+   UP  PPS-D-019624 | HEAD:  | NEW: Sony FX3/FX6, Canon C70
+   UP  PPS-D-005017 | HEAD:  | NEW: SA-110SJ(동등 효율 이상)
+   UP  PPS-D-021874 | HEAD:  | NEW: 혼합골재, 부영산업개발, SB2-40mm
+   UP  PPS-D-010692 | HEAD:  | NEW: 가. 제조사(제조년월): R형 복합형 수신기(벽부형), 프로테크주식회사(2008.12.)
+   UP  PPS-D-012477 | HEAD:  | NEW: 주호흡기(G260) 2개
+   UP  PPS-D-020279 | HEAD:  | NEW: Smartstream G2.5T
+   UP  PPS-D-010856 | HEAD:  | NEW: Standard ILDA Laser Show System
+   UP  PPS-D-017519 | HEAD:  | NEW: CV-1500
+   UP  PPS-D-018247 | HEAD:  | NEW: Ansys HPC Pack
+   UP  PPS-D-003885 | HEAD:  | NEW: Giga computing사 GPU G294-S41-AAP2 플랫폼 기반
+   UP  PPS-D-016539 | HEAD:  | NEW: Inverter (LS산전 동등이상)
+   UP  PPS-D-004907 | HEAD:  | NEW: 현재 교육용으로 활용하고 있는 진공 프로브 스테이션 MV5C와 parametet analyzer인 WGFMU와 호환이 가능해야
+   UP  PPS-D-017179 | HEAD:  | NEW: Kubota V1505
+== h2: outside=0 down=1 (0.02%) up=30 (0.55%) e9-only=0 | dev down 0 up 2 (1.0%)
+   UP  PPS-D-020694 | HEAD:  | NEW: 현대 유니버스 수소전기버스
+   UP  PPS-D-014789 | HEAD:  | NEW: CPU : Digital Signal Controller(TMS320F28335)
+   UP  PPS-D-020710 | HEAD:  | NEW: DANFOSS APP 8.2
+   UP  PPS-D-012173 | HEAD:  | NEW: 국가정보원 CC인증 EAL4 必
+   UP  PPS-D-017552 | HEAD:  | NEW: 모 델 : DH360/300C
+   UP  PPS-D-020494 | HEAD:  | NEW: 구매희망 [NVIDIA] RTX PRO 6000
+   UP  PPS-D-010127 | HEAD:  | NEW: 시사운드 아키텍처 : 다양한 XDclear 프로브와 새로운 시사운드 Imageformer 결합
+   UP  PPS-D-010519 | HEAD:  | NEW: Mic2 일체(송신기, 윈드스크린, 클립 마그넷)
+   UP  PPS-D-017518 | HEAD:  | NEW: 친환경 eVGT 엔진(Tier-5) 장착된 제품 – 대용량 SCR 배기파이프 적용
+   UP  PPS-D-015599 | HEAD:  | NEW: NESSY (Neutral Electrode Safety System of Erbe Elektromedizin GmbH)
+   UP  PPS-D-010797 | HEAD:  | NEW: 뉴질랜드 케이스브룩(Casebrook intermediate School) 학교장의 프로그램에 대한 확인서(Confirmati
+   UP  PPS-D-017523 | HEAD:  | NEW: 4) Nervetrack
+   UP  PPS-D-017936 | HEAD:  | NEW: *체결방법은 힐티제품 S-WD 11 Z M (볼트+공구)로 사용함을 원칙으로 한다.
+   UP  PPS-D-018612 | HEAD:  | NEW: GPU: NVIDIA A10 GPU 2개, 총 48GB GPU 메모리, CUDA 지원
+   UP  PPS-D-015091 | HEAD:  | NEW: 1. 이산화황 증류기 AUWII Model SD1000M 12set 2. Water Chiller AUWII Model T4 
+   UP  PPS-D-020801 | HEAD:  | NEW: GPU: NVIDIA RTX 4500 ADA (240 tensor core, 24GB GDDR6, 210W) * 4ea
+   UP  PPS-D-016131 | HEAD:  | NEW: 아. 입찰 진행시 시스템의 구성 내용에 기재되어있는 모델 제품을 사용하여야만 한다.
+   UP  PPS-D-009039 | HEAD:  | NEW: 멀티미디어 내비플러스 | 12.3인치 내비게이션(블루링크, 폰 프로젝션, 인카페이먼트), 고속도로 주행 보조, 내비게이션 기반
+   UP  PPS-D-013250 | HEAD:  | NEW: 오므론 혈압계 HEM-7142T2
+   UP  PPS-D-007924 | HEAD:  | NEW: K-6691
+   UP  PPS-D-019624 | HEAD:  | NEW: Sony FX3/FX6, Canon C70
+   UP  PPS-D-021874 | HEAD:  | NEW: 혼합골재, 부영산업개발, SB2-40mm
+   UP  PPS-D-010692 | HEAD:  | NEW: 가. 제조사(제조년월): R형 복합형 수신기(벽부형), 프로테크주식회사(2008.12.)
+   UP  PPS-D-012477 | HEAD:  | NEW: 주호흡기(G260) 2개
+   UP  PPS-D-020279 | HEAD:  | NEW: Smartstream G2.5T
+   UP  PPS-D-017519 | HEAD:  | NEW: CV-1500
+   UP  PPS-D-018247 | HEAD:  | NEW: Ansys HPC Pack
+   UP  PPS-D-003885 | HEAD:  | NEW: Giga computing사 GPU G294-S41-AAP2 플랫폼 기반
+   UP  PPS-D-004907 | HEAD:  | NEW: 현재 교육용으로 활용하고 있는 진공 프로브 스테이션 MV5C와 parametet analyzer인 WGFMU와 호환이 가능해야
+   UP  PPS-D-017179 | HEAD:  | NEW: Kubota V1505
+   DOWN PPS-D-020814 | HEAD: E-GMP 플랫폼/성능 : 차세대 일체형 PE 시스템(160kW 후륜 모터, 감속기, 인버터), 110.3 kWh 리튬 이온  | NEW: 
+== h1: outside=0 down=180 (3.27%) up=37 (0.67%) e9-only=14 | dev down 2 (1.0%) up 1 (0.5%)
+   UP  PPS-D-014789 | HEAD:  | NEW: CPU : Digital Signal Controller(TMS320F28335)
+   UP  PPS-D-020710 | HEAD:  | NEW: DANFOSS APP 8.2
+   UP  PPS-D-021018 | HEAD:  | NEW: 모델명 : Vanquish core HPLC System (동등 및 상위기종 이상)
+   UP  PPS-D-017552 | HEAD:  | NEW: 모 델 : DH360/300C
+   UP  PPS-D-020494 | HEAD:  | NEW: 구매희망 [NVIDIA] RTX PRO 6000
+   UP  PPS-D-020827 | HEAD:  | NEW: 기존 장례식장에 설치된 냉난방기(삼성전자) 제품과 제어 및 운영상 호환이 가능한 동등 이상의 제품이어야 하므로
+   UP  PPS-D-012248 | HEAD:  | NEW: 양이온성 에멀젼(C-840TBD 동등이상)
+   UP  PPS-D-010519 | HEAD:  | NEW: Mic2 일체(송신기, 윈드스크린, 클립 마그넷)
+   UP  PPS-D-019926 | HEAD:  | NEW: CM-26dG 또는 동등 이상의 휴대형 분광측색계 본체 1식
+   UP  PPS-D-015599 | HEAD:  | NEW: 1. 모델명 : 계약장비의 모델명 기록 2. 장비명 : 국문과 영문으로 기록
+   UP  PPS-D-020904 | HEAD:  | NEW: 가. 형 식 : 웨스코 펌프
+   UP  PPS-D-017936 | HEAD:  | NEW: *체결방법은 힐티제품 S-WD 11 Z M (볼트+공구)로 사용함을 원칙으로 한다.
+   UP  PPS-D-005282 | HEAD:  | NEW: MTU16V2000M90엔진
+   UP  PPS-D-018612 | HEAD:  | NEW: GPU: NVIDIA A10 GPU 2개, 총 48GB GPU 메모리, CUDA 지원
+   UP  PPS-D-015091 | HEAD:  | NEW: 1. 이산화황 증류기 AUWII Model SD1000M 12set 2. Water Chiller AUWII Model T4 
+   UP  PPS-D-020801 | HEAD:  | NEW: GPU: NVIDIA RTX 4500 ADA (240 tensor core, 24GB GDDR6, 210W) * 4ea
+   UP  PPS-D-001146 | HEAD:  | NEW: 2. 모델명: DL1000
+   UP  PPS-D-016131 | HEAD:  | NEW: 형식 : 압력트렌스미터
+   UP  PPS-D-021675 | HEAD:  | NEW: 제출형식 : A4(페이지 하단에 일련번호(페이지번호) 표시 필수)
+   UP  PPS-D-015955 | HEAD:  | NEW: 카트리지 형식 : 세라믹볼 베어링 카트리지
+   UP  PPS-D-018062 | HEAD:  | NEW: 모델명 : Smart SPM (Refubrished demo lab unit)
+   UP  PPS-D-013250 | HEAD:  | NEW: 오므론 혈압계 HEM-7142T2
+   UP  PPS-D-007924 | HEAD:  | NEW: K-6691
+   UP  PPS-D-019624 | HEAD:  | NEW: Sony FX3/FX6, Canon C70
+   UP  PPS-D-005628 | HEAD:  | NEW: · 형식 : 무급유 터보(마그네틱 베어링 적용)
+   UP  PPS-D-005017 | HEAD:  | NEW: SA-110SJ(동등 효율 이상)
+   UP  PPS-D-021874 | HEAD:  | NEW: 혼합골재, 부영산업개발, SB2-40mm
+   UP  PPS-D-019257 | HEAD:  | NEW: 1. 모델명 : 계약장비의 모델명 기록 2. 장비명 : 국문과 영문으로 기록
+   UP  PPS-D-015674 | HEAD:  | NEW: 데이터 공유 | ｏ 데이터 형식 : XML 1.0 | | | | √ |
+   UP  PPS-D-012477 | HEAD:  | NEW: 주호흡기(G260) 2개
+   UP  PPS-D-019051 | HEAD:  | NEW: 1. 형 식 : VL-06F-08B04(Retrofit VCB)
+   UP  PPS-D-020279 | HEAD:  | NEW: Smartstream G2.5T
+   UP  PPS-D-017519 | HEAD:  | NEW: CV-1500
+   UP  PPS-D-003885 | HEAD:  | NEW: Giga computing사 GPU G294-S41-AAP2 플랫폼 기반
+   UP  PPS-D-007659 | HEAD:  | NEW: 3. 설치모델: 장애인용 캠핑용트레일러
+   UP  PPS-D-004907 | HEAD:  | NEW: 현재 교육용으로 활용하고 있는 진공 프로브 스테이션 MV5C와 parametet analyzer인 WGFMU와 호환이 가능해야
+   UP  PPS-D-017179 | HEAD:  | NEW: Kubota V1505
+   DOWN PPS-D-014211 | HEAD: ANSYS Mechanical Enterprise & Design Modeler 유지보수 라이선스 (Maintenance Li | NEW: 
+   DOWN PPS-D-016246 | HEAD: 에버랜드 밀쿠폰 2장 제공 | NEW: 
+   DOWN PPS-D-018921 | HEAD: ENDRESS+HAUSER 등 | NEW: 
+   DOWN PPS-D-005946 | HEAD: 스카이조스터주 / 대상포진 생바이러스백신 | NEW: 
+   DOWN PPS-D-004126 | HEAD: 챗봇 찰리(CHARLI) | NEW: 
+   DOWN PPS-D-005347 | HEAD: 대형텐트(TFS텐트) | NEW: 
+   DOWN PPS-D-000812 | HEAD: 뉴케어 외 2종 | NEW: 
+   DOWN PPS-D-017647 | HEAD: 냉난방기 납품 장비는 냉난방기 통합제어를 위해 기존 설치된 제조사(엘지전자)와 호환가능한 제품이어야 합니다. | NEW: 
+   DOWN PPS-D-021796 | HEAD: (1) Lumerical FDTD | NEW: 
+   DOWN PPS-D-020098 | HEAD: VisioNize Colud, cloud 기반의 web base monitoring system | NEW: 
+   DOWN PPS-D-019024 | HEAD: 3.5mm Beedless Airlines | NEW: 
+   DOWN PPS-D-004400 | HEAD: Amplitrode, VivoAmp™ and CV-Amp™ | NEW: 
+   DOWN PPS-D-012698 | HEAD: 글루네오 플러스 / 바로젠2 혈당측정기 일 것(기존 제품과 호환) | NEW: 
+   DOWN PPS-D-001586 | HEAD: Trapezoid방식의 스탠드를 적용해 무거운 하중을 버티며 움직임이 적은 제품 | NEW: 
+   DOWN PPS-D-011087 | HEAD: 해석 프로그램(Ansys CFD Premium) 연간 유지보수 | NEW: 
+   DOWN PPS-D-020841 | HEAD: 2026년 진단검사의학과 장비[ABL90FLEX] 시약 구매 전자입찰공고 | NEW: 
+   DOWN PPS-D-013066 | HEAD: 결선 3D 구성(안) 필수 | NEW: 
+   DOWN PPS-D-015103 | HEAD: 2. 세부규격 : 레진 기구 세트 (composite filling instrument set) [Osung] | NEW: 
+   DOWN PPS-D-000545 | HEAD: 전년도 활용된 방과후·맞춤형 운영 전문 프로그램(코디마스터)을 활용하여 | NEW: 
+   DOWN PPS-D-016719 | HEAD: 제작업체 : Mitsubishi 용량 1 kW | NEW: 
+   DOWN PPS-D-007692 | HEAD: 7. 데이터 암호화: Bit-lockerTM 기술 | NEW: 
+   DOWN PPS-D-017660 | HEAD: ROBOTIS(서울), 두산로보틱스(성남), 넥슨(성남) | NEW: 
+   DOWN PPS-D-006998 | HEAD: 납품 대상인 KT Cloud 솔루션에 대해 제조사 파트너 레벨로 정식 등록되어 있는 전문 업체여야 하며 | NEW: 
+   DOWN PPS-D-005745 | HEAD: cradleCFD(scFLOW)를 활용한 CFD 해석 개요 | NEW: 
+   DOWN PPS-D-018827 | HEAD: 액티브B컴플렉스 | 녹십자 | NEW: 
+   DOWN PPS-D-014726 | HEAD: 본 기관에서 사용하는 아큐첵 가이드 스트립과 호환 되는 혈당 측정기 일 것 | NEW: 
+   DOWN PPS-D-017358 | HEAD: Planet Tasking Credit | NEW: 
+   DOWN PPS-D-009248 | HEAD: Novaseq platform으로 sequencing 시 | NEW: 
+   DOWN PPS-D-017187 | HEAD: - Number of cuda cores: 24,064 | NEW: 
+   DOWN PPS-D-017864 | HEAD: 모델 YANMAR, 12AYM-WST | NEW: 
+   DOWN PPS-D-018650 | HEAD: 고진공 터보 펌프 (외산브랜드): 1000 L/sec 용량 | NEW: 
+   DOWN PPS-D-007025 | HEAD: 숙박 라마다용인호텔(2박) | NEW: 
+   DOWN PPS-D-000442 | HEAD: 환자급식재료(특수의료용도식품, 그린비아) 단가계약 | NEW: 
+   DOWN PPS-D-004397 | HEAD: Amplitrode, VivoAmp™ and CV-Amp™ | NEW: 
+   DOWN PPS-D-010325 | HEAD: · 다빈치리졸브 스튜디오 라이선스 등 | NEW: 
+   DOWN PPS-D-006589 | HEAD: * 기 운영 중인 IP-PBX 와 동일사 제품 | NEW: 
+   DOWN PPS-D-012081 | HEAD: 일동폴산정 o 폴산 1mg 통 일동제약 | NEW: 
+   DOWN PPS-D-003889 | HEAD: 잔류농약 463종* | NEW: 
+   DOWN PPS-D-017379 | HEAD: 기존 설치된 스피드계측기와의 호환을 위해 IFSC공식 경기용 타이머인 “Deepron” 제품을 납품한다. | NEW: 
+   DOWN PPS-D-000573 | HEAD: 예시) 닥터솔루션 등 | NEW: 
+   DOWN PPS-D-008594 | HEAD: 제품규격 Air-Q3 | NEW: 
+   DOWN PPS-D-001025 | HEAD: 기도폐쇄 실습용 마네킹 NASCO | NEW: 
+   DOWN PPS-D-003359 | HEAD: 니코레트인비지 1단계 외 19종 | NEW: 
+   DOWN PPS-D-018894 | HEAD: 본 기술원에서 제시하는 기종으로 적용한다. | NEW: 
+   DOWN PPS-D-018074 | HEAD: Suno 심플 모드로 작곡 시작 | NEW: 
+   DOWN PPS-D-016212 | HEAD: 메인스피커 : NEXO GEO-T * 24EA | NEW: 
+   DOWN PPS-D-012649 | HEAD: 건 명: 대학 실시간 화상수업 Zoom 라이선스 구매(수의계약·5천만원미만) | NEW: 
+   DOWN PPS-D-011522 | HEAD: ㅇ 대 상 : 모나미 153 스틱 비비드 볼펜 단품 | NEW: 
+   DOWN PPS-D-000202 | HEAD: ClusterPlus 서버(32Core) License | NEW: 
+   DOWN PPS-D-012819 | HEAD: PIPETMAN DIAMOND Tips | NEW: 
+   DOWN PPS-D-006607 | HEAD: 싼타페 하이브리드(휘발유) | NEW: 
+   DOWN PPS-D-016001 | HEAD: 나지마 400㎖ 6,500 1,000 6,500,000 | NEW: 
+   DOWN PPS-D-016120 | HEAD: 도장작업에 사용하는 모든 도료는 감독관이 지정하는 제조사(KCC에폭시 페인트, 경화제 포함)의 도료를 사용하여야 한다. | NEW: 
+   DOWN PPS-D-004767 | HEAD: Intel® Xeon® 6747P Processor (2.7GHz, 48C/96T, 288MB, 330W) * 1EA (또는  | NEW: 
+   DOWN PPS-D-017292 | HEAD: 1. GPU Architecture : Blackwell Architecture | NEW: 
+   DOWN PPS-D-009237 | HEAD: 재질: 현수막 (반드시 4PASS 출력으로 인쇄) | NEW: 
+   DOWN PPS-D-009731 | HEAD: 코사이드 외 5종 | NEW: 
+   DOWN PPS-D-008292 | HEAD: 보드로스타 | NEW: 
+   DOWN PPS-D-017483 | HEAD: 삼성3Y800 | NEW: 
+   DOWN PPS-D-005296 | HEAD: EU보르도 | NEW: 
+   DOWN PPS-D-002969 | HEAD: MCOM제어방식: 얼음량 자동조절 센서로 최적의 제빙시스템 제공 | NEW: 
+   DOWN PPS-D-003055 | HEAD: 방화벽,IPS(SECUI), 알카텔루센트(Alcatel-Lucent), 모니터랩(Monitorapp) | NEW: 
+   DOWN PPS-D-017070 | HEAD: 디브리핑 시스템(SimCapture Pro) 2대 | NEW: 
+   DOWN PPS-D-014408 | HEAD: ㈜팜한농 - 롱킥 | NEW: 
+   DOWN PPS-D-002033 | HEAD: 도서문화상품권 (※해피머니 도서문화상품권 제외) | NEW: 
+   DOWN PPS-D-016674 | HEAD: Clip Studio EX | NEW: 
+   DOWN PPS-D-015033 | HEAD: 균열해석용 SIMULIA ABAQUS CAE Extended 및 Solver(5 Tokens) | NEW: 
+   DOWN PPS-D-004432 | HEAD: ※ [지역:r1|단위=기초|광역=전라남도]에서 운영중인 네트워크스위치 제품과 100% 호환 제품으로 한정 함 | NEW: 
+   DOWN PPS-D-003462 | HEAD: CNG 버스용 타이어 : 11R 22.5 전기버스용 타이어 : 275 70R 22.5-18PR(전·후륜 겸용) | NEW: 
+   DOWN PPS-D-008814 | HEAD: 실루엣 카메오5 프로 마크2 | NEW: 
+   DOWN PPS-D-000304 | HEAD: 모바일 수강신청 관리를 위한 코디마스터 프로그램을 계약 사용하도록 한다. | NEW: 
+   DOWN PPS-D-000414 | HEAD: 엑소덤패취 30 외 2품목 | NEW: 
+   DOWN PPS-D-004407 | HEAD: Amplitrode, VivoAmp™ and CV-Amp™ | NEW: 
+   DOWN PPS-D-004045 | HEAD: “학교명표시(실사컷팅 또는 아크릴 세로15cm×가로80cm)”를 을 버스2면(전․후)에 부착 | NEW: 
+   DOWN PPS-D-013400 | HEAD: 유니버스 노블 디젤 | NEW: 
+   DOWN PPS-D-007145 | HEAD: 니코틴엘 30(1단계) | NEW: 
+   DOWN PPS-D-020542 | HEAD: ※ 비용분석 수행시 전산모델(True Planning)을 활용한 모수추정 포함 | NEW: 
+   DOWN PPS-D-011185 | HEAD: UNIDOS Romeo | NEW: 
+   DOWN PPS-D-017227 | HEAD: 1회 충전 주행거리 : 303㎞ 이상(환경부 인증 기준) | NEW: 
+   DOWN PPS-D-021471 | HEAD: YTN 라디오 광고 필수 편성 | NEW: 
+   DOWN PPS-D-000870 | HEAD: ICPMS: 중금속 | NEW: 
+   DOWN PPS-D-015815 | HEAD: 가. 품 목: 폐렴구균 단백접합 15가 백신(박스뉴반스주) | NEW: 
+   DOWN PPS-D-000291 | HEAD: Mil-kin C-type | NEW: 
+   DOWN PPS-D-006244 | HEAD: Star-CCM+ Power Session | NEW: 
+   DOWN PPS-D-014162 | HEAD: ※ 2026 DSU 학생성공 VISION FAIR (목공 or 블럭) 시안 1종 이상 반드시 포함 | NEW: 
+   DOWN PPS-D-016223 | HEAD: 전원공급장치는 기존에 공사에서 운용중인 모델과 동일 모델이어야 합니다. | NEW: 
+   DOWN PPS-D-014814 | HEAD: ‘고등학생 통학버스 아저씽’이라는 표지판을 부착하고 운행하여야 한다.(양옆면 차량 래핑) | NEW: 
+   DOWN PPS-D-016090 | HEAD: Meyer, JBL, D&G, EAW, Nexo 등 동급이상의 3Way Line Array System | NEW: 
+   DOWN PPS-D-011212 | HEAD: [기관(공공기관)] 보유 상용 전자파 수치해석 S/W(IDS사 G.EME)에 호환가능하도록 CAD 모델 제작 | NEW: 
+   DOWN PPS-D-003224 | HEAD: 표지 | 아르떼 210g/㎡ 혹은 동급지질 | NEW: 
+   DOWN PPS-D-002773 | HEAD: 칩셋 : 미디어텍 디멘시티 7025(6nm) | NEW: 
+   DOWN PPS-D-015673 | HEAD: 도어모터 – 로템DCV 도어엔진 128V 1000RPM | NEW: 
+   DOWN PPS-D-001661 | HEAD: 남양 임페리얼 | NEW: 
+   DOWN PPS-D-010808 | HEAD: 가스히트펌프(GHP) 실외기는 실내기와 호환 및 자동(중앙)제어가 가능한 제품[엘지전자(주)]이어야 하므로 | NEW: 
+   DOWN PPS-D-010689 | HEAD: ZOOM Workplace for Education Enterprise Plus | NEW: 
+   DOWN PPS-D-014679 | HEAD: 5FT 1300 series | NEW: 
+   DOWN PPS-D-017090 | HEAD: Illumina Novaseq X plus(25B) | NEW: 
+   DOWN PPS-D-020479 | HEAD: Google Workspace for Education Plus : 학생 및 교직원용 라이선스 3,000개 | NEW: 
+   DOWN PPS-D-013242 | HEAD: LEATHERMAN REV 정품 | NEW: 
+   DOWN PPS-D-002467 | HEAD: Magstim Unit With UI Controller | NEW: 
+   DOWN PPS-D-019791 | HEAD: Distal end outer diameter : 6.6mm | NEW: 
+   DOWN PPS-D-002825 | HEAD: AMD EPYC™ 9755 프로세서 이상급 성능(TEE 지원) | NEW: 
+   DOWN PPS-D-002540 | HEAD: 솔페리노(카스틸리오네)는 적십자의 역사적 상징성을 고려하여 JHD Dunant Hotel 숙박을 최우선 과업으로 한다. | NEW: 
+   DOWN PPS-D-000796 | HEAD: ※ 기 설치된 냉난방기(삼성전자)과 시스템 운영에 있어 호환·연동이 가능하여야 함 | NEW: 
+   DOWN PPS-D-015926 | HEAD: 19) 바람막이(MOOTO) | NEW: 
+   DOWN PPS-D-015247 | HEAD: 제과 교육기관: 에꼴 르노트르(Ecole Lenôtre) 또는 동급 이상의 제과 교육기관 | NEW: 
+   DOWN PPS-D-017378 | HEAD: 대형텐트(Hypic텐트) | NEW: 
+   DOWN PPS-D-015382 | HEAD: EdgeCAM 라이센스 사용권한증서 | NEW: 
+   DOWN PPS-D-000056 | HEAD: 무선인증솔루션(엔트로링크 PPX-ANYLINK_6900) | NEW: 
+   DOWN PPS-D-003394 | HEAD: 레이EV 차량 1대 | NEW: 
+   DOWN PPS-D-015594 | HEAD: 반려봇 보보 | NEW: 
+   DOWN PPS-D-004426 | HEAD: Amplitrode, VivoAmp™ and CV-Amp™ | NEW: 
+   DOWN PPS-D-019308 | HEAD: 현대자동차 포터Ⅱ 파워게이트 초장축 슈퍼캡 스마트 2WD 모델은 장거리 운송과 도심 물류 환경 모두에서 안정적인 주행 성능을  | NEW: 
+   DOWN PPS-D-020772 | HEAD: 마징가 250ml 병 | NEW: 
+   DOWN PPS-D-019410 | HEAD: 현대 유니버스 41 | NEW: 
+   DOWN PPS-D-009251 | HEAD: 이지에스바이오만의 특화된 분석 서비스 제공 | NEW: 
+   DOWN PPS-D-016165 | HEAD: S-Flow™ | NEW: 
+   DOWN PPS-D-016526 | HEAD: “한큐, 도래미” 사용 결정 | NEW: 
+   DOWN PPS-D-014988 | HEAD: 니토 키네시오 50mm×5m (6롤 1박스) | NEW: 
+   DOWN PPS-D-020882 | HEAD: 단수지정 물품은 명시된 제조사로만 계약하며, 제조사 선정 “첨부서류”를 근거로 한다. | NEW: 
+   DOWN PPS-D-000902 | HEAD: 숙소(나인트리 바이 파르나스 서울 판교) | NEW: 
+   DOWN PPS-D-014546 | HEAD: Leica Microsystems Ltd | NEW: 
+   DOWN PPS-D-017744 | HEAD: OS : 64bit 전용 운영체제(secuiOS) | NEW: 
+   DOWN PPS-D-005993 | HEAD: 카메라 (필수) SONY FX 시리즈 | NEW: 
+   DOWN PPS-D-005665 | HEAD: GHP실외기는 조달청 다수공급자계약(MAS) 2단계 경쟁에 의해 기 계약된 엘지전자 주식회사의 실내기 및 옵션과 중앙제어시스템 | NEW: 
+   DOWN PPS-D-012940 | HEAD: 가스엔진히트펌프 실외기는 실내기(제조사 LG) 선정 업체와 호환이 가능한 제품으로 납품하는 것을 조건으로 한다. | NEW: 
+   DOWN PPS-D-019098 | HEAD: ○ 제 품 명: 케어웰 시니어 영양죽 ○ 규 격: 200g(40g×5포)/통 | NEW: 
+   DOWN PPS-D-020319 | HEAD: 현대아이오닉9 6인승(전기) | NEW: 
+   DOWN PPS-D-012370 | HEAD: 모델명 리버링크 (LIBERLINK) | NEW: 
+   DOWN PPS-D-015655 | HEAD: 독일 피부 더마테스트 인증을 받은 제품 | NEW: 
+   DOWN PPS-D-016641 | HEAD: HiQ Viral DNA/RNA kit, v.3.0 kit 사용시 13분만에 추출 이 가능해야 한다. | NEW: 
+   DOWN PPS-D-004252 | HEAD: AxiomTM Wheat HD Genotyping service | NEW: 
+   DOWN PPS-D-016474 | HEAD: MAVlink 기반 FC(Pixhawk 등) 기체 8대 이상 및 그 외 상용 기체(DJI, AUTEL 등) 6대 이상 필수 | NEW: 
+   DOWN PPS-D-003282 | HEAD: 1차 적격심사에 활용 가능한 표절 검사 프로그램(‘카피킬러’ 등) 확보 | NEW: 
+   DOWN PPS-D-008542 | HEAD: 스타리아 하이브리드 PE 자가용 투어러(11인승) | NEW: 
+   DOWN PPS-D-010685 | HEAD: 카스-생맥주/20L/4.5도/KEG/오비맥주(주) | NEW: 
+   DOWN PPS-D-002416 | HEAD: 1-2) KBS스포츠예술과학원 자격증이수 자 | NEW: 
+   DOWN PPS-D-001341 | HEAD: 니로EV 3대 임차 | NEW: 
+   DOWN PPS-D-001223 | HEAD: 스타리아 하이브리드 11인승 | NEW: 
+   DOWN PPS-D-004838 | HEAD: ArtisanLink Pro Special Staining System | NEW: 
+   DOWN PPS-D-007442 | HEAD: 방청 및 방오도료(해중생물 부착방지)는 조광요턴(주)의 SEAMATE 계열을 사용한다. | NEW: 
+   DOWN PPS-D-021411 | HEAD: AI VIEW 라이센스 | NEW: 
+   DOWN PPS-D-017891 | HEAD: C-Therm Trident | NEW: 
+   DOWN PPS-D-016387 | HEAD: INTROVIEW® PRO 소프트웨어를 통한 다양한 2D &3D 이미징 모드 | NEW: 
+   DOWN PPS-D-002217 | HEAD: 연구원의 히트 영상인 “잠수함은 어떻게 바닷속에서 다닐 수 있을까” 애니메이션 영상 후속편 제작 (필수) | NEW: 
+   DOWN PPS-D-020552 | HEAD: 스피커 : MA SOUND급 이상의 라인어레이 스피커 | NEW: 
+   DOWN PPS-D-020854 | HEAD: 록타이트 #243 50ML | NEW: 
+   DOWN PPS-D-013948 | HEAD: 해석 프로그램(Ansys CFD Premium) | NEW: 
+   DOWN PPS-D-004253 | HEAD: PHYZEN PACBIO SMRT library 제작 및 QC | NEW: 
+   DOWN PPS-D-011370 | HEAD: 모든 제품은 [2026년 모델]로 납품하며 | NEW: 
+   DOWN PPS-D-019802 | HEAD: 2026 레이 전기차 1.0. 라이트 A/T 기본형(경형 전기차, 4인승 승용) | NEW: 
+   DOWN PPS-D-007288 | HEAD: 멀티미디어내비플러스 Ⅱ | NEW: 
+   DOWN PPS-D-018575 | HEAD: 86100 Scurry USB Interface Export ------------------------------------ | NEW: 
+   DOWN PPS-D-005438 | HEAD: i-scan function is a software tool integrated in the DEFINA processor. | NEW: 
+   DOWN PPS-D-006979 | HEAD: 가상 로봇 설계 시뮬레이터 SOLIDWORKS EDU 라이선스 30USER 제공 | NEW: 
+   DOWN PPS-D-017821 | HEAD: 계약 상대자는 24톤 암롤 트럭을 보유(소유)하고 있어야 한다. | NEW: 
+   DOWN PPS-D-005810 | HEAD: 8002호 노즐이 장착된 잔류분무기 | NEW: 
+   DOWN PPS-D-021011 | HEAD: 겉감:TR하이미어 | NEW: 
+   DOWN PPS-D-009252 | HEAD: Truseq Nano library 방식 사용, PE library, NovaSeqX Platform 사용, 151bpX2 | NEW: 
+   DOWN PPS-D-004923 | HEAD: 설비 내역 : 삼정이엔씨 냉동기 2SET(수냉식 메인 + 공냉식 서브 복합 타입) | NEW: 
+   DOWN PPS-D-019148 | HEAD: 슈퍼브레인H 전용SW 사용조건부 임대계약 | NEW: 
+   DOWN PPS-D-002267 | HEAD: 펌프를 보호하기 위해 각 펌프 마다 MCCB(Schneider Electric사) 및 과부하 방지 장치가 내장되어야 한다. | NEW: 
+   DOWN PPS-D-010860 | HEAD: 케토크린플라스타 | NEW: 
+   DOWN PPS-D-014774 | HEAD: AOMEi BACKUPPER PROFESSIONAL | NEW: 
+   DOWN PPS-D-016432 | HEAD: 스케치업(Sketch-Up) | NEW: 
+   DOWN PPS-D-021888 | HEAD: 디자인 스토리 설명 (곽현주 디자이너) | NEW: 
+   DOWN PPS-D-000099 | HEAD: TECORA(DECS) | NEW: 
+   DOWN PPS-D-008116 | HEAD: 항공사는 [수요기관(고등학교)]가 예약한 항공사(아시아나, 대한항공)로 제한합니다. | NEW: 
+   DOWN PPS-D-001468 | HEAD: 2026년형 대형승용차 7인승 A/T | NEW: 
+   DOWN PPS-D-011639 | HEAD: 니코틴엘(1단계) *상부에 황갈색 지지체와 하부에 황색의 방출막이 있는 직경62mm의 원형 패취제 갑 일반의약품 | NEW: 
+   DOWN PPS-D-015011 | HEAD: 도급자는 용역 수행에 필요한 트럭(더블캡) 1톤 1대 | NEW: 
+   DOWN PPS-D-020430 | HEAD: LabVIEW(그래피컬 언어) 외에도 ANSI C 기반의 LabWindows/CVI와 .NET 기반의 Measurement S | NEW: 
+   DOWN PPS-D-000574 | HEAD: 47 과도 도루코,대 5 | NEW: 
+   DOWN PPS-D-021350 | HEAD: Rolls-Royce solutions에서 발급한 순정품증명서 | NEW: 
+   DOWN PPS-D-008787 | HEAD: Architecture: Blackwell Architecture | NEW: 
+   DOWN PPS-D-020926 | HEAD: 채용접수 시스템((주)마이다스인 JOBDA)* 운영 | NEW: 
+   DOWN PPS-D-017959 | HEAD: Architecture : NVIDIA Ampere | NEW: 
+   DOWN PPS-D-009129 | HEAD: 2. 소프트웨어: HELIX(설치 및 내장) | NEW: 
+   DOWN PPS-D-011235 | HEAD: “스마트 송장” 앱을 설치후 GPS를 통한 운행경로 및 상ㆍ하차지 자동 운행 관리 하는 시스템을 적용해야 한다. | NEW: 
+   DOWN PPS-D-012610 | HEAD: 5) 소프트웨어 – MPA CT-Plus 소프트웨어를 사용한다. | NEW: 
+   E9   PPS-D-021748 | HEAD: OxiMaxTM 펄스옥시미터시스템은 | NEW: 1. 모델명 : 계약장비의 모델명 기록 2. 장비명 : 국문과 영문으로 기록
+   E9   PPS-D-008691 | HEAD: Zoom Workplace for Education School and Campus Annual | NEW: ◦ 제 조 사 : ◦ 모델명 :
+   E9   PPS-D-009361 | HEAD: 2 Zoom Workplace Pro(3년) 1 | NEW: m 모델: 송신기 ET-301HK(핸드마이크) / 수신기 WRX-302L
+   E9   PPS-D-012556 | HEAD: Motor : 6322C3/6322C3VL | NEW: -- 형식 : Squirrel: Cage
+   E9   PPS-D-019432 | HEAD: 주제관 형태 : TFS텐트 (1동) | NEW: 다. 전시 형식: 패널, 사진, 영상, 실물 모형, 인터랙티브 콘텐츠 등
+   E9   PPS-D-017526 | HEAD: 4) 이미지프로세싱 소프트웨어 : EVP-Plus 또는 S-Vue | NEW: 5) 제조사 : X-ray 제조사
+   E9   PPS-D-020400 | HEAD: 치수: 441(W) x 262(D) x 546 mm(H) | NEW: 법인(상호)명: 장비명: 모델: 제조사:
+   E9   PPS-D-016370 | HEAD: 상지재활로봇 1set, 소아용 웨어러블 재활로봇 1set, 재활트레드밀1set, 전동높이조절 치료베드 1set, 전동 상하지  | NEW: 1. 모델명 : 계약한 장비의 모델명 기록
+   E9   PPS-D-015632 | HEAD: S-VUE : FDA 승인 받은 50% 감소된 선량으로 고해상도 이미지 획득이 가능한 기술 | NEW: (1) 디텍터 형식 : Amorphous Silicon TFT 방식
+   E9   PPS-D-005940 | HEAD: Xinics Commons 콘텐츠관리시스템과의 클라우드 영상 편집기와 호환 제공 | NEW: - 파일 형식 : MP4(H.264) 지원(차후 4K 업그레이드가 가능해야함)
+   E9   PPS-D-008279 | HEAD: 라바짜“그랜드에스프레소” | NEW: - 원산지: 이태리 – 제조사:이태리“루이지라바짜”사
+   E9   PPS-D-016992 | HEAD: 2026 MUSSO(E) 블랙 엣지 4WD AT(화물 소형) | NEW: - 차종/모델: 2026 MUSSO(E) 블랙 엣지 4WD AT(화물 소형)
+   E9   PPS-D-001191 | HEAD: Flight Controller(Leonardo) Arduino 프로그래밍 가능 | NEW: A. 특징 (Features) 본 장비는 드론의 자율비행 및 미션 수행을 위해 AI 기술을 융합하는 방법을 교육하기 위한 것이
+   E9   PPS-D-020046 | HEAD: KCT 임상논문 (5개 이상) | NEW: - 형식 : 자유양식, PDF로 제출
