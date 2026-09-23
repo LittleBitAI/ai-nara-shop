@@ -586,6 +586,53 @@ class V6BasicRegionRules(unittest.TestCase):
         self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
         self.assertIsNone(self.decide(rec, 0))
 
+    # 네 라운드 연속 같은 가족에서 P1 이 났다. 원인은 "관계를 반증 없음으로 증명" 한 것이고,
+    # 고친 뒤에는 **긍정 근거**를 요구한다 — 참가 업체의 소재지 주어(꼴 ①)나 융합 제한(꼴 ②).
+    # 아래 표가 그 규칙의 경계를 잡는다. 앞의 여섯은 리뷰가 준 반례, 나머지는 같은 원인에서
+    # 파생될 수 있는 것을 직접 만든 것이다.
+    BASIC = "[지역:r2|단위=기초|광역=경기도]"
+    WIDE = "[지역:r1|단위=광역|광역=경기도]"
+    ROLE_CASES = [
+        ("쉼표로 이은 납품장소", f"본점소재지가 경기도 {WIDE}에 있는 업체, 납품장소는 {BASIC}"),
+        ("접속어미로 이은 납품장소", f"본점소재지가 경기도 {WIDE}에 있는 업체이며 납품장소는 {BASIC}"),
+        ("구분자 없는 납품장소", f"본점소재지가 경기도 {WIDE}에 있는 업체 납품장소는 {BASIC}"),
+        ("장소가 먼저 오는 역순", f"납품장소는 {BASIC} 본점소재지는 경기도 {WIDE}에 있는 업체"),
+        ("현장 위치가 먼저", f"현장 위치: {BASIC} 주된 영업소가 경기도 {WIDE}에 있는 업체"),
+        ("장소를 꾸미는 소재지", f"납품장소의 소재지가 {BASIC}이며 본점소재지는 경기도 {WIDE}에 있는 업체"),
+        ("장소 소재지 단독", f"납품장소 소재지가 {BASIC}인 업체"),
+        ("과업 수행 장소의 소재지", f"과업 수행 장소의 소재지가 {BASIC}이고 본점은 경기도 {WIDE}"),
+        ("세미콜론으로 갈린 공사 위치", f"공사 위치의 소재지는 {BASIC}; 본점소재지는 {WIDE}"),
+        ("괄호가 낀 이행 장소", f"이행 장소(납품)는 {BASIC}, 주된 영업소는 {WIDE}"),
+        ("개찰 장소", f"개찰 장소는 {BASIC} 이며 본점소재지가 {WIDE}에 있는 업체"),
+        ("괄호 안의 납품장소", f"본점소재지가 {WIDE}에 있는 업체(납품장소 {BASIC})"),
+        ("배송지", f"배송지는 {BASIC} 본점소재지는 {WIDE}"),
+        ("장소를 꾸미고 제한이 뒤에", f"납품장소의 소재지가 {BASIC}인 곳에 본점소재지를 둔 업체"),
+    ]
+    LIMIT_CASES = [
+        ("소재지를 ~에 둔", f"주된 영업소의 소재지를 경기도 {BASIC}에 둔 업체"),
+        ("괄호 낀 본점소재지", f"법인등기부상 본점소재지(개인사업자는 사업장의 소재지)가"
+                            f" {BASIC} 내에 소재하고 있는 업체"),
+        ("융합 지역제한", f"지역제한(경기도 {BASIC}) 대상 용역입니다."),
+        ("융합 지역 업체", f"부정당업체로 제재를 받지 않은 경기도 {BASIC} 지역 업체"),
+        ("주사무소 관내", f"주사무소 소재지가 경기도 {BASIC} 관내에 소재한 업체"),
+    ]
+
+    def test_u_raises_only_on_a_participant_side_location_limit(self):
+        """긍정 근거가 선 문장만 올린다 — 참가 업체의 소재지 주어이거나 융합 제한이다."""
+        for name, sentence in self.LIMIT_CASES:
+            with self.subTest("올린다: " + name):
+                rec = self.one_line_notice("가. " + sentence)
+                self.assertTrue(candidate.confirmed_basic_region_sentences(rec), name)
+                self.assertIsNotNone(self.decide(rec, 0), name)
+
+    def test_u_does_not_raise_when_the_token_belongs_to_another_role(self):
+        """토큰이 장소·개찰 같은 다른 역할에 속하면 어순·구분자와 무관하게 올리지 않는다."""
+        for name, sentence in self.ROLE_CASES:
+            with self.subTest(name):
+                rec = self.one_line_notice("가. 입찰참가자격: " + sentence)
+                self.assertEqual([], candidate.confirmed_basic_region_sentences(rec), name)
+                self.assertIsNone(self.decide(rec, 0), name)
+
     def test_u_does_not_raise_when_a_connective_joins_a_delivery_place(self):
         """PR #114 재리뷰 P1 — 쉼표가 아니라 접속 어미로 이어 붙인 납품 장소.
 
@@ -769,6 +816,13 @@ class V6SmallQuoteException(unittest.TestCase):
             # PR #114 재리뷰 3라운드 P1 — 제출 방식이 문서명 앞에 오는 어순.
             ("나라장터에서 열람 후 우편으로 입찰서를 제출한다", False),
             ("나라장터를 이용하여 방문으로 견적서를 제출한다", False),
+            # 4라운드 P1 과 같은 원인에서 파생될 꼴 — 시스템은 열람·조회에 쓰였다.
+            ("나라장터에서 공고문 열람 후 입찰서는 현장 접수처에 제출한다", False),
+            ("입찰서는 나라장터에서 조회하고 견적서는 담당부서에 직접 제출한다", False),
+            ("나라장터 공고를 확인한 뒤 견적서는 방문 접수한다", False),
+            # 반대로, 시스템이 제출의 수단으로 표시되면 인정한다.
+            ("견적서는 나라장터를 통하여 제출하여야 합니다.", True),
+            ("입찰서는 지정정보처리장치에 제출한다", True),
             ("라. 공동수급협정서는 반드시 조달청 전자입찰시스템을 이용하여"
              " 국가종합전자조달시스템 전자 입찰 특별유의서에 따라 제출하여야 합니다.", False),
             ("사. 견적서 제출 여부는 나라장터 시스템의 전자문서함에서 확인하여야 합니다.", False),

@@ -655,6 +655,27 @@ ROLE_SWITCH = re.compile(
     r"|공사\s*위치|현장\s*위치|용역\s*위치|대상\s*위치|위\s*치\s*[:：]"
     r"|개찰|설명회|접수\s*장소|제출\s*장소")
 
+# ===== 올림의 긍정 근거 =====
+# 네 라운드 연속 같은 자리에서 오탐이 났다. 원인은 하나다 — **관계를 "반증이 없음" 으로
+# 증명하려 했다.** 앵커가 있고 토큰이 있고 사이에 금지어가 없으면 묶었으니, 금지 목록에
+# 없는 표현이 나올 때마다 뚫렸다. 그래서 기준을 뒤집는다: **무엇이 있으면 묶는가**를 적는다.
+#
+# 지역 제한 문장은 한국어 공고에서 두 꼴 중 하나다.
+#   ① 주어-서술  `<참가 업체의 소재지> ... <지역> ... <두다/소재하다/있다>`
+#   ② 융합       `지역제한(<지역>)` · `<지역> 지역 업체` — 주어와 서술이 한 낱말에 붙었다
+# ①은 **주어가 참가 업체의 것**이어야 한다. `납품장소의 소재지가 […기초…]` 는 `소재지` 가
+# 있어도 그 주어가 납품 장소다. 그래서 `소재지` 를 홀로 앵커로 쓰지 않고, 머리 낱말까지
+# 묶어서 본다.
+PARTICIPANT_SUBJECT = re.compile(
+    r"(?:법인\s*등기(?:부|사항증명서)?\s*상\s*)?"
+    r"(?:본점|본사|주된\s*영업소|주\s*사무소|주사무소|사업장|영업소)"
+    r"\s*(?:의\s*)?(?:소재지|소재\s*지)?(?:가|는|를|을|은|에)?")
+# ②. 주어와 서술이 붙어 있어 토큰이 앞에 와도 된다.
+FUSED_LIMIT = re.compile(r"지역\s*제한|지역제한|지역\s*업체|관내\s*업체|관할\s*구역")
+# ①의 서술. 토큰이 이 서술의 자리에 놓여야 제한이 성립한다.
+LOCATED_PREDICATE = re.compile(r"둔|두고|두어|둘|소재|있는|있어야|위치|한정|제한")
+PREDICATE_REACH = 40   # 토큰 뒤에서 서술을 찾을 범위(괄호를 뺀 뒤)
+
 
 def confirmed_basic_region_sentences(rec):
     """**절 단위로** 제한 대상과 기초 토큰이 이어진 자리. 올리는 쪽 기준이다(좁게 센다).
@@ -691,36 +712,57 @@ def _binds_limit_to_token(segment):
     괄호 안은 정의를 덧붙이는 자리라 사이 거리에서 빼고 본다 — `본점소재지(개인사업자인
     경우에는 … 사업장의 소재지)가 [수요기관(기초자치단체)]내에` 의 괄호가 90자쯤 된다.
     """
-    anchors = [(m.start(), m.end()) for m in REGION_LIMIT_ANCHOR.finditer(segment)]
-    if not anchors:
-        return False
-    roles = [(m.start(), m.end()) for m in ROLE_SWITCH.finditer(segment)]
     tokens = [(m.start(), m.end()) for m in _submission().ANON_REGION.finditer(segment)
               if "단위=기초" in m.group(0)]
     tokens += [(m.start(), m.end()) for m in BASIC_AGENCY_TARGET.finditer(segment)]
+    if not tokens:
+        return False
+    subjects = [(m.start(), m.end()) for m in PARTICIPANT_SUBJECT.finditer(segment)]
+    fused = [(m.start(), m.end()) for m in FUSED_LIMIT.finditer(segment)]
+    roles = [(m.start(), m.end()) for m in ROLE_SWITCH.finditer(segment)]
     for token in tokens:
-        # 토큰은 **자기 앞의 가장 가까운 역할 표시**에 속한다. 그것이 납품 장소면
-        # 뒤에 참가자격 제한이 또 나오더라도 이 토큰은 제한 대상이 아니다.
-        # `납품장소는 […기초…] 본점소재지는 경기도 […광역…]에 있는 업체` 가 그 꼴이다.
-        before_anchor = max((a for a in anchors if a[1] <= token[0]), default=None)
-        before_role = max((r for r in roles if r[1] <= token[0]), default=None)
-        if before_role and (before_anchor is None or before_role[0] > before_anchor[0]):
-            continue
-        candidates = [before_anchor] if before_anchor else []
-        # 앞에 아무 표시도 없으면 뒤의 제한을 본다 — `경기도 […기초…] 지역 업체`(`061`).
-        if before_anchor is None:
-            following = min((a for a in anchors if a[0] >= token[1]), default=None)
-            candidates = [following] if following else []
-        for anchor in candidates:
-            lo, hi = (anchor[1], token[0]) if anchor[0] <= token[0] else (token[1], anchor[0])
-            if lo > hi:
-                continue
-            between = re.sub(r"\([^)]*\)|（[^）]*）", " ", segment[lo:hi])
-            if ROLE_SWITCH.search(between):
-                continue
-            if len(between.strip()) > LIMIT_TOKEN_REACH:
-                continue
+        if _bound_to_subject(segment, token, subjects, roles):
             return True
+        if _bound_to_fused_limit(segment, token, fused, roles):
+            return True
+    return False
+
+
+def _strip_parentheses(text):
+    """괄호 안은 정의를 덧붙이는 자리라 거리에서 뺀다 — `본점소재지(개인사업자인 경우에는
+    … 사업장의 소재지)가` 의 괄호가 90자쯤 된다."""
+    return re.sub(r"\([^)]*\)|（[^）]*）|【[^】]*】", " ", text)
+
+
+def _bound_to_subject(segment, token, subjects, roles):
+    """꼴 ① — 참가 업체의 소재지 주어가 토큰 **앞**에 있고, 토큰 뒤에 소재 서술이 온다."""
+    subject = max((x for x in subjects if x[1] <= token[0]), default=None)
+    if subject is None:
+        return False
+    # 주어와 토큰 사이에 역할이 바뀌면 그 토큰은 이 주어의 것이 아니다.
+    between = _strip_parentheses(segment[subject[1]:token[0]])
+    if ROLE_SWITCH.search(between) or len(between.strip()) > LIMIT_TOKEN_REACH:
+        return False
+    # 서술을 찾는 창에 **토큰 자신을 포함한다.** 발주기관 토큰은 `[수요기관(기초자치단체)]내에
+    # 소재` 까지를 한 덩어리로 물기 때문에, 토큰 뒤만 보면 서술이 이미 소비돼 남지 않는다.
+    after = _strip_parentheses(segment[token[0]:token[1] + PREDICATE_REACH])
+    return bool(LOCATED_PREDICATE.search(after))
+
+
+def _bound_to_fused_limit(segment, token, fused, roles):
+    """꼴 ② — `지역제한(<지역>)` · `<지역> 지역 업체`. 주어와 서술이 붙어 있다."""
+    for limit in fused:
+        lo, hi = (limit[1], token[0]) if limit[0] <= token[0] else (token[1], limit[0])
+        if lo > hi:
+            continue
+        between = _strip_parentheses(segment[lo:hi])
+        if ROLE_SWITCH.search(between) or len(between.strip()) > LIMIT_TOKEN_REACH:
+            continue
+        # 토큰 앞에 다른 역할이 더 가까이 있으면 그 역할의 것이다.
+        role = max((r for r in roles if r[1] <= token[0]), default=None)
+        if role and role[0] > limit[0]:
+            continue
+        return True
     return False
 
 
@@ -786,6 +828,31 @@ QUOTE_SYSTEM_REACH = 80
 QUOTE_OFFLINE = re.compile(r"우편|등기|방문|직접\s*제출|지참|팩스|FAX|이메일|전자우편|인편|우송")
 
 
+# 시스템이 **제출의 수단**으로 표시된 꼴. 이것이 (a) 의 긍정 근거다.
+# `나라장터에서 공고문 열람 후 …` 의 `에서` 는 행위가 일어난 자리일 뿐이고, 실제로 그
+# 자리에서 한 일은 열람이다. 그래서 수단·방향 표지를 요구한다.
+QUOTE_MEANS_MARK = re.compile(r"(?:을|를)\s*(?:이용|통하|통해|경유)|(?:으)?로\s*(?:제출|송신)"
+                              r"|에\s*제출|을\s*통한")
+# 시스템 이름과 그 표지 사이에는 **시스템 안의 것**을 가리키는 말이 낄 수 있다 —
+# `나라장터 시스템의 "입찰정보"를 이용하여 제출`. 그래서 붙어 있기를 요구하지 않고,
+# 사이에 **다른 행위**가 끼지 않았는지로 가른다. 열람·조회·공고는 제출이 아니다.
+QUOTE_MEANS_REACH = 30
+QUOTE_OTHER_ACTION = re.compile(r"열람|조회|확인|게시|공고|안내|출력|내려받|다운로드|접수처|방문")
+
+
+def _system_is_the_means(text):
+    """이 앞말에서 **지정정보처리장치가 제출의 수단으로 쓰였다**고 말하는가."""
+    for system in QUOTE_SYSTEM.finditer(text):
+        window = text[system.end():system.end() + QUOTE_MEANS_REACH]
+        mark = QUOTE_MEANS_MARK.search(window)
+        if mark is None:
+            continue
+        if QUOTE_OTHER_ACTION.search(window[:mark.start()]):
+            continue
+        return True
+    return False
+
+
 def _says_electronic_quote(line):
     """이 줄이 **견적서·입찰서를** 지정정보처리장치로 제출한다고 말하는가.
 
@@ -803,7 +870,7 @@ def _says_electronic_quote(line):
     """
     for _, segment in _segments(line):
         for submit in QUOTE_SUBMIT_WORD.finditer(segment):
-            if not QUOTE_SYSTEM.search(segment[:submit.start()]):
+            if not _system_is_the_means(segment[:submit.end()]):
                 continue
             if QUOTE_LOOKUP_ONLY.match(segment[submit.end():submit.end() + 8]):
                 continue
