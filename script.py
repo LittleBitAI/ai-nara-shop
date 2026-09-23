@@ -1795,6 +1795,7 @@ REGION_WINDOW = 200
 # 시·도인지 모르는 기관(보건·소방·행정기관 등)은 조문의 기본값 5억원을 쓴다.
 # 발주기관은 `공고문` 에서만 읽는다 — 규격서·첨부의 기관·납품 장소는 발주기관이 아니다.
 # 세종은 발주기관 토큰에 걸린 지역(`|지역=rN`)이 세종이거나, 링크가 없으면 공고문의 광역이 세종뿐일 때다.
+# 공고문에 지역 토큰이 하나도 없으면 평문 `세종특별자치시` 로 본다.
 # 가목의 용역(건설기술·설계감리·엔지니어링 3억 3천만원, 시설물안전법 안전점검·정밀안전진단
 # 1억 5천만원)은 나라장터에서 `기술용역` 이다. meta `업무구분` 이 `일반용역` 이면 가목 밖으로 읽는다.
 # 본문 낱말로 가목을 가리면 `실시설계 및 제작·설치`·`과학실험실 안전 점검` 같은 공고가 잘못 내려간다.
@@ -1843,7 +1844,11 @@ def _is_sejong(text, first):
     regions = dict(WIDE_OF.findall(text))
     if first.group(2) in regions:
         return regions[first.group(2)] == SEJONG
-    return set(regions.values()) == {SEJONG}
+    if regions:
+        return set(regions.values()) == {SEJONG}
+    # 세종 발주 공고는 지역 토큰이 하나도 없고 `세종특별자치시 회계과` 가 평문으로 남기도 한다
+    # (무라벨 `PPS-D-016374`). 지역 토큰이 없을 때만 평문을 본다.
+    return SEJONG in text
 
 
 def region_price_limit(rec):

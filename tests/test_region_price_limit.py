@@ -60,6 +60,14 @@ class LocalGoodsServiceLimit(unittest.TestCase):
         only_sejong = notice("지방정부", extra="[지역:r1|단위=기초|광역=세종특별자치시] 청사")
         self.assertEqual(500_000_000, script.region_price_limit(only_sejong))
 
+    def test_sejong_without_region_tokens_is_read_from_plain_text(self):
+        """세종 발주 공고는 지역 토큰이 하나도 없고 기관명이 평문으로 남기도 한다(무라벨 `PPS-D-016374`)."""
+        rec = notice("지방정부", extra="개찰장소 세종특별자치시 회계과 입찰집행관 PC\n지역제한(세종특별자치시)")
+        self.assertEqual(500_000_000, script.region_price_limit(rec))
+        # 지역 토큰이 있으면 평문 언급은 발주기관이 아니다
+        rec["docs"][0]["text"] += "\n[지역:r1|단위=기초|광역=충청남도] 청사"
+        self.assertEqual(350_000_000, script.region_price_limit(rec))
+
     def test_document_order_does_not_decide_the_agency(self):
         """발주기관은 공고문에서 읽는다. 배열 순서가 바뀌어도 같은 값이어야 한다."""
         rec = notice("지방정부")
