@@ -1338,9 +1338,9 @@ V21_FLOOR_NATIONAL = 10.0
 V21_PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
 V21_JOINT_BARRED = re.compile(
     r"공동\s*(?:수급|계약|도급|참여|이행)[^.。]*?(?:불허|불가|허용하지\s*않|금지)")
-V9_WINDOW = 300                                                # 근거 앞뒤로 볼 글자 수
-# "호환"은 제한일 수 있고 "상당"은 공고에서 대개 금액(상당액·상당가격) 뜻이라 넣지 않는다.
-V9_EQUIVALENT = re.compile(r"동등|이상의?\s*(?:제품|성능|사양)|또는\s*그\s*이상")
+# v9 는 인용이 성능 하한(`… 이상`)이면 모델명이 아니라서 내린다. 근거 곁의 "동등 이상" 문구로
+# 내리던 `V9_EQUIVALENT` 는 뺐다 — 운영진 S7-14 가 그 표현만으로 v9 를 정하지 말라고 했고, 무라벨
+# 5,500건에서 그 게이트가 내린 41건 중 29건이 모델 지정 꼴이었다(reports/team-b/b6-v9-equivalent).
 V9_SPEC_FLOOR = re.compile(r"이상\s*$")
 # v17 is an SME restriction that admits mid-size firms (v15 small-only, v18 no small-firm
 # restriction). A quote that names only a narrow qualification — small firms, micro
@@ -1683,13 +1683,7 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
     if item == "v17":
         return v17_quote_is_narrow(evidence)
     if item == "v9":
-        if V9_SPEC_FLOOR.search(evidence):
-            return True
-        for doc in rec["docs"]:
-            at = doc["text"].find(evidence)
-            if at >= 0:
-                window = doc["text"][max(0, at - V9_WINDOW):at + len(evidence) + V9_WINDOW]
-                return bool(V9_EQUIVALENT.search(window))
+        return bool(V9_SPEC_FLOOR.search(evidence))
     return False
 
 
