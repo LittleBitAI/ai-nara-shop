@@ -30,13 +30,21 @@ import io
 import json
 import math
 from pathlib import Path
+from statistics import NormalDist
 
 ROOT = Path(__file__).resolve().parents[3]
 ITEMS = ["v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v20"]
 
 
-def ratio_interval(dev_k, dev_n, unl_k, unl_n, z=1.96):
-    """배율(두 이항 비율의 비)의 95% 구간 — Katz 로그법.
+# 항목별 명목 구간. 한 항목만 미리 정해 놓고 봤다면 이것을 쓴다.
+Z_NOMINAL = NormalDist().inv_cdf(0.975)
+# 열 항목을 한 번에 훑고 그중 튀는 것을 고르므로 다중비교 보정이 필요하다.
+# Bonferroni — 항목마다 0.05/10 을 쓴다. 이래야 "열 중 어느 하나라도 헛발" 확률이 5% 다.
+Z_SIMULTANEOUS = NormalDist().inv_cdf(1 - 0.05 / len(ITEMS) / 2)
+
+
+def ratio_interval(dev_k, dev_n, unl_k, unl_n, z=Z_NOMINAL):
+    """배율(두 이항 비율의 비)의 신뢰구간 — Katz 로그법.
 
     **양쪽의 불확실성을 같이 넣는다.** 처음 판은 dev 쪽만 넣었는데, 무라벨 쪽 분모가
     열 배라고 해서 그쪽 분자가 확실한 것은 아니다. v12 는 무라벨 발화가 14건뿐이라
@@ -51,9 +59,14 @@ def ratio_interval(dev_k, dev_n, unl_k, unl_n, z=1.96):
 
 def direction(low, high):
     """구간이 1 을 물면 방향을 말하지 않는다. 점추정을 방향으로 읽지 않는다."""
-    if low is None or (low <= 1 <= high):
+    if low is None or high is None or (low <= 1 <= high):
         return "미정"
     return "더 적다" if high < 1 else "더 많다"
+
+
+def show(value, spec):
+    """`None` 은 `미산출` 로 적는다. 숫자 서식을 그대로 먹이면 TypeError 로 죽는다."""
+    return "미산출" if value is None else format(value, spec)
 
 
 def read_rows(paths):
@@ -88,35 +101,50 @@ def main(argv=None):
         tp = sum(truth[r["id"]][item] == "1" for r in fired_dev)
         dev_rate = len(fired_dev) / len(dev)
         unl_rate = fired_unl / len(unlabeled)
-        low, high = ratio_interval(len(fired_dev), len(dev), fired_unl, len(unlabeled))
+        counts = (len(fired_dev), len(dev), fired_unl, len(unlabeled))
+        low, high = ratio_interval(*counts)
+        sim_low, sim_high = ratio_interval(*counts, z=Z_SIMULTANEOUS)
         out["items"][item] = {
             "dev_fired": len(fired_dev), "dev_rate": dev_rate,
             "unlabeled_fired": fired_unl, "unlabeled_rate": unl_rate,
             "multiplier": (unl_rate / dev_rate) if dev_rate else None,
-            # 배율의 95% 구간. 구간이 1 을 물면 방향을 말할 수 없다.
+            # 항목별 명목 95% 구간. 구간이 1 을 물면 방향을 말할 수 없다.
             "multiplier_low": low, "multiplier_high": high,
             "direction": direction(low, high),
+            # 열 항목 동시 95% (Bonferroni). 이 표를 훑어 고른 것이므로 이쪽이 결론이다.
+            "simultaneous_low": sim_low, "simultaneous_high": sim_high,
+            "simultaneous_direction": direction(sim_low, sim_high),
             "dev_tp": tp, "dev_fp": len(fired_dev) - tp,
         }
 
+    # f-string 안에서 바깥과 같은 따옴표를 다시 쓰지 않는다. 그 문법은 3.12 부터이고
+    # 이 저장소가 지원하는 3.11 에서는 파싱 자체가 실패한다.
+    def span(low, high):
+        if low is None or high is None:
+            return "미산출"
+        return "[{:.2f}, {:.2f}]".format(low, high)
+
+    print(f'{"항목":<6}{"dev 발화":>9}{"dev율":>8}{"무라벨":>8}{"무라벨율":>10}'
+          f'{"배율":>7}{"명목 95%":>16}{"방향":>7}{"동시 95%":>17}{"방향":>7}{"dev TP/FP":>11}')
+    for item in ITEMS:
+        row = out["items"][item]
+        score = "{}/{}".format(row["dev_tp"], row["dev_fp"])
+        print(f'{item:<6}{row["dev_fired"]:>9}{row["dev_rate"]:>8.3f}'
+              f'{row["unlabeled_fired"]:>8}{row["unlabeled_rate"]:>10.4f}'
+              f'{show(row["multiplier"], ">7.2f")}'
+              f'{span(row["multiplier_low"], row["multiplier_high"]):>16}{row["direction"]:>7}'
+              f'{span(row["simultaneous_low"], row["simultaneous_high"]):>17}'
+              f'{row["simultaneous_direction"]:>7}{score:>11}')
+    print(f'dev {out["dev_n"]}건 · 무라벨 {out["unlabeled_n"]}건')
+    print(f'명목 z={Z_NOMINAL:.4f} · 동시 z={Z_SIMULTANEOUS:.4f} '
+          f'(Bonferroni, {len(ITEMS)}항목). **결론은 동시 쪽으로 읽는다.**')
+
+    # **출력을 다 낸 뒤에 쓴다.** 먼저 쓰면 표를 못 찍고 죽은 실행도 산출물을 남기고,
+    # 다음 사람은 그 JSON 을 성공한 회차의 것으로 읽는다.
     # 줄끝을 LF 로 고정한다. 기본값으로 열면 윈도에서 CRLF 로 나간다.
     with io.open(args.out, "w", encoding="utf-8", newline="\n") as stream:
         json.dump(out, stream, ensure_ascii=False, indent=1)
         stream.write("\n")
-
-    # f-string 안에서 바깥과 같은 따옴표를 다시 쓰지 않는다. 그 문법은 3.12 부터이고
-    # 이 저장소가 지원하는 3.11 에서는 파싱 자체가 실패한다.
-    print(f'{"항목":<6}{"dev 발화":>9}{"dev율":>8}{"무라벨":>8}{"무라벨율":>10}'
-          f'{"배율":>7}{"95% 구간":>16}{"방향":>7}{"dev TP/FP":>11}')
-    for item in ITEMS:
-        row = out["items"][item]
-        low, high = row["multiplier_low"], row["multiplier_high"]
-        span = "미산출" if low is None else "[{:.2f}, {:.2f}]".format(low, high)
-        score = "{}/{}".format(row["dev_tp"], row["dev_fp"])
-        print(f'{item:<6}{row["dev_fired"]:>9}{row["dev_rate"]:>8.3f}'
-              f'{row["unlabeled_fired"]:>8}{row["unlabeled_rate"]:>10.4f}'
-              f'{row["multiplier"]:>7.2f}{span:>16}{row["direction"]:>7}{score:>11}')
-    print(f'dev {out["dev_n"]}건 · 무라벨 {out["unlabeled_n"]}건')
 
 
 if __name__ == "__main__":
