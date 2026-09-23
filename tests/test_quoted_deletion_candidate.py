@@ -74,6 +74,21 @@ class V3Amount(unittest.TestCase):
         quote = "3천만원(기초금액의 130% 이상) 실적"
         self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))
 
+    def test_amount_outside_the_performance_clause_is_ignored(self):
+        """리뷰 라운드 3: 자본금처럼 실적이 아닌 금액을 요구실적액으로 읽지 않는다."""
+        for quote in ("자본금 3천만원 이상 및 최근 5년간 사업예산의 1배 이상 수행실적을 보유한 업체",
+                      "자본금 3천만원 이상, 동종 실적 1건 이상 보유 업체"):
+            with self.subTest(quote=quote):
+                self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))
+
+    def test_multiple_of_one_or_more_blocks_amount_rule(self):
+        quote = "수행실적 3천만원 이상(사업예산의 1.5배 이상)"
+        self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))
+
+    def test_performance_amount_beside_other_amount_still_decides(self):
+        quote = "자본금 5억원 이상 및 최근 3년 이내 동종 용역 실적 3천만원 이상"
+        self.assertEqual(candidate.v3_deletion(quote, notice(quote)), "below_budget")
+
     def test_no_amount_and_no_percent_is_kept(self):
         quote = "동종 용역 수행실적이 있는 업체"
         self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))

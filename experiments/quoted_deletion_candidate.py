@@ -36,6 +36,11 @@ from typing import Any, Dict, Optional
 
 # ----- v3 -----
 PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
+# 1배 이상을 비율로 적은 표기. 이것이 있으면 금액 규칙은 쉰다.
+RATIO = re.compile(r"(\d+(?:\.\d+)?)\s*(%|배)")
+# 요구실적 금액은 실적 문구와 같은 절에 있는 금액만 센다. 자본금·보증금은 실적이 아니다.
+CLAUSE_SPLIT = re.compile(r"\s및\s|[;\n]|,\s")
+PERFORMANCE_WORD = re.compile(r"실\s*적|수\s*행|납\s*품|준\s*공")
 # 배점표의 구간 칸: `<기준 문구> N% 이상`. 기준 문구는 한두 어절이다.
 BAND_CELL = re.compile(r"([가-힣]+(?:\s[가-힣]+)?)\s*(\d+(?:\.\d+)?)\s*%\s*이상")
 # 구간 칸과 다음 행 사이에 올 수 있는 것: 칸 구분선, 배점 숫자, `나.`·`2)` 같은 행 번호.
@@ -79,11 +84,12 @@ def _below_budget(quote, rec):
     meta = rec.get("meta") or {}
     bases = [b for b in (meta.get("입찰추정가격"), meta.get("배정예산금액"))
              if isinstance(b, (int, float)) and not isinstance(b, bool) and b > 0]
-    amounts = _amounts(quote)
+    if any(float(n) >= (100 if unit == "%" else 1) for n, unit in RATIO.findall(quote)):
+        return False   # 1배 이상 비율을 적었다. 금액과 어느 쪽이 요구인지 가리지 않는다
+    amounts = [a for clause in CLAUSE_SPLIT.split(quote) if PERFORMANCE_WORD.search(clause)
+               for a in _amounts(clause)]
     if not bases or not amounts:
         return False
-    if any(float(p) >= 100 for p in PERCENT.findall(quote)):
-        return False   # 금액과 함께 1배 이상 비율을 적었다. 어느 쪽이 요구인지 가리지 않는다
     return max(amounts) < min(bases)   # 두 기준 모두의 1배 미만일 때만
 
 
