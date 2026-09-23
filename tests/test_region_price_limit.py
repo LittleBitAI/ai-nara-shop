@@ -67,18 +67,17 @@ class LocalGoodsServiceLimit(unittest.TestCase):
                                "text": "[수요기관(기초자치단체)] 과업지시서"})
         self.assertEqual(350_000_000, script.region_price_limit(rec))
 
-    def test_special_services_use_their_own_limit_first(self):
-        """안전점검·정밀안전진단 1억 5천만원, 건설기술·설계·감리·엔지니어링 3억 3천만원."""
-        cases = (("지방정부", "용 역 명: 교량 정밀안전진단 용역", 150_000_000),
-                 ("기초자치단체", "용 역 명: 정밀안전점검 용역", 150_000_000),
-                 ("지방정부", "용 역 명: 도로 실시설계 용역", 330_000_000),
-                 ("기초자치단체", "용 역 명: 하수관로 건설사업관리(감리) 감리용역", 330_000_000))
+    def test_general_service_is_not_read_as_a_technical_service_from_words(self):
+        """가목(3억 3천만원·1억 5천만원)은 `기술용역` 이다. `일반용역` 은 본문 낱말로 가목이 되지 않는다.
+
+        무라벨 `PPS-D-005524`(입구게이트 디자인·제작·설치, `실시설계` 포함)와
+        `PPS-D-010202`(과학실험실 안전 점검)가 낱말 분류로 잘못 내려갔던 사례다.
+        """
+        cases = (("지방정부", "입찰건명: 입구게이트 디자인 및 제작·설치용역 (실시설계 포함)", 350_000_000),
+                 ("기초자치단체", "공고명: 과학실험실 안전 점검 위탁용역", 500_000_000))
         for agency, head, limit in cases:
             with self.subTest(head):
-                rec = notice(agency, extra=head)
-                self.assertEqual(limit, script.region_price_limit(rec))
-                rec["meta"]["입찰추정가격"] = limit
-                self.assertFalse(script.evidence_refutes("v5", QUALIFICATION, rec))
+                self.assertEqual(limit, script.region_price_limit(notice(agency, extra=head)))
 
     def test_v7_is_suppressed_from_the_province_limit(self):
         rec = notice("지방정부", price=350_000_000)

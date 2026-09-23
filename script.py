@@ -1793,11 +1793,11 @@ REGION_WINDOW = 200
 # 첫 `[수요기관(…)]` 이 발주기관이다. `지방정부` 가 시·도다 — dev 에서 그 토큰으로 시작하는
 # 공고가 서울특별시 `재무공고`(서소문청사)이고, 시·군·구는 `기초자치단체` 로 따로 온다.
 # 시·도인지 모르는 기관(보건·소방·행정기관 등)은 조문의 기본값 5억원을 쓴다.
-# 발주기관과 용역 종류는 `공고문` 에서만 읽는다 — 규격서·첨부의 기관·납품 장소는 발주기관이 아니다.
+# 발주기관은 `공고문` 에서만 읽는다 — 규격서·첨부의 기관·납품 장소는 발주기관이 아니다.
 # 세종은 발주기관 토큰에 걸린 지역(`|지역=rN`)이 세종이거나, 링크가 없으면 공고문의 광역이 세종뿐일 때다.
-# 용역 종류별 금액(집행기준 제4장 제2절)이 발주기관보다 먼저다. 데이터에 `기술용역` 업무구분이
-# 없어 이 용역들도 `일반용역` 으로 온다. 종류는 공고문 머리의 용역명 낱말로 가린다.
-#   - 안전점검·정밀안전진단: 1억 5천만원.  - 건설기술·설계·감리·엔지니어링: 3억 3천만원.
+# 가목의 용역(건설기술·설계감리·엔지니어링 3억 3천만원, 시설물안전법 안전점검·정밀안전진단
+# 1억 5천만원)은 나라장터에서 `기술용역` 이다. meta `업무구분` 이 `일반용역` 이면 가목 밖으로 읽는다.
+# 본문 낱말로 가목을 가리면 `실시설계 및 제작·설치`·`과학실험실 안전 점검` 같은 공고가 잘못 내려간다.
 #
 # 공사
 #   국가: 시행규칙 제24조제2항제1호 — 건설공사(전문 제외)는 고시금액(공사 88억원),
@@ -1830,15 +1830,10 @@ PROVINCE_AGENCY = ("지방정부", "광역자치단체")
 FIRST_AGENCY = re.compile(r"\[수요기관\(([^)\]|]+)\)(?:\|지역=(r\d+))?\]")
 WIDE_OF = re.compile(r"\[지역:(r\d+)\|[^\]]*?광역=([^\]|]+)\]")
 SEJONG = "세종특별자치시"
-SERVICE_LIMIT = (
-    (re.compile(r"정밀\s*안전\s*진단|안전\s*점검"), 150_000_000),
-    (re.compile(r"건설기술|엔지니어링|설계\s*용역|감리\s*용역|실시\s*설계|기본\s*설계"), 330_000_000),
-)
-SERVICE_HEAD = 500   # 용역명을 찾을 공고문 머리. 본문 전체의 `설계`·`점검` 은 용역 종류가 아니다
 
 
 def _notice_text(rec):
-    """발주기관과 용역 종류를 읽을 문서. `공고문` 이 없으면 첫 문서다."""
+    """발주기관을 읽을 문서. `공고문` 이 없으면 첫 문서다."""
     docs = rec.get("docs", [])
     notice = next((d for d in docs if d.get("type") == "공고문"), docs[0] if docs else {})
     return notice.get("text") or ""
@@ -1856,15 +1851,9 @@ def region_price_limit(rec):
     meta = rec.get("meta") or {}
     scope = _price_scope(meta.get("업무구분"))
     limit = REGION_PRICE_LIMIT.get((meta.get("적용계약법"), scope))
-    if (meta.get("적용계약법"), scope) != ("지방계약법", "용역물품"):
+    if (meta.get("적용계약법"), scope) != ("지방계약법", "용역물품") or meta.get("소관구분") != "지방정부":
         return limit
     text = _notice_text(rec)
-    if meta.get("업무구분") == "일반용역":
-        for kind, special in SERVICE_LIMIT:
-            if kind.search(text[:SERVICE_HEAD]):
-                return special
-    if meta.get("소관구분") != "지방정부":
-        return limit
     first = FIRST_AGENCY.search(text)
     if first and first.group(1) in PROVINCE_AGENCY and not _is_sejong(text, first):
         return PROVINCE_LIMIT
