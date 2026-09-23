@@ -136,6 +136,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
                 legacy["company_size_clause_quotes"] = bool(settings.get("company_size_clause_quotes"))
             if hasattr(script, "QUALIFICATION_ROLES"):
                 legacy["company_size_qualification_role"] = bool(settings.get("company_size_qualification_role"))
+            if hasattr(script, "COMPETITIVE_ROW_PATTERN"):
+                legacy["company_size_competitive_row"] = bool(settings.get("company_size_competitive_row"))
             focused, _ = script.parse_judgment(company_text, expected_items=script.COMPANY_SIZE_KEYS,
                                                **legacy)
             verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])

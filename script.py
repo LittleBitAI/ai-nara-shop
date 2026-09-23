@@ -86,6 +86,7 @@ SCOPE_ITEMS = ["v12", "v13"]
 DOCUMENT_CHECK_ITEMS = ["v10", "v20"]  # A3: 같은 호출에서 본문 요건의 존재/부재를 읽는다.
 CLAUSE_QUOTE_MAX = 120  # 적용 대상은 품목표를 재조립하지 않고 짧은 원문 한 구간으로 확인한다.
 QUALIFICATION_ROLES = ["eligibility", "checklist", "legal_reference", "none", "unknown"]
+COMPETITIVE_ROW_PATTERN = "^[0-9]{10}$"   # 경쟁제품 판정의 근거 행(제공 목록의 세부품명번호)
 COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 항목이 아니다.
 
 # ----- N3: 경쟁제품 카탈로그를 v10·v11·v12에도 준다 -----
@@ -478,6 +479,12 @@ Return one JSON object with key company_size and these fields:
   other includes construction, 엔지니어링사업, 건설엔지니어링 and software subject to separate
   소프트웨어사업자 size rules. Use unknown when the purchased scope cannot be resolved.
 - scope_quote: exact notice quotation identifying the purchased goods/service.
+- competitive_row: the 세부품명번호 of the ONE supplied row the purchased subject matches,
+  copied exactly from 일치후보 or 서비스보조목록. Return it only when that row's 특이사항
+  conditions are satisfied by this notice. Return null when no supplied row matches, when the
+  supplied lists are empty, or when scope is not competitive. Do not invent a number, do not
+  copy a code from the notice text or its metadata, and do not return a row you did not rely on.
+  This names the evidence for scope=competitive; the number must appear in the supplied lists.
 - qualification_role: classify the role of the enterprise-size statements BEFORE selecting a
   category. eligibility = an operative clause connects an enterprise category to permission to
   bid, including an explicit size-limited competition heading or a certificate explicitly made
@@ -568,7 +575,8 @@ All quotations must be one contiguous span from a notice document, at most 500 c
 Use null for an unobserved quotation. Do not invent absent facts. No preamble or explanation."""
 
 
-def company_size_schema(*, legacy=False, clause_quotes=True, qualification_role=True):
+def company_size_schema(*, legacy=False, clause_quotes=True, qualification_role=True,
+                       competitive_row=True):
     quote = {"type": ["string", "null"], "maxLength": EVIDENCE_MAX}
     props = {
         "scope": {"type": "string", "enum": ["general", "competitive", "other", "unknown"]},
@@ -581,9 +589,14 @@ def company_size_schema(*, legacy=False, clause_quotes=True, qualification_role=
         "size_exception": {"type": "string", "enum": ["none", "broaden_sme", "joint_small", "unknown"]},
         "size_exception_quote": quote,
     }
+    if competitive_row and not legacy:
+        # 경쟁제품 판정의 근거 행. **구 회차에는 소급하지 않는다** — 보관된 원응답에 이 필드가
+        # 없으므로 넣으면 그 회차의 재생이 "사실 필드 결손"으로 죽는다.
+        props["competitive_row"] = {"type": ["string", "null"], "pattern": COMPETITIVE_ROW_PATTERN}
     if qualification_role and not legacy:
         # 역할·원문 관측을 기업등급보다 먼저 출력한다. 구 회차에는 새 사실을 소급하지 않는다.
         props = {"scope": props.pop("scope"), "scope_quote": props.pop("scope_quote"),
+                 **({"competitive_row": props.pop("competitive_row")} if competitive_row else {}),
                  "qualification_role": {"type": "string", "enum": QUALIFICATION_ROLES},
                  "qualification_quote": props.pop("qualification_quote"),
                  "qualification_complete": props.pop("qualification_complete"), **props}
@@ -689,6 +702,26 @@ def company_size_products(facts, rec, visible=None):
     return out
 
 
+def verified_competitive_row(facts, rec, visible):
+    """모델이 지목한 근거 행이 **그 공고에 제공된 목록** 안에 있는가.
+
+    코드는 대조만 한다 — 그 번호가 경쟁제품인지 다시 판단하지 않는다. 판정은 행의
+    존재로 확인된다. 목록은 그 공고에 실제로 보여 준 것과 같은 함수로 다시 만든다.
+
+    문자열·후보 유무로 scope 를 거르지 않는다. 모델이 **지목한** 행만 본다.
+    필드 자체가 없는 구 회차 응답은 `None` 을 돌려준다 — 그 회차의 동작을 바꾸지 않는다.
+    """
+    if "competitive_row" not in facts:
+        return None                         # 구 스키마다. 판단하지 않는다
+    row = facts.get("competitive_row")
+    if not row:
+        return False
+    lookup = sme_product_lookup(rec, visible, _PRODUCTS)
+    supplied = {p["세부품명번호"] for p in lookup.get("일치후보") or ()}
+    supplied |= {r[0] for r in lookup.get("서비스보조목록") or ()}
+    return row in supplied
+
+
 def verify_company_size(facts, rec, max_chars):
     """A1 결정표에 scope 축의 v12·v13을 얹어 돌려준다.
 
@@ -712,6 +745,13 @@ def verify_company_size(facts, rec, max_chars):
         fixed = restore_spacing(facts.get(key), rec, visible)
         if fixed is not None:
             facts[key] = fixed
+    # 경쟁제품은 제공 목록의 행으로 확인한다. 확인되지 않으면 채택하지 않는다.
+    # `unknown` 으로 둔다 — "경쟁제품이 아니다"가 아니라 "확인되지 않았다"이고,
+    # general 로 뒤집는 길은 v10·v11·v12·v13 TP 가 죽어 이미 기각됐다.
+    # 구 회차는 필드가 없어 `None` 이므로 이 줄이 걸리지 않는다 — 재생이 그대로 재현된다.
+    if (facts.get("scope") == "competitive"
+            and verified_competitive_row(facts, rec, visible) is False):
+        facts["scope"] = "unknown"
     bands, reason = _company_size_bands(facts, rec, max_chars)
     out = dict(bands)
     if reason != "unverified_scope":
@@ -1199,7 +1239,8 @@ def extract_json(text: str) -> Optional[Any]:
 
 def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_legacy=False,
                    company_size_clause_quotes=True,
-                   company_size_qualification_role=True) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+                   company_size_qualification_role=True,
+                   company_size_competitive_row=True) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
     """동등한 이진값을 정규화하고 추가 필드는 버린다. 필수 판정 결손은 복구 대상으로 남긴다."""
     obj = extract_json(text)
     if obj is None:
@@ -1213,7 +1254,8 @@ def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_le
         facts = obj["company_size"]
         properties = company_size_schema(legacy=company_size_legacy,
                                           clause_quotes=company_size_clause_quotes,
-                                          qualification_role=company_size_qualification_role)["properties"]
+                                          qualification_role=company_size_qualification_role,
+                                         competitive_row=company_size_competitive_row)["properties"]
         if not isinstance(facts, dict) or not set(properties) <= set(facts):
             raise ValueError("company_size: 사실 필드 결손")
         for key, spec in properties.items():
@@ -2280,6 +2322,7 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                              "company_size_items": BAND_ITEMS, "company_size_document_checks": True,
                              "company_size_clause_quotes": True,
                              "company_size_qualification_role": True,
+                             "company_size_competitive_row": True,
                              "split_items": SPLIT_ITEMS,
                              "product_items": PRODUCT_ITEMS,
                              "prompt_language": "en_with_ko_legal_terms", "sme_facts": True, **settings,
