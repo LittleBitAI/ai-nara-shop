@@ -1,0 +1,87 @@
+{"id": "PPS-D-019811", "item": "v3", "reason": "scoring_band", "quote": "가. 입찰 금액의 100% 이상", "order": 227, "drawn": true}
+{"id": "PPS-D-002806", "item": "v3", "reason": "below_budget", "quote": "입찰공고일 기준 최근 5년간 준공된 동일분야 단일 계약 1건당 3억 원 이상인 이행실적 합산 평가", "order": 295, "drawn": true}
+{"id": "PPS-D-000171", "item": "v3", "reason": "scoring_band", "quote": "가. 입찰 금액의 100% 이상", "order": 538, "drawn": true}
+{"id": "PPS-D-008910", "item": "v3", "reason": "scoring_band", "quote": "가. 입찰 금액의 100% 이상", "order": 805, "drawn": true}
+{"id": "PPS-D-002213", "item": "v3", "reason": "below_budget", "quote": "입찰공고일 기준 최근 3년간 단일계약건으로 3천만원이상 사업이행실적", "order": 1214, "drawn": true}
+{"id": "PPS-D-019170", "item": "v3", "reason": "scoring_band", "quote": "가. 입찰 금액의 100% 이상", "order": 1552, "drawn": true}
+{"id": "PPS-D-016984", "item": "v3", "reason": "below_budget", "quote": "3천만원 이상 실적 유무", "order": 1890, "drawn": true}
+{"id": "PPS-D-007967", "item": "v3", "reason": "below_budget", "quote": "최근 3개년 5천만 원 이상 실적 건수 기준", "order": 1976, "drawn": true}
+{"id": "PPS-D-013643", "item": "v3", "reason": "below_budget", "quote": "단일건 3천만원 이상의 수행 실적이 있는 업체", "order": 2522, "drawn": true}
+{"id": "PPS-D-005999", "item": "v3", "reason": "below_budget", "quote": "공고일 기준 최근 3년 이내 단일 실적 1억원 이상(부가세 포함)의 관련 수행(먹거리 관련 운영 용역)실적이 있는 업체", "order": 2600, "drawn": true}
+{"id": "PPS-D-008212", "item": "v3", "reason": "below_budget", "quote": "최근 3년 이내 3천만 원 이상 실적 유무", "order": 4477, "drawn": true}
+{"id": "PPS-D-009704", "item": "v3", "reason": "scoring_band", "quote": "가. 입찰 금액의 100% 이상", "order": 4641, "drawn": true}
+{"id": "PPS-D-013050", "item": "v3", "reason": "scoring_band", "quote": "가. 입찰 금액의 100% 이상", "order": 4670, "drawn": true}
+{"id": "PPS-D-008908", "item": "v3", "reason": "below_budget", "quote": "최근 3년 이내 안전보건관리체계 구축, 안전보건 관계법령 이행실태 점검 컨설팅 수행 실적이 있는 기관(단일 또는 누적 실적 5,000,000원 이상)", "order": 4833, "drawn": true}
+{"id": "PPS-D-010445", "item": "v17", "reason": "no_mid_size_entity", "quote": "라. 소기업 또는 소상공인인 업체로서 「중·소기업·소상공인 및 장애인기업 확인요령」에 따라 발급된 소기업·소상공인확인서(입찰서 제출 마감일 전일까지 발급된 것으로 유효기간 내에 있어야 함)를 소지한 자", "order": 97, "drawn": true}
+{"id": "PPS-D-003107", "item": "v17", "reason": "no_mid_size_entity", "quote": "｢중소기업기본법｣ 제2조제2항에 따른 소기업 또는 ｢소상공인 보호 및 지원에 관한 법률｣ 제2조에 따른 소상공인으로서 ｢중소기업 범위 및 확인에 관한 규정｣에 따라 발급된 소기업・소상공인확인서 중 하나를 소지한 자", "order": 142, "drawn": true}
+{"id": "PPS-D-002361", "item": "v17", "reason": "no_mid_size_entity", "quote": "1) ｢중소기업기본법｣ 제2조에 따른 소기업 또는 ｢소상공인 보호 및 지원에 관한 법률｣ 제2조에 따른 소상공인으로서 ｢중소기업 범위 및 확인에 관한 규정｣에 따라 발급된 <소기업 또는 소상공인 확인서> 중 하나를 소지한 업체", "order": 245, "drawn": true}
+{"id": "PPS-D-004778", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업자 및 「소상공인 기본법」 제2조에 따른 소상공인으로서 중소기업 범위 및 확인에 관한 규정에 따라 발급된 소기업·소상공인 확인서를 소지한 업체", "order": 283, "drawn": true}
+{"id": "PPS-D-018109", "item": "v17", "reason": "no_mid_size_entity", "quote": "② 소기업·소상공인 확인서", "order": 531, "drawn": true}
+{"id": "PPS-D-007614", "item": "v17", "reason": "no_mid_size_entity", "quote": "「소기업 및 소상공인 지원을 위한 특별조치법」제2조에 따른 소기업 또는 소상공인 업체로서", "order": 552, "drawn": true}
+{"id": "PPS-D-011662", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조의 소기업자 및 「소상공인 보호 및 지원에 관한 법률」 제2조의 소상공인으로서", "order": 706, "drawn": true}
+{"id": "PPS-D-007417", "item": "v17", "reason": "no_mid_size_entity", "quote": "나. 입찰방법 : 제한경쟁(소기업(소상공인)), 총액입찰(부가세포함)", "order": 786, "drawn": true}
+{"id": "PPS-D-004483", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조 제2항에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업∙소상공인 확인서(유효기간 내에 있어야 함)를 소지한 업체이어야 합니다.", "order": 790, "drawn": true}
+{"id": "PPS-D-011326", "item": "v17", "reason": "no_mid_size_entity", "quote": "｢중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령｣ 제2조의2 제1항 제1호에 따른 소기업 또는 소상공인 간 제한경쟁입찰", "order": 808, "drawn": true}
+{"id": "PPS-D-007195", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인 업체로서", "order": 933, "drawn": true}
+{"id": "PPS-D-016598", "item": "v17", "reason": "no_mid_size_entity", "quote": "㉠「중소기업기본법」 제2조 제2항에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인확인서(전자입찰서 제출 마감일 전일까지 발급된 것으로 유효기간 내에 있어야 함)를 소지한 자", "order": 935, "drawn": true}
+{"id": "PPS-D-012576", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업자 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업ㆍ소상공인 확인서를 소지한 자", "order": 950, "drawn": true}
+{"id": "PPS-D-000927", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 및 「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서 「중소기업 범위 확인에 관한 규정」에 따라 발급된 ‘소기업·소상공인 확인서’를 소지한 자", "order": 1095, "drawn": true}
+{"id": "PPS-D-012085", "item": "v17", "reason": "no_mid_size_entity", "quote": "1) 정부기관에서 지정한 서울시 여성기업, 사회적 기업, 자활센터, 자활기업 및 개인사업체", "order": 1158, "drawn": true}
+{"id": "PPS-D-019091", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업자 및 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인 확인서를 소지한 자", "order": 1195, "drawn": true}
+{"id": "PPS-D-021252", "item": "v17", "reason": "no_mid_size_entity", "quote": "(소기업 제한)", "order": 1288, "drawn": true}
+{"id": "PPS-D-007880", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조제2항 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로 「중소기업범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인확인서를 소지한 업체이어야 합니다.", "order": 1302, "drawn": true}
+{"id": "PPS-D-005839", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조제2항에 따른 소기업, 「소상공인기본법」제2조에 따른 소상공인, 「벤처기업육성에 관한 특별법」제2조제1항에 따른 벤처기업 또는 「중소기업창업지원법」에 따른 창업기업", "order": 1348, "drawn": true}
+{"id": "PPS-D-018152", "item": "v17", "reason": "no_mid_size_entity", "quote": "본 용역은 추정가격 1억 원 미만으로 「중소기업제품 구매촉진 및 판로지원에 관한 법률」 제2조의2 제1항 제1호에 따른 소기업·소상공인 간 제한경쟁 대상에 해당하나, 전문성이 요구되는 과업 특성을 고려하여 같은 법 시행령 제2조의3 제1항 제2호 가목에 따라 비영리법인의 입찰참여를 허용함", "order": 1491, "drawn": true}
+{"id": "PPS-D-013282", "item": "v17", "reason": "no_mid_size_entity", "quote": "추정가격 1억 원 미만: 소기업 또는 소상공인간 제한경쟁입찰", "order": 1657, "drawn": true}
+{"id": "PPS-D-016924", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조제2항에 의한 소기업 또는「소상공인기본법」제2조에 따른 소상공인인 업체로서", "order": 1799, "drawn": true}
+{"id": "PPS-D-021856", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업자 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업ㆍ소상공인확인서를 소지한 자", "order": 2016, "drawn": true}
+{"id": "PPS-D-015289", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업제품 구매촉진 및 판로지원에 관한 법률」제4조 및 같은법 시행령 제 2조의 2, 「소상공인 보호 및 지원에 관한 법률」제2조에 따라 소상공인·소기업확인서를 소지한 업체", "order": 2077, "drawn": true}
+{"id": "PPS-D-008814", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 또는「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업 · 소상공인 확인서를 소지한 업체이어야 합니다.", "order": 2255, "drawn": true}
+{"id": "PPS-D-017245", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 또는「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서,「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 <소기업·소상공인 확인서>를 소지한 자", "order": 2398, "drawn": true}
+{"id": "PPS-D-008811", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조 및 같은 법 시행령 제8조에 따른 소기업과「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로", "order": 2432, "drawn": true}
+{"id": "PPS-D-002841", "item": "v17", "reason": "no_mid_size_entity", "quote": "「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소기업·소상공인으로서, 「중·소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업‧소상공인 확인서를 소지한 자", "order": 2551, "drawn": true}
+{"id": "PPS-D-013933", "item": "v17", "reason": "no_mid_size_entity", "quote": "라. 소기업, 소상공인", "order": 2571, "drawn": true}
+{"id": "PPS-D-011185", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조 제2항에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인확인서(전자입찰서 제출마감일 전일까지 발급된 것으로 유효기간 내에 있어야 함)를 소지한 업체여야 합니다.", "order": 2720, "drawn": true}
+{"id": "PPS-D-018468", "item": "v17", "reason": "no_mid_size_entity", "quote": "「벤처기업육성에 관한 특별조치법」제2조제1항에 따른 벤처기업, 「소상공인기본법」제2조에 따른 소상공인, 「중소기업기본법」제2조제2항에 따른 소기업 또는 「중소기업창업 지원법」제2조제3호에 따른 창업기업", "order": 2769, "drawn": true}
+{"id": "PPS-D-017138", "item": "v17", "reason": "no_mid_size_entity", "quote": "「여성기업지원에 관한 법률」 제2조 제1호에 따른 여성기업", "order": 2778, "drawn": true}
+{"id": "PPS-D-006564", "item": "v17", "reason": "no_mid_size_entity", "quote": "다. 「중소기업기본법」제2조 제2항에 따른 소기업 또는「소상공인기본법」제2조에 따른 소상공인으로서", "order": 2821, "drawn": false}
+{"id": "PPS-D-015817", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 〈소기업․소상공인확인서〉를 소지한 업체", "order": 2838, "drawn": false}
+{"id": "PPS-D-014545", "item": "v17", "reason": "no_mid_size_entity", "quote": "｢중소기업기본법｣ 제2조 제2항에 따른 소기업 또는 ｢소상공인기본법 ｣ 제2조에 따른 소상공인으로 ｢중소기업 범위 및 확인에 관한 규정｣에 따라 발급된 소기업·소상공인 확인서(계약 체결일까지 발급된 것으로 유효기간 내에 있어야 함)를 소지한 자이어야 합니다.", "order": 2902, "drawn": false}
+{"id": "PPS-D-014918", "item": "v17", "reason": "no_mid_size_entity", "quote": "「벤처기업육성에 관한 특별조치법」 제2조제1항에 따른 ‘벤처기업’ 또는「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 ‘소상공인’ 또는「중소기업기본법」 제2조제2항에 따른 ‘소기업’ 또는「중소기업창업 지원법」 제2조제3호에 따른 ‘창업기업’만 입찰에 참가 할 수 있습니다.", "order": 2991, "drawn": false}
+{"id": "PPS-D-002424", "item": "v17", "reason": "no_mid_size_entity", "quote": "소기업(소상공인)", "order": 3109, "drawn": false}
+{"id": "PPS-D-020535", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 또는「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서,「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 <소기업·소상공인 확인서>를 소지한 자", "order": 3113, "drawn": false}
+{"id": "PPS-D-013635", "item": "v17", "reason": "no_mid_size_entity", "quote": "나. 입찰서제출 마감일 기준 중소기업제품 구매촉진 및 판로지원에 관한 법률시행령 제2조의2 및 소기업 및 소상공인 지원을 위한 특별조치법 제2조에 따른 소기업 또는 소상공인인 업체이어야 합니다.", "order": 3237, "drawn": false}
+{"id": "PPS-D-002467", "item": "v17", "reason": "no_mid_size_entity", "quote": "소기업(소상공인)", "order": 3295, "drawn": false}
+{"id": "PPS-D-015955", "item": "v17", "reason": "no_mid_size_entity", "quote": "소기업(소상공인)", "order": 3307, "drawn": false}
+{"id": "PPS-D-015926", "item": "v17", "reason": "no_mid_size_entity", "quote": "입찰 참가 제한\n- 소기업 또는 소상공인, 여성기업, 장애인기업으로 참가 제한", "order": 3399, "drawn": false}
+{"id": "PPS-D-002558", "item": "v17", "reason": "no_mid_size_entity", "quote": "다. 소기업·소상공인 또는 여성기업·장애인기업 제한견적입니다.", "order": 3437, "drawn": false}
+{"id": "PPS-D-009534", "item": "v17", "reason": "no_mid_size_entity", "quote": "소기업 또는 소상공인 간 제한경쟁", "order": 3451, "drawn": false}
+{"id": "PPS-D-000592", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인 확인서를 소지한 자", "order": 3457, "drawn": false}
+{"id": "PPS-D-011182", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조 제2항에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인확인서(전자입찰서 제출마감일 전일까지 발급된 것으로 유효기간 내에 있어야 함)를 소지한 업체여야 합니다.", "order": 3594, "drawn": false}
+{"id": "PPS-D-009812", "item": "v17", "reason": "no_mid_size_entity", "quote": "다. 소기업·소상공인 제한입찰입니다.", "order": 3604, "drawn": false}
+{"id": "PPS-D-017932", "item": "v17", "reason": "no_mid_size_entity", "quote": "㉠ 「중소기업기본법」제2조제2항에 따른 소기업 또는「소상공인기본법」제2조에 따른 소상공인으로서「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인확인서를 소지한 자", "order": 3645, "drawn": false}
+{"id": "PPS-D-006816", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조제2항에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 중소기업범위 및 확인에 관한 규정에 따라 발급된 소기업․소상공인확인서를 소지한 업체", "order": 3673, "drawn": false}
+{"id": "PPS-D-020507", "item": "v17", "reason": "no_mid_size_entity", "quote": "｢벤처기업육성에 관한 특별조치법｣ 제2조제1항에 따른 벤처기업, ｢소상공인기본법｣제2조에 따른 소상공인, ｢중소기업기본법｣제2조제2항에 따른 소기업 또는 ｢중소기업창업 지원법｣제2조 제3호에 따른 창업기업", "order": 3687, "drawn": false}
+{"id": "PPS-D-013864", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 또는 「소상공인 기본법」 제2조에 따른 소상공인으로서, 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업, 소상공인확인서를 소지한 자이어야 합니다.", "order": 3908, "drawn": false}
+{"id": "PPS-D-016633", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 또는「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인 업체로서", "order": 3934, "drawn": false}
+{"id": "PPS-D-011388", "item": "v17", "reason": "no_mid_size_entity", "quote": "「벤처기업육성에 관한 특별조치법」 제2조제1항에 따른 ‘벤처기업’, 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 ‘소상공인’, 「중소기업기본법」 제2조제2항에 따른 ‘소기업’ 또는「중소기업창업 지원법」 제2조제3호에 따른 ‘창업기업’만 입찰에 참가 할 수 있습니다.", "order": 4131, "drawn": false}
+{"id": "PPS-D-019051", "item": "v17", "reason": "no_mid_size_entity", "quote": "소기업 또는 소상공인 간 제한", "order": 4353, "drawn": false}
+{"id": "PPS-D-013036", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 또는「소상공인기본법」제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업 또는 소상공인 확인서(적격심사 서류 제출마감일까지 발급된 자료 포함)를 소지한 자.", "order": 4409, "drawn": false}
+{"id": "PPS-D-016023", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업 또는 「소기업 및 소상공인 지원을 위한 특별조치법」 제2조에 따른 소상공인으로서", "order": 4442, "drawn": false}
+{"id": "PPS-D-005837", "item": "v17", "reason": "no_mid_size_entity", "quote": "나.「국가를 당사자로 하는 계약에 관한 법률 시행령」제12조에 따른 자격 요건을 갖춘 자 중 아래 요건 중 하나에 해당하는 자\n-「중소기업기본법」제2조제2항에 따른 소기업, 「소상공인기본법」제2조에 따른 소상공인, 「벤처기업육성에 관한 특별법」제2조제1항에 따른 벤처기업 또는 「중소기업창업지원법」에 따른 창업기업\n-「중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령」제2조의3에 해당하는 비영리법인", "order": 4496, "drawn": false}
+{"id": "PPS-D-015365", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업자 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업ㆍ소상공인 확인서를 소지한 자", "order": 4513, "drawn": false}
+{"id": "PPS-D-016387", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조제2항에 따른 소기업 또는「소상공인기본법」제2조에 따른 소상공인으로서「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인확인서를 소지한 자", "order": 4524, "drawn": false}
+{"id": "PPS-D-018118", "item": "v17", "reason": "no_mid_size_entity", "quote": "소기업·소상공인간 제한경쟁을 예외로합니다.", "order": 4586, "drawn": false}
+{"id": "PPS-D-012567", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업자 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업ㆍ소상공인 확인서를 소지한 자", "order": 4594, "drawn": false}
+{"id": "PPS-D-002458", "item": "v17", "reason": "no_mid_size_entity", "quote": "소기업(소상공인)", "order": 4605, "drawn": false}
+{"id": "PPS-D-021854", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업자 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업ㆍ소상공인확인서를 소지한 자", "order": 4662, "drawn": false}
+{"id": "PPS-D-008778", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조 제2항에 따른 소기업 및「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서", "order": 4779, "drawn": false}
+{"id": "PPS-D-009267", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조제2항에 따른 소기업 또는「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서", "order": 4930, "drawn": false}
+{"id": "PPS-D-006999", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조에 따른 소기업 및「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로서", "order": 5054, "drawn": false}
+{"id": "PPS-D-019956", "item": "v17", "reason": "no_mid_size_entity", "quote": "중소기업기본법 제2조에 따른 소기업 또는 소상공인법 제2조에 따른 소상공인으로서 중소기업 범위 및 확인에 관한 규정에 따라 발급된 소기업·소상공인 확인서를 소지한 자여야 합니다.", "order": 5543, "drawn": false}
+{"id": "PPS-D-012624", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」제2조 제2항에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」제2조에 따른 소상공인으로‘소기업, 소상공인 확인서’를 소지한 업체", "order": 5559, "drawn": false}
+{"id": "PPS-D-012850", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조 제2항에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서", "order": 5560, "drawn": false}
+{"id": "PPS-D-006467", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업 및 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업·소상공인 확인서를 소지한 업체", "order": 5646, "drawn": false}
+{"id": "PPS-D-015706", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조에 따른 소기업 또는 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소상공인으로서", "order": 5777, "drawn": false}
+{"id": "PPS-D-020213", "item": "v17", "reason": "no_mid_size_entity", "quote": "나. 입찰방법 : 제한경쟁(소기업(소상공인)), 총액입찰(부가세포함)", "order": 5817, "drawn": false}
+{"id": "PPS-D-009918", "item": "v17", "reason": "no_mid_size_entity", "quote": "「중소기업기본법」 제2조 제2항에 따른 소기업, 「소상공인기본법」 제2조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한 규정」에 따라 발급된 소기업․소상공인 확인서를 소지한 자", "order": 5845, "drawn": false}
