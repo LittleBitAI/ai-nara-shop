@@ -89,6 +89,7 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `a8-v20-1790057577391794027` | `e6d9b98` | episode-1 control 0.591008188119 · a8 0.588468081167 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 일부 | [reports/runs/a8-v20-1790057577391794027/](../reports/runs/a8-v20-1790057577391794027/) |
 | `a8-v20-1790059133832323156` | `e6d9b98` | episode-2 a8 0.589442740036 · control 0.586932341938 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 일부 | [reports/runs/a8-v20-1790059133832323156/](../reports/runs/a8-v20-1790059133832323156/) |
 | `colab-1790081509639025520` | `227631f` | 0.6102659462701191 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1790081509639025520/](../reports/runs/colab-1790081509639025520/) |
+| `colab-1790141677344456786` | `9ed0805` | 0.575482169261194 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790141677344456786/](../reports/runs/colab-1790141677344456786/) |
 
 `a5-scope-…`는 제출 파이프라인 회차가 아닙니다. `company_size` 한 단계만 GPU로 돌리고
 나머지는 보관 원응답으로 재생한 A/B이며 제출 ZIP이 없습니다. 위 네 값을 위 행들의
