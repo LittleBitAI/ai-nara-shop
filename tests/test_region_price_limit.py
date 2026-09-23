@@ -28,7 +28,7 @@ class LocalGoodsServiceLimit(unittest.TestCase):
                 self.assertEqual(350_000_000, script.region_price_limit(notice(agency)))
 
     def test_sejong_and_lower_tiers_use_five_hundred_million(self):
-        cases = (notice("지방정부", extra="[지역:r1|단위=기초|광역=세종특별자치시]"),
+        cases = (notice("지방정부", extra="[수요기관(지방정부)] [지역:r1|단위=기초|광역=세종특별자치시]"),
                  notice("기초자치단체"),
                  notice("중학교", owner="교육기관"),
                  notice("교육청", owner="교육기관"),
@@ -57,16 +57,23 @@ class LocalGoodsServiceLimit(unittest.TestCase):
         linked["docs"][0]["text"] = linked["docs"][0]["text"].replace(
             "[수요기관(지방정부)]", "[수요기관(지방정부)|지역=r1]")
         self.assertEqual(500_000_000, script.region_price_limit(linked))
-        only_sejong = notice("지방정부", extra="[지역:r1|단위=기초|광역=세종특별자치시] 청사")
-        self.assertEqual(500_000_000, script.region_price_limit(only_sejong))
+        # 발주기관 토큰 바로 뒤의 지역은 그 기관의 소재지다(무라벨 `PPS-D-014240`·`PPS-D-017264`)
+        adjacent = notice("지방정부", extra="접수장소: [수요기관(지방정부)] [지역:r1|단위=읍면동|광역=세종특별자치시]")
+        self.assertEqual(500_000_000, script.region_price_limit(adjacent))
+
+    def test_unbound_region_tokens_are_sites_not_the_agency(self):
+        """기관에 묶이지 않은 지역 토큰은 현장·납품지다. 세종이어도, 아니어도 발주처를 정하지 않는다."""
+        site_only = notice("지방정부", extra="용역현장: [지역:r1|단위=읍면동|광역=세종특별자치시] 일원")
+        self.assertEqual(350_000_000, script.region_price_limit(site_only))
+        # 무라벨 `PPS-D-016496`: 세종 회계과가 적혀 있고 현장 토큰이 따로 있다
+        office = notice("지방정부", extra="용역현장: [지역:r4|단위=읍면동|광역=미상] 일원\n"
+                                        "개찰장소 세종특별자치시 회계과 입찰집행관 PC")
+        self.assertEqual(500_000_000, script.region_price_limit(office))
 
     def test_sejong_without_region_tokens_is_read_from_plain_text(self):
         """세종 발주 공고는 지역 토큰이 하나도 없고 기관명이 평문으로 남기도 한다(무라벨 `PPS-D-016374`)."""
         rec = notice("지방정부", extra="개찰장소 세종특별자치시 회계과 입찰집행관 PC\n지역제한(세종특별자치시)")
         self.assertEqual(500_000_000, script.region_price_limit(rec))
-        # 지역 토큰이 있으면 평문 언급은 발주기관이 아니다
-        rec["docs"][0]["text"] += "\n[지역:r1|단위=기초|광역=충청남도] 청사"
-        self.assertEqual(350_000_000, script.region_price_limit(rec))
 
     def test_sejong_in_a_participation_list_is_not_the_agency(self):
         """참가 가능 지역 목록의 세종은 발주기관이 아니다(무라벨 `PPS-D-007109`·`PPS-D-010611`)."""
