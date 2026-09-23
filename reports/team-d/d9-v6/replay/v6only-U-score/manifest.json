@@ -4,7 +4,7 @@
   "status": "draft",
   "run_id": "v6only-U-score",
   "baseline_run": null,
-  "created_at": "2026-09-23T07:41:39.020680+00:00",
+  "created_at": "2026-09-23T09:22:42.273713+00:00",
   "sources": [
     {
       "role": "truth",
@@ -14,7 +14,7 @@
     {
       "role": "pred",
       "path": "reports/team-d/d9-v6/replay/v6only-U/submission.csv",
-      "sha256": "233d2302580255d5300cf82a047e351962c65c89f456c067a447dd228072154a"
+      "sha256": "4c449b71188e8810d4ed09af596dd7f8195d194533a2e11ee4e4322ecb49795f"
     }
   ],
   "generator": {
@@ -58,5 +58,5 @@
     "evidence_substring": false,
     "evidence_quality": false
   },
-  "elapsed_seconds_before_publish": 0.18511059999946156
+  "elapsed_seconds_before_publish": 0.1791618000006565
 }

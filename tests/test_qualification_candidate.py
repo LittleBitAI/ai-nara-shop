@@ -575,6 +575,57 @@ class V6BasicRegionRules(unittest.TestCase):
         self.assertTrue(candidate.has_basic_signal("경기도 광주시 지역 업체"))
         self.assertIsNone(self.decide(rec, 1))
 
+    def test_u_does_not_raise_when_the_basic_token_is_a_delivery_place(self):
+        """PR #114 리뷰 P1 — 한 줄에 참가 제한과 납품 장소가 같이 오는 공고.
+
+        제한은 광역인데 기초 토큰의 역할은 납품 장소다. 줄 단위로 보면 올려 버린다.
+        """
+        rec = self.one_line_notice(
+            "가. 입찰참가자격: 본점소재지가 경기도 [지역:r1|단위=광역|광역=경기도]에 있는 업체,"
+            " 납품장소는 [지역:r2|단위=기초|광역=경기도]")
+        self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
+        self.assertIsNone(self.decide(rec, 0))
+
+    def test_u_evidence_carries_the_token_even_on_a_very_long_line(self):
+        """PR #114 리뷰 P1 — 480자로 앞부분만 자르면 인용에 `단위=기초` 가 안 남는다."""
+        padding = "입찰참가자격 안내입니다. " * 30
+        rec = self.one_line_notice(
+            "가. " + padding + "본점소재지가 경기도 [지역:r1|단위=기초|광역=경기도]에 있는 업체")
+        decided = self.decide(rec, 0)
+        self.assertIsNotNone(decided)
+        quote = decided[1]
+        self.assertLessEqual(len(quote), candidate.QUOTE_MAX)
+        self.assertIn("단위=기초", quote)
+        self.assertIn(quote, rec["docs"][0]["text"], "근거가 원문의 연속 구간이 아니다")
+
+    def test_u_evidence_passes_the_submission_contract(self):
+        """올린 근거는 운영 후처리가 v6 에 거는 계약을 다시 통과해야 한다."""
+        for rec_id in ("PPS-DEV-070", "PPS-DEV-071"):
+            with self.subTest(rec_id):
+                rec = self.recs[rec_id]
+                quote = self.decide(rec, 0)[1]
+                passed, _why = candidate.v6_evidence_contract(quote, rec)
+                self.assertTrue(passed)
+        self.assertEqual(
+            (False, "인용 안에 기초 토큰이 없다"),
+            candidate.v6_evidence_contract("본점소재지가 경기도에 있는 업체", self.recs["PPS-DEV-070"]))
+        self.assertEqual(
+            (False, "근거가 비었다"),
+            candidate.v6_evidence_contract("", self.recs["PPS-DEV-070"]))
+
+    def test_clause_split_keeps_a_parenthesised_comma_together(self):
+        """괄호 안의 쉼표로 절을 자르면 제한 대상과 토큰이 갈라진다."""
+        line = ("법인등기부상 본점소재지(개인사업자인 경우에는 사업자등록증, 허가증 등에 기재된"
+                " 사업장의 소재지)가 [수요기관(기초자치단체)]내에 소재하고")
+        clauses = [text for _, text in candidate._clauses(line)]
+        self.assertEqual(1, len(clauses), clauses)
+
+    def one_line_notice(self, text):
+        """`PPS-DEV-070` 의 meta 를 그대로 두고 공고문만 한 줄로 바꾼 사본."""
+        rec = json.loads(json.dumps(self.recs["PPS-DEV-070"], ensure_ascii=False))
+        rec["docs"] = [{"doc_id": "D0", "type": "공고문", "text": text}]
+        return rec
+
     def test_l1_lowers_the_delivery_only_basic_token(self):
         """`PPS-DEV-102` — 기초 토큰은 납품 장소에만 있고 참가 제한은 `경기도` 뿐이다."""
         rec = self.recs["PPS-DEV-102"]
@@ -672,6 +723,22 @@ class V6SmallQuoteException(unittest.TestCase):
         checked = candidate.evaluate_small_quote_exception(rec)
         for evidence in checked["c_evidence"]:
             self.assertNotIn("홈페이지", evidence["sentence"])
+
+    def test_electronic_quote_needs_the_quote_itself_to_be_submitted(self):
+        """PR #114 리뷰 P1 — 시스템·견적서·제출이 한 창에 있어도 내는 것이 협정서면 (a) 가 아니다."""
+        cases = [
+            ("견적서는 나라장터에서 열람하고 공동수급협정서는 제출한다", False),
+            ("라. 공동수급협정서는 반드시 조달청 전자입찰시스템을 이용하여"
+             " 국가종합전자조달시스템 전자 입찰 특별유의서에 따라 제출하여야 합니다.", False),
+            ("사. 견적서 제출 여부는 나라장터 시스템의 전자문서함에서 확인하여야 합니다.", False),
+            ("가. 국가종합전자조달시스템을 이용하여 2인 이상으로부터 견적서를 제출받는"
+             " 수의계약 및 전자계약 대상입니다.", True),
+            ("다. 반드시 조달청 국가종합전자조달시스템을 이용하여 제출하여야 하며,"
+             " 입찰서 제출 확인은 조달청 국가종합전자조달시스템의 웹 송신함에서 확인하시기 바랍니다.", True),
+        ]
+        for line, expected in cases:
+            with self.subTest(line[:30]):
+                self.assertEqual(expected, candidate._says_electronic_quote(line))
 
     def test_removing_the_electronic_quote_sentences_flips_only_a(self):
         """변형: (a)만 거짓. 두 판본 모두 내리지 않는다."""

@@ -584,14 +584,60 @@ def region_limit_sentences(rec):
 
 
 def basic_region_sentences(rec):
-    """위 문장 중 기초 신호가 있는 것. 내리는 쪽 기준이다(넓게 센다)."""
+    """위 문장 중 기초 신호가 있는 것. 내리는 쪽 기준이다(넓게 센다).
+
+    내리는 쪽은 줄 단위로 넓게 본다 — 기초일 수 있으면 내리지 않는 것이 안전하다.
+    """
     return [hit for hit in region_limit_sentences(rec) if has_basic_signal(hit["sentence"])]
 
 
+# 절 경계. 쉼표·세미콜론으로 자르되 **괄호 안에서는 자르지 않는다** —
+# `본점소재지(개인사업자인 경우에는 … 허가ㆍ인가ㆍ면허ㆍ등록ㆍ신고 …)가 [수요기관(기초자치단체)]내에`
+# 처럼 제한 대상과 토큰 사이에 괄호가 통째로 끼는 문장이 흔하다.
+CLAUSE_BREAK = ",，;；"
+CLAUSE_OPEN = "([{（［｛【〔「『"
+CLAUSE_CLOSE = ")]}）］｝】〕」』"
+
+
+def _clauses(line):
+    """(줄 안 시작위치, 절). 괄호 깊이를 세면서 자른다."""
+    depth = start = 0
+    for index, char in enumerate(line):
+        if char in CLAUSE_OPEN:
+            depth += 1
+        elif char in CLAUSE_CLOSE:
+            depth = max(0, depth - 1)
+        elif depth == 0 and char in CLAUSE_BREAK:
+            yield start, line[start:index]
+            start = index + 1
+    yield start, line[start:]
+
+
 def confirmed_basic_region_sentences(rec):
-    """위 문장 중 토큰으로 기초가 확인된 것. 올리는 쪽 기준이다(좁게 센다)."""
-    return [hit for hit in region_limit_sentences(rec)
-            if has_confirmed_basic_signal(hit["sentence"])]
+    """**절 단위로** 제한 대상과 기초 토큰이 이어진 자리. 올리는 쪽 기준이다(좁게 센다).
+
+    줄 단위로 보면 안 된다. 한 줄에 참가자격 제한과 납품 장소가 같이 오는 공고가 있어서,
+    `본점소재지가 경기도 [지역:r1|단위=광역|…]에 있는 업체, 납품장소는 [지역:r2|단위=기초|…]`
+    를 "참가자격이 시·군·구로 제한됐다"로 읽는다. 제한은 광역인데 기초 토큰의 역할은 납품
+    장소다 — 올림은 **같은 절에서** 둘이 이어질 때만 허용한다(PR #114 리뷰 P1).
+    """
+    found = []
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        for line_start, line in _doc_lines(text):
+            if not line.strip() or not REGION_LIMIT_ANCHOR.search(line):
+                continue
+            if NOT_REGION_LIMIT.search(line) or not _is_qualification_context(text, line_start):
+                continue
+            for offset, clause in _clauses(line):
+                if not REGION_LIMIT_ANCHOR.search(clause):
+                    continue
+                if NOT_REGION_LIMIT.search(clause) or not has_confirmed_basic_signal(clause):
+                    continue
+                found.append({"doc_id": doc.get("doc_id"), "doc_type": doc.get("type"),
+                              "text": text, "start": line_start + offset,
+                              "sentence": clause, "line": line})
+    return found
 
 
 def price_below_region_limit(rec):
@@ -636,26 +682,42 @@ def _docs_dropped(rec):
 #     `견적서 제출 여부는 나라장터 …에서 확인하여야 합니다` 는 시스템이 `제출` 뒤에 있어 떨어지고,
 #     `공동수급협정서는 … 제출하여야 합니다` 는 제출물이 견적서·입찰서가 아니라 떨어진다.
 QUOTE_SYSTEM = re.compile(r"지정정보처리장치|국가종합전자조달|나라장터|G2B|전자조달시스템")
-QUOTE_OBJECT = re.compile(r"(?:전자)?(?:견적서|입찰서)")
+# 제출 대상이 될 수 있는 서류. **무엇을 내는 문장인지**를 이 목록으로 가른다.
+QUOTE_DOCUMENT = re.compile(
+    r"전자견적서|견적서|입찰서|공동수급협정서|협정서|서약서|제안서|산출내역서"
+    r"|증명서|확인서|등록증|신청서|제출서류|첨부서류")
+# 그중 이 계약의 견적·입찰 그 자체인 것.
+QUOTE_TARGET = re.compile(r"전자견적서|견적서|입찰서")
 QUOTE_SUBMIT_WORD = re.compile(r"제출")
 QUOTE_LOOKUP_ONLY = re.compile(r"^\s*(?:여부|확인|사실|결과|내역|현황)")
 QUOTE_SYSTEM_REACH = 80
-QUOTE_OBJECT_REACH = 60
 
 
 def _says_electronic_quote(line):
-    """이 줄이 견적서·입찰서를 지정정보처리장치로 제출한다고 말하는가."""
+    """이 줄이 **견적서·입찰서를** 지정정보처리장치로 제출한다고 말하는가.
+
+    창 안에 낱말이 같이 있는 것으로는 부족하다. `견적서는 나라장터에서 열람하고
+    공동수급협정서는 제출한다` 는 시스템·견적서·제출이 다 창 안에 있지만 내는 것은
+    협정서다(PR #114 리뷰 P1). 그래서 **그 `제출` 의 대상이 무엇인지**를 본다 —
+    바로 앞에 나온 서류가 견적서·입찰서여야 한다.
+
+    대상이 생략된 문장(`국가종합전자조달시스템을 이용하여 제출하여야 하며`)은 줄 안의
+    서류가 전부 견적서·입찰서일 때만 인정한다. 다른 서류가 섞여 있으면 가리지 못한다.
+    """
     for submit in QUOTE_SUBMIT_WORD.finditer(line):
         before = line[max(0, submit.start() - QUOTE_SYSTEM_REACH):submit.start()]
         if not QUOTE_SYSTEM.search(before):
             continue
-        around = line[max(0, submit.start() - QUOTE_OBJECT_REACH):
-                      submit.end() + QUOTE_OBJECT_REACH]
-        if not QUOTE_OBJECT.search(around):
-            continue
         if QUOTE_LOOKUP_ONLY.match(line[submit.end():submit.end() + 8]):
             continue
-        return True
+        preceding = QUOTE_DOCUMENT.findall(line[:submit.start()])
+        if preceding:
+            if QUOTE_TARGET.fullmatch(preceding[-1]):
+                return True
+            continue
+        documents = QUOTE_DOCUMENT.findall(line)
+        if documents and all(QUOTE_TARGET.fullmatch(name) for name in documents):
+            return True
     return False
 
 # (b) 금액기준. 용역·물품은 추정가격 1억원 이하다.
@@ -786,9 +848,47 @@ def evaluate_small_quote_exception(rec, sentences=None):
 
 
 def _v6_quote(hit):
-    """올림 근거문구. 그 문장의 원문 부분문자열이고 `clean_evidence()` 를 통과해야 한다."""
-    quote = hit["sentence"].strip()[:QUOTE_MAX]
-    return _submission().clean_evidence(quote, hit["text"])
+    """올림 근거문구. **기초 토큰을 반드시 담은** 연속 원문 구간이다.
+
+    앞에서 480자로 자르면 안 된다. 긴 참가자격 조항의 앞부분만 잘려 나가 `단위=기초` 가
+    빠진 인용이 되고, 그러면 근거가 항목을 입증하지 못한 채 양성만 남는다(PR #114 리뷰 P1).
+    그래서 절 안에서 **토큰 자리를 중심으로** 상한만큼 떼어 낸다.
+    """
+    script = _submission()
+    clause = hit["sentence"]
+    if len(clause.strip()) <= QUOTE_MAX:
+        return script.clean_evidence(clause.strip(), hit["text"])
+    anchors = [m.start() for m in script.ANON_REGION.finditer(clause)]
+    anchors += [m.start() for m in BASIC_AGENCY_TARGET.finditer(clause)]
+    if not anchors:
+        return ""
+    center = min(anchors)
+    lo = max(0, center - QUOTE_MAX // 3)
+    quote = clause[lo:lo + QUOTE_MAX].strip()
+    return script.clean_evidence(quote, hit["text"])
+
+
+def v6_evidence_contract(quote, rec):
+    """이 근거로 v6 양성을 써도 되는가. (통과여부, 사유) 를 돌려준다.
+
+    운영 `script.postprocess()` 가 v6 에 거는 계약을 후보가 **스스로 다시 건다.** 이 후보는
+    v6 을 그 후처리 뒤에 얹으므로, 다시 걸지 않으면 검사받지 않은 양성이 남는다.
+
+    한 자리에서 운영 게이트와 갈린다. `v6_not_a_basic_region_limit()` 은
+    `[수요기관(기초자치단체)]내에 소재` 를 기초 신호로 읽지 못해 조건 ②로 내린다(`PPS-DEV-071`).
+    그 한 경우만 사유를 남기고 통과시킨다 — 운영에 옮길 때 그 함수가 이 토큰을 배워야 한다는
+    뜻이고, 보고서 §"B에게 넘기는 것" ①이 그것이다. 다른 이유로 게이트가 내리면 올리지 않는다.
+    """
+    if not (quote or "").strip():
+        return False, "근거가 비었다"
+    if not has_confirmed_basic_signal(quote):
+        return False, "인용 안에 기초 토큰이 없다"
+    script = _submission()
+    if not script.v6_not_a_basic_region_limit(quote, rec):
+        return True, ""
+    if BASIC_AGENCY_TARGET.search(quote):
+        return True, "운영 게이트가 발주기관 토큰을 못 읽는다 — 운영 반영 시 수리 필요"
+    return False, "운영 v6 근거 게이트가 내린다"
 
 
 def v6_decision(model_v6, rec, rules):
@@ -802,7 +902,8 @@ def v6_decision(model_v6, rec, rules):
         if confirmed and price_below_region_limit(rec) and not is_small_negotiated(rec):
             for hit in confirmed:
                 quote = _v6_quote(hit)
-                if quote:
+                passed, _why = v6_evidence_contract(quote, rec)
+                if passed:
                     return 1, quote, "U"
     if model_v6 == 1 and not _docs_dropped(rec):
         if "L1" in rules and not sentences:
