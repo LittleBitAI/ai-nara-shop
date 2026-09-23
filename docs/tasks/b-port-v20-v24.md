@@ -1,6 +1,6 @@
 # Handover — port v20 (#111) and the v24 budget axis (#119) into `script.py`
 
-Status: review. Both ports are in, rebased on `main` `c8d99fe` (#98 v17 gate and
+Status: reviewed (round 1 `머지 허용`), merge pending. Both ports are in, rebased on `main` `c8d99fe` (#98 v17 gate and
 #114 merged; its `script.py` is the same as `9631dbd`'s). Each commit is separately green on the full suite except the two
 `test_setup_agents` errors that `main` also has (environmental). Awaiting the
 independent review of the operating-code port and A's submission decision.
@@ -67,11 +67,9 @@ The user asked for everything adopted to be reflected in `script.py`.
 
 ## What is left
 
-1. Review before it goes live. The plan requires the operating-code port to be
-   reviewed before any run, and the v24 task doc says "옮긴 운영 코드는 그 PR
-   에서 다시 리뷰한다". Use the `sol` Codex cell.
-2. Push and open the PR. The PR body needs the evidence-source and
-   unlabeled-check sections (#117).
+Nothing on this branch. PR #125 is open; independent review round 1 (`sol`
+cell, GPT-6-Sol) returned `새 발견 없음 · 머지 허용`. Merging and the combined
+submission are A's.
 
 ## A's decision (the user's)
 
