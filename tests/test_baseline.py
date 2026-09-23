@@ -737,6 +737,10 @@ class BaselineTests(unittest.TestCase):
         # 비율이 여럿이면 큰 쪽이 요구 배수다. 곁의 부가세율을 집어 정탐을 내리지 않는다.
         self.assertEqual(judged("v3", "예산금액의 130% 이상(부가세 10% 포함) 실적",
                                 meta={"입찰추정가격": 318_181_818}), 1)
+        # **기준액에 붙지 않은 비율은 요구 배수가 아니다.** `%`만 보고 집으면 부가세율을
+        # 배수로 읽어, 3배를 요구하는 정탐을 0.1배로 만들어 내린다(리뷰 P1).
+        self.assertEqual(judged("v3", "실적 3억원 이상 (부가세 10% 포함)",
+                                meta={"입찰추정가격": 100_000_000}), 1)
         # 1배 이상을 요구하는 인용은 그대로 둔다.
         self.assertEqual(judged("v3", "단일 건 3억 원 이상의 유사사업 실적",
                                 meta={"입찰추정가격": 227_272_727}), 1)
@@ -768,6 +772,12 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(judged("v6", basic), 1)
         self.assertEqual(judged("v6", "본 입찰은 전자입찰로만 집행합니다."), 0)
         self.assertEqual(judged("v6", "서울특별시 또는 경기도에 소재한 업체"), 0)
+        # **기초 단위를 이름으로만 적은 인용도 지역제한이다.** 광역명도 익명화 토큰도 없다는
+        # 이유로 내리면 시·군·구 제한 정탐을 잃는다(리뷰 P1). 이름 뒤에는 조사가 붙는다.
+        self.assertEqual(judged("v6", "주된 영업소가 고양시에 있는 업체"), 1)
+        self.assertEqual(judged("v6", "본점 소재지가 성남시의 관내인 업체"), 1)
+        # 두 음절 이상을 앞에 요구하므로 `실시`·`고시` 같은 낱말은 기초 단위로 세지 않는다.
+        self.assertEqual(judged("v6", "본 용역은 2026년 3월에 실시에 들어갑니다."), 0)
 
     def test_mock_cli_and_invalid_inputs(self):
         with tempfile.TemporaryDirectory(prefix="t1 한글 ") as tmp:

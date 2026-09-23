@@ -1973,7 +1973,10 @@ MONEY = re.compile(
 MONEY_MIN = 1_000_000            # 사람 수·건수를 금액으로 읽지 않기 위한 하한
 MONEY_MAX = 100_000_000_000      # 오독한 큰 수를 버리는 상한
 # 조문은 배수를 비율로도 적게 한다. `예산금액의 100% 이상`은 **1배 이내**라 위반이 아니다.
-PERF_RATIO = re.compile(r"(\d+(?:\.\d+)?)\s*%")
+# **기준액을 가리키는 말에 붙은 비율만 요구 배수다.** `%`만 보고 집으면 `부가세 10% 포함`
+# 같은 곁 숫자를 배수로 읽어, 3억원을 요구하는 정탐을 0.1배로 만들어 내린다.
+PERF_RATIO = re.compile(r"(?:추정가격|기초금액|예산금액|사업\s*예산|사업비|계약금액|입찰\s*금액|낙찰금액)"
+                        r"\s*의?\s*(\d+(?:\.\d+)?)\s*%")
 
 
 def parse_money(match):
@@ -2029,8 +2032,9 @@ def performance_below_budget(rec, evidence):
        부분문자열)를 채울 수 없다.
     ② 인용이 배수를 **비율**로 적었으면 그 비율이 100 이하일 때 내린다.
        조문이 1배 **이내**를 허용하므로 `예산금액의 100% 이상`은 위반이 아니다.
-       비율이 여럿이면 **가장 큰 것**을 요구 배수로 본다. 인용에 부가세율 같은 곁 숫자가
-       섞였을 때 작은 쪽을 집으면 1배 이상을 요구하는 정탐을 내린다.
+       비율은 **기준액을 가리키는 말에 붙은 것만** 센다(`PERF_RATIO`). 그런 비율이 없으면
+       ③으로 간다 — `부가세 10% 포함`은 요구 배수가 아니라 곁 숫자다.
+       비율이 여럿이면 **가장 큰 것**을 요구 배수로 본다.
     ③ 그 밖에는 인용 안 금액을 기준액과 견준다.
     """
     meta = rec.get("meta") or {}
@@ -2179,7 +2183,10 @@ def apply_qualification_rules(judgment, rec):
 # 이 꼴로 바뀌어 있다. `단위=기초` 가 시·군·구 제한이라는 신호다.
 ANON_REGION = re.compile(r"\[(?:등록)?지역:[^\]]*?단위=(기초|광역)[^\]]*\]")
 # 기초 단위를 이름으로 적은 공고도 있다. 광역시·특별시·특별자치시는 광역이므로 뺀다.
-BASIC_REGION_NAME = re.compile(r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)(?![가-힣])")
+# 이름 뒤에는 조사가 붙는다 — `고양시에`·`성남시의`. 뒤를 한글로 통째로 막으면 그 꼴을
+# 전부 놓치고, 시·군·구 제한인 인용을 "지역제한 문장이 아니다"로 읽는다.
+BASIC_REGION_NAME = re.compile(r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)"
+                               r"(?:(?![가-힣])|(?=[에의은는이가을를와과로내산]))")
 
 
 def _has_basic_unit(text: str) -> bool:
@@ -2198,8 +2205,10 @@ def v6_not_a_basic_region_limit(evidence: str, rec: Dict[str, Any]) -> bool:
     if not (evidence or "").strip():
         return True                                     # ① 근거 없는 양성
     wide = set(re.findall(WIDE_REGION, evidence))
-    if not wide and not ANON_REGION.search(evidence):
+    if not wide and not ANON_REGION.search(evidence) and not _has_basic_unit(evidence):
         return True                                     # ② 지역제한 문장이 아니다
+        # 기초 단위를 이름으로만 적은 공고(`주된 영업소가 고양시에 있는 업체`)는 광역명도
+        # 익명화 토큰도 없다. 그것을 "지역제한이 아니다"로 읽으면 v6 정탐을 내린다.
     if len(wide) >= 2 and not _has_basic_unit(evidence):
         return True                                     # ③ 광역 확대 — v7 의 몫이다
     return False
