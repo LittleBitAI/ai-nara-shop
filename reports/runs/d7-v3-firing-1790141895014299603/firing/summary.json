@@ -1,0 +1,34 @@
+{
+  "mode": "live_baseline_v3_only",
+  "dev": {
+    "count": 200,
+    "model_v3": 17,
+    "model_v3_rate": 0.085,
+    "gate_fired": 7,
+    "gate_fired_rate": 0.035,
+    "gate_fired_given_model_v3": 0.4117647058823529,
+    "final_v3": 10,
+    "final_v3_rate": 0.05
+  },
+  "unlabeled": {
+    "count": 1000,
+    "model_v3": 83,
+    "model_v3_rate": 0.083,
+    "gate_fired": 24,
+    "gate_fired_rate": 0.024,
+    "gate_fired_given_model_v3": 0.2891566265060241,
+    "final_v3": 46,
+    "final_v3_rate": 0.046
+  },
+  "unlabeled_over_dev": {
+    "model_v3_rate": 0.9764705882352941,
+    "gate_fired_rate": 0.6857142857142856,
+    "final_v3_rate": 0.9199999999999999
+  },
+  "complete": false,
+  "completed_shards": [
+    "dev",
+    "unlabeled-00"
+  ],
+  "note": "v3 판정·게이트 발화율만 잰다. Macro F1·서버 통과·다른 항목의 값이 아니다. 부분 수집은 표본이며 20,000건 증거가 아니다. dev 발화가 0이면 배율은 null 이다."
+}

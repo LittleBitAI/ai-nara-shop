@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/d7-v3-firing-xvyvomtv/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/d7-v3-firing-xvyvomtv/repo/requirements.txt"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv",
+  "started": 1790138138.8492749,
+  "returncode": 0,
+  "elapsed_seconds": 0.6065192222595215
+}
