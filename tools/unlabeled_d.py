@@ -28,14 +28,38 @@ def load(path, name):
     return module
 
 
+def check_prefix(ids, failed, order):
+    """Shards plus the failed set must be exactly the first k IDs of the sample order.
+
+    A missing shard or an unexplained gap would still yield a D, just from a non-random
+    subset of the sample (review round 2). Check the whole contract here, once.
+    """
+    if len(set(ids)) != len(ids):
+        raise ValueError("묶음들에 같은 ID 가 두 번 있다")
+    if set(ids) & set(failed):
+        raise ValueError(f"성공과 실패 집합 F 에 같이 있다: {sorted(set(ids) & set(failed))[:5]}")
+    seen = set(ids) | set(failed)
+    if seen != set(order[:len(seen)]):
+        missing = [i for i in order[:len(seen)] if i not in seen]
+        raise ValueError(f"표본 순서의 앞 {len(seen)}건이 아니다 — 빠진 ID {missing[:5]} "
+                         "(묶음이 빠졌거나 F 에 없는 누락이다)")
+
+
 def layers(rows, recs, candidate):
-    """rows: submission.csv 행, recs: id→공고. 항목별 D 셀 목록과 층 크기."""
+    """rows: submission.csv 행, recs: id→공고. 항목별 D 셀 목록과 층 크기.
+
+    Each cell must satisfy the production postprocess contract: 0/1 only, a positive carries
+    a non-empty verified quote, a negative carries none. A cell outside it would be counted
+    in the wrong layer and silently shrink D (review rounds 1-2).
+    """
     out = {item: {"D": [], "R": 0, "Z": 0} for item in ITEMS}
     for row in rows:
         for item, evidence in ITEMS.items():
             if row[item] not in ("0", "1"):
-                # A corrupted cell counted as Z would silently shrink D (review round 1).
                 raise ValueError(f"{row['id']} {item}={row[item]!r}: CSV 계약 밖 값이다")
+            if (row[item] == "1") != bool(row[evidence].strip()):
+                raise ValueError(f"{row['id']} {item}={row[item]} 인데 {evidence} 가 "
+                                 f"{'비었다' if row[item] == '1' else '있다'}: 후처리 계약 위반")
             if row[item] == "0":
                 out[item]["Z"] += 1
                 continue
@@ -71,6 +95,13 @@ def main(argv=None):
     if len(set(names)) != len(names):
         raise ValueError(f"같은 묶음이 두 폴더에 있다: {sorted({n for n in names if names.count(n) > 1})}")
     ids = [i for s in shards for i in json.loads((s / "ids.json").read_text(encoding="utf-8"))]
+    failed = set()
+    for run in args.run:
+        summary_path = Path(run) / "summary.json"
+        if summary_path.is_file():
+            failed |= set(json.loads(summary_path.read_text(encoding="utf-8")).get("failed", []))
+    order_list = Path(args.order).read_text(encoding="utf-8").split()
+    check_prefix(ids, failed, order_list)
     idset = set(ids)
     recs = {}
     for line in Path(args.input).read_bytes().decode("utf-8").split("\n"):

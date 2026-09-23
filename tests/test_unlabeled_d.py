@@ -7,7 +7,26 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.unlabeled_d import layers  # noqa: E402
+from tools.unlabeled_d import check_prefix, layers  # noqa: E402
+
+
+class SampleContract(unittest.TestCase):
+    """Review round 2: the shards plus the failed set must be exactly a prefix of the order."""
+
+    ORDER = ["A", "B", "C", "D", "E", "F"]
+
+    def test_full_prefix_passes(self):
+        check_prefix(["A", "B", "C", "D"], set(), self.ORDER)
+        check_prefix(["A", "C", "D"], {"B"}, self.ORDER)
+
+    def test_missing_shard_or_gap_is_rejected(self):
+        for ids, failed in ((["C", "D"], set()),          # first shard missing
+                            (["A", "C"], set()),          # gap not in F
+                            (["A", "B"], {"B"}),          # both succeeded and failed
+                            (["A", "B", "B"], set())):    # duplicate
+            with self.subTest(ids=ids, failed=failed):
+                with self.assertRaises(ValueError):
+                    check_prefix(ids, failed, self.ORDER)
 
 
 class Layers(unittest.TestCase):
@@ -38,10 +57,21 @@ class Layers(unittest.TestCase):
         """Review round 1: a corrupted cell must not be counted as Z."""
         candidate = types.SimpleNamespace(v3_deletion=lambda q, r: None, v17_deletion=lambda q: None)
         for bad in ("2", "", " 1", "1.0"):
-            with self.subTest(value=bad):
-                rows = [{"id": "X", "v3": bad, "e3": "q", "v17": "0", "e17": ""}]
+            for quote in ("q", ""):   # with and without evidence, so the value check stands alone
+                with self.subTest(value=bad, quote=quote):
+                    rows = [{"id": "X", "v3": bad, "e3": quote, "v17": "0", "e17": ""}]
+                    with self.assertRaises(ValueError):
+                        layers(rows, {"X": {}}, candidate)
+
+    def test_rejects_evidence_that_breaks_the_postprocess_contract(self):
+        """Review round 2: production writes evidence for every v3/v17 positive and none for a 0."""
+        candidate = types.SimpleNamespace(v3_deletion=lambda q, r: None, v17_deletion=lambda q: None)
+        for row in ({"id": "X", "v3": "0", "e3": "", "v17": "1", "e17": ""},
+                    {"id": "X", "v3": "1", "e3": "  ", "v17": "0", "e17": ""},
+                    {"id": "X", "v3": "0", "e3": "stray", "v17": "0", "e17": ""}):
+            with self.subTest(row=row):
                 with self.assertRaises(ValueError):
-                    layers(rows, {"X": {}}, candidate)
+                    layers([row], {"X": {}}, candidate)
 
 
 if __name__ == "__main__":
