@@ -35,13 +35,25 @@ ROOT = Path(__file__).resolve().parents[3]
 ITEMS = ["v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v20"]
 
 
-def wilson(k, n, z=1.96):
-    """dev 발화율의 신뢰구간. dev 가 200건뿐이라 배율의 불확실성은 거의 전부 여기서 온다."""
-    p = k / n
-    denom = 1 + z * z / n
-    centre = p + z * z / (2 * n)
-    half = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
-    return ((centre - half) / denom, (centre + half) / denom)
+def ratio_interval(dev_k, dev_n, unl_k, unl_n, z=1.96):
+    """배율(두 이항 비율의 비)의 95% 구간 — Katz 로그법.
+
+    **양쪽의 불확실성을 같이 넣는다.** 처음 판은 dev 쪽만 넣었는데, 무라벨 쪽 분모가
+    열 배라고 해서 그쪽 분자가 확실한 것은 아니다. v12 는 무라벨 발화가 14건뿐이라
+    그 항을 빼면 상한이 0.90 으로 나오고 넣으면 **1.05** 로 나온다 — 판정이 뒤집힌다.
+    """
+    if not dev_k or not unl_k:
+        return (None, None)          # 한쪽이 0 이면 로그법을 못 쓴다. 미정으로 둔다
+    ratio = (unl_k / unl_n) / (dev_k / dev_n)
+    spread = math.sqrt(1 / dev_k - 1 / dev_n + 1 / unl_k - 1 / unl_n)
+    return (ratio * math.exp(-z * spread), ratio * math.exp(z * spread))
+
+
+def direction(low, high):
+    """구간이 1 을 물면 방향을 말하지 않는다. 점추정을 방향으로 읽지 않는다."""
+    if low is None or (low <= 1 <= high):
+        return "미정"
+    return "더 적다" if high < 1 else "더 많다"
 
 
 def read_rows(paths):
@@ -76,14 +88,14 @@ def main(argv=None):
         tp = sum(truth[r["id"]][item] == "1" for r in fired_dev)
         dev_rate = len(fired_dev) / len(dev)
         unl_rate = fired_unl / len(unlabeled)
-        low, high = wilson(len(fired_dev), len(dev))
+        low, high = ratio_interval(len(fired_dev), len(dev), fired_unl, len(unlabeled))
         out["items"][item] = {
             "dev_fired": len(fired_dev), "dev_rate": dev_rate,
             "unlabeled_fired": fired_unl, "unlabeled_rate": unl_rate,
             "multiplier": (unl_rate / dev_rate) if dev_rate else None,
-            # dev 발화율의 95% 구간을 배율로 옮긴 것. 구간이 1 을 물면 방향을 말할 수 없다.
-            "multiplier_low": unl_rate / high if high else None,
-            "multiplier_high": unl_rate / low if low else None,
+            # 배율의 95% 구간. 구간이 1 을 물면 방향을 말할 수 없다.
+            "multiplier_low": low, "multiplier_high": high,
+            "direction": direction(low, high),
             "dev_tp": tp, "dev_fp": len(fired_dev) - tp,
         }
 
@@ -92,21 +104,18 @@ def main(argv=None):
         json.dump(out, stream, ensure_ascii=False, indent=1)
         stream.write("\n")
 
+    # f-string 안에서 바깥과 같은 따옴표를 다시 쓰지 않는다. 그 문법은 3.12 부터이고
+    # 이 저장소가 지원하는 3.11 에서는 파싱 자체가 실패한다.
     print(f'{"항목":<6}{"dev 발화":>9}{"dev율":>8}{"무라벨":>8}{"무라벨율":>10}'
           f'{"배율":>7}{"95% 구간":>16}{"방향":>7}{"dev TP/FP":>11}')
     for item in ITEMS:
         row = out["items"][item]
-        span = f'[{row["multiplier_low"]:.2f}, {row["multiplier_high"]:.2f}]'
-        if row["multiplier_low"] > 1:
-            direction = "더 많다"
-        elif row["multiplier_high"] < 1:
-            direction = "더 적다"
-        else:
-            direction = "미정"
+        low, high = row["multiplier_low"], row["multiplier_high"]
+        span = "미산출" if low is None else "[{:.2f}, {:.2f}]".format(low, high)
+        score = "{}/{}".format(row["dev_tp"], row["dev_fp"])
         print(f'{item:<6}{row["dev_fired"]:>9}{row["dev_rate"]:>8.3f}'
               f'{row["unlabeled_fired"]:>8}{row["unlabeled_rate"]:>10.4f}'
-              f'{row["multiplier"]:>7.2f}{span:>16}{direction:>7}'
-              f'{f"{row['dev_tp']}/{row['dev_fp']}":>11}')
+              f'{row["multiplier"]:>7.2f}{span:>16}{row["direction"]:>7}{score:>11}')
     print(f'dev {out["dev_n"]}건 · 무라벨 {out["unlabeled_n"]}건')
 
 
