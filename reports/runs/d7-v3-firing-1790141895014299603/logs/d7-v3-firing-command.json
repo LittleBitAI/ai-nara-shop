@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/content/d7-v3-firing-xvyvomtv/venv/bin/python",
+    "/content/d7-v3-firing-xvyvomtv/repo/experiments/d7_collect_v3_firing.py",
+    "--input",
+    "/content/drive/MyDrive/d7/train_unlabeled.jsonl",
+    "--output-dir",
+    "/content/drive/MyDrive/d7/v3-firing-c236a67244cc",
+    "--model-dir",
+    "/root/.cache/huggingface/hub/models--google--gemma-4-26B-A4B-it/snapshots/4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "--shards-per-episode",
+    "1"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv/repo",
+  "started": 1790139205.426737,
+  "returncode": 0,
+  "elapsed_seconds": 2689.578721523285
+}
