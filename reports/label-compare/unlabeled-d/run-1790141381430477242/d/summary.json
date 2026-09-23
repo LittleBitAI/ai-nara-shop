@@ -1,0 +1,33 @@
+{
+  "notices": 2000,
+  "order_prefix": 2000,
+  "submission_sha256": {
+    "u00": "e708e6ed0ce5ed6c007fc5ffb950089fc381bb97e9dfb6549d33d9540d0427d7",
+    "u01": "38d004e005c14524861b091d7476b4f7d1cecd53cfdb81928dcd4694d1661b06",
+    "u02": "7759123f937213847d3d22a5b8e93eab1fff158e807467d3ad55f5ed62f2e1d2",
+    "u03": "83213646ef985fe49f606f12a812f268cf7eb385ce23670d1376bb018e2352d7"
+  },
+  "items": {
+    "v3": {
+      "N_D": 8,
+      "N_R": 58,
+      "N_Z": 1934,
+      "wanted": 19,
+      "drawn": 8,
+      "reasons": {
+        "below_budget": 4,
+        "scoring_band": 4
+      }
+    },
+    "v17": {
+      "N_D": 22,
+      "N_R": 41,
+      "N_Z": 1937,
+      "wanted": 32,
+      "drawn": 22,
+      "reasons": {
+        "no_mid_size_entity": 22
+      }
+    }
+  }
+}
