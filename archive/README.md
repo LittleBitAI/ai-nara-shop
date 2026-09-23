@@ -12,4 +12,7 @@
 | [배경.md](contest/배경.md) | 4654 | `6352f5ebb11392c6fb8910100ee42e058e3f0821b588d65b70943f0efecf164f` |
 | [datasets.md](contest/datasets.md) | 0 | `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855` |
 
+| [notice-region-limit.md](contest/notice-region-limit.md) | 2976 | `178ac2f6e1920f454dcd5863d0fcfd32e1f3c73f38056a8ddd005dec8e85d0d8` |
+
+`notice-region-limit.md`는 대회 공지(지역제한 금액 보완) 본문을 그대로 옮긴 것입니다.
 `datasets.md`는 원래 빈 파일입니다. 누락된 자료로 추정해 내용을 만들지 않았습니다.
