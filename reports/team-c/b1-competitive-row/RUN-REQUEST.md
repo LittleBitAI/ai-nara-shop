@@ -345,6 +345,43 @@ if recorded and not (recorded.startswith(code_commit) or code_commit.startswith(
 회차 기록의 `code.commit` 이 가리키고 다른 환경의 `--verify` 가 찾으려면
 그 커밋이 **원격에 남아 있어야 한다.**
 
+### 3-4. 1~4단계는 이미 밟았다 — **담당자는 5단계부터 시작한다**
+
+7차 리뷰의 인수인계 2번까지를 실제로 실행했다. **아래는 계획이 아니라 기록이다.**
+
+| 단계 | 결과 |
+| --- | --- |
+| 0) 기준 재생 | **Macro 0.609274806721** — 기대값과 일치 |
+| 1) 적용 전 회귀 검사 | `tests/test_c_competitive_row_diff.py` **10 passed** |
+| 2) 실험 브랜치 | `run/b1-competitive-row` (작업 브랜치 `feat/c-v18-fn-audit` 에서 분기) |
+| 3) diff 적용 | `script.py` 마커 2 · `tools/replay_run.py` 마커 1 |
+| 3-1) 적용 후 재생 | **바이트 동일** `sha256 7dd13743d39564db…` · 종료 코드 0 |
+| 4) 실험 커밋·push | **`9ed08054fc2c288a57fa33c689ea1f31703d15b2`** |
+
+**Colab 에 넣을 값이 이것이다.**
+
+```python
+SOURCE_MODE = "clone"
+REPO_REF    = "9ed08054fc2c288a57fa33c689ea1f31703d15b2"
+```
+
+**노트북과 같은 방식의 fetch 가 실제로 되는지 확인했다.**
+
+```text
+git clone --depth 1 --branch main <repo> <dir>
+git -C <dir> fetch --depth 1 origin 9ed08054fc2c288a57fa33c689ea1f31703d15b2
+  → * branch  9ed08054… -> FETCH_HEAD      ★ 성공
+git -C <dir> checkout FETCH_HEAD
+  → script.py 마커 2 · tools/replay_run.py 마커 1 · HEAD = 9ed08054…
+```
+
+**작업 브랜치 복구도 확인했다**(§3 12단계) — `git switch` 뒤 마커 **0·0**,
+`HEAD = 4a72194…` 로 실험 커밋과 다르고, `git status --porcelain` 이 빈 출력이다.
+**운영 `main` 에는 적용하지 않았다.**
+
+> **주의 — 이것으로 회차가 돈 것이 아니다.** 5단계(Colab dev 200건)부터가 GPU 이고
+> **아직 실행되지 않았다.** 이 절의 기록은 "코드가 원격에 고정됐고 받을 수 있다" 까지다.
+
 ## 4. 합격 기준 — **회차 전에 고정한다**
 
 네 가지를 **전부** 충족해야 채택 후보로 올린다. 하나라도 어긋나면 반려다.
@@ -594,7 +631,10 @@ FN 집합이 바뀐 것**이고, 그 수가 곧 FN 축의 churn 이다.
 | 새 회차 재생 가능성 | **미측정.** 새 회차가 없어 `--verify` 를 못 돌렸다. §3-1 은 코드를 읽고 파싱 동작을 실측한 결론이지 회차로 확인한 것이 아니다 |
 | `register_run.py` 등록 | **미실행.** CLI 인자와 두 검사(`len(candidates)!=1`, `source.json` 대조)를 **소스로 확인**했다 |
 | 복구 절차 | **모형으로 확인함.** 임시 git 저장소에서 커밋 뒤 `git checkout --` 가 안 되돌리는 것과, 실험 브랜치 방식이 되돌리는 것을 둘 다 재현했다(§3-2) |
-| 실험 ref push | **안 함.** 회차를 안 돌렸다. §3-3 은 노트북·등록기 **소스를 읽은** 결론이고 Colab 에서 확인한 것이 아니다 |
+| 실험 ref push | **했다.** `run/b1-competitive-row` = `9ed08054fc2c288a57fa33c689ea1f31703d15b2`. §3 1~4단계를 실제로 밟았다(§3-4) |
+| 실험 코드로 보관 회차 재생 | **했다.** 적용 전후 `sha256 7dd13743d39564db…` 로 **바이트 동일** |
+| 노트북과 같은 방식의 fetch | **했다.** `clone --depth 1 --branch main` 뒤 `fetch --depth 1 origin <40자 SHA>` 성공 · 체크아웃 코드에 마커 확인 |
+| 작업 브랜치 복구 | **했다.** `git switch` 뒤 마커 0·0 · HEAD ≠ 실험 커밋 · `git status` 빈 출력 |
 | **두 회차 반복** | **미실행.** §4-1 은 판정 **방법**을 고정한 것이고 churn 실측값이 아니다 |
 | 경로 규약(§3-0) | **확인함.** 등록된 회차 `colab-1789902969401579900` 의 실제 배치를 조회했다 — 루트에 CSV 가 없고 `dev/`·`dev-debug/`·`sample/` 아래에 있다 |
 | `submit`/`results` 해시 구분(§4-1) | **기존 기록으로 확인함.** 같은 `code.commit` 회차 쌍 4쌍이 전부 `results` 다름·`submit` 같음이었다 |
@@ -629,9 +669,9 @@ FN 집합이 바뀐 것**이고, 그 수가 곧 FN 축의 churn 이다.
   근거 행을 더해도 안 풀린다.
 - **새 회차가 고정 커밋으로 실제 재생되는지.** §3-1 은 파싱 동작을 실측하고 코드를 읽어
   세운 결론이다. **새 회차가 없어 `--verify` 로 확인하지 못했다.** §3 8단계가 그 확인이다.
-- **실험 ref 를 실제로 push 해 Colab 이 받는지.** §3-3 은 노트북과 등록기 **소스를 읽은**
-  결론이다. `git fetch --depth 1 origin <SHA>` 가 그 ref 로 실제로 되는지는 **안 해 봤다.**
-  `--depth 1` 이라 얕은 fetch 로 그 커밋을 받을 수 있어야 한다.
+- ~~실험 ref 를 실제로 push 해 Colab 이 받는지.~~ **닫혔다** — §3-4 에 실측을 적었다.
+  다만 **Colab 런타임에서 돌린 것은 아니다.** 같은 명령을 로컬에서 흉내 낸 것이라
+  네트워크·인증 환경이 다르면 결과가 다를 수 있다.
 - **`register_run.py` 를 실제로 돌려 보지 않았다.** CLI 인자와 두 검사
   (`len(candidates) != 1`, `source.json` 대조)를 **소스로** 확인했다.
   `artifacts/inbox-run1`·`-run2` 를 쓰는 것도 그 검사에서 유도한 것이지 돌려 본 것이 아니다.
