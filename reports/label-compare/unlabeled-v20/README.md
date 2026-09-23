@@ -74,7 +74,7 @@ every value of `U1` (a tie only when `K1 = U1 = 0`) — the additions, where the
 not decide the sign. `P` includes `Z1`, the positives neither side predicts; see the bounds under Result.
 
 Every removal rests on a text fact, not a legal reading: the notice has no software-provider registration of
-any kind, or it contains the 제48조 sentence. dev: 191/191 notices without registration are v20=0, 3/3 with
+any kind, or it contains the 제48조 sentence. dev (current detector): 187/187 notices without a software term are v20=0, 3/3 with
 the sentence are v20=0.
 
 A first regex pass over the removals found notices registering other software categories (1426, 1470) or
@@ -130,8 +130,8 @@ has a verified quote. Only then are the 48 removals checked. A removal the LLM r
   those 41 as "registration no".
 
 So every removal is one of the two facts, read the same way by two independent readers. `W1 = 0` then
-holds as far as the definition does: dev has 0 positives among 191 notices without registration
-(95% Wilson upper bound 1.97%, about 0.8 expected among 41) and among 3 with the sentence.
+holds as far as the definition does: dev has 0 positives among 187 notices without a software term
+(95% Wilson upper bound 2.01% for 0/187, about 0.8 expected among 41) and among 3 with the sentence.
 If `W1 = 0` the candidate beats the model on v20 for any `U1`. Worst case `U1 = 0`, pred 67 vs 77, the
 smallest `K1` (of 33) that still wins:
 
@@ -142,8 +142,8 @@ smallest `K1` (of 33) that still wins:
 | 3 | 31 | 48 (impossible) |
 
 Simulation (seed 20260923, 20,000 draws; rule-1 precision Beta(6,3) from dev 5/7, abstain-kept model
-precision Beta(2,5) from dev 1/5, rule-0 positive rate Beta(1,195) from dev 0/194 for both W and Z):
-P(candidate wins v20) 1.0, v20 F1 gain 5%/50% +0.255/+0.412, Macro +0.0106/+0.0171. With `Z1 = 40`
+precision Beta(2,5) from dev 1/5, rule-0 positive rate Beta(1,191) from dev 0/190 for both W and Z):
+P(candidate wins v20) 1.0, v20 F1 gain 5%/50% +0.254/+0.411, Macro +0.0106/+0.0171. With `Z1 = 40`
 fixed: 1.0, F1 +0.196/+0.322, Macro +0.0082/+0.0134.
 
 What this does not measure: the additions `U1` and whether the unlabeled 2,000 stand in for the evaluation
