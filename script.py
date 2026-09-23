@@ -1624,7 +1624,14 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
         # 경계는 계약법·업무구분마다 다르다. 국가 용역물품 2.3억을 지방 공고에 쓰면
         # 지방의 제한 허용 구간(시행규칙 제24조) 한복판을 v5 로 읽는다.
         # 표는 `REGION_PRICE_LIMIT` 에 이미 있었고 v7 이 같은 표를 쓴다.
-        return region_restriction_allowed(rec)
+        #
+        # **`region_restriction_allowed()` 를 그대로 쓰지 않는다.** 그 함수는 v7 의 양성
+        # 검출을 지키려고 금액·계약법·업무구분을 모르면 True(= 못 막는다)를 낸다. 그 True 를
+        # 여기서 "위반이 아니다"로 읽으면 판단 불가인 공고의 v5 양성을 지운다.
+        # 반증은 **상한과 금액을 둘 다 읽었을 때만** 성립한다.
+        limit = region_price_limit(rec)
+        price = estimated_price(rec)
+        return limit is not None and price is not None and price < limit
     if item == "v19":
         if not v19_demanded_at_bid_stage(rec):
             return True                     # 공고가 입찰 단계에서 요구한 적이 없다
@@ -1810,14 +1817,21 @@ def _price_scope(work_type):
     return None
 
 
+def region_price_limit(rec):
+    """이 공고에 적용되는 지역제한 허용 상한. 계약법이나 업무구분을 모르면 None."""
+    meta = rec.get("meta") or {}
+    return REGION_PRICE_LIMIT.get((meta.get("적용계약법"), _price_scope(meta.get("업무구분"))))
+
+
 def region_restriction_allowed(rec):
     """추정가격이 지역제한 허용 상한 미만인지. 판단할 수 없으면 True를 돌려준다.
 
     모르는 것을 근거로 막지 않는다. 막는 쪽이 틀리면 정답 양성을 잃는다.
+    **이 True 는 "허용 구간이다"가 아니라 "못 막는다"이다.** 그러므로 다른 항목에서
+    "위반이 아니다"라는 뜻으로 뒤집어 쓰면 안 된다 — 모르는 공고의 양성을 지운다.
     """
     meta = rec.get("meta") or {}
-    scope = _price_scope(meta.get("업무구분"))
-    limit = REGION_PRICE_LIMIT.get((meta.get("적용계약법"), scope))
+    limit = region_price_limit(rec)
     price = meta.get("입찰추정가격")
     if limit is None or not price:
         return True
@@ -2162,15 +2176,13 @@ def apply_qualification_rules(judgment, rec):
     out = dict(judgment)
     for item in QUALIFICATION_ITEMS:
         cell = dict(out.get(item) or {"위반여부": 0, "근거문구": None})
-        # v4 만 음성 결과도 쓴다. 특정기관 한정이 공고 어디에도 없으면 이 항목이 성립하지
-        # 않는다 — 규칙은 이미 매 공고에서 돌고 있었고 그 답을 버리고 있었다.
-        if cell.get("위반여부") == 1 and item != "v4":
+        # 세 규칙 다 **양성 검출기**다. 못 찾은 것은 "없다"가 아니라 "이 어휘로는 못 봤다"이다.
+        # 한때 v4 에서 그 None 을 확정적 음성으로 승격시켜 dev 오탐 3건을 지웠지만,
+        # `[수요기관(기초자치단체)|지역=r1]` 처럼 익명화된 기관 토큰에서 검출기가 None 을
+        # 내므로 정답 양성까지 함께 지운다. 되돌렸다 — 여기서는 0 을 1 로만 올린다.
+        if cell.get("위반여부") == 1:
             continue
         hit = RULES[item](rec)
-        if cell.get("위반여부") == 1:
-            if hit is None:
-                out[item] = {"위반여부": 0, "근거문구": None}
-            continue
         if hit:
             out[item] = {"위반여부": 1, "근거문구": hit["근거문구"]}
     v3 = dict(out.get("v3") or {"위반여부": 0, "근거문구": None})

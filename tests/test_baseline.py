@@ -750,10 +750,15 @@ class BaselineTests(unittest.TestCase):
         self.assertIsNone(baseline.performance_below_budget({"meta": {}}, "실적 3천만원"))
         self.assertIsNone(baseline.performance_below_budget({"meta": small}, "실적이 있는 업체"))
 
-        # ----- v4: 공고 어디에도 특정기관 한정이 없으면 이 항목이 성립하지 않는다.
+        # ----- v4: 검출기의 미탐은 "기관 제한이 없다"가 아니다. 0을 1로만 올린다.
         institution = "가. 입찰참가자격: 최근 3년 이내 공공기관에서 발주한 유사용역 실적이 있는 업체"
         self.assertEqual(judged("v4", institution), 1)
-        self.assertEqual(judged("v4", "가. 입찰참가자격: 최근 3년 이내 유사용역 실적이 있는 업체"), 0)
+        # 익명화된 기관 토큰은 검출기 어휘 밖이라 None 이 나온다. 그것으로 모델 양성을
+        # 내리면 정답까지 지운다 — 한때 그렇게 했다가 리뷰 P1 으로 되돌렸다.
+        anonymous = "입찰참가자격: [수요기관(기초자치단체)|지역=r1]이 발주한 유사용역 실적을 보유한 업체"
+        self.assertIsNone(baseline.detect_institution_performance(
+            {"docs": [{"doc_id": "a", "type": "공고문", "text": anonymous}]}))
+        self.assertEqual(judged("v4", anonymous), 1)
 
         # ----- v5: 고시금액 경계는 계약법·업무구분마다 다르다(REGION_PRICE_LIMIT).
         region = "주된 영업소가 서울특별시 관내에 있는 업체"
@@ -763,6 +768,14 @@ class BaselineTests(unittest.TestCase):
         national = {"적용계약법": "국가계약법", "업무구분": "일반용역"}
         self.assertEqual(judged("v5", region, meta={**national, "입찰추정가격": 200_000_000}), 0)
         self.assertEqual(judged("v5", region, meta={**national, "입찰추정가격": 727_272_727}), 1)
+        # **판단할 수 없으면 반증이 아니다.** `region_restriction_allowed()` 는 v7 을 지키려고
+        # 모르면 True(= 못 막는다)를 내는데, 그것을 "위반이 아니다"로 읽으면 판단 불가인
+        # 공고의 v5 양성을 지운다(리뷰 P1). 세 가지 불명 모두에서 양성이 서 있어야 한다.
+        self.assertEqual(judged("v5", region, meta={**national, "입찰추정가격": None}), 1)
+        self.assertEqual(judged("v5", region, meta={"적용계약법": None, "업무구분": "일반용역",
+                                                    "입찰추정가격": 727_272_727}), 1)
+        self.assertEqual(judged("v5", region, meta={"적용계약법": "국가계약법", "업무구분": None,
+                                                    "입찰추정가격": 727_272_727}), 1)
         # **v7 은 같은 표를 다른 방향으로 쓴다.** 고시금액 미만은 v7 의 구간이므로
         # v5 를 내리는 그 기록에서 v7 은 그대로 서 있어야 한다.
         self.assertEqual(judged("v7", region, meta={**local, "입찰추정가격": 262_727_273}), 1)
