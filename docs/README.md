@@ -69,6 +69,7 @@
 | 대회 이해·평가 전략·운영 | [contest](contest.md), [roadmap](roadmap.md) | 제공 안내의 평가 비중·일정, 새 공식 공지가 있는 경우 변경 사항 |
 | 전처리·문서 선택 | [data](data.md), [design](design.md) | 현재 `script.py`의 입력·예산 처리, 제공 원본 `open/baseline/script.py`와 비교 |
 | 명세·법령 매핑 | [items](items.md), [rules](rules.md), [contracts](contracts.md) | `open/data/항목표.json`, `open/data/법령패키지/` |
+| 운영진 답변·dev 라벨 노이즈 확인 | [qna](qna.md) | 원문 `archive/contest/qna/` 17건(S7) |
 | 라벨·사례 생성 | [rules](rules.md), [contracts](contracts.md) | `open/train_unlabeled.jsonl`, `open/dev.jsonl` |
 | 프롬프트·검색 | [design](design.md), [contracts](contracts.md) | 승인 명세, 항목표, RAG 노트북 |
 | 위키 판정 페이지·RAG 파일럿 | [실제 결과](../reports/wiki-rag-pilot/results.md), [Claude 착수서](tasks/wiki-rag-pilot.md) | v20 현재 방식/원문/페이지 세 군, 동일 공고 입력·기존 소비자. 두 회차 완료·가설 기각·미채택 |
