@@ -1,0 +1,41 @@
+{
+  "notices": 6000,
+  "order_prefix": 6000,
+  "submission_sha256": {
+    "u00": "e708e6ed0ce5ed6c007fc5ffb950089fc381bb97e9dfb6549d33d9540d0427d7",
+    "u01": "38d004e005c14524861b091d7476b4f7d1cecd53cfdb81928dcd4694d1661b06",
+    "u02": "7759123f937213847d3d22a5b8e93eab1fff158e807467d3ad55f5ed62f2e1d2",
+    "u03": "83213646ef985fe49f606f12a812f268cf7eb385ce23670d1376bb018e2352d7",
+    "u04": "936c7667177d94557c44e3c7d775762ac39b3acb1c252bf021984fe44faa00ea",
+    "u05": "5c41c0f39142635372fb37eaaf7b20b2e1323eb92e21828c6e1897c0fdec02d5",
+    "u06": "7d17669837383b0bc5844fa8058b7a979211ca46296002565d8dd5403fbc1b1c",
+    "u07": "698511a9c605bf6b9d83b0d001036c4a2181dd9758b54767e711790e6db1cd0e",
+    "u08": "2ff4ca5d247b9d616d72b7a544603e70c9695bb5413b13562ba7c7cd1025e21b",
+    "u09": "3bfdabfe154cdae6a52ce10409547dbec890cfef42cd8a5d7c51fadc0039721a",
+    "u10": "db1032031e0d3b4d55b695071c3f050185cbde52c4a8d4676026ce5805786f11",
+    "u11": "a0f3a274811ac0e8d5bc5e0b593fc56698c20de330ffd4355a62eb552d40ee3f"
+  },
+  "items": {
+    "v3": {
+      "N_D": 14,
+      "N_R": 167,
+      "N_Z": 5819,
+      "wanted": 19,
+      "drawn": 14,
+      "reasons": {
+        "below_budget": 8,
+        "scoring_band": 6
+      }
+    },
+    "v17": {
+      "N_D": 73,
+      "N_R": 116,
+      "N_Z": 5811,
+      "wanted": 32,
+      "drawn": 32,
+      "reasons": {
+        "no_mid_size_entity": 73
+      }
+    }
+  }
+}

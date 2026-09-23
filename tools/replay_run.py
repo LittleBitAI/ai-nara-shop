@@ -164,6 +164,9 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 #  - 여덟 셀: B6 가 v9 의 `V9_EQUIVALENT`(근거 곁 "동등 이상" 문구로 내림)를 뺐다. 운영진 S7-14 가
 #    그 표현만으로 정하지 말라고 했다. `088`·`090`·`110`·`160` 의 v9·e9 가 다시 선다
 #    (reports/team-b/b6-v9-equivalent). 아래 두 목록에도 같은 공고가 더해진다.
+#  - 여덟 셀: v17 인용 게이트(`v17_quote_is_narrow`)가 소기업·소상공인·여성기업만 적은
+#    인용의 v17 양성 네 자리에서 값과 근거를 함께 비웠다. 무라벨 6,000건 감사로 채택했다.
+#    세 목록 모두 이 셀들만 더해지고 빠진 항목 0 — 게이트가 내리기만 한다는 증거다.
 #
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
@@ -171,7 +174,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 # (`absence-replay` 와의 대조도 같은 목록이다).
 DELIBERATE_MOVES = [
     ("PPS-DEV-01", "v1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"),
-    ("PPS-DEV-036", "v19"), ("PPS-DEV-038", "v24"), ("PPS-DEV-039", "v21"),
+    ("PPS-DEV-036", "v19"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"),
+    ("PPS-DEV-038", "v24"), ("PPS-DEV-039", "v21"),
     ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-050", "v9"),
     ("PPS-DEV-060", "v24"),
     ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"),
@@ -179,10 +183,11 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-068", "v24"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-090", "e9"), ("PPS-DEV-090", "v9"),
     ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"), ("PPS-DEV-099", "v24"),
-    ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e6"), ("PPS-DEV-102", "v6"),
+    ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e17"), ("PPS-DEV-102", "e6"),
+    ("PPS-DEV-102", "v17"), ("PPS-DEV-102", "v6"),
     ("PPS-DEV-103", "v24"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
     ("PPS-DEV-110", "e9"), ("PPS-DEV-110", "v9"),
-    ("PPS-DEV-122", "e24"),
+    ("PPS-DEV-120", "e17"), ("PPS-DEV-120", "v17"), ("PPS-DEV-122", "e24"),
     ("PPS-DEV-122", "v24"), ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"),
     ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"),
     ("PPS-DEV-144", "v6"),
@@ -190,7 +195,8 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "v24"), ("PPS-DEV-156", "e24"),
     ("PPS-DEV-156", "v24"), ("PPS-DEV-16", "v13"),
     ("PPS-DEV-160", "e9"), ("PPS-DEV-160", "v9"), ("PPS-DEV-162", "v9"),
-    ("PPS-DEV-170", "v21"), ("PPS-DEV-176", "v24"),
+    ("PPS-DEV-170", "v21"), ("PPS-DEV-172", "e17"), ("PPS-DEV-172", "v17"),
+    ("PPS-DEV-176", "v24"),
     ("PPS-DEV-182", "v24"), ("PPS-DEV-187", "v6"),
     ("PPS-DEV-188", "v21"), ("PPS-DEV-191", "e24"), ("PPS-DEV-191", "v24"),
     ("PPS-DEV-192", "e24"), ("PPS-DEV-192", "v24"), ("PPS-DEV-195", "v24"),
@@ -207,6 +213,7 @@ DELIBERATE_MOVES = [
 #    이 회차의 원응답이 그 회차 CSV 와 달라 위 목록과 겹치지 않는 공고가 섞인다.
 DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-01", "v1"), ("PPS-DEV-036", "v19"), ("PPS-DEV-036", "v5"),
+    ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"),
     ("PPS-DEV-042", "v21"), ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"),
     ("PPS-DEV-050", "v9"),
     ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v24"),
@@ -214,6 +221,7 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-09", "e6"),
     ("PPS-DEV-09", "v6"), ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"),
+    ("PPS-DEV-098", "e17"), ("PPS-DEV-098", "v17"),
     ("PPS-DEV-099", "v24"), ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e6"),
     ("PPS-DEV-102", "v6"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
     ("PPS-DEV-110", "e9"), ("PPS-DEV-110", "v9"),
@@ -221,10 +229,12 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-122", "v24"), ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"),
     ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"),
     ("PPS-DEV-144", "v6"), ("PPS-DEV-148", "e13"),
-    ("PPS-DEV-15", "e24"), ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "v24"),
+    ("PPS-DEV-15", "e24"), ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "e17"),
+    ("PPS-DEV-153", "v17"), ("PPS-DEV-153", "v24"),
     ("PPS-DEV-156", "e24"), ("PPS-DEV-156", "v24"), ("PPS-DEV-16", "v13"),
     ("PPS-DEV-160", "e9"), ("PPS-DEV-160", "v9"),
     ("PPS-DEV-162", "v9"), ("PPS-DEV-169", "v24"),
+    ("PPS-DEV-172", "e17"), ("PPS-DEV-172", "v17"),
     ("PPS-DEV-176", "v24"), ("PPS-DEV-187", "v6"),
     ("PPS-DEV-188", "v21"), ("PPS-DEV-191", "e24"), ("PPS-DEV-191", "v24"),
     ("PPS-DEV-192", "v24"), ("PPS-DEV-195", "v24"), ("PPS-DEV-198", "v13"),
@@ -239,18 +249,22 @@ DELIBERATE_MOVES_H2 = [
 # D7 의 게이트 여덟 셀도 여기에 더해진다 — 그 보관본은 A7 만 적용된 산출물이다.
 DELIBERATE_MOVES_A7 = [
     ("PPS-DEV-01", "v1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"),
-    ("PPS-DEV-036", "v19"), ("PPS-DEV-039", "v21"), ("PPS-DEV-050", "v9"),
+    ("PPS-DEV-036", "v19"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"),
+    ("PPS-DEV-039", "v21"), ("PPS-DEV-050", "v9"),
     ("PPS-DEV-063", "v12"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-090", "e9"), ("PPS-DEV-090", "v9"),
-    ("PPS-DEV-092", "v6"), ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e6"),
+    ("PPS-DEV-092", "v6"), ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e17"),
+    ("PPS-DEV-102", "e6"), ("PPS-DEV-102", "v17"),
     ("PPS-DEV-102", "v6"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
     ("PPS-DEV-110", "e9"), ("PPS-DEV-110", "v9"),
+    ("PPS-DEV-120", "e17"), ("PPS-DEV-120", "v17"),
     ("PPS-DEV-127", "v21"),
     ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"),
     ("PPS-DEV-144", "v6"),
     ("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"),
     ("PPS-DEV-160", "e9"), ("PPS-DEV-160", "v9"), ("PPS-DEV-162", "v9"),
-    ("PPS-DEV-170", "v21"), ("PPS-DEV-187", "v6"),
+    ("PPS-DEV-170", "v21"), ("PPS-DEV-172", "e17"), ("PPS-DEV-172", "v17"),
+    ("PPS-DEV-187", "v6"),
     ("PPS-DEV-188", "v21"), ("PPS-DEV-198", "v13"),
     ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"),
