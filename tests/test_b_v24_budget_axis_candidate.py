@@ -110,6 +110,16 @@ class BudgetAxisTest(unittest.TestCase):
         near = _rec("배정예산: 금74,461,000원", 배정예산금액=74460000)
         self.assertIsNotNone(candidate.budget_mismatch(near))
 
+    def test_condition2_registration_truncated_below_1000_won_is_equal(self):
+        # Unlabeled `PPS-D-001227`: the registration drops the won below 1,000.
+        rec = _rec("사업예산 : 금 408,801,326 원", 배정예산금액=408801000, 입찰추정가격=408801000)
+        self.assertIsNone(candidate.budget_mismatch(rec))
+
+    def test_sum_formula_total_is_after_equals(self):
+        rec = _rec("라. 사업예산 : 금51,840,000원 + 금219,537,000원 = 금271,377,000원 (천원 미만 절사)",
+                   배정예산금액=271377000, 입찰추정가격=271377000)
+        self.assertIsNone(candidate.budget_mismatch(rec))
+
     def test_condition3_bid_target_beats_project_total(self):
         self.assertIsNone(candidate.budget_mismatch(DEV["PPS-DEV-117"]))
 

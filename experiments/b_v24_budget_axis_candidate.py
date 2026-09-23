@@ -15,7 +15,8 @@ the operating code and applies four conditions taken from what the amounts mean
    (`사업예산 27,200,000` with registered estimate 27,200,000) and is not a mismatch.
 2. Display rounding — two amounts are equal when one is the other shown at a coarser
    unit (10/100/1,000 won, read from trailing zeros), or they differ by the 1 won left
-   by a VAT back-calculation.
+   by a VAT back-calculation. Either side can be the rounded one: notices round
+   (`PPS-D-000043`) and registrations truncate below 1,000 won (`PPS-D-001227`).
 3. Bid scope — when the notice states an amount specific to this bid (`입찰대상금액`,
    `입찰금액`, `용역예정금액`, `추정금액`, `배정예산`, `기초금액`), project totals
    (`사업예산`…) are not compared: `배정예산금액` is what was budgeted for this bid.
@@ -68,8 +69,9 @@ LABELED = re.compile(
     + rf"{_}(?:\([^)\n]{{0,15}}\))?{_}[:：]?{_}(?:금{_})?" + AMOUNT + rf"{_}원")
 # `추정가격 230,000,000원 미만` is a threshold in a rule, not this notice's price.
 THRESHOLD = re.compile(rf"{_}(?:이상|미만|이하|초과)")
-# `사업예산: 1,750,000원 × 18명 = 31,500,000원` — the total is after `=`.
-FORMULA = re.compile(rf"{_}[×xX*][^=\n]{{0,30}}={_}(?:금{_})?" + AMOUNT + rf"{_}원")
+# `사업예산: 1,750,000원 × 18명 = 31,500,000원`, `금51,840,000원 + 금219,537,000원 = …` —
+# the total is after `=`.
+FORMULA = re.compile(rf"{_}[×xX*+][^=\n]{{0,30}}={_}(?:금{_})?" + AMOUNT + rf"{_}원")
 UNIT_PRICE = re.compile(rf"단{_}가{_}(?:계{_}약|입{_}찰|견{_}적)")
 # `1차년도 용역예정금액`, `장기계속 1차 사업예산`, `상반기 기초금액` — one phase of the
 # contract, while the registration holds the whole bid.
@@ -104,6 +106,8 @@ def _display_unit(value: int) -> int:
 
 def same_amount(shown: int, registered: int) -> bool:
     """Condition 2: equal up to display rounding or the 1 won VAT back-calculation residual."""
+    # Both sides: the registration is also entered truncated below 1,000 won
+    # (unlabeled `PPS-D-001227` notice 408,801,326 · registered 408,801,000).
     gap = abs(shown - registered)
     return gap <= 1 or gap < max(_display_unit(shown), _display_unit(registered))
 

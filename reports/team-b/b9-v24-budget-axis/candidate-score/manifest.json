@@ -4,7 +4,7 @@
   "status": "draft",
   "run_id": "candidate-score",
   "baseline_run": null,
-  "created_at": "2026-09-23T09:58:40.034666+00:00",
+  "created_at": "2026-09-23T10:32:34.562265+00:00",
   "sources": [
     {
       "role": "truth",
@@ -58,5 +58,5 @@
     "evidence_substring": false,
     "evidence_quality": false
   },
-  "elapsed_seconds_before_publish": 0.08811190002597868
+  "elapsed_seconds_before_publish": 0.08006850001402199
 }
