@@ -1,5 +1,5 @@
 {
-  "macro_f1": 0.6230568580026784,
+  "macro_f1": 0.6184272283730489,
   "items": {
     "v1": {
       "tp": 3,
@@ -21,11 +21,11 @@
     },
     "v3": {
       "tp": 8,
-      "fp": 0,
+      "fp": 2,
       "fn": 0,
-      "precision": 1.0,
+      "precision": 0.8,
       "recall": 1.0,
-      "f1": 1.0,
+      "f1": 0.8888888888888888,
       "support": 8
     },
     "v4": {
@@ -221,5 +221,5 @@
   "truth_count": 200,
   "pred_count": 200,
   "ids_match": true,
-  "error_count": 121
+  "error_count": 123
 }

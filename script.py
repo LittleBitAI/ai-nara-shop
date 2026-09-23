@@ -1996,6 +1996,12 @@ MONEY_MAX = 100_000_000_000      # 오독한 큰 수를 버리는 상한
 # 같은 곁 숫자를 배수로 읽어, 3억원을 요구하는 정탐을 0.1배로 만들어 내린다.
 PERF_RATIO = re.compile(r"(?:추정가격|기초금액|예산금액|사업\s*예산|사업비|계약금액|입찰\s*금액|낙찰금액)"
                         r"\s*의?\s*(\d+(?:\.\d+)?)\s*%")
+# 기준액 이름이 붙어도 그 비율이 **실적** 요구인지는 아직 모른다. 한 인용에 실적 금액과
+# 다른 의무의 비율이 같이 있으면(`유사용역 실적 3억원 이상인 업체, 입찰보증금은 사업비의
+# 5% 이상`) 보증금 비율을 실적 배수로 읽어 정탐을 0.05배로 만든다. 그래서 **그 비율이
+# 실적을 말하는 구절 안에 있을 때만** 요구 배수로 센다. 구절은 이 구분자로 가른다.
+PERF_WORD = re.compile(r"실적")
+CLAUSE_BREAK = re.compile(r"[,;|/·\n]|(?<![가-힣])및(?![가-힣])")
 
 
 def parse_money(match):
@@ -2037,6 +2043,23 @@ def required_performance(evidence):
     return best
 
 
+def performance_ratios(evidence):
+    """실적을 말하는 구절 안에 있는 요구 비율만 돌려준다. 연결을 못 세우면 빈 목록.
+
+    구절은 인용을 구분자로 자른 조각이다. 비율 앞의 같은 조각에 `실적`이 있어야 그 비율이
+    실적 요구다. `입찰보증금은 사업비의 5% 이상`은 앞 쉼표에서 잘려 `실적`이 없으므로
+    세지 않고, 같은 인용의 `유사용역 실적 3억원 이상`이 금액으로 판정된다.
+    """
+    found = []
+    for match in PERF_RATIO.finditer(evidence):
+        start = 0
+        for boundary in CLAUSE_BREAK.finditer(evidence, 0, match.start()):
+            start = boundary.end()
+        if PERF_WORD.search(evidence, start, match.start()):
+            found.append(float(match.group(1)))
+    return found
+
+
 def performance_below_budget(rec, evidence):
     """v3. 근거문구가 요구하는 실적이 추정가격의 1배 이내면 그 배수를 돌려준다. 아니면 None.
 
@@ -2053,6 +2076,8 @@ def performance_below_budget(rec, evidence):
        조문이 1배 **이내**를 허용하므로 `예산금액의 100% 이상`은 위반이 아니다.
        비율은 **기준액을 가리키는 말에 붙은 것만** 센다(`PERF_RATIO`). 그런 비율이 없으면
        ③으로 간다 — `부가세 10% 포함`은 요구 배수가 아니라 곁 숫자다.
+       기준액 이름이 붙었더라도 **그 비율이 실적을 말하는 구절 안에 있어야** 센다.
+       연결을 확정할 수 없으면 비율로 내리지 않고 ③으로 간다.
        비율이 여럿이면 **가장 큰 것**을 요구 배수로 본다.
     ③ 그 밖에는 인용 안 금액을 기준액과 견준다.
     """
@@ -2062,7 +2087,7 @@ def performance_below_budget(rec, evidence):
         return None
     if not (evidence or "").strip():
         return 0.0
-    ratios = [float(found) for found in PERF_RATIO.findall(evidence)]
+    ratios = performance_ratios(evidence)
     if ratios:
         highest = max(ratios)
         return highest / 100.0 if highest <= 100.0 else None
