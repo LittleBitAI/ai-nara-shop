@@ -169,6 +169,24 @@
       "macro_f1": 0.599315859077856
     },
     {
+      "id": "colab-1790081509639025520",
+      "date": "2026-09-22",
+      "kind": "gpu-run",
+      "code": "227631f",
+      "evidence": "reports/runs/colab-1790081509639025520/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.6102659462701191
+    },
+    {
+      "id": "colab-1790141677344456786",
+      "date": "2026-09-23",
+      "kind": "gpu-run",
+      "code": "9ed0805",
+      "evidence": "reports/runs/colab-1790141677344456786/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.575482169261194
+    },
+    {
       "id": "a5-scope-1789959906563639676/episode-1/control/h2",
       "date": "2026-09-17",
       "kind": "gpu-pilot",
@@ -277,6 +295,78 @@
       "macro_f1": 0.5987351360935577
     },
     {
+      "id": "a8-v20-1790057577391794027/episode-1/a8/off",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790057577391794027/pilot/episode-1/a8/off-score/metrics.json",
+      "note": "company_size episode-1/a8 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.5884680811670601
+    },
+    {
+      "id": "a8-v20-1790057577391794027/episode-1/a8/on",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790057577391794027/pilot/episode-1/a8/on-score/metrics.json",
+      "note": "company_size episode-1/a8 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.5884680811670601
+    },
+    {
+      "id": "a8-v20-1790057577391794027/episode-1/control/off",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790057577391794027/pilot/episode-1/control/off-score/metrics.json",
+      "note": "company_size episode-1/control 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.5910081881189317
+    },
+    {
+      "id": "a8-v20-1790057577391794027/episode-1/control/on",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790057577391794027/pilot/episode-1/control/on-score/metrics.json",
+      "note": "company_size episode-1/control 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.5910081881189317
+    },
+    {
+      "id": "a8-v20-1790059133832323156/episode-2/a8/off",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790059133832323156/pilot/episode-2/a8/off-score/metrics.json",
+      "note": "company_size episode-2/a8 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.5894427400364558
+    },
+    {
+      "id": "a8-v20-1790059133832323156/episode-2/a8/on",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790059133832323156/pilot/episode-2/a8/on-score/metrics.json",
+      "note": "company_size episode-2/a8 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.5894427400364558
+    },
+    {
+      "id": "a8-v20-1790059133832323156/episode-2/control/off",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790059133832323156/pilot/episode-2/control/off-score/metrics.json",
+      "note": "company_size episode-2/control 군 · 소비자 off · 혼합 CPU 재생",
+      "macro_f1": 0.5869323419378224
+    },
+    {
+      "id": "a8-v20-1790059133832323156/episode-2/control/on",
+      "date": "2026-09-17",
+      "kind": "gpu-pilot",
+      "code": "e6d9b98",
+      "evidence": "reports/runs/a8-v20-1790059133832323156/pilot/episode-2/control/on-score/metrics.json",
+      "note": "company_size episode-2/control 군 · 소비자 on · 혼합 CPU 재생",
+      "macro_f1": 0.5869323419378224
+    },
+    {
       "id": "a4-scope-gate",
       "date": "2026-09-21",
       "kind": "cpu-replay",
@@ -347,6 +437,33 @@
       "macro_f1": 0.5084137874,
       "evidence": null,
       "note": "비공개 1,853건 · 같은 ZIP dev 0.599315859077856 · 6380초"
+    },
+    {
+      "id": "server/3a30167",
+      "date": "2026-09-21",
+      "kind": "server",
+      "code": "3a30167",
+      "macro_f1": 0.5057795952,
+      "evidence": null,
+      "note": "비공개 1,853건 · 같은 ZIP dev None · 6300초"
+    },
+    {
+      "id": "server/227631f",
+      "date": "2026-09-22",
+      "kind": "server",
+      "code": "227631f",
+      "macro_f1": 0.5077356078,
+      "evidence": null,
+      "note": "비공개 1,853건 · 같은 ZIP dev None · 6300초"
+    },
+    {
+      "id": "server/9a8f2eb",
+      "date": "2026-09-23",
+      "kind": "server",
+      "code": "9a8f2eb",
+      "macro_f1": 0.5314739081,
+      "evidence": null,
+      "note": "비공개 1,853건 · 같은 ZIP dev None · 6386초"
     }
   ]
 }
