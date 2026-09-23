@@ -64,7 +64,7 @@ def main():
     with (ROOT / "open/dev_labels.csv").open(encoding="utf-8", newline="") as stream:
         truth = {r["id"]: r for r in csv.DictReader(stream)}
 
-    rows = []
+    rows, gate = [], []
     for rec in script.iter_records(str(ROOT / "open/dev.jsonl")):
         identifier = rec["id"]
         parsed, _ = script.parse_judgment(texts["baseline"][identifier])
@@ -92,6 +92,12 @@ def main():
                 wrote = int(verified[ITEM]["위반여부"])
             parsed.update(verified)
         final = int(script.postprocess(parsed, rec)[ITEM]["위반여부"])
+
+        # **거르기 전에 200건을 먼저 센다.** 양성만 남기고 세면 §4 의 전수 표에 산출물이
+        # 없어진다 — 리뷰 [P2] 가 잡은 자리다.
+        gate.append({"id": identifier.replace("PPS-DEV-", ""), "base": base,
+                     "부재판정": wrote, "label": int(truth[identifier][ITEM]),
+                     "final": final})
         if final != 1:
             continue
 
@@ -113,9 +119,17 @@ def main():
             "requirements_complete": facts.get("requirements_complete"),
         })
 
+    # 200건 전수를 (baseline 값, 부재 판정이 쓴 값, 라벨)로 묶는다. §4 표의 산출물이다.
+    tally = {}
+    for row in gate:
+        key = f'base={row["base"]} · 부재판정={row["부재판정"]} · 라벨={row["label"]}'
+        tally[key] = tally.get(key, 0) + 1
+
+    payload = {"item": ITEM, "dev_n": len(gate), "positives": rows,
+               "gate_tally": dict(sorted(tally.items())), "gate": gate}
     with io.open(Path(__file__).with_name("paths.json"), "w",
                  encoding="utf-8", newline="\n") as stream:
-        json.dump(rows, stream, ensure_ascii=False, indent=1)
+        json.dump(payload, stream, ensure_ascii=False, indent=1)
         stream.write("\n")
 
     print(f'{"공고":<6}{"판정":<5}{"경로":<14}{"base":>5}{"sme후":>6}{"company":>8}'
@@ -131,6 +145,10 @@ def main():
         group = [r for r in rows if r["경로"] == path]
         tp = sum(r["판정"] == "TP" for r in group)
         print(f'{path:<14}{len(group):>4}{tp:>5}{len(group) - tp:>5}')
+
+    print(f'\n게이트 동작 전수 {len(gate)}건')
+    for key, count in payload["gate_tally"].items():
+        print(f'  {key:<44}{count:>4}')
 
 
 if __name__ == "__main__":

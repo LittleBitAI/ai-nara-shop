@@ -1,170 +1,1585 @@
-[
- {
-  "id": "12",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
+{
+ "item": "v10",
+ "dev_n": 200,
+ "positives": [
+  {
+   "id": "12",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "23",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 1,
+   "sme후": 1,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "039",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "040",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "059",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "061",
+   "label": 1,
+   "판정": "TP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "062",
+   "label": 1,
+   "판정": "TP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "064",
+   "label": 1,
+   "판정": "TP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "068",
+   "label": 1,
+   "판정": "TP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "126",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "128",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  },
+  {
+   "id": "146",
+   "label": 0,
+   "판정": "FP",
+   "경로": "부재 판정",
+   "base": 0,
+   "sme후": 0,
+   "company": 1,
+   "reason": "outside_general_scope",
+   "scope": "competitive",
+   "direct_production": null,
+   "dp_quote_null": true,
+   "requirements_complete": "yes"
+  }
+ ],
+ "gate_tally": {
+  "base=0 · 부재판정=0 · 라벨=0": 41,
+  "base=0 · 부재판정=0 · 라벨=1": 1,
+  "base=0 · 부재판정=1 · 라벨=0": 7,
+  "base=0 · 부재판정=1 · 라벨=1": 4,
+  "base=0 · 부재판정=None · 라벨=0": 144,
+  "base=0 · 부재판정=None · 라벨=1": 2,
+  "base=1 · 부재판정=1 · 라벨=0": 1
  },
- {
-  "id": "23",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 1,
-  "sme후": 1,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "039",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "040",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "059",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "061",
-  "label": 1,
-  "판정": "TP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "062",
-  "label": 1,
-  "판정": "TP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "064",
-  "label": 1,
-  "판정": "TP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "068",
-  "label": 1,
-  "판정": "TP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "126",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "128",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- },
- {
-  "id": "146",
-  "label": 0,
-  "판정": "FP",
-  "경로": "부재 판정",
-  "base": 0,
-  "sme후": 0,
-  "company": 1,
-  "reason": "outside_general_scope",
-  "scope": "competitive",
-  "direct_production": null,
-  "dp_quote_null": true,
-  "requirements_complete": "yes"
- }
-]
+ "gate": [
+  {
+   "id": "01",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "02",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "03",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "04",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "05",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "06",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "07",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "08",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "09",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "10",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "11",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "12",
+   "base": 0,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "13",
+   "base": 0,
+   "부재판정": null,
+   "label": 1,
+   "final": 0
+  },
+  {
+   "id": "14",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "15",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "16",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "17",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "18",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "19",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "20",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "21",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "22",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "23",
+   "base": 1,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "24",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "25",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "26",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "27",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "28",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "29",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "30",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "31",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "32",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "033",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "034",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "035",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "036",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "037",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "038",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "039",
+   "base": 0,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "040",
+   "base": 0,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "041",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "042",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "043",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "044",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "045",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "046",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "047",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "048",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "049",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "050",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "051",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "052",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "053",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "054",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "055",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "056",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "057",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "058",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "059",
+   "base": 0,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "060",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "061",
+   "base": 0,
+   "부재판정": 1,
+   "label": 1,
+   "final": 1
+  },
+  {
+   "id": "062",
+   "base": 0,
+   "부재판정": 1,
+   "label": 1,
+   "final": 1
+  },
+  {
+   "id": "063",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "064",
+   "base": 0,
+   "부재판정": 1,
+   "label": 1,
+   "final": 1
+  },
+  {
+   "id": "065",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "066",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "067",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "068",
+   "base": 0,
+   "부재판정": 1,
+   "label": 1,
+   "final": 1
+  },
+  {
+   "id": "069",
+   "base": 0,
+   "부재판정": null,
+   "label": 1,
+   "final": 0
+  },
+  {
+   "id": "070",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "071",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "072",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "073",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "074",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "075",
+   "base": 0,
+   "부재판정": 0,
+   "label": 1,
+   "final": 0
+  },
+  {
+   "id": "076",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "077",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "078",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "079",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "080",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "081",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "082",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "083",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "084",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "085",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "086",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "087",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "088",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "089",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "090",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "091",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "092",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "093",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "094",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "095",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "096",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "097",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "098",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "099",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "100",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "101",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "102",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "103",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "104",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "105",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "106",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "107",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "108",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "109",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "110",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "111",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "112",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "113",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "114",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "115",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "116",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "117",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "118",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "119",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "120",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "121",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "122",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "123",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "124",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "125",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "126",
+   "base": 0,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "127",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "128",
+   "base": 0,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "129",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "130",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "131",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "132",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "133",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "134",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "135",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "136",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "137",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "138",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "139",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "140",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "141",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "142",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "143",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "144",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "145",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "146",
+   "base": 0,
+   "부재판정": 1,
+   "label": 0,
+   "final": 1
+  },
+  {
+   "id": "147",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "148",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "149",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "150",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "151",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "152",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "153",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "154",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "155",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "156",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "157",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "158",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "159",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "160",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "161",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "162",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "163",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "164",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "165",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "166",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "167",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "168",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "169",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "170",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "171",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "172",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "173",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "174",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "175",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "176",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "177",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "178",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "179",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "180",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "181",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "182",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "183",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "184",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "185",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "186",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "187",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "188",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "189",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "190",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "191",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "192",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "193",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "194",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "195",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "196",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "197",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "198",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "199",
+   "base": 0,
+   "부재판정": 0,
+   "label": 0,
+   "final": 0
+  },
+  {
+   "id": "200",
+   "base": 0,
+   "부재판정": null,
+   "label": 0,
+   "final": 0
+  }
+ ]
+}
