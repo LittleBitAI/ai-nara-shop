@@ -92,6 +92,8 @@ class CompanySizeTests(unittest.TestCase):
     def test_clause_quotes_separate_observation_from_applicability(self):
         rec, f = notice(50_000_000), facts("unrestricted")
         rec["docs"][0]["text"] = "정보시스템 개발 용역. 사업자등록 업체 누구나 참가 가능."
+        # `v20_decision()` (#111) decides v20 from the notice: it needs the 1468 registration.
+        rec["meta"]["면허업종제한목록"] = "소프트웨어사업자(컴퓨터관련서비스사업)(1468)"
         f.update(scope="competitive", scope_quote="정보시스템 개발 용역.", requirements_complete="yes",
                  direct_production_quote=None, software_business="yes",
                  software_business_quote="정보시스템 개발 용역.", software_participation_quote=None)
@@ -143,6 +145,8 @@ class CompanySizeTests(unittest.TestCase):
         rec = notice(50_000_000)
         rec["docs"][0]["text"] = (
             "정보시스템 개발 용역. 입찰참가자격: 사업자등록 업체 누구나 참가 가능.")
+        # `v20_decision()` (#111) decides v20 from the notice: it needs the 1468 registration.
+        rec["meta"]["면허업종제한목록"] = "소프트웨어사업자(컴퓨터관련서비스사업)(1468)"
         f = facts("unrestricted")
         f.update(scope="competitive", scope_quote="정보시스템 개발 용역.",
                  requirements_complete="yes", direct_production="absent", direct_production_quote=None,

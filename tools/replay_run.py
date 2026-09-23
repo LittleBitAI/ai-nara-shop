@@ -170,6 +170,11 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 #  - Two cells: the budget axis (B9, #119) ported into `postprocess` raises `PPS-DEV-29`
 #    v24 with the quoted notice amount (a TP; dev v24 4/12/4 -> 5/12/3). All three lists
 #    gain exactly these two cells and lose none.
+#  - v20 cells only: `v20_decision()` (#111) now decides v20 from two facts in the notice
+#    and overrides the model; the evidence stays blank. On the fixed H4 responses it clears
+#    the four FPs (056·064·068·144), raises the four FNs (24·131·132·134) and adds two
+#    new FPs (124·135). H2's model gave different v20 answers, so its list differs (133).
+#    dev v20 1/4/4 -> 5/2/0. No other item moves in any of the three lists.
 #
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
@@ -180,9 +185,11 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-036", "v19"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"),
     ("PPS-DEV-038", "v24"), ("PPS-DEV-039", "v21"),
     ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-050", "v9"),
-    ("PPS-DEV-060", "v24"),
+    ("PPS-DEV-056", "v20"), ("PPS-DEV-060", "v24"),
     ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"),
+    ("PPS-DEV-064", "v20"),
     ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"), ("PPS-DEV-068", "e24"),
+    ("PPS-DEV-068", "v20"),
     ("PPS-DEV-068", "v24"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-090", "e9"), ("PPS-DEV-090", "v9"),
     ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"), ("PPS-DEV-099", "v24"),
@@ -191,9 +198,10 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-103", "v24"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
     ("PPS-DEV-110", "e9"), ("PPS-DEV-110", "v9"),
     ("PPS-DEV-120", "e17"), ("PPS-DEV-120", "v17"), ("PPS-DEV-122", "e24"),
-    ("PPS-DEV-122", "v24"), ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"),
-    ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"),
-    ("PPS-DEV-144", "v6"),
+    ("PPS-DEV-122", "v24"), ("PPS-DEV-123", "v24"), ("PPS-DEV-124", "v20"), ("PPS-DEV-127", "v21"),
+    ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-131", "v20"), ("PPS-DEV-132", "v20"),
+    ("PPS-DEV-132", "v9"), ("PPS-DEV-134", "v20"), ("PPS-DEV-135", "v20"),
+    ("PPS-DEV-144", "v20"), ("PPS-DEV-144", "v6"),
     ("PPS-DEV-145", "v24"), ("PPS-DEV-148", "e13"), ("PPS-DEV-15", "e24"),
     ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "v24"), ("PPS-DEV-156", "e24"),
     ("PPS-DEV-156", "v24"), ("PPS-DEV-16", "v13"),
@@ -203,7 +211,7 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-182", "v24"), ("PPS-DEV-187", "v6"),
     ("PPS-DEV-188", "v21"), ("PPS-DEV-191", "e24"), ("PPS-DEV-191", "v24"),
     ("PPS-DEV-192", "e24"), ("PPS-DEV-192", "v24"), ("PPS-DEV-195", "v24"),
-    ("PPS-DEV-198", "v13"), ("PPS-DEV-199", "v24"),
+    ("PPS-DEV-198", "v13"), ("PPS-DEV-199", "v24"), ("PPS-DEV-24", "v20"),
     ("PPS-DEV-25", "e3"), ("PPS-DEV-25", "v3"),
     ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
 ]
@@ -229,8 +237,9 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-102", "v6"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
     ("PPS-DEV-110", "e9"), ("PPS-DEV-110", "v9"),
     ("PPS-DEV-122", "e24"),
-    ("PPS-DEV-122", "v24"), ("PPS-DEV-123", "v24"), ("PPS-DEV-127", "v21"),
-    ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"),
+    ("PPS-DEV-122", "v24"), ("PPS-DEV-123", "v24"), ("PPS-DEV-124", "v20"), ("PPS-DEV-127", "v21"),
+    ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-131", "v20"), ("PPS-DEV-132", "v20"),
+    ("PPS-DEV-133", "v20"), ("PPS-DEV-134", "v20"), ("PPS-DEV-135", "v20"),
     ("PPS-DEV-144", "v6"), ("PPS-DEV-148", "e13"),
     ("PPS-DEV-15", "e24"), ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "e17"),
     ("PPS-DEV-153", "v17"), ("PPS-DEV-153", "v24"),
@@ -241,7 +250,7 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-176", "v24"), ("PPS-DEV-187", "v6"),
     ("PPS-DEV-188", "v21"), ("PPS-DEV-191", "e24"), ("PPS-DEV-191", "v24"),
     ("PPS-DEV-192", "v24"), ("PPS-DEV-195", "v24"), ("PPS-DEV-198", "v13"),
-    ("PPS-DEV-25", "e3"),
+    ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-28", "v24"),
     ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
 ]
@@ -255,22 +264,23 @@ DELIBERATE_MOVES_H2 = [
 DELIBERATE_MOVES_A7 = [
     ("PPS-DEV-01", "v1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"),
     ("PPS-DEV-036", "v19"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"),
-    ("PPS-DEV-039", "v21"), ("PPS-DEV-050", "v9"),
-    ("PPS-DEV-063", "v12"),
+    ("PPS-DEV-039", "v21"), ("PPS-DEV-050", "v9"), ("PPS-DEV-056", "v20"),
+    ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"), ("PPS-DEV-068", "v20"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-090", "e9"), ("PPS-DEV-090", "v9"),
     ("PPS-DEV-092", "v6"), ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e17"),
     ("PPS-DEV-102", "e6"), ("PPS-DEV-102", "v17"),
     ("PPS-DEV-102", "v6"), ("PPS-DEV-11", "e5"), ("PPS-DEV-11", "v5"),
     ("PPS-DEV-110", "e9"), ("PPS-DEV-110", "v9"),
-    ("PPS-DEV-120", "e17"), ("PPS-DEV-120", "v17"),
+    ("PPS-DEV-120", "e17"), ("PPS-DEV-120", "v17"), ("PPS-DEV-124", "v20"),
     ("PPS-DEV-127", "v21"),
-    ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-132", "v9"),
-    ("PPS-DEV-144", "v6"),
+    ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-131", "v20"), ("PPS-DEV-132", "v20"),
+    ("PPS-DEV-132", "v9"), ("PPS-DEV-134", "v20"), ("PPS-DEV-135", "v20"),
+    ("PPS-DEV-144", "v20"), ("PPS-DEV-144", "v6"),
     ("PPS-DEV-148", "e13"), ("PPS-DEV-16", "v13"),
     ("PPS-DEV-160", "e9"), ("PPS-DEV-160", "v9"), ("PPS-DEV-162", "v9"),
     ("PPS-DEV-170", "v21"), ("PPS-DEV-172", "e17"), ("PPS-DEV-172", "v17"),
     ("PPS-DEV-187", "v6"),
-    ("PPS-DEV-188", "v21"), ("PPS-DEV-198", "v13"),
+    ("PPS-DEV-188", "v21"), ("PPS-DEV-198", "v13"), ("PPS-DEV-24", "v20"),
     ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
 ]

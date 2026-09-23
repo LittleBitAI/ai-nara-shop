@@ -44,6 +44,9 @@ RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
 # 2026-09-23 re-pinned (sha256 74b82127…): the B9 budget axis (#119) was ported into
 # `postprocess`. Two cells moved (PPS-DEV-29 v24·e24) and nothing outside v24 changed.
 # Source: docs/tasks/b-v24-budget-axis.md.
+# 2026-09-23 re-pinned (sha256 f2984077…): `v20_decision()` (#111) was ported into
+# `postprocess` and overrides the model's v20. Seven v20 cells moved (24·124·131·132·
+# 133·134·135), no evidence cell and nothing outside v20. Source: PR #111.
 HEAD_REPLAY =ROOT / "reports/team-b/b5-port-replay/submission.csv"
 
 CANDIDATE = '''"""검사용 후보. 모든 판정을 0으로 만든다."""

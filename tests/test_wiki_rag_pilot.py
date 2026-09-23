@@ -243,7 +243,10 @@ class ConsumerTests(unittest.TestCase):
         row['response_text'] = json.dumps(response, ensure_ascii=False)
         verified, _ = script.verify_company_size(facts, records['PPS-DEV-02'], row['max_chars'])
         self.assertEqual(verified['v20'], {'위반여부': 1, '근거문구': None})
-        with tempfile.TemporaryDirectory() as directory:
+        # `v20_decision()` (#111) settles v20 from the notice and would override this change on
+        # PPS-DEV-02; no dev notice both abstains and yields v20=1 here. This test is about the
+        # consumer wiring, so the notice rule abstains. The rule has its own tests.
+        with tempfile.TemporaryDirectory() as directory, patch.object(script, 'v20_decision', return_value=None):
             output = Path(directory)/'wiki'
             output.mkdir()
             _, predictions = wiki.replay_arm(payload, output, 'wiki')
