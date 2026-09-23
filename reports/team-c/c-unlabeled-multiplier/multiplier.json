@@ -13,9 +13,15 @@
    "direction": "미정",
    "simultaneous_low": 0.4613515743303127,
    "simultaneous_high": 2.2772762865826635,
-   "simultaneous_direction": "미정",
+   "katz_direction": "미정",
+   "score_low": 0.48222490631004356,
+   "score_high": 2.2600652180677976,
+   "score_direction": "미정",
+   "fisher_p": 1.0,
    "dev_tp": 4,
-   "dev_fp": 8
+   "dev_fp": 8,
+   "holm_p": 1.0,
+   "direction_agreed": "미정"
   },
   "v11": {
    "dev_fired": 5,
@@ -28,9 +34,15 @@
    "direction": "미정",
    "simultaneous_low": 0.18328327276970288,
    "simultaneous_high": 2.328878342219359,
-   "simultaneous_direction": "미정",
+   "katz_direction": "미정",
+   "score_low": 0.20217987473223664,
+   "score_high": 2.1845271922312888,
+   "score_direction": "미정",
+   "fisher_p": 0.38740884377888174,
    "dev_tp": 2,
-   "dev_fp": 3
+   "dev_fp": 3,
+   "holm_p": 1.0,
+   "direction_agreed": "미정"
   },
   "v12": {
    "dev_fired": 4,
@@ -43,9 +55,15 @@
    "direction": "더 적다",
    "simultaneous_low": 0.052755793614040924,
    "simultaneous_high": 1.0320088224386808,
-   "simultaneous_direction": "미정",
+   "katz_direction": "미정",
+   "score_low": 0.06011112337217782,
+   "score_high": 0.9305749742792482,
+   "score_direction": "더 적다",
+   "fisher_p": 0.01863309018538767,
    "dev_tp": 4,
-   "dev_fp": 0
+   "dev_fp": 0,
+   "holm_p": 0.11179854111232601,
+   "direction_agreed": "미정"
   },
   "v13": {
    "dev_fired": 11,
@@ -58,9 +76,15 @@
    "direction": "미정",
    "simultaneous_low": 0.7089837999607668,
    "simultaneous_high": 3.7349464530390595,
-   "simultaneous_direction": "미정",
+   "katz_direction": "미정",
+   "score_low": 0.7435053639318303,
+   "score_high": 3.697150347087586,
+   "score_direction": "미정",
+   "fisher_p": 0.09931762958454476,
    "dev_tp": 3,
-   "dev_fp": 8
+   "dev_fp": 8,
+   "holm_p": 0.48951677356447093,
+   "direction_agreed": "미정"
   },
   "v14": {
    "dev_fired": 9,
@@ -73,9 +97,15 @@
    "direction": "더 적다",
    "simultaneous_low": 0.07724773192318123,
    "simultaneous_high": 0.5568814977019809,
-   "simultaneous_direction": "더 적다",
+   "katz_direction": "더 적다",
+   "score_low": 0.08165306799907657,
+   "score_high": 0.5425819380035983,
+   "score_direction": "더 적다",
+   "fisher_p": 0.00021089207260934655,
    "dev_tp": 7,
-   "dev_fp": 2
+   "dev_fp": 2,
+   "holm_p": 0.0021089207260934655,
+   "direction_agreed": "더 적다"
   },
   "v15": {
    "dev_fired": 5,
@@ -88,9 +118,15 @@
    "direction": "더 적다",
    "simultaneous_low": 0.06767092037361397,
    "simultaneous_high": 0.9483804479597674,
-   "simultaneous_direction": "더 적다",
+   "katz_direction": "더 적다",
+   "score_low": 0.07487146544133416,
+   "score_high": 0.8821842799048636,
+   "score_direction": "더 적다",
+   "fisher_p": 0.011815757656690433,
    "dev_tp": 4,
-   "dev_fp": 1
+   "dev_fp": 1,
+   "holm_p": 0.10228095954297248,
+   "direction_agreed": "미정"
   },
   "v16": {
    "dev_fired": 6,
@@ -103,9 +139,15 @@
    "direction": "더 적다",
    "simultaneous_low": 0.08938476524599943,
    "simultaneous_high": 0.9699363266837894,
-   "simultaneous_direction": "더 적다",
+   "katz_direction": "더 적다",
+   "score_low": 0.09707346327898392,
+   "score_high": 0.9207825122459943,
+   "score_direction": "더 적다",
+   "fisher_p": 0.011364551060330276,
    "dev_tp": 4,
-   "dev_fp": 2
+   "dev_fp": 2,
+   "holm_p": 0.10228095954297248,
+   "direction_agreed": "미정"
   },
   "v17": {
    "dev_fired": 11,
@@ -118,9 +160,15 @@
    "direction": "미정",
    "simultaneous_low": 0.2455445808695173,
    "simultaneous_high": 1.3358736232909503,
-   "simultaneous_direction": "미정",
+   "katz_direction": "미정",
+   "score_low": 0.2573109491677381,
+   "score_high": 1.3202581916702054,
+   "score_direction": "미정",
+   "fisher_p": 0.09790335471289419,
    "dev_tp": 5,
-   "dev_fp": 6
+   "dev_fp": 6,
+   "holm_p": 0.48951677356447093,
+   "direction_agreed": "미정"
   },
   "v18": {
    "dev_fired": 3,
@@ -133,9 +181,15 @@
    "direction": "더 많다",
    "simultaneous_low": 0.686665417785191,
    "simultaneous_high": 17.389639682227767,
-   "simultaneous_direction": "미정",
+   "katz_direction": "미정",
+   "score_low": 0.8125045374986519,
+   "score_high": 15.256298062694082,
+   "score_direction": "미정",
+   "fisher_p": 0.01329294141666958,
    "dev_tp": 1,
-   "dev_fp": 2
+   "dev_fp": 2,
+   "holm_p": 0.10228095954297248,
+   "direction_agreed": "미정"
   },
   "v20": {
    "dev_fired": 5,
@@ -148,9 +202,15 @@
    "direction": "미정",
    "simultaneous_low": 0.3473483522072341,
    "simultaneous_high": 4.28503544220643,
-   "simultaneous_direction": "미정",
+   "katz_direction": "미정",
+   "score_low": 0.3829860449911435,
+   "score_high": 4.0292613872518945,
+   "score_direction": "미정",
+   "fisher_p": 0.8343098902496818,
    "dev_tp": 1,
-   "dev_fp": 4
+   "dev_fp": 4,
+   "holm_p": 1.0,
+   "direction_agreed": "미정"
   }
  }
 }

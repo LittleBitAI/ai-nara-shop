@@ -57,11 +57,91 @@ def ratio_interval(dev_k, dev_n, unl_k, unl_n, z=Z_NOMINAL):
     return (ratio * math.exp(-z * spread), ratio * math.exp(z * spread))
 
 
+def constrained_p1(x1, n1, x2, n2, theta):
+    """`p2 = theta·p1` 제약 아래의 최대우도 `p1`. 점수식을 이분법으로 푼다."""
+    lo, hi = 1e-12, min(1.0, 1.0 / theta) - 1e-12
+
+    def score(p1):
+        return ((x1 + x2) / p1 - (n1 - x1) / (1 - p1)
+                - (n2 - x2) * theta / (1 - theta * p1))
+    if score(hi) > 0:
+        return hi
+    for _ in range(300):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if score(mid) > 0 else (lo, mid)
+    return (lo + hi) / 2
+
+
+def score_interval(x1, n1, x2, n2, z):
+    """Miettinen–Nurminen 점수 구간. Katz 와 다른 근사라 **갈리는지 보려고** 같이 낸다."""
+    if not x1 or not x2:
+        return (None, None)
+    ratio = (x2 / n2) / (x1 / n1)
+    target = z * z
+
+    def stat(theta):
+        p1 = constrained_p1(x1, n1, x2, n2, theta)
+        p2 = theta * p1
+        return ((x1 - n1 * p1) ** 2 / max(n1 * p1 * (1 - p1), 1e-18)
+                + (x2 - n2 * p2) ** 2 / max(n2 * p2 * (1 - p2), 1e-18))
+
+    def edge(up):
+        far = ratio
+        for _ in range(4000):
+            far = far * 1.02 if up else far / 1.02
+            if far <= 1e-9 or far >= 1e9 or stat(far) >= target:
+                break
+        near = far / 1.02 if up else far * 1.02
+        for _ in range(200):
+            mid = math.sqrt(near * far)
+            near, far = (near, mid) if stat(mid) >= target else (mid, far)
+        return (near + far) / 2
+    return edge(False), edge(True)
+
+
+def fisher_two_sided(x1, n1, x2, n2):
+    """2x2 Fisher 정확검정 양측 p. 근사가 아니라 초기하 확률의 합이라 희소 표본에 버틴다.
+
+    scipy 를 안 쓴다 — 이 저장소의 제출 경로는 의존을 안 늘린다.
+    `scipy.stats.fisher_exact` 와 열 항목에서 `1e-9` 안쪽으로 일치함을 확인했다.
+    """
+    total, hits = n1 + n2, x1 + x2
+    denominator = math.comb(total, hits)
+
+    def prob(k):
+        return math.comb(n1, k) * math.comb(n2, hits - k) / denominator
+    observed = prob(x1)
+    span = range(max(0, hits - n2), min(n1, hits) + 1)
+    return min(1.0, sum(prob(k) for k in span if prob(k) <= observed * (1 + 1e-9)))
+
+
+def holm(pvalues):
+    """Holm–Bonferroni. Bonferroni 보다 덜 보수적이고 FWER 는 같게 지킨다."""
+    order = sorted(pvalues, key=pvalues.get)
+    out, running = {}, 0.0
+    for rank, item in enumerate(order):
+        running = max(running, pvalues[item] * (len(order) - rank))
+        out[item] = min(running, 1.0)
+    return out
+
+
 def direction(low, high):
     """구간이 1 을 물면 방향을 말하지 않는다. 점추정을 방향으로 읽지 않는다."""
     if low is None or high is None or (low <= 1 <= high):
         return "미정"
     return "더 적다" if high < 1 else "더 많다"
+
+
+def agreed(katz_dir, score_dir, holm_p):
+    """**세 방법이 다 같은 말을 할 때만** 방향을 말한다.
+
+    리뷰 [P1]. dev 발화가 5~9건인 자리에서 Katz 동시 구간만 보면 v15·v16 이 닫히는데
+    (`[0.07, 0.95]`·`[0.09, 0.97]`), Fisher+Holm 은 둘 다 `0.10` 으로 안 닫는다.
+    **결론이 구간 방법에 달려 있으면 그것은 결론이 아니다.**
+    """
+    if katz_dir != score_dir or katz_dir == "미정":
+        return "미정"
+    return katz_dir if holm_p < 0.05 else "미정"
 
 
 def show(value, spec):
@@ -104,6 +184,7 @@ def main(argv=None):
         counts = (len(fired_dev), len(dev), fired_unl, len(unlabeled))
         low, high = ratio_interval(*counts)
         sim_low, sim_high = ratio_interval(*counts, z=Z_SIMULTANEOUS)
+        sc_low, sc_high = score_interval(*counts, z=Z_SIMULTANEOUS)
         out["items"][item] = {
             "dev_fired": len(fired_dev), "dev_rate": dev_rate,
             "unlabeled_fired": fired_unl, "unlabeled_rate": unl_rate,
@@ -111,11 +192,23 @@ def main(argv=None):
             # 항목별 명목 95% 구간. 구간이 1 을 물면 방향을 말할 수 없다.
             "multiplier_low": low, "multiplier_high": high,
             "direction": direction(low, high),
-            # 열 항목 동시 95% (Bonferroni). 이 표를 훑어 고른 것이므로 이쪽이 결론이다.
+            # 열 항목 동시 95% (Bonferroni), Katz 로그법.
             "simultaneous_low": sim_low, "simultaneous_high": sim_high,
-            "simultaneous_direction": direction(sim_low, sim_high),
+            "katz_direction": direction(sim_low, sim_high),
+            # 같은 수준의 점수법(Miettinen–Nurminen). Katz 와 갈리는지 본다.
+            "score_low": sc_low, "score_high": sc_high,
+            "score_direction": direction(sc_low, sc_high),
+            "fisher_p": fisher_two_sided(*counts) if fired_dev and fired_unl else None,
             "dev_tp": tp, "dev_fp": len(fired_dev) - tp,
         }
+
+    # Holm 은 열 항목을 같이 봐야 하므로 항목 순회가 끝난 뒤에 붙인다.
+    pvalues = {i: r["fisher_p"] for i, r in out["items"].items() if r["fisher_p"] is not None}
+    adjusted = holm(pvalues) if pvalues else {}
+    for item, row in out["items"].items():
+        row["holm_p"] = adjusted.get(item)
+        row["direction_agreed"] = agreed(row["katz_direction"], row["score_direction"],
+                                         row["holm_p"] if row["holm_p"] is not None else 1.0)
 
     # f-string 안에서 바깥과 같은 따옴표를 다시 쓰지 않는다. 그 문법은 3.12 부터이고
     # 이 저장소가 지원하는 3.11 에서는 파싱 자체가 실패한다.
@@ -124,20 +217,23 @@ def main(argv=None):
             return "미산출"
         return "[{:.2f}, {:.2f}]".format(low, high)
 
-    print(f'{"항목":<6}{"dev 발화":>9}{"dev율":>8}{"무라벨":>8}{"무라벨율":>10}'
-          f'{"배율":>7}{"명목 95%":>16}{"방향":>7}{"동시 95%":>17}{"방향":>7}{"dev TP/FP":>11}')
+    print(f'{"항목":<6}{"dev 발화":>9}{"무라벨":>8}{"배율":>7}'
+          f'{"Katz 동시":>17}{"점수 동시":>17}{"Holm p":>9}'
+          f'{"Katz":>6}{"점수":>6}{"합의":>7}{"dev TP/FP":>11}')
     for item in ITEMS:
         row = out["items"][item]
-        score = "{}/{}".format(row["dev_tp"], row["dev_fp"])
-        print(f'{item:<6}{row["dev_fired"]:>9}{row["dev_rate"]:>8.3f}'
-              f'{row["unlabeled_fired"]:>8}{row["unlabeled_rate"]:>10.4f}'
+        tally = "{}/{}".format(row["dev_tp"], row["dev_fp"])
+        print(f'{item:<6}{row["dev_fired"]:>9}{row["unlabeled_fired"]:>8}'
               f'{show(row["multiplier"], ">7.2f")}'
-              f'{span(row["multiplier_low"], row["multiplier_high"]):>16}{row["direction"]:>7}'
               f'{span(row["simultaneous_low"], row["simultaneous_high"]):>17}'
-              f'{row["simultaneous_direction"]:>7}{score:>11}')
+              f'{span(row["score_low"], row["score_high"]):>17}'
+              f'{show(row["holm_p"], ">9.4f")}'
+              f'{row["katz_direction"]:>6}{row["score_direction"]:>6}'
+              f'{row["direction_agreed"]:>7}{tally:>11}')
     print(f'dev {out["dev_n"]}건 · 무라벨 {out["unlabeled_n"]}건')
     print(f'명목 z={Z_NOMINAL:.4f} · 동시 z={Z_SIMULTANEOUS:.4f} '
-          f'(Bonferroni, {len(ITEMS)}항목). **결론은 동시 쪽으로 읽는다.**')
+          f'(Bonferroni, {len(ITEMS)}항목).')
+    print('**결론은 `합의` 열이다** — Katz·점수법·Fisher+Holm 이 다 같은 말을 할 때만 방향을 쓴다.')
 
     # **출력을 다 낸 뒤에 쓴다.** 먼저 쓰면 표를 못 찍고 죽은 실행도 산출물을 남기고,
     # 다음 사람은 그 JSON 을 성공한 회차의 것으로 읽는다.
