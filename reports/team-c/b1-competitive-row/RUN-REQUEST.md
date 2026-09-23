@@ -108,6 +108,27 @@ git apply reports/team-c/b1-competitive-row/competitive-row.diff           # 회
 
 ## 3. 실행 절차
 
+### 3-0. 경로 규약 — 두 종류를 섞지 않는다
+
+**재생 출력 폴더와 등록된 회차 폴더는 모양이 다르다.** 아래 이름을 그대로 쓴다.
+
+| 이름 | 무엇 | 제출 CSV 위치 |
+| --- | --- | --- |
+| `<head>` · `<regr>` | `replay_run.py --output-dir` 가 만든 **재생 출력 폴더** | **`<head>/submission.csv`** |
+| `<run1>` · `<run2>` | `register_run.py` 가 만든 **등록 회차 루트** `reports/runs/<run-id>` | **`<run1>/dev-debug/submission.csv`** |
+
+등록된 회차는 `dev/` · `dev-debug/` · `sample/` 로 나뉘고 각각 아래에 `submission.csv` 가
+있다. **루트 바로 아래에는 CSV 가 없다.** 이 요청서는 원응답이 함께 있는 **`dev-debug/`**
+를 쓴다 — 기준 재생 `<head>` 도 같은 케이스에서 나온 것이라 같은 축이다.
+
+```text
+reports/runs/<run-id>/            ← <run1>
+├─ manifest.json
+├─ dev/submission.csv
+├─ dev-debug/submission.csv       ← 채점·대조에 쓰는 것
+└─ sample/submission.csv
+```
+
 ```bash
 # 0) 기준 확인 — 이 값이 안 나오면 멈춘다
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789902969401579900/dev-debug \
@@ -165,11 +186,11 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox-run1 \
 #    등록기가 source.json.commit 과 --code-commit 을 대조한다 — 다르면 여기서 죽는다
 
 # 7) 1회차 채점·대조
-python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <run1>/submission.csv \
+python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <run1>/dev-debug/submission.csv \
   --output-dir <run1-score>
-python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run1>/submission.csv \
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run1>/dev-debug/submission.csv \
   --truth open/dev_labels.csv --items v14,v15,v16,v17,v18 --output-dir <cmp1-c>
-python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run1>/submission.csv \
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run1>/dev-debug/submission.csv \
   --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp1-scope>
 
 # 8) 1회차가 그 커밋의 코드로 재현되는지 확인한다
@@ -184,17 +205,18 @@ python -X utf8 tools/replay_run.py --case <run1>/dev-debug --verify
 mkdir -p artifacts/inbox-run2
 python -X utf8 tools/register_run.py --inbox artifacts/inbox-run2 \
   --code-commit $(cat /tmp/run-sha)
-python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <run2>/submission.csv \
+python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <run2>/dev-debug/submission.csv \
   --output-dir <run2-score>
 
 # 11) **후보↔후보 churn 을 잰다.** 이것이 이번 코드의 잡음 범위다
-python -X utf8 tools/compare_runs.py --before <run1>/submission.csv --after <run2>/submission.csv \
+python -X utf8 tools/compare_runs.py --before <run1>/dev-debug/submission.csv --after <run2>/dev-debug/submission.csv \
   --truth open/dev_labels.csv --items v14,v15,v16,v17,v18 --output-dir <churn-c>
-python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run2>/submission.csv \
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run2>/dev-debug/submission.csv \
   --truth open/dev_labels.csv --items v14,v15,v16,v17,v18 --output-dir <cmp2-c>
-python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run2>/submission.csv \
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run2>/dev-debug/submission.csv \
   --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp2-scope>
-#    두 manifest.json 의 code.commit·ZIP 해시·입력 해시를 대조해 같은 조건인지 확인한다
+#    두 manifest.json 대조: code.commit 같음 · zip_sha256.submit 같음 · 입력 해시 같음
+#    zip_sha256.results 는 회차마다 다르다 — 대조 대상이 아니다(§4-1)
 
 # 12) **작업 브랜치로 돌아온다.** 실험 커밋은 origin 의 run/ 브랜치에 남는다
 git switch $(cat /tmp/origin-branch)
@@ -390,24 +412,71 @@ if recorded and not (recorded.startswith(code_commit) or code_commit.startswith(
 
 다섯을 **1회차와 동일**하게 고정한다. 하나라도 다르면 churn 측정이 아니다.
 
-| 고정할 것 | 어디서 확인 |
-| --- | --- |
-| 실험 커밋 SHA | 두 `manifest.json` 의 `code.commit` |
-| 제출 ZIP 해시 | 두 `manifest.json` 의 `zip_sha256` |
-| dev 입력 해시 | 두 회차 기록의 입력 해시 |
-| 모델·seed·설정 | `model.json` · `run_report.json` 의 `reproduction.settings` |
-| `REPO_REF` | 같은 40자리 SHA |
+| 고정할 것 | 어디서 확인 | 같아야 하나 |
+| --- | --- | --- |
+| 실험 커밋 SHA | 두 `manifest.json` 의 `code.commit` | **같아야 한다** |
+| **제출** ZIP 해시 | 두 `manifest.json` 의 **`zip_sha256.submit`** | **같아야 한다** |
+| **결과** ZIP 해시 | 두 `manifest.json` 의 `zip_sha256.results` | **달라야 정상이다 — 대조 대상이 아니다** |
+| dev 입력 해시 | 두 회차 기록의 입력 해시 | 같아야 한다 |
+| 모델·seed·설정 | `model.json` · `run_report.json` 의 `reproduction.settings` | 같아야 한다 |
+| `REPO_REF` | 같은 40자리 SHA | 같아야 한다 |
+
+> **`zip_sha256` 을 통째로 비교하지 않는다.** 그 칸은 `{"results": …, "submit": …}` 딕셔너리이고
+> **`results` 는 회차마다 반드시 다르다** — 회차 ID·산출물이 다른 ZIP 이기 때문이다.
+> 통째로 대조하면 정상인 2회차가 매번 불일치로 걸린다.
+>
+> **기존 기록이 그것을 보인다.** 같은 `code.commit` 으로 두 번 돈 회차 쌍 **4쌍**이 있고
+> **넷 다 `results` 는 다르고 `submit` 은 같았다.**
+>
+> | `code.commit` | `results` | `submit` |
+> | --- | --- | --- |
+> | `b7ac2650` | `6193be45a3` · `98e2d4cc27` **다름** | `c1ef2c840e` · `c1ef2c840e` **같음** |
+> | `44f5e4b8` · `e6d9b98b` · `a9fdd0a8` | 각각 2종 **다름** | 각각 1종 **같음** |
+>
+> **`submit` 이 다르면** 같은 코드에서 다른 제출 번들이 나왔다는 뜻이다. 그때는 2회차를
+> 무효로 보고 **원인을 적는다** — 패키징이 비결정적이라는 신호이지 후보의 효과가 아니다.
 
 ### 최종 판정 — 셋을 **전부** 만족해야 채택 후보다
 
 | # | 무엇 | 판정 |
 | --- | --- | --- |
 | **A** | **두 회차 모두** 기준 1(v18 FN ≤ 3)과 기준 2(v10~v13 TP 10 유지)를 만족 | 하나라도 한 회차에서 어긋나면 **반려** |
-| **B** | **v18 FN 감소폭이 후보↔후보 churn 보다 크다** | 감소폭 ≤ churn 이면 **반려.** 잡음과 구분되지 않는다 |
-| **C** | **대상 밖 바뀐 셀이 후보↔후보 churn 범위 안** | 넘으면 **회귀로 반려** |
+| **B** | **v18 FN 감소폭 > v18 FN churn** | `≤` 면 **반려.** 잡음과 구분되지 않는다 |
+| **C** | **대상 밖 바뀐 셀 ≤ 대상 밖 churn** | 넘으면 **회귀로 반려** |
 
-**B·C 의 churn 은 `<run1>` 대 `<run2>` 실측이다**(§3 11단계). 과거 13쌍의 17~45셀을
-쓰지 않는다 — 다른 코드의 값이다.
+### B·C 가 쓰는 수를 여기서 못 박는다
+
+**"churn" 이라는 말만으로는 판정이 안 된다.** 어느 축의 몇 셀인지 정해야 하고,
+**비교하는 두 수가 같은 축이어야 한다.** 네 값을 `comparison.json` 에서 **그대로 읽는다.**
+
+| 기호 | 정의 | 어디서 |
+| --- | --- | --- |
+| `FN₁` · `FN₂` | 1·2회차의 **v18 `fn`** | `<cmp1-c>` · `<cmp2-c>` 의 `items[v18].after.fn` |
+| `FN_base` | 기준의 v18 `fn` = **6** | `<cmp1-c>` 의 `items[v18].before.fn` |
+| **`Δ` (감소폭)** | **`FN_base − max(FN₁, FN₂)`** | 위 세 값에서 계산. **나쁜 쪽 회차를 쓴다** |
+| **`c_FN` (v18 FN churn)** | **`|FN₂ − FN₁|`** | 같은 값들에서 계산 |
+| `off₁` · `off₂` | 1·2회차의 **대상 밖 바뀐 셀** | `<cmp1-c>` · `<cmp2-c>` 의 `changed_cells_off_focus` |
+| **`c_off` (대상 밖 churn)** | `<churn-c>` 의 `changed_cells_off_focus` | 후보↔후보 대조 |
+
+**판정식은 이것뿐이다.**
+
+```text
+B :  Δ > c_FN            즉  (6 − max(FN₁, FN₂))  >  |FN₂ − FN₁|
+C :  max(off₁, off₂) ≤ c_off
+```
+
+**왜 `max` 인가.** 두 회차 중 **나쁜 쪽**으로 판정한다. 좋은 회차를 골라 쓰면
+결과를 보고 기준을 고르는 것이다.
+
+**왜 같은 축인가.** 첫 판은 "v18 FN 감소폭" 을 **전체 바뀐 셀 수**와 견주게 적었다.
+그것은 **셀 개수와 FN 개수를 견주는 것**이라 판정이 성립하지 않는다.
+이제 FN 은 FN 끼리(`Δ` 대 `c_FN`), 대상 밖 셀은 대상 밖 셀끼리(`off` 대 `c_off`) 본다.
+
+**예시(값은 가정이다 — 회차 전에는 모른다).**
+`FN₁=3 · FN₂=4` 면 `Δ = 6 − 4 = 2`, `c_FN = 1` → `2 > 1` 이라 **B 통과**.
+`FN₁=3 · FN₂=5` 면 `Δ = 1`, `c_FN = 2` → `1 > 2` 가 거짓이라 **B 반려**.
+
+**과거 13쌍의 17~45셀을 쓰지 않는다** — 다른 코드의 값이고, 셀 단위라 `c_FN` 과 축도 다르다.
 
 ### 미리 정해 두는 읽기 규칙
 
@@ -426,7 +495,8 @@ if recorded and not (recorded.startswith(code_commit) or code_commit.startswith(
 | 항목 | 왜 |
 | --- | --- |
 | `source.json.commit` · 패키지 `script.py` 의 마커 유무 | 후보 코드로 돈 게 맞는지(§3-3) |
-| `manifest.json` 의 `code.commit` · `zip_sha256` · 입력 해시 | 두 회차가 같은 조건인지(§4-1) |
+| `manifest.json` 의 `code.commit` · **`zip_sha256.submit`** · 입력 해시 | 두 회차가 같은 조건인지(§4-1) |
+| `zip_sha256.results` | **기록만 한다.** 회차마다 달라서 대조 대상이 아니다 |
 | 노트북 커밋 | `REPO_REF` 와 별개로 기록한다 |
 | `company_size_inference_seconds` | 기준 4 판정 |
 | `company_size_response_count` · 출력 한도 실패 건수 | 스키마가 길어져 잘리는지 |
@@ -435,7 +505,8 @@ if recorded and not (recorded.startswith(code_commit) or code_commit.startswith(
 | `scope` 분포 전→후 (competitive 78건이 몇으로) | 관측의 실제 효과 |
 | `039·040·041·044` 각각의 `competitive_row`·`scope`·v18 | 사정권 4건의 개별 결과 |
 | v10·v11·v12·v13 의 TP 셀 10개 개별 생존 | 기준 2 판정 |
-| **후보↔후보 churn** (셀 수 · 대상 항목 · 대상 밖) | **기준 B·C 판정. 이 코드의 잡음 범위다** |
+| **`FN₁`·`FN₂`·`off₁`·`off₂`·`c_FN`·`c_off`** | **기준 B·C 판정. §4-1 의 정의대로 `comparison.json` 에서 읽는다** |
+| `<churn-c>/comparison.json` 전문 | 후보↔후보 대조 원본. 뒤에 다시 셀 수 있게 남긴다 |
 
 **`competitive_row` 가 목록 밖 번호였던 건수를 반드시 센다.** 모델이 공고 본문이나
 메타의 코드를 베껴 오면 이 관측은 무효다 — 그 경우 관측 자체를 반려한다.
@@ -472,6 +543,9 @@ if recorded and not (recorded.startswith(code_commit) or code_commit.startswith(
 | 복구 절차 | **모형으로 확인함.** 임시 git 저장소에서 커밋 뒤 `git checkout --` 가 안 되돌리는 것과, 실험 브랜치 방식이 되돌리는 것을 둘 다 재현했다(§3-2) |
 | 실험 ref push | **안 함.** 회차를 안 돌렸다. §3-3 은 노트북·등록기 **소스를 읽은** 결론이고 Colab 에서 확인한 것이 아니다 |
 | **두 회차 반복** | **미실행.** §4-1 은 판정 **방법**을 고정한 것이고 churn 실측값이 아니다 |
+| 경로 규약(§3-0) | **확인함.** 등록된 회차 `colab-1789902969401579900` 의 실제 배치를 조회했다 — 루트에 CSV 가 없고 `dev/`·`dev-debug/`·`sample/` 아래에 있다 |
+| `submit`/`results` 해시 구분(§4-1) | **기존 기록으로 확인함.** 같은 `code.commit` 회차 쌍 4쌍이 전부 `results` 다름·`submit` 같음이었다 |
+| B·C 판정식이 계산되는지 | **확인함.** `<cmp>/comparison.json` 에 `items[v18].before.fn`·`after.fn`·`changed_cells_off_focus` 가 실제로 있다 |
 
 **TP/FP/FN 전→후가 없다.** 후보의 효과를 이 문서가 주장하지 않는다.
 `§1` 의 무리별 TP 수는 **현재 회차의 실측**이고 이 관측의 결과가 아니다.
@@ -506,8 +580,12 @@ if recorded and not (recorded.startswith(code_commit) or code_commit.startswith(
 - **`register_run.py` 를 실제로 돌려 보지 않았다.** CLI 인자와 두 검사
   (`len(candidates) != 1`, `source.json` 대조)를 **소스로** 확인했다.
   `artifacts/inbox-run1`·`-run2` 를 쓰는 것도 그 검사에서 유도한 것이지 돌려 본 것이 아니다.
-- **후보↔후보 churn 이 얼마일지 모른다.** §4-1 의 기준 B·C 가 그 값에 걸려 있는데
-  **회차 전에는 알 수 없다.** 과거 13쌍의 17~45셀은 다른 코드의 값이라 쓰지 않는다.
-  churn 이 v18 FN 감소폭보다 크면 이 관측으로는 못 가린다 — 그때의 답은 반려다.
+- **`c_FN`·`c_off` 값을 회차 전에는 모른다.** §4-1 의 기준 B·C 가 그 값에 걸려 있다.
+  정의와 판정식은 고정했지만 **수는 회차가 준다.** 과거 13쌍의 17~45셀은 다른 코드의
+  값이고 셀 단위라 `c_FN` 과 축도 달라 쓰지 않는다.
+  `Δ ≤ c_FN` 이면 이 관측으로는 못 가린다 — 그때의 답은 반려다.
+- **`c_FN` 이 0 으로 나올 수도 있다.** 두 회차의 v18 `fn` 이 같으면 `|FN₂−FN₁| = 0` 이고
+  `Δ > 0` 이면 B 를 통과한다. 그것은 **그 축이 이 회차 쌍에서 안 흔들렸다**는 뜻이지
+  잡음이 없다는 증명이 아니다 — 회차 쌍 하나는 표본 1 이다.
 - **두 회차로 충분한지.** 회차 쌍 하나로 재는 churn 은 그 자체가 표본 1 이다.
   더 늘리면 정밀해지지만 **회차를 늘려 통과시키는 길**과 구분이 어려워져 둘로 고정했다.
