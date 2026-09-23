@@ -208,6 +208,18 @@ class V17MidSizeEntity(unittest.TestCase):
             with self.subTest(quote=quote):
                 self.assertIsNone(candidate.v17_deletion(quote))
 
+    def test_article_designation_of_sme_is_kept(self):
+        """리뷰 라운드 5: 중소기업기본법 제2조에 따른 업체는 중소기업자, 곧 중기업까지다."""
+        for quote in ("「중소기업기본법」 제2조에 따른 업체",
+                      "「중소기업기본법」 제2조에 따른 업체 또는 소상공인",
+                      "중소기업기본법 제2조제1항에 따른 자로서 확인서를 소지한 업체"):
+            with self.subTest(quote=quote):
+                self.assertIsNone(candidate.v17_deletion(quote))
+
+    def test_quote_naming_no_narrow_entity_is_kept(self):
+        """내리려면 인용이 소기업·소상공인·여성기업 같은 좁은 자격을 실제로 적어야 한다."""
+        self.assertIsNone(candidate.v17_deletion("입찰참가자격을 갖춘 업체"))
+
     def test_empty_quote_is_left_to_the_evidence_contract(self):
         self.assertIsNone(candidate.v17_deletion(""))
 

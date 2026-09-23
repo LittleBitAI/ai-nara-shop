@@ -21,8 +21,9 @@
    막는 참가자격이 아니라 점수 구간이다.
 
 **v17 1억원 미만 일반물품 중소기업 제한.** v15 는 소기업 제한, v18 은 소기업 제한 없음이다.
-v17 은 중기업까지 허용한 제한이라, 인용이 중소기업·중기업을 자격 주체로 적지 않으면 그
-위반을 세우지 못한다. 법령·규정 이름(「중소기업기본법」, 「중소기업 범위 및 확인에 관한
+v17 은 중기업까지 허용한 제한이라, 인용이 좁은 자격(소기업·소상공인·여성기업 등)만 적고
+중소기업·중기업을 자격 주체로 적지 않으면 그 위반을 세우지 못한다. `중소기업기본법 제2조에 따른
+업체` 처럼 조문으로 중소기업자를 정한 인용은 중기업 허용이다. 법령·규정 이름(「중소기업기본법」, 「중소기업 범위 및 확인에 관한
 규정」)에 든 `중소기업` 은 자격 주체가 아니므로 지우고 본다. 소기업·소상공인 확인서,
 여성기업 자격이 여기서 내려간다. `experiments/evidence_gate_candidate.py` 의 ② 는 법령 이름을
 안 지워 PPS-DEV-102 를 놓치고, `소기업` 이 없는 여성기업 인용도 놓친다.
@@ -62,6 +63,12 @@ LAW_TITLE = re.compile(r"[「｢『][^」｣』]*(?:법|법률|령|규정|규칙
 BARE_TITLE = re.compile(r"중소\s*기업\s*(?:기본\s*법|범위\s*및\s*확인|현황\s*정보|제품\s*구매\s*촉진|청)"
                         r"|중소\s*벤처\s*기업\s*부")
 MID_SIZE = re.compile(r"중\s*[·・ㆍ․,./]?\s*소\s*기업|중\s*기업")
+# 조문으로 자격을 정한 표기. 중소기업기본법 제2조는 중소기업자(소기업+중기업)를 정의한다.
+# `제2조제2항에 따른 소기업` 처럼 뒤에 좁은 자격을 적었을 때만 좁은 것이다(리뷰 라운드 5).
+SME_ARTICLE = re.compile(r"중\s*소\s*기\s*업\s*기\s*본\s*법[」｣』]?\s*제\s*2\s*조"
+                         r"(?:\s*제\s*\d+\s*[항호])*\s*에\s*따른\s*(\S+)")
+# 내리려면 인용이 좁은 자격을 실제로 적어야 한다. 중기업 표기가 없다는 것만으로는 내리지 않는다.
+NARROW = re.compile(r"소\s*기업|소\s*상\s*공\s*인|여\s*성\s*기\s*업|장\s*애\s*인\s*기\s*업|사\s*회\s*적\s*기\s*업")
 
 
 def baseline():
@@ -143,11 +150,15 @@ def v3_deletion(quote: str, rec: Dict[str, Any]) -> Optional[str]:
 
 
 def v17_deletion(quote: str) -> Optional[str]:
-    """v17 양성을 내릴 이유. 인용이 중기업을 자격 주체로 적지 않으면 내린다."""
+    """v17 양성을 내릴 이유. 인용이 좁은 자격만 적고 중기업을 자격 주체로 적지 않으면 내린다."""
     if not (quote or "").strip():
         return None
+    if any(not NARROW.match(entity) for entity in SME_ARTICLE.findall(quote)):
+        return None   # 조문이 중소기업자를 자격으로 정했다
     body = BARE_TITLE.sub(" ", LAW_TITLE.sub(" ", quote))
-    return None if MID_SIZE.search(body) else "no_mid_size_entity"
+    if MID_SIZE.search(body) or not NARROW.search(body):
+        return None
+    return "no_mid_size_entity"
 
 
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
