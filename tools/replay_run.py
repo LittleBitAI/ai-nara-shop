@@ -167,6 +167,9 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 #  - 여덟 셀: v17 인용 게이트(`v17_quote_is_narrow`)가 소기업·소상공인·여성기업만 적은
 #    인용의 v17 양성 네 자리에서 값과 근거를 함께 비웠다. 무라벨 6,000건 감사로 채택했다.
 #    세 목록 모두 이 셀들만 더해지고 빠진 항목 0 — 게이트가 내리기만 한다는 증거다.
+#  - Two cells: the budget axis (B9, #119) ported into `postprocess` raises `PPS-DEV-29`
+#    v24 with the quoted notice amount (a TP; dev v24 4/12/4 -> 5/12/3). All three lists
+#    gain exactly these two cells and lose none.
 #
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
@@ -202,7 +205,7 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-192", "e24"), ("PPS-DEV-192", "v24"), ("PPS-DEV-195", "v24"),
     ("PPS-DEV-198", "v13"), ("PPS-DEV-199", "v24"),
     ("PPS-DEV-25", "e3"), ("PPS-DEV-25", "v3"),
-    ("PPS-DEV-28", "v24"),
+    ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
 ]
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
@@ -240,12 +243,14 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-192", "v24"), ("PPS-DEV-195", "v24"), ("PPS-DEV-198", "v13"),
     ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-28", "v24"),
+    ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
 ]
 
 # `reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv` 와 대조할 때.
 # 그 보관본은 이미 A7 대조 축이 적용된 산출물이므로, 지금 `script.py` 와의 차이는
 # **근거 계약이 움직인 셀만 남는다** — A7 이 양쪽에 다 있어 상쇄된다. v24·e24 가 한 칸도
 # 없는 것이 그 증거다. 이 목록이 달라지면 두 규칙 중 하나의 배선이 끊긴 것이다.
+# The one v24 exception is the budget axis (B9, #119): `PPS-DEV-29` v24·e24, which A7 does not know.
 # D7 의 게이트 여덟 셀도 여기에 더해진다 — 그 보관본은 A7 만 적용된 산출물이다.
 DELIBERATE_MOVES_A7 = [
     ("PPS-DEV-01", "v1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"),
@@ -267,7 +272,7 @@ DELIBERATE_MOVES_A7 = [
     ("PPS-DEV-187", "v6"),
     ("PPS-DEV-188", "v21"), ("PPS-DEV-198", "v13"),
     ("PPS-DEV-25", "e3"),
-    ("PPS-DEV-25", "v3"),
+    ("PPS-DEV-25", "v3"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
 ]
 
 
