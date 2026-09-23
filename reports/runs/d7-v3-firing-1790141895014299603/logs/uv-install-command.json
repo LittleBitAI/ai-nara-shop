@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "pip",
+    "install",
+    "uv"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv",
+  "started": 1790137902.5350635,
+  "returncode": 0,
+  "elapsed_seconds": 4.609603404998779
+}

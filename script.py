@@ -1626,8 +1626,18 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
         # **이 게이트를 다른 금액 항목에 함께 걸면 손해다.** 같은 방식을 항목명에 금액이
         # 적힌 다섯(v2·v4·v5·v6·v7)에 일괄 적용하면 합계 −0.219다 — v4는 양성 6건 중
         # 2건만 구간 안이고(0.800 → 0.444), v7도 TP를 하나 잃는다. v5만 건다.
+        #
+        # 경계는 계약법·업무구분·발주기관마다 다르다. 국가 용역물품 2.3억을 지방 공고에 쓰면
+        # 지방의 제한 허용 구간(시행규칙 제24조) 한복판을 v5 로 읽는다. 지방 물품·일반용역은
+        # 시·도 3억 5천만원, 그 밖 5억원이다(`region_price_limit`, docs/rules.md). v7 이 같은 함수를 쓴다.
+        #
+        # **`region_restriction_allowed()` 를 그대로 쓰지 않는다.** 그 함수는 v7 의 양성
+        # 검출을 지키려고 금액·계약법·업무구분을 모르면 True(= 못 막는다)를 낸다. 그 True 를
+        # 여기서 "위반이 아니다"로 읽으면 판단 불가인 공고의 v5 양성을 지운다.
+        # 반증은 **상한과 금액을 둘 다 읽었을 때만** 성립한다.
+        limit = region_price_limit(rec)
         price = estimated_price(rec)
-        return price is not None and price < NOTICE_AMOUNT_WON
+        return limit is not None and price is not None and price < limit
     if item == "v19":
         if not v19_demanded_at_bid_stage(rec):
             return True                     # 공고가 입찰 단계에서 요구한 적이 없다
@@ -1779,13 +1789,20 @@ REGION_WINDOW = 200
 #         → 재정경제부 고시 `물품 및 용역: 2억 3천만 원`
 #   지방: 시행령 제20조제1항제6호 → 시행규칙 제24조제2호 나목
 #
-# 지방 용역·물품 값 5억원은 **조건부 기준을 근사한 값이다.** 나목은 지자체를 둘로 나눈다.
-#   - 법 제5조제1항을 적용받는 지자체: 행정안전부장관이 고시한 금액.
-#     그중 서울·부산·인천의 관할구역 안 군·구만 5억원으로 못 박혀 있다.
-#   - 법 제5조제1항을 적용받지 않는 지자체: 5억원.
-# 행정안전부장관 고시액이 제공 자료에 없어 첫 갈래의 실제 값을 알 수 없다.
-# 그래서 조문에 숫자로 적힌 5억원 하나로 두 갈래를 근사한다.
-# 고시액이 5억원과 다르면 그 지자체의 공고에서 이 게이트가 틀린다.
+# 지방 용역·물품은 발주기관에 따라 둘이다. 나목의 `행정안전부장관이 고시한 금액`은
+# 대회 공지가 제공한 3억 5천만원이다(행정안전부고시 제2024-95호, docs/rules.md 지역제한 금액).
+#   - 시·도(세종 제외): 3억 5천만원.
+#   - 세종·시·군·구·교육청(학교)·지방공기업: 5억원.
+# 발주기관은 익명화 토큰으로 가린다(docs/data.md 가 판정 사용을 허용한다). 공고 머리의
+# 첫 `[수요기관(…)]` 이 발주기관이다. `지방정부` 가 시·도다 — dev 에서 그 토큰으로 시작하는
+# 공고가 서울특별시 `재무공고`(서소문청사)이고, 시·군·구는 `기초자치단체` 로 따로 온다.
+# 시·도인지 모르는 기관(보건·소방·행정기관 등)은 조문의 기본값 5억원을 쓴다.
+# 발주기관은 `공고문` 에서만 읽는다 — 규격서·첨부의 기관·납품 장소는 발주기관이 아니다.
+# 세종은 발주기관에 묶인 증거로만 가린다 — 기관 토큰의 지역 링크, 평문의 세종 부서.
+# 묶이지 않은 지역 토큰과 제한 지역은 현장·납품지다(`_is_sejong`).
+# 가목의 용역(건설기술·설계감리·엔지니어링 3억 3천만원, 시설물안전법 안전점검·정밀안전진단
+# 1억 5천만원)은 나라장터에서 `기술용역` 이다. meta `업무구분` 이 `일반용역` 이면 가목 밖으로 읽는다.
+# 본문 낱말로 가목을 가리면 `실시설계 및 제작·설치`·`과학실험실 안전 점검` 같은 공고가 잘못 내려간다.
 #
 # 공사
 #   국가: 시행규칙 제24조제2항제1호 — 건설공사(전문 제외)는 고시금액(공사 88억원),
@@ -1813,14 +1830,60 @@ def _price_scope(work_type):
     return None
 
 
+PROVINCE_LIMIT = 350_000_000          # 시·도(세종 제외) 물품·일반용역
+PROVINCE_AGENCY = ("지방정부", "광역자치단체")
+FIRST_AGENCY = re.compile(r"\[수요기관\(([^)\]|]+)\)(?:\|지역=(r\d+))?\]")
+WIDE_OF = re.compile(r"\[지역:(r\d+)\|[^\]]*?광역=([^\]|]+)\]")
+SEJONG = "세종특별자치시"
+# 평문에서 세종을 발주처로 가리키는 문맥. 참가 가능 지역 목록의 `세종특별자치시` 는 발주처가 아니다.
+SEJONG_OFFICE = re.compile(SEJONG + r"\s*(?:회계과|재무과|계약과|분임재무관|재무관|입찰집행관)")
+
+
+def _notice_text(rec):
+    """발주기관을 읽을 문서. `공고문` 이 없으면 첫 문서다."""
+    docs = rec.get("docs", [])
+    notice = next((d for d in docs if d.get("type") == "공고문"), docs[0] if docs else {})
+    return notice.get("text") or ""
+
+
+def _is_sejong(text, first):
+    """시·도 공고의 발주처가 세종인가. 발주기관에 묶인 증거만 본다.
+
+    묶인 증거는 둘이다 — 발주기관 토큰의 `|지역=rN` 링크, 평문의 세종 부서(`세종특별자치시 회계과`,
+    무라벨 `PPS-D-016374`). 위치는 어떤 형태로든 발주처가 아니다(지방 시행규칙 제25조제3항):
+    현장·납품지 지역 토큰은 기관 토큰 바로 뒤에 붙어 있어도(`납품장소: [수요기관(…)] [지역:…]`,
+    `PPS-D-014240`) 납품지이고, 참가 가능 지역 목록(`PPS-D-007109`)·제한 지역도 같다.
+    그래서 현장 토큰이 세종 부서 문구를 가리지 않는다(`PPS-D-016496`). 두 증거가 모두 없는 세종 발주
+    공고는 시·도 금액을 받는다 — 무라벨에서 그런 공고는 모두 3억 5천만원 미만이었다.
+    """
+    regions = dict(WIDE_OF.findall(text))
+    linked = regions.get(first.group(2))
+    return linked == SEJONG or bool(SEJONG_OFFICE.search(text))
+
+
+def region_price_limit(rec):
+    """그 공고의 지역제한 상한(항목명의 `고시금액`). 금액을 나눌 갈래를 모르면 None."""
+    meta = rec.get("meta") or {}
+    scope = _price_scope(meta.get("업무구분"))
+    limit = REGION_PRICE_LIMIT.get((meta.get("적용계약법"), scope))
+    if (meta.get("적용계약법"), scope) != ("지방계약법", "용역물품") or meta.get("소관구분") != "지방정부":
+        return limit
+    text = _notice_text(rec)
+    first = FIRST_AGENCY.search(text)
+    if first and first.group(1) in PROVINCE_AGENCY and not _is_sejong(text, first):
+        return PROVINCE_LIMIT
+    return limit
+
+
 def region_restriction_allowed(rec):
     """추정가격이 지역제한 허용 상한 미만인지. 판단할 수 없으면 True를 돌려준다.
 
     모르는 것을 근거로 막지 않는다. 막는 쪽이 틀리면 정답 양성을 잃는다.
+    **이 True 는 "허용 구간이다"가 아니라 "못 막는다"이다.** 그러므로 다른 항목에서
+    "위반이 아니다"라는 뜻으로 뒤집어 쓰면 안 된다 — 모르는 공고의 양성을 지운다.
     """
     meta = rec.get("meta") or {}
-    scope = _price_scope(meta.get("업무구분"))
-    limit = REGION_PRICE_LIMIT.get((meta.get("적용계약법"), scope))
+    limit = region_price_limit(rec)
     price = meta.get("입찰추정가격")
     if limit is None or not price:
         return True
@@ -1973,10 +2036,14 @@ MONEY = re.compile(
     r"\s*(?:([\d,]+))?"
     r"\s*(원)?"
 )
-PERF_WORD = re.compile(r"실적")
-MONEY_REACH = 180      # 실적 문구 앞뒤에서 금액을 찾을 범위
 MONEY_MIN = 1_000_000            # 사람 수·건수를 금액으로 읽지 않기 위한 하한
 MONEY_MAX = 100_000_000_000      # 오독한 큰 수를 버리는 상한
+# 조문은 배수를 비율로도 적게 한다(`예산금액의 100% 이상`). **그 축은 여기 없다.**
+# 세 번 시도했고 세 번 다 정탐을 지웠다 — `%`만 보면 `부가세 10% 포함`을, 기준액 이름을
+# 요구하면 `입찰보증금은 사업비의 5%`를, 구분자로 구절을 갈라도 마침표나 `로서`로 이어진
+# 같은 문장의 보증금 비율을 실적 배수로 읽었다. **앞 조각에 `실적`이 있다는 사실은 뒤의
+# 비율도 실적 요건이라는 증거가 아니다.** 그래서 이 게이트는 인용 안의 **명시적 실적 금액**만
+# 본다. 비율 표기만 있는 인용은 내리지 않는다 — 별도 가설로 검증할 축이다.
 
 
 def parse_money(match):
@@ -2002,43 +2069,46 @@ def parse_money(match):
     return total
 
 
-def _money_near(text, pos):
-    """실적 문구 근처의 원 단위 금액. 억·천만·만원 표기를 모두 원으로 바꾼다."""
-    segment = text[max(0, pos - MONEY_REACH):pos + MONEY_REACH]
-    values = []
-    for match in MONEY.finditer(segment):
-        value = parse_money(match)
-        if value is not None:
-            values.append(value)
-    return values
+def required_performance(evidence):
+    """근거문구가 요구하는 실적 금액의 최댓값. 읽지 못하면 None.
 
-
-def required_performance(rec):
-    """참가자격이 요구하는 실적 금액의 최댓값. 읽지 못하면 None."""
+    **문서 전체가 아니라 인용 안에서만 읽는다.** 문서 최댓값을 집으면 인용과 무관한
+    다른 조항의 금액으로 v3 을 판정한다 — `PPS-DEV-03` 이 그렇게 본문의 1억(배수 1.12)을
+    집어 3천만원(배수 0.34)을 요구하는 인용을 살렸고, 본문에 `실적`이 한 번도 없는
+    `PPS-DEV-25` 에서는 앵커가 통째로 빗나가 아무것도 못 읽었다.
+    """
     best = None
-    for doc in rec.get("docs", []):
-        text = doc.get("text") or ""
-        for match in PERF_WORD.finditer(text):
-            if not _is_qualification_context(text, match.start()):
-                continue
-            for value in _money_near(text, match.start()):
-                if MONEY_MIN <= value <= MONEY_MAX and (best is None or value > best):
-                    best = value
+    for match in MONEY.finditer(evidence or ""):
+        value = parse_money(match)
+        if value is not None and MONEY_MIN <= value <= MONEY_MAX and (best is None or value > best):
+            best = value
     return best
 
 
-def performance_below_budget(rec):
-    """v3. 요구 실적금액이 계약목적물 추정가격의 1배 미만이면 그 배수를 돌려준다. 아니면 None.
+def performance_below_budget(rec, evidence):
+    """v3. 근거문구가 요구하는 실적이 추정가격의 1배 이내면 그 배수를 돌려준다. 아니면 None.
 
-    기준은 조문대로 추정가격이다(국가·지방 시행규칙 제25조제2항제1호 나목).
-    추정가격이 없으면 배정예산금액으로 물러선다. dev에서는 두 기준의 1배 경계 판정이 같다.
-    금액이나 기준액을 읽지 못하면 None을 돌려준다. 모르는 것을 근거로 내리지 않는다.
+    기준은 조문대로 추정가격이다(국가·지방 시행규칙 제25조제2항제1호 나목
+    `…해당 계약목적물의 추정가격의 1배 이내`). 추정가격이 없으면 배정예산금액으로
+    물러선다. dev에서는 두 기준의 1배 경계 판정이 같다.
+    기준액이나 인용 안 금액을 못 읽으면 None이다 — 모르는 것을 근거로 내리지 않는다.
+
+    두 갈래다.
+    ① 근거문구가 비면 내린다. 근거 없는 양성은 제출 계약의 `e`(원문의 연속된
+       부분문자열)를 채울 수 없다.
+    ② 인용 안의 **명시적 실적 금액**을 기준액과 견준다.
+
+    **비율 표기(`예산금액의 100% 이상`)로는 내리지 않는다.** 조문이 1배 이내를 허용하므로
+    그런 인용이 위반이 아닌 것은 맞지만, 한 인용 안에서 어느 비율이 실적 요구인지를
+    가릴 방법을 아직 못 세웠다 — 위 상수 주석이 세 번의 실패를 적고 있다.
     """
     meta = rec.get("meta") or {}
     basis = meta.get("입찰추정가격") or meta.get("배정예산금액")
     if not basis:
         return None
-    required = required_performance(rec)
+    if not (evidence or "").strip():
+        return 0.0
+    required = required_performance(evidence)
     if required is None:
         return None
     ratio = required / basis
@@ -2153,15 +2223,54 @@ def apply_qualification_rules(judgment, rec):
     out = dict(judgment)
     for item in QUALIFICATION_ITEMS:
         cell = dict(out.get(item) or {"위반여부": 0, "근거문구": None})
+        # 세 규칙 다 **양성 검출기**다. 못 찾은 것은 "없다"가 아니라 "이 어휘로는 못 봤다"이다.
+        # 한때 v4 에서 그 None 을 확정적 음성으로 승격시켜 dev 오탐 3건을 지웠지만,
+        # `[수요기관(기초자치단체)|지역=r1]` 처럼 익명화된 기관 토큰에서 검출기가 None 을
+        # 내므로 정답 양성까지 함께 지운다. 되돌렸다 — 여기서는 0 을 1 로만 올린다.
         if cell.get("위반여부") == 1:
             continue
         hit = RULES[item](rec)
         if hit:
             out[item] = {"위반여부": 1, "근거문구": hit["근거문구"]}
     v3 = dict(out.get("v3") or {"위반여부": 0, "근거문구": None})
-    if v3.get("위반여부") == 1 and performance_below_budget(rec) is not None:
+    if v3.get("위반여부") == 1 and performance_below_budget(rec, v3.get("근거문구")) is not None:
         out["v3"] = {"위반여부": 0, "근거문구": None}
     return out
+
+
+# 익명화된 지역 토큰. dev 입력이 200건 전부 `anon_applied=True` 라 기초 지자체 이름이
+# 이 꼴로 바뀌어 있다. `단위=기초` 가 시·군·구 제한이라는 신호다.
+ANON_REGION = re.compile(r"\[(?:등록)?지역:[^\]]*?단위=(기초|광역)[^\]]*\]")
+# 기초 단위를 이름으로 적은 공고도 있다. 광역시·특별시·특별자치시는 광역이므로 뺀다.
+# 이름 뒤에는 조사가 붙는다 — `고양시에`·`성남시의`. 뒤를 한글로 통째로 막으면 그 꼴을
+# 전부 놓치고, 시·군·구 제한인 인용을 "지역제한 문장이 아니다"로 읽는다.
+BASIC_REGION_NAME = re.compile(r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)"
+                               r"(?:(?![가-힣])|(?=[에의은는이가을를와과로내산]))")
+
+
+def _has_basic_unit(text: str) -> bool:
+    """이 인용이 기초(시·군·구) 단위 제한을 가리키는가."""
+    if any(unit == "기초" for unit in ANON_REGION.findall(text or "")):
+        return True
+    # 광역 이름을 먼저 지운다. "서울특별시"의 "특별시"를 기초로 세지 않기 위해서다.
+    return bool(BASIC_REGION_NAME.search(re.sub(WIDE_REGION, " ", text or "")))
+
+
+def v6_not_a_basic_region_limit(evidence: str, rec: Dict[str, Any]) -> bool:
+    """v6 의 근거가 '고시금액 미만 계약의 시·군·구 제한'을 가리키지 못하는가.
+
+    세 조건 전부 항목 정의와 제출 계약에서 나온다(A4 후보에서 v6 만 옮겼다).
+    """
+    if not (evidence or "").strip():
+        return True                                     # ① 근거 없는 양성
+    wide = set(re.findall(WIDE_REGION, evidence))
+    if not wide and not ANON_REGION.search(evidence) and not _has_basic_unit(evidence):
+        return True                                     # ② 지역제한 문장이 아니다
+        # 기초 단위를 이름으로만 적은 공고(`주된 영업소가 고양시에 있는 업체`)는 광역명도
+        # 익명화 토큰도 없다. 그것을 "지역제한이 아니다"로 읽으면 v6 정탐을 내린다.
+    if len(wide) >= 2 and not _has_basic_unit(evidence):
+        return True                                     # ③ 광역 확대 — v7 의 몫이다
+    return False
 
 
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
@@ -2183,6 +2292,8 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                     break
             if (not ev and v not in EVIDENCE_EXEMPT) or evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
+        if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
+            hit, ev = 0, ""
         out[v] = {"위반여부": hit, "근거문구": ev}
     return out
 

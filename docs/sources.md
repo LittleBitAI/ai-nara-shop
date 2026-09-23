@@ -17,6 +17,7 @@
 | S3 [datasets 보관본](../archive/contest/datasets.md) | 빈 파일(0바이트); 통합할 본문 없음 | 없음; 빈 상태도 보존 |
 | S4 [배경 보관본](../archive/contest/배경.md) | 문제 배경·평가 방식·참가·운영 안내 | [contest](contest.md) |
 | S5 [배포 README](../open/README.md) | 제공 파일·입출력·실행환경 | [data](data.md), [rules](rules.md) |
+| S6 [지역제한 금액 공지 보관본](../archive/contest/notice-region-limit.md) | 법령패키지를 보완하는 대회 제공 자료. 지방 지역제한 금액(시·도 3억 5천만원 등)과 항목별 `고시금액`의 뜻 | [rules](rules.md#지역제한-금액과-고시금액), [items](items.md) v2·v5~v7·v14~v16 |
 | [발표용.pptx](../발표용.pptx) 7~13장·발표자 노트 | AI 초안→사람 검토, 8공정, 품질 게이트, 승인 책임 | [contracts](contracts.md) |
 | 발표용 14~15장 | 공정 오너십·파일 경계·작은 브랜치 | [workflow](workflow.md), [design](design.md) |
 | 발표용 16~18·21장 | 일정·첫 산출물·예산·미정 질문 | [roadmap](roadmap.md), [tasks](tasks.md) |
@@ -25,6 +26,7 @@
 | [open/baseline/script.py](../open/baseline/script.py) | 실제 loader·prompt·vLLM·mock·후처리·CSV 구현 | 현재 실행 명령과 실패 경계 |
 | 루트 `[Baseline]_Gemma + 법령 RAG 법령위반 판정.ipynb` | 조문 단위 BM25, topk=8, RAG_CHARS=8000, QUERY_CHARS=3000 | 검색 개선 기준선 |
 | 루트 `[Baseline]_Gemma 제약 디코딩 법령위반 판정.ipynb` | 16,384 context, 1,536 출력, 제약 디코딩 | 예산 기준선 |
+| S7 [토크 질의응답 보관본](../archive/contest/qna/) | 운영진 답변 17건(2026-09-23 수집). 채점·캐시·logprob 임계·오탈자·항목별 판정 기준·dev 라벨 노이즈 | [qna](qna.md), [rules](rules.md) A4·Q2, [contest](contest.md) E2, [items](items.md) |
 
 두 PPTX의 슬라이드 XML과 발표 노트를 읽었습니다. 슬라이드 외형을 변경하지 않았습니다.
 초기 통합에서는 최신 공지를 확인하지 않았으며, 아래 T1 확인 기록으로 운영 정보를 보완했습니다.

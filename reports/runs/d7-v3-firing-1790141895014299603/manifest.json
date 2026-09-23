@@ -1,0 +1,90 @@
+{
+  "artifact_id": "run-d7-v3-firing-1790141895014299603",
+  "version": 1,
+  "status": "draft",
+  "run_id": "d7-v3-firing-1790141895014299603",
+  "zip_name": "d7-v3-firing-results-1790141895014299603.zip",
+  "zip_sha256": "6869202347e4edebfe7bf7b7ae656d0a804f014b785825f8713e0b54a524b9ee",
+  "kind": "D7 v3 무라벨 발화율 수집 — 24항목 기본 호출로 인용을 받아 게이트 발화를 센다. 제출 ZIP 없음",
+  "code": {
+    "commit": "c236a67244cc871a815084788493ec6d3f39d27e",
+    "requested_ref": "c236a67244cc871a815084788493ec6d3f39d27e",
+    "script_sha256": "7ec8246d2e6c8aa2cdb6294f12c5c9efeca5b8afd3cf345ce100e8bb4eb3a25d",
+    "note": "그 회차의 script.py 해시가 PR #96 의 fix/d-falsepositive-gates HEAD 와 바이트 단위로 같다"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB, 42405855232 bytes",
+    "cuda": "13.0",
+    "python": "3.12.13",
+    "packages": {
+      "vllm": "0.26.0"
+    },
+    "model": "google/gemma-4-26B-A4B-it",
+    "model_revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52",
+    "chat_template_sha256": "ae53464bf3be25802b3a5b37def7fd89667067d7577049b3b2d74c4d8de4c6d4"
+  },
+  "inputs": {
+    "unlabeled_sha256": "f46449fb84f980a5ddf868d66f5daff2bcf0991135d9b81da5656dd607275698",
+    "dev": "open/dev.jsonl",
+    "prompt_sha256": "56f73f0bb2218516ba60e4fe09088eb19bb5279eaa00d2a47a1bd6f489d72c8e",
+    "schema_sha256": "1f85904111e288dea2f2d0bfa98cbcd73bd4356987514784bfeb5f4b34bd9f2e",
+    "seed": 20260826,
+    "max_tokens": 2048,
+    "max_chars": 16000,
+    "chunk": 128,
+    "shard_size": 1000
+  },
+  "cases": {
+    "dev": {
+      "counts": {
+        "records": 200,
+        "responses_valid": 200,
+        "retries": 0,
+        "model_v3": 17,
+        "gate_fired": 7,
+        "final_v3": 10
+      },
+      "seconds": {
+        "model_load": 440.0,
+        "inference": 365.4,
+        "stage": 368.2
+      }
+    },
+    "unlabeled-00": {
+      "counts": {
+        "records": 1000,
+        "responses_valid": 1000,
+        "retries": 0,
+        "model_v3": 83,
+        "gate_fired": 24,
+        "final_v3": 46
+      },
+      "seconds": {
+        "model_load": 440.0,
+        "inference": 1851.6,
+        "stage": 1865.1
+      }
+    }
+  },
+  "results": {
+    "unlabeled_over_dev": {
+      "model_v3_rate": 0.9764705882352941,
+      "gate_fired_rate": 0.6857142857142856,
+      "final_v3_rate": 0.9199999999999999
+    },
+    "complete": false,
+    "coverage_note": "무라벨 1,000건 표본이다. 20,000건 전체가 아니므로 W5 전수 증거가 아니다.",
+    "uncertainty_note": "게이트 발화가 dev 7건·무라벨 24건이다. 95% 구간이 1.7~7.0% 대 1.6~3.5% 이고 배율은 0.23~2.08 까지 벌어진다. 0.69 를 정밀한 값으로 읽지 않는다."
+  },
+  "raw_responses": {
+    "included": true,
+    "where": "firing/dev.json · firing/unlabeled-00.json 의 rows[].response_text",
+    "note": "이 저장본으로 read_shard() 가 숫자를 다시 계산해 대조했다. summary.json 이 재계산과 같다."
+  },
+  "excluded": [
+    {
+      "path": "firing/*.events.jsonl",
+      "reason": "프롬프트·응답 사본이라 rows[].response_text 와 중복이다. 판정에 필요한 값은 전부 shard JSON 에 있다"
+    }
+  ]
+}

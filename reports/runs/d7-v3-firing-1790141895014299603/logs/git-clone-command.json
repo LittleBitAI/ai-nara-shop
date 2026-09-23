@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "clone",
+    "--depth",
+    "1",
+    "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "/content/d7-v3-firing-xvyvomtv/repo"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv",
+  "started": 1790137852.8834255,
+  "returncode": 0,
+  "elapsed_seconds": 1.564420223236084
+}
