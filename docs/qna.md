@@ -132,6 +132,6 @@ e열이 빈 양성도 근거가 없다는 뜻이 아니다 — e열은 형식 �
 | 자리 | 답과의 관계 | 상태 | 담당 |
 | --- | --- | --- | --- |
 | `script.py` v5 게이트가 지방에도 2억 3천만원 | S7-17과 다르다 | 해소 — #96 이 v5 를 계약법별 표로 바꾸고 #99 가 발주기관별 지역제한 금액(`region_price_limit()`)을 얹었다 | D(v5), 운영 반영 B |
-| `script.py` `V9_EQUIVALENT` — 근거 앞뒤 300자에 "동등"이 있으면 v9를 내린다 | S7-14는 그 표현만으로 정하지 말라고 한다 | B4(`6dc72ba`, 9/18)가 넣었다. [B6 작업서](tasks/b-v9-equivalent-gate.md) ready | B(v9·B4) |
+| `script.py` `V9_EQUIVALENT` — 근거 앞뒤 300자에 "동등"이 있으면 v9를 내린다 | S7-14는 그 표현만으로 정하지 말라고 한다 | 해소 — B6 가 뺐다(`feat/b-v9-equivalent-gate`, 독립 리뷰 전). [B6 작업서](tasks/b-v9-equivalent-gate.md) | B(v9·B4) |
 | `단위=기초` 를 v6 에 쓰기 | S7-15가 v6 신호로 공인했다 | 일부 해소 — #96 이 A4 의 v6 인용 게이트(`v6_not_a_basic_region_limit()`)를 운영에 옮겨 내림에 쓴다(dev v6 3/0/3). 올림과 지방 소액수의 예외는 없다 — [D9 작업서](tasks/d-v6-basic-region.md) ready | D(v6), 운영 반영 B |
 | logprob을 받지 않는다 | S7-12가 항목별 임계를 허용했다 | 미착수 | 미배정 — A가 정한다 |
