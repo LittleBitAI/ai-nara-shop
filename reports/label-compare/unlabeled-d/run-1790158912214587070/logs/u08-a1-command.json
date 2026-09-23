@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/content/unlabeled-d-3dw992jx/venv/bin/python",
+    "script.py",
+    "--debug-responses"
+  ],
+  "cwd": "/content/unlabeled-d-3dw992jx/cases/u08-a1",
+  "started": 1790151073.3246496,
+  "returncode": 0,
+  "elapsed_seconds": 1942.4519157409668
+}

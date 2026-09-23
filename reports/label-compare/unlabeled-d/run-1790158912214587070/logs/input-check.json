@@ -1,0 +1,58 @@
+{
+  "status": "verified",
+  "path": "/content/drive/MyDrive/a5/train_unlabeled.jsonl",
+  "sha256": "f46449fb84f980a5ddf868d66f5daff2bcf0991135d9b81da5656dd607275698",
+  "count": 20000,
+  "notices": 6000,
+  "shards": [
+    [
+      "u00",
+      500
+    ],
+    [
+      "u01",
+      500
+    ],
+    [
+      "u02",
+      500
+    ],
+    [
+      "u03",
+      500
+    ],
+    [
+      "u04",
+      500
+    ],
+    [
+      "u05",
+      500
+    ],
+    [
+      "u06",
+      500
+    ],
+    [
+      "u07",
+      500
+    ],
+    [
+      "u08",
+      500
+    ],
+    [
+      "u09",
+      500
+    ],
+    [
+      "u10",
+      500
+    ],
+    [
+      "u11",
+      500
+    ]
+  ],
+  "out": "/content/drive/MyDrive/a5/unlabeled-d-14f03d1d5426"
+}

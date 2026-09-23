@@ -172,7 +172,10 @@ class SubmissionContract(unittest.TestCase):
         return {"id": "PPS-TEST-1",
                 "docs": [{"doc_id": "d1", "type": "공고문",
                           "text": "입찰참가자격: 중소기업자에 한한다. 기타 사항은 공고문에 따른다."}],
-                "meta": {"입찰추정가격": 150_000_000}}
+                # A 1468 software registration with no 제48조 statement: `v20_decision()` (#111)
+                # sets v20=1 from the notice, so the model's v20=1 survives.
+                "meta": {"입찰추정가격": 150_000_000,
+                         "면허업종제한목록": "소프트웨어사업자(컴퓨터관련서비스사업)(1468)"}}
 
     def model_output_with_absence_evidence(self):
         """모델이 부재탐지 항목에도 인용을 낸 경우. 회차 ① 이 허용하려는 출력이다."""

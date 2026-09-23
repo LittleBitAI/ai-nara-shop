@@ -449,5 +449,452 @@ class ApplyContract(unittest.TestCase):
         self.assertEqual(snapshot, json.dumps(before, ensure_ascii=False, sort_keys=True))
 
 
+UNLABELED = ROOT / "open" / "train_unlabeled.jsonl"
+ALL_V6 = {"U", "L1", "L2C", "L2E"}
+
+
+def load_unlabeled(ids):
+    """무라벨 원본에서 레코드를 읽는다. 파일이 없으면 **건너뛰지 않고 실패한다.**
+
+    건너뛴 초록은 검사가 없는 것과 같다(작업서). 그 파일은 gitignore 라 워크트리에
+    없을 수 있고, 그때 이 검사는 빨개져야 한다.
+    """
+    if not UNLABELED.exists():
+        raise AssertionError(
+            f"{UNLABELED} 가 없다. L2 보호 사례는 실제 무라벨 레코드로만 만든다 — "
+            "손으로 조립한 합성 레코드를 쓰지 않는다")
+    want, found = set(ids), {}
+    with UNLABELED.open(encoding="utf-8") as stream:
+        for line in stream:
+            rec = json.loads(line)
+            if rec["id"] in want:
+                found[rec["id"]] = rec
+                if len(found) == len(want):
+                    break
+    missing = want - set(found)
+    if missing:
+        raise AssertionError(f"무라벨 원본에 없는 공고: {sorted(missing)}")
+    return found
+
+
+def with_v6(judgment, value, quote="모델이 고른 문구"):
+    out = dict(judgment)
+    out["v6"] = {"위반여부": value, "근거문구": quote if value == 1 else None}
+    return out
+
+
+def strip_lines(rec, doc_id, sentences):
+    """그 문서에서 주어진 줄을 지운 사본. 변형은 조건표의 근거 문장을 지워 만든다."""
+    copy_rec = json.loads(json.dumps(rec, ensure_ascii=False))
+    drop = {s.strip() for s in sentences}
+    for doc in copy_rec["docs"]:
+        if doc.get("doc_id") != doc_id:
+            continue
+        doc["text"] = "\n".join(line for line in (doc.get("text") or "").split("\n")
+                                if line.strip() not in drop)
+    return copy_rec
+
+
+class V6BasicRegionRules(unittest.TestCase):
+    """D9 보호 사례 표. 규칙을 켠 상태에서 셀이 어디로 가는지를 못박는다."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.recs = load_dev()
+
+    def decide(self, rec, model_v6, rules=ALL_V6):
+        return candidate.v6_decision(model_v6, rec, set(rules))
+
+    def test_rules_are_off_unless_asked(self):
+        """환경변수를 안 주면 v6 은 손대지 않는다 — 앞선 v8·v7·v4·v3 재생이 그대로 재현된다."""
+        self.assertEqual(set(), candidate.enabled_v6_rules())
+        rec = self.recs["PPS-DEV-102"]
+        out = {"v6": {"위반여부": 1, "근거문구": "그대로"}}
+        self.assertEqual(out, candidate.apply_v6(out, with_v6(empty_judgment(), 1), rec))
+
+    def test_l1_keeps_the_region_business_phrasing_positive(self):
+        """`PPS-DEV-061` — `소재지` 류 낱말 없이 `… 지역 업체` 로만 적은 정탐."""
+        self.assertIsNone(self.decide(self.recs["PPS-DEV-061"], 1))
+
+    def test_no_rule_lowers_the_basic_token_positives(self):
+        """`PPS-DEV-08`·`072` — 기초 토큰이 있는 소재지 제한은 어느 규칙도 1→0 으로 못 바꾼다."""
+        for rec_id in ("PPS-DEV-08", "PPS-DEV-072"):
+            with self.subTest(rec_id):
+                self.assertIsNone(self.decide(self.recs[rec_id], 1))
+
+    def test_u_raises_the_two_known_false_negatives(self):
+        """`PPS-DEV-070`(국가·기초 토큰)·`071`(`[수요기관(기초자치단체)]내에 소재`)."""
+        for rec_id in ("PPS-DEV-070", "PPS-DEV-071"):
+            with self.subTest(rec_id):
+                decided = self.decide(self.recs[rec_id], 0)
+                self.assertIsNotNone(decided, "U 가 올려야 한다")
+                value, quote, rule = decided
+                self.assertEqual((1, "U"), (value, rule))
+                self.assertTrue(quote, "근거문구가 비었다")
+
+    def test_u_evidence_survives_clean_evidence(self):
+        """U 가 올린 e6 은 그 문장의 원문 부분문자열이어야 한다(D4-4)."""
+        for rec_id in ("PPS-DEV-070", "PPS-DEV-071"):
+            with self.subTest(rec_id):
+                rec = self.recs[rec_id]
+                quote = self.decide(rec, 0)[1]
+                self.assertTrue(any(quote in (doc.get("text") or "") for doc in rec["docs"]),
+                                "근거문구가 제공 문서의 부분문자열이 아니다")
+
+    def test_u_does_not_raise_on_a_wide_region_short_name(self):
+        """합성: `서울시 지역 업체` — 광역 축약명은 기초 신호가 아니다. 모를 때 올리지 않는다."""
+        rec = self.variant_061("서울시 지역 업체")
+        self.assertTrue(candidate.region_limit_sentences(rec), "지역 제한 문장 자체는 남아야 한다")
+        self.assertIsNone(self.decide(rec, 0))
+
+    def test_u_does_not_raise_on_a_wide_region_full_name(self):
+        """합성: `서울특별시 지역 업체` — 광역 정식명도 마찬가지고, 모델이 1이면 L1 이 내린다."""
+        rec = self.variant_061("서울특별시 지역 업체")
+        self.assertIsNone(self.decide(rec, 0))
+        self.assertEqual((0, None, "L1"), self.decide(rec, 1))
+
+    def test_a_name_shared_by_a_wide_and_a_basic_region_is_not_a_basic_signal(self):
+        """합성: `경기도 광주시` — 광역 축약명과 기초 지명이 겹치는 이름은 기초로 세지 않는다."""
+        self.assertIsNone(self.decide(self.variant_061("경기도 광주시 지역 업체"), 0))
+
+    def test_u_does_not_raise_on_a_common_word_ending_in_the_district_suffix(self):
+        """`PPS-DEV-32`·`PPS-DEV-076` — `체결시`·`반드시` 를 기초 지명으로 읽어 올린 오탐이다.
+
+        `script.BASIC_REGION_NAME` 이 `[가-힣]{2,4}(?:시|군|구)` 라서 보통 낱말을 문다.
+        올리는 쪽은 익명화 토큰만 센다 — dev 는 전부 익명화라 기초 지명은 토큰으로 온다.
+        """
+        for rec_id in ("PPS-DEV-32", "PPS-DEV-076"):
+            with self.subTest(rec_id):
+                rec = self.recs[rec_id]
+                self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
+                self.assertIsNone(self.decide(rec, 0))
+
+    def test_lowering_still_treats_an_ambiguous_name_as_basic(self):
+        """내리는 쪽은 반대다 — 이름이 기초일 수 있으면 내리지 않는다."""
+        rec = self.variant_061("경기도 광주시 지역 업체")
+        self.assertTrue(candidate.has_basic_signal("경기도 광주시 지역 업체"))
+        self.assertIsNone(self.decide(rec, 1))
+
+    def test_u_does_not_raise_when_the_basic_token_is_a_delivery_place(self):
+        """PR #114 리뷰 P1 — 한 줄에 참가 제한과 납품 장소가 같이 오는 공고.
+
+        제한은 광역인데 기초 토큰의 역할은 납품 장소다. 줄 단위로 보면 올려 버린다.
+        """
+        rec = self.one_line_notice(
+            "가. 입찰참가자격: 본점소재지가 경기도 [지역:r1|단위=광역|광역=경기도]에 있는 업체,"
+            " 납품장소는 [지역:r2|단위=기초|광역=경기도]")
+        self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
+        self.assertIsNone(self.decide(rec, 0))
+
+    # 네 라운드 연속 같은 가족에서 P1 이 났다. 원인은 "관계를 반증 없음으로 증명" 한 것이고,
+    # 고친 뒤에는 **긍정 근거**를 요구한다 — 참가 업체의 소재지 주어(꼴 ①)나 융합 제한(꼴 ②).
+    # 아래 표가 그 규칙의 경계를 잡는다. 앞의 여섯은 리뷰가 준 반례, 나머지는 같은 원인에서
+    # 파생될 수 있는 것을 직접 만든 것이다.
+    BASIC = "[지역:r2|단위=기초|광역=경기도]"
+    WIDE = "[지역:r1|단위=광역|광역=경기도]"
+    ROLE_CASES = [
+        ("쉼표로 이은 납품장소", f"본점소재지가 경기도 {WIDE}에 있는 업체, 납품장소는 {BASIC}"),
+        ("접속어미로 이은 납품장소", f"본점소재지가 경기도 {WIDE}에 있는 업체이며 납품장소는 {BASIC}"),
+        ("구분자 없는 납품장소", f"본점소재지가 경기도 {WIDE}에 있는 업체 납품장소는 {BASIC}"),
+        ("장소가 먼저 오는 역순", f"납품장소는 {BASIC} 본점소재지는 경기도 {WIDE}에 있는 업체"),
+        ("현장 위치가 먼저", f"현장 위치: {BASIC} 주된 영업소가 경기도 {WIDE}에 있는 업체"),
+        ("장소를 꾸미는 소재지", f"납품장소의 소재지가 {BASIC}이며 본점소재지는 경기도 {WIDE}에 있는 업체"),
+        ("장소 소재지 단독", f"납품장소 소재지가 {BASIC}인 업체"),
+        ("과업 수행 장소의 소재지", f"과업 수행 장소의 소재지가 {BASIC}이고 본점은 경기도 {WIDE}"),
+        ("세미콜론으로 갈린 공사 위치", f"공사 위치의 소재지는 {BASIC}; 본점소재지는 {WIDE}"),
+        ("괄호가 낀 이행 장소", f"이행 장소(납품)는 {BASIC}, 주된 영업소는 {WIDE}"),
+        ("개찰 장소", f"개찰 장소는 {BASIC} 이며 본점소재지가 {WIDE}에 있는 업체"),
+        ("괄호 안의 납품장소", f"본점소재지가 {WIDE}에 있는 업체(납품장소 {BASIC})"),
+        ("배송지", f"배송지는 {BASIC} 본점소재지는 {WIDE}"),
+        ("장소를 꾸미고 제한이 뒤에", f"납품장소의 소재지가 {BASIC}인 곳에 본점소재지를 둔 업체"),
+    ]
+    LIMIT_CASES = [
+        ("소재지를 ~에 둔", f"주된 영업소의 소재지를 경기도 {BASIC}에 둔 업체"),
+        ("괄호 낀 본점소재지", f"법인등기부상 본점소재지(개인사업자는 사업장의 소재지)가"
+                            f" {BASIC} 내에 소재하고 있는 업체"),
+        ("융합 지역제한", f"지역제한(경기도 {BASIC}) 대상 용역입니다."),
+        ("융합 지역 업체", f"부정당업체로 제재를 받지 않은 경기도 {BASIC} 지역 업체"),
+        ("주사무소 관내", f"주사무소 소재지가 경기도 {BASIC} 관내에 소재한 업체"),
+    ]
+
+    def test_u_raises_only_on_a_participant_side_location_limit(self):
+        """긍정 근거가 선 문장만 올린다 — 참가 업체의 소재지 주어이거나 융합 제한이다."""
+        for name, sentence in self.LIMIT_CASES:
+            with self.subTest("올린다: " + name):
+                rec = self.one_line_notice("가. " + sentence)
+                self.assertTrue(candidate.confirmed_basic_region_sentences(rec), name)
+                self.assertIsNotNone(self.decide(rec, 0), name)
+
+    def test_u_does_not_raise_when_the_token_belongs_to_another_role(self):
+        """토큰이 장소·개찰 같은 다른 역할에 속하면 어순·구분자와 무관하게 올리지 않는다."""
+        for name, sentence in self.ROLE_CASES:
+            with self.subTest(name):
+                rec = self.one_line_notice("가. 입찰참가자격: " + sentence)
+                self.assertEqual([], candidate.confirmed_basic_region_sentences(rec), name)
+                self.assertIsNone(self.decide(rec, 0), name)
+
+    def test_u_does_not_raise_when_a_connective_joins_a_delivery_place(self):
+        """PR #114 재리뷰 P1 — 쉼표가 아니라 접속 어미로 이어 붙인 납품 장소.
+
+        쉼표 유무가 아니라 **토큰의 역할**이 제한 대상에 묶이는지를 봐야 한다.
+        """
+        joins = ["업체이며 납품장소는", "업체, 납품장소는", "업체 납품장소는"]
+        for join in joins:
+            with self.subTest(join):
+                rec = self.one_line_notice(
+                    "가. 입찰참가자격: 본점소재지가 경기도 [지역:r1|단위=광역|광역=경기도]에 있는 "
+                    + join + " [지역:r2|단위=기초|광역=경기도]")
+                self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
+                self.assertIsNone(self.decide(rec, 0))
+
+    def test_u_does_not_raise_when_the_place_label_comes_first(self):
+        """PR #114 재리뷰 3라운드 P1 — 장소가 제한보다 **먼저** 나오는 역순.
+
+        토큰은 자기 앞의 가장 가까운 역할 표시에 속한다. 그것이 납품 장소면 뒤에
+        참가자격 제한이 또 나오더라도 이 토큰은 제한 대상이 아니다.
+        """
+        cases = [
+            "납품장소는 [지역:r2|단위=기초|광역=경기도] 본점소재지는 경기도"
+            " [지역:r1|단위=광역|광역=경기도]에 있는 업체",
+            "현장 위치: [지역:r2|단위=기초|광역=경기도] 주된 영업소가 경기도"
+            " [지역:r1|단위=광역|광역=경기도]에 있는 업체",
+        ]
+        for tail in cases:
+            with self.subTest(tail[:20]):
+                rec = self.one_line_notice("가. 입찰참가자격: " + tail)
+                self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
+                self.assertIsNone(self.decide(rec, 0))
+
+    def test_u_evidence_carries_the_token_even_on_a_very_long_line(self):
+        """PR #114 리뷰 P1 — 480자로 앞부분만 자르면 인용에 `단위=기초` 가 안 남는다."""
+        padding = "입찰참가자격 안내입니다. " * 30
+        rec = self.one_line_notice(
+            "가. " + padding + "본점소재지가 경기도 [지역:r1|단위=기초|광역=경기도]에 있는 업체")
+        decided = self.decide(rec, 0)
+        self.assertIsNotNone(decided)
+        quote = decided[1]
+        self.assertLessEqual(len(quote), candidate.QUOTE_MAX)
+        self.assertIn("단위=기초", quote)
+        self.assertIn(quote, rec["docs"][0]["text"], "근거가 원문의 연속 구간이 아니다")
+
+    def test_u_evidence_passes_the_submission_contract(self):
+        """올린 근거는 운영 후처리가 v6 에 거는 계약을 다시 통과해야 한다."""
+        for rec_id in ("PPS-DEV-070", "PPS-DEV-071"):
+            with self.subTest(rec_id):
+                rec = self.recs[rec_id]
+                quote = self.decide(rec, 0)[1]
+                passed, _why = candidate.v6_evidence_contract(quote, rec)
+                self.assertTrue(passed)
+        self.assertEqual(
+            (False, "인용 안에 기초 토큰이 없다"),
+            candidate.v6_evidence_contract("본점소재지가 경기도에 있는 업체", self.recs["PPS-DEV-070"]))
+        self.assertEqual(
+            (False, "근거가 비었다"),
+            candidate.v6_evidence_contract("", self.recs["PPS-DEV-070"]))
+
+    def test_clause_split_keeps_a_parenthesised_comma_together(self):
+        """괄호 안의 쉼표로 절을 자르면 제한 대상과 토큰이 갈라진다."""
+        line = ("법인등기부상 본점소재지(개인사업자인 경우에는 사업자등록증, 허가증 등에 기재된"
+                " 사업장의 소재지)가 [수요기관(기초자치단체)]내에 소재하고")
+        clauses = [text for _, text in candidate._clauses(line)]
+        self.assertEqual(1, len(clauses), clauses)
+
+    def one_line_notice(self, text):
+        """`PPS-DEV-070` 의 meta 를 그대로 두고 공고문만 한 줄로 바꾼 사본."""
+        rec = json.loads(json.dumps(self.recs["PPS-DEV-070"], ensure_ascii=False))
+        rec["docs"] = [{"doc_id": "D0", "type": "공고문", "text": text}]
+        return rec
+
+    def test_l1_lowers_the_delivery_only_basic_token(self):
+        """`PPS-DEV-102` — 기초 토큰은 납품 장소에만 있고 참가 제한은 `경기도` 뿐이다."""
+        rec = self.recs["PPS-DEV-102"]
+        self.assertEqual((0, None, "L1"), self.decide(rec, 1))
+        self.assertEqual([], candidate.basic_region_sentences(rec))
+
+    def test_l1_does_not_lower_when_an_attachment_was_dropped(self):
+        """합성: 첨부가 잘린 `061`. 못 본 문서에 근거가 있을 수 있으므로 내리지 않는다."""
+        rec = json.loads(json.dumps(self.recs["PPS-DEV-061"], ensure_ascii=False))
+        rec["dropped_doc_counts"] = {"과업지시서": 1}
+        self.assertIsNone(self.decide(rec, 1))
+
+    def variant_061(self, replacement):
+        """`061` 의 지역 제한 문장에서 지역 표기 하나만 바꾼 사본."""
+        rec = json.loads(json.dumps(self.recs["PPS-DEV-061"], ensure_ascii=False))
+        token = "경기도 [지역:r1|단위=기초|광역=경기도] 지역 업체"
+        for doc in rec["docs"]:
+            doc["text"] = (doc.get("text") or "").replace(token, replacement)
+        return rec
+
+
+class V6RaisingStaysInsideTheDefinition(unittest.TestCase):
+    """무라벨에서 U 가 올렸던 셀 중 참가자격 제한이 아니었던 것. 실제 공고로만 못박는다.
+
+    dev 는 U 대상이 두 건뿐이라 이 구멍이 안 보였다. 무라벨 2,000건에서 11건 중 4건이었다.
+    """
+
+    CASES = {
+        "PPS-D-008004": "소송의 관할 법원을 정한 조항이다",
+        "PPS-D-012422": "과업지시서의 지역업체 보호·지원 조항이다",
+        "PPS-D-004910": "동점자 우선순위이지 참가 제한이 아니다",
+        "PPS-D-011742": "제한은 광역(충청북도)이고 기초 토큰은 발주기관을 가리킬 뿐이다",
+    }
+
+    @classmethod
+    def setUpClass(cls):
+        cls.recs = load_unlabeled(sorted(cls.CASES))
+
+    def test_u_does_not_raise_on_sentences_that_do_not_limit_participation(self):
+        for rec_id, why in self.CASES.items():
+            with self.subTest(rec_id):
+                rec = self.recs[rec_id]
+                self.assertEqual([], candidate.confirmed_basic_region_sentences(rec), why)
+                self.assertIsNone(candidate.v6_decision(0, rec, ALL_V6), why)
+
+    def test_the_agency_token_counts_only_when_it_is_the_target(self):
+        """`[수요기관(기초자치단체)]` 는 제한의 대상일 때만 기초 신호다."""
+        self.assertTrue(candidate.has_confirmed_basic_signal(
+            "본점소재지가 [수요기관(기초자치단체)]내에 소재하고"))
+        self.assertFalse(candidate.has_confirmed_basic_signal(
+            "[수요기관(기초자치단체)]이 제시하는 시방서에 따라 납품이 가능한 업체"))
+
+
+class V6SmallQuoteException(unittest.TestCase):
+    """L2 보호 사례. 기준 레코드는 실제 무라벨 공고이고, 변형은 조건표의 근거 문장을 지워 만든다."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.recs = load_unlabeled(["PPS-D-008513", "PPS-D-009156"])
+
+    def test_the_reference_notice_meets_all_three_conditions(self):
+        """`PPS-D-008513` — (a)(b)(c) 가 모두 참이라 두 판본 모두 내린다."""
+        rec = self.recs["PPS-D-008513"]
+        self.assertTrue(candidate.is_small_negotiated(rec))
+        checked = candidate.evaluate_small_quote_exception(rec)
+        self.assertEqual((True, True, True), (checked["a"], checked["b"], checked["c"]))
+        for rule in ("L2C", "L2E"):
+            with self.subTest(rule):
+                self.assertEqual((0, None, rule), candidate.v6_decision(1, rec, {rule}))
+
+    def test_jurisdiction_evidence_respects_role_and_document_boundaries(self):
+        """`PPS-D-009156` — (c) 의 근거는 D0 의 위치 줄 하나다.
+
+        같은 `r2` 가 D0 의 개찰 장소 줄(역할이 다름)과 D1 의 처리장 줄(문서가 다름)에도 있다.
+        """
+        checked = candidate.evaluate_small_quote_exception(self.recs["PPS-D-009156"])
+        self.assertTrue(checked["c"])
+        self.assertEqual(["D0"], sorted({e["doc_id"] for e in checked["c_evidence"]}))
+        for evidence in checked["c_evidence"]:
+            self.assertNotIn("개찰", evidence["sentence"])
+            self.assertNotIn("처리장", evidence["sentence"])
+        self.assertEqual(1, len(checked["c_evidence"]))
+
+    def test_jurisdiction_evidence_is_never_the_restriction_sentence_itself(self):
+        """`PPS-D-013602` — `입찰 및 계약방식 지역제한([지역:r1…])` 이 제 자신을 관할 근거로 냈다."""
+        rec = load_unlabeled(["PPS-D-013602"])["PPS-D-013602"]
+        checked = candidate.evaluate_small_quote_exception(rec)
+        limits = {x["sentence"] for x in checked["limit_sentences"]}
+        for evidence in checked["c_evidence"]:
+            self.assertNotIn(evidence["sentence"], limits)
+
+    def test_a_website_menu_path_is_not_a_place(self):
+        """`PPS-D-017898` — `- 위치 : 홈페이지 / 군민참여 / …` 는 납품·현장 장소가 아니다."""
+        rec = load_unlabeled(["PPS-D-017898"])["PPS-D-017898"]
+        checked = candidate.evaluate_small_quote_exception(rec)
+        for evidence in checked["c_evidence"]:
+            self.assertNotIn("홈페이지", evidence["sentence"])
+
+    def test_electronic_quote_needs_the_quote_itself_to_be_submitted(self):
+        """PR #114 리뷰 P1 — 시스템·견적서·제출이 한 창에 있어도 내는 것이 협정서면 (a) 가 아니다."""
+        cases = [
+            ("견적서는 나라장터에서 열람하고 공동수급협정서는 제출한다", False),
+            # PR #114 재리뷰 P1 — 시스템은 열람에, 우편은 제출에 붙었다.
+            ("견적서는 나라장터에서 열람하고 입찰서는 우편으로 제출한다", False),
+            ("입찰서는 나라장터를 이용하여 우편으로 제출한다", False),
+            ("공동수급협정서는 나라장터에서 열람하고 국가종합전자조달시스템을 이용하여"
+             " 제출하여야 한다", False),
+            ("견적서는 우편으로 내고 국가종합전자조달시스템을 이용하여 제출하여야 한다", False),
+            # PR #114 재리뷰 3라운드 P1 — 제출 방식이 문서명 앞에 오는 어순.
+            ("나라장터에서 열람 후 우편으로 입찰서를 제출한다", False),
+            ("나라장터를 이용하여 방문으로 견적서를 제출한다", False),
+            # 4라운드 P1 과 같은 원인에서 파생될 꼴 — 시스템은 열람·조회에 쓰였다.
+            ("나라장터에서 공고문 열람 후 입찰서는 현장 접수처에 제출한다", False),
+            ("입찰서는 나라장터에서 조회하고 견적서는 담당부서에 직접 제출한다", False),
+            ("나라장터 공고를 확인한 뒤 견적서는 방문 접수한다", False),
+            # 5라운드 P1 — 표지가 시스템이 아니라 그 안의 자료에 붙는 꼴.
+            # 그 `이용` 이 시키는 첫 행위가 제출이 아니면 시스템은 그 일에 쓰인 것이다.
+            ("나라장터의 서식을 이용하여 작성한 입찰서를 현장 접수처에 제출한다", False),
+            ("나라장터의 양식을 이용하여 작성한 견적서를 우편으로 제출한다", False),
+            ("나라장터를 이용하여 등록한 업체만 견적서를 방문 제출할 수 있다", False),
+            ("국가종합전자조달시스템의 표준서식을 이용하여 견적서를 작성한 뒤 제출한다", False),
+            ("나라장터 자료를 이용하여 열람한 뒤 입찰서를 제출한다", False),
+            # 반대로, 시스템이 제출의 수단으로 표시되면 인정한다.
+            ("견적서는 나라장터를 통하여 제출하여야 합니다.", True),
+            ("입찰서는 지정정보처리장치에 제출한다", True),
+            ("견적서는 나라장터를 이용하여 제출하되 원본은 우편으로 송부한다", True),
+            # 6라운드 P1 — 표지가 시스템 안의 자료에 붙으면 뒤따르는 동사가 제출이어도
+            # 그 자료의 이용인지 시스템을 통한 제출인지 갈리지 않는다. 보류한다.
+            ("입찰서는 나라장터의 서식을 이용하여 현장으로 제출한다.", False),
+            ("견적서는 나라장터의 양식을 이용하여 제출한다", False),
+            # `PPS-D-015016` 의 실제 문장도 같은 꼴이라 보류된다 — 내리는 쪽은 모르면 안 내린다.
+            ("① 견적서 제출은 반드시 나라장터 시스템의 “입찰정보”를 이용하여"
+             " 제출하여야 합니다.", False),
+            # 머리 낱말로 가른다 — 낱말이 사이에 있어도 머리가 서식이면 제출 경로가 아니다.
+            ("입찰서는 나라장터의 전자입찰 서식을 이용하여 현장으로 제출한다.", False),
+            # 7라운드 P1 — `…시스템` 으로 끝나도 전자입찰시스템이 아니면 기능 미상이라 보류한다.
+            ("견적서는 나라장터의 인증시스템을 이용하여 인증한 견적서를 현장으로 제출한다.", False),
+            ("견적서는 나라장터의 관리시스템을 이용하여 제출한다.", False),
+            # 표지가 시스템 자신이나 그 안의 제출 기능에 붙으면 인정한다 — 무라벨 실제 문장.
+            ("조달청 국가종합전자조달시스템(G2B)을 이용하여 전자견적서를 제출하면 된다", True),
+            ("견적서는 나라장터 시스템을 통하여 제출하여야 합니다.", True),
+            ("가. 별도의 견적참가 신청서류는 제출하지 않으며, 조달청 국가종합전자조달시스템(G2B)"
+             " 홈페이지의 전자입찰 입찰서 제출기능을 이용하여 견적서를 제출하면 됩니다.", True),
+            ("2) 전자견적제출은 반드시 나라장터 안전 입찰서비스를 이용하여 입찰서를 제출하여야", True),
+            ("카. 본 견적은 반드시 국가종합전자조달 홈페이지의 전자입찰시스템을 이용하여 제출하여야"
+             " 하며, 견적서 제출 확인은 웹송신함에서 확인하시기 바랍니다.", True),
+            ("라. 공동수급협정서는 반드시 조달청 전자입찰시스템을 이용하여"
+             " 국가종합전자조달시스템 전자 입찰 특별유의서에 따라 제출하여야 합니다.", False),
+            ("사. 견적서 제출 여부는 나라장터 시스템의 전자문서함에서 확인하여야 합니다.", False),
+            ("가. 국가종합전자조달시스템을 이용하여 2인 이상으로부터 견적서를 제출받는"
+             " 수의계약 및 전자계약 대상입니다.", True),
+            ("다. 반드시 조달청 국가종합전자조달시스템을 이용하여 제출하여야 하며,"
+             " 입찰서 제출 확인은 조달청 국가종합전자조달시스템의 웹 송신함에서 확인하시기 바랍니다.", True),
+        ]
+        for line, expected in cases:
+            with self.subTest(line[:30]):
+                self.assertEqual(expected, candidate._says_electronic_quote(line))
+
+    def test_removing_the_electronic_quote_sentences_flips_only_a(self):
+        """변형: (a)만 거짓. 두 판본 모두 내리지 않는다."""
+        rec = self.recs["PPS-D-008513"]
+        base = candidate.evaluate_small_quote_exception(rec)
+        changed = strip_lines(rec, "D0", [e["sentence"] for e in base["a_evidence"]])
+        checked = candidate.evaluate_small_quote_exception(changed)
+        self.assertEqual((False, base["b"], base["c"]),
+                         (checked["a"], checked["b"], checked["c"]), "한 조건만 뒤집혀야 한다")
+        self.assertIsNone(candidate.v6_decision(1, changed, {"L2C", "L2E"}))
+
+    def test_raising_the_price_above_the_table_flips_only_b(self):
+        """변형: (b)만 거짓. 두 판본 모두 내리지 않고, 기초 제한 문장이 남아 L1 도 내리지 않는다."""
+        rec = self.recs["PPS-D-008513"]
+        base = candidate.evaluate_small_quote_exception(rec)
+        changed = json.loads(json.dumps(rec, ensure_ascii=False))
+        changed["meta"]["입찰추정가격"] = 110_000_000
+        checked = candidate.evaluate_small_quote_exception(changed)
+        self.assertEqual((base["a"], False, base["c"]),
+                         (checked["a"], checked["b"], checked["c"]), "한 조건만 뒤집혀야 한다")
+        self.assertIsNone(candidate.v6_decision(1, changed, ALL_V6))
+
+    def test_removing_the_site_sentence_flips_only_c(self):
+        """변형: (c)만 거짓. L2-보수는 내리지 않고 L2-추정은 내린다."""
+        rec = self.recs["PPS-D-008513"]
+        base = candidate.evaluate_small_quote_exception(rec)
+        changed = strip_lines(rec, "D0", [e["sentence"] for e in base["c_evidence"]])
+        checked = candidate.evaluate_small_quote_exception(changed)
+        self.assertEqual((base["a"], base["b"], False),
+                         (checked["a"], checked["b"], checked["c"]), "한 조건만 뒤집혀야 한다")
+        self.assertIsNone(candidate.v6_decision(1, changed, {"L2C"}))
+        self.assertEqual((0, None, "L2E"), candidate.v6_decision(1, changed, {"L2E"}))
+
+
 if __name__ == "__main__":
     unittest.main()

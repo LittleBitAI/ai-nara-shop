@@ -103,11 +103,12 @@ class AnnexBlockTests(unittest.TestCase):
             metrics, predictions = pilot.hybrid_replay(payload, output, experiment='a8')
             baseline = BASELINE_CSV.read_bytes()
             for variant in ('off', 'on'):
-                # 일부러 갈린 셀은 `replay_run.DELIBERATE_MOVES` 가 소유한다. v20 은 그 안에 없다.
+                # 일부러 갈린 셀은 `replay_run.DELIBERATE_MOVES` 가 소유한다. Its v20 cells are
+                # `v20_decision()` (#111), which decides v20 from the notice for both variants alike.
                 self.assertEqual(pilot.replay_run.csv_cell_diff((output/f'{variant}-hybrid.csv').read_bytes(), baseline),
                                  pilot.replay_run.DELIBERATE_MOVES)
                 item = metrics[variant]['items']['v20']
-                self.assertEqual((item['tp'], item['fp'], item['fn']), (1, 4, 4))
+                self.assertEqual((item['tp'], item['fp'], item['fn']), (5, 2, 0))
             self.assertEqual(pilot.changes(predictions['off'], predictions['on']), [])
 
     def test_reachable_v20_tp_ceiling_on_the_fixed_case_is_two(self):

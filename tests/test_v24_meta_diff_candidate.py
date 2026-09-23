@@ -34,6 +34,8 @@ candidate = _load("v24_meta_diff", ROOT / "experiments" / "a7_v24_meta_diff.py")
 BEFORE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug/submission.csv"
 AFTER = ROOT / "reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv"
 ITEMS = [f"v{i}" for i in range(1, 25)]
+# Cells the ported budget axis (B9, #119) raises on this replay. The A7 candidate does not know it.
+BUDGET_AXIS_CELLS = [("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24")]
 
 # dev-debug 재생 기준 → 후보. (TP, FP, FN)
 EXPECTED = {"before": (5, 36, 3), "after": (4, 12, 4)}
@@ -96,13 +98,15 @@ class V24MetaDiffCandidate(unittest.TestCase):
             return replay_run.to_csv_bytes(script, result["rows"])
 
         adopted = rows()
-        self.assertEqual(adopted, rows(candidate.postprocess),
+        # The budget axis (B9, #119) is in `postprocess` now and the A7 candidate predates it,
+        # so the overlay lowers exactly the cells the axis raised. Nothing else may differ.
+        self.assertEqual(replay_run.csv_cell_diff(adopted, rows(candidate.postprocess)), BUDGET_AXIS_CELLS,
                          "후보를 덧씌우자 결과가 달라졌다 — 운영 코드와 후보의 v24 판정이 갈렸다")
         moved = replay_run.csv_cell_diff(adopted, AFTER.read_bytes())
         self.assertEqual(moved, replay_run.DELIBERATE_MOVES_A7,
                          "지금 출력이 보관된 candidate-replay/submission.csv 와 예상 밖으로 다르다")
-        self.assertFalse([cell for cell in moved if cell[1] in ("v24", "e24")],
-                         "A7 이 양쪽에 다 있으므로 v24 는 한 칸도 남으면 안 된다")
+        self.assertEqual([cell for cell in moved if cell[1] in ("v24", "e24")], BUDGET_AXIS_CELLS,
+                         "A7 이 양쪽에 다 있으므로 v24 는 예산 축 셀 밖에서 한 칸도 남으면 안 된다")
 
     def test_v24_counts_match_the_recorded_replay(self):
         self.assertEqual(_counts(self.before, self.truth, "v24"), EXPECTED["before"])
