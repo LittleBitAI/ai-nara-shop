@@ -13,8 +13,8 @@ dev 재생은 v20 1/4/4 → 5/2/0, Macro +0.026389 지만 양성 5건을 보고 
 | 층 | 모델 → 후보 | 공고 |
 | --- | --- | ---: |
 | U | 0 → 1 (후보가 올림) | 34 |
-| W | 1 → 0 (후보가 내림) | 45 |
-| K | 1 → 1 (7 은 후보 보류, 모델 유지) | 32 |
+| W | 1 → 0 (후보가 내림) | 44 |
+| K | 1 → 1 (8 은 후보 보류, 모델 유지) | 33 |
 | Z | 0 → 0 | 1,889 |
 
 현재 후보 기준이다. 첫 판(보류 없음)은 U 35 · W 53 · K 24 였다.
@@ -27,10 +27,10 @@ dev 재생은 v20 1/4/4 → 5/2/0, Macro +0.026389 지만 양성 5건을 보고 
 라벨의 양성 수를 `U1`·`W1`·`K1`, Z 층의 놓친 양성을 `Z1` 이라 하면 무라벨 2,000건에서
 
 - 모델: TP = `K1 + W1`, 예측 77
-- 후보: TP = `K1 + U1`, 예측 66 (첫 판 59)
+- 후보: TP = `K1 + U1`, 예측 67 (첫 판 59)
 - 정답 양성 P = `K1 + W1 + U1 + Z1`
 
-F1 = 2TP / (예측 + P) 이므로 후보가 이기는 조건은 `(K1+U1)/(66+P) > (K1+W1)/(77+P)` 이다.
+F1 = 2TP / (예측 + P) 이므로 후보가 이기는 조건은 `(K1+U1)/(67+P) > (K1+W1)/(77+P)` 이다.
 `Z1` 은 라벨하지 않으므로 0 과 dev 비율(FN 0/200 이던 후보 기준 0, 모델 기준 4/200 → 40)의
 양 끝에서 둘 다 계산해 부호가 같을 때만 채택 근거로 쓴다.
 
@@ -103,7 +103,14 @@ statement cites its legal source — 소프트웨어 진흥법 제48조, the old
 and only that removes. Field or name vocabulary (중소 소프트웨어사업자, 대기업인 소프트웨어, 사업금액별 참여,
 입찰참여 제한금액) abstains: 62 of 20,000 unlabeled, 0 in dev. Missing a real statement is the safe direction:
 on a 1468 notice it only makes a wrong addition, which the bound tolerates; a false match makes a wrong removal.
-Layers now: U 34, W 45, K 32 (7 abstain), Z 1,889; candidate predicts 66.
+
+The other removal fact had the same shape, so it was audited before round 4: 39 of 20,000 notices set to 0
+for "no registration" did mention one — "소프트웨어사업자- 컴퓨터관련서비스사업", "소프트웨어사업(…)[업종코드:1469]",
+"(업종코드 1468)" under another name, "소프트웨어 사업자", a 확인서 in a submission list. Here over-matching is
+the safe side, so `ANY_SW_PROVIDER` is now any 소프트웨어사업 / SW사업자 mention or a software industry code
+(1426, 1468–1471). None of the remaining no-registration removals mentions a software term. 0 decisions
+on 20,000: 19,017 · 1: 456 · None: 527.
+Layers now: U 34, W 44, K 33 (8 abstain), Z 1,889; candidate predicts 67.
 
 [experiments/v20_fact_check.py](../../../experiments/v20_fact_check.py) asks an external LLM the two facts
 (no verdict) and verifies every quote as a substring. Pass line, fixed before running: on dev
@@ -119,25 +126,25 @@ has a verified quote. Only then are the 48 removals checked. A removal the LLM r
   removals read "registration no, sec48 no". After round 1, 46 of them remain removals; the 4 clause
   removals left all have the LLM's sec48 quote inside the 공고문. **The LLM shares the blind spot of round 3**:
   for `PPS-D-018094` its sec48 `yes` quote was the certificate line. After round 3 the removals are 3 that
-  cite the legal source (`003055`, `014211`, `018645`) and 42 without any registration; the LLM check on the
-  42 is about registration, a plainer fact, and stands.
+  cite the legal source (`003055`, `014211`, `018645`) and 41 with no software term at all; the LLM also read
+  those 41 as "registration no".
 
 So every removal is one of the two facts, read the same way by two independent readers. `W1 = 0` then
 holds as far as the definition does: dev has 0 positives among 191 notices without registration
-(95% Wilson upper bound 1.97%, about 0.8 expected among 42) and among 3 with the sentence.
-If `W1 = 0` the candidate beats the model on v20 for any `U1`. Worst case `U1 = 0`, pred 66 vs 77, the
-smallest `K1` (of 32) that still wins:
+(95% Wilson upper bound 1.97%, about 0.8 expected among 41) and among 3 with the sentence.
+If `W1 = 0` the candidate beats the model on v20 for any `U1`. Worst case `U1 = 0`, pred 67 vs 77, the
+smallest `K1` (of 33) that still wins:
 
 | `W1` | `Z1 = 0` | `Z1 = 40` |
 | ---: | ---: | ---: |
-| 1 | 7 | 11 |
-| 2 | 16 | 25 |
-| 3 | 26 | 41 (impossible) |
+| 1 | 8 | 13 |
+| 2 | 18 | 28 |
+| 3 | 31 | 48 (impossible) |
 
 Simulation (seed 20260923, 20,000 draws; rule-1 precision Beta(6,3) from dev 5/7, abstain-kept model
 precision Beta(2,5) from dev 1/5, rule-0 positive rate Beta(1,195) from dev 0/194 for both W and Z):
-P(candidate wins v20) 1.0, v20 F1 gain 5%/50% +0.259/+0.418, Macro +0.0108/+0.0174. With `Z1 = 40`
-fixed: 1.0, F1 +0.199/+0.327, Macro +0.0083/+0.0136.
+P(candidate wins v20) 1.0, v20 F1 gain 5%/50% +0.255/+0.412, Macro +0.0106/+0.0171. With `Z1 = 40`
+fixed: 1.0, F1 +0.196/+0.322, Macro +0.0082/+0.0134.
 
 What this does not measure: the additions `U1` and whether the unlabeled 2,000 stand in for the evaluation
 set. Server score is still the only direct measurement.
@@ -145,4 +152,4 @@ set. Server score is still the only direct measurement.
 ## 상태
 
 Adopted 2026-09-23 (PR #111, held unmerged for the combined submission build). Review rounds 1–3: four P1
-repaired, plus the bracket gap found auditing the same pattern. No unlabeled v20 labels; external verdict labelling stays blocked. Not in `script.py`.
+repaired, plus two gaps found auditing the same families (half-width bracket, registration phrasings). No unlabeled v20 labels; external verdict labelling stays blocked. Not in `script.py`.

@@ -81,6 +81,13 @@ class DecisionTest(unittest.TestCase):
                 "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
         self.assertIsNone(candidate.v20_decision(r))
 
+    def test_registration_in_other_phrasings_abstains(self):
+        # PPS-D-000531 / 001279 / 003059 shapes: no "(업종…)" after 소프트웨어사업자, or only the code.
+        for text in ("소프트웨어사업(디지털 콘텐츠 개발 서비스사업)[업종코드:1469]으로 신고를 필한 업체",
+                     "정보시스템개발서비스업(업종코드 1469) 등 본 사업과 관련된 업종으로 등록된 업체",
+                     "소트프웨어 개발 촉진법에 의한 소프트웨어 사업자"):
+            self.assertIsNone(candidate.v20_decision(rec(text)), text)
+
     def test_1468_in_other_wording_adds(self):
         r = rec("소프트웨어사업자(업종코드:1468)와 정보통신공사업(업종코드:0036)로 입찰참가 등록한 자")
         self.assertEqual(candidate.v20_decision(r), 1)

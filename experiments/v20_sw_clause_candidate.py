@@ -34,7 +34,7 @@ H4(`colab-1789902969401579900`)와 A8 두 회차에서 v20 은 TP 1 / FP 4 / FN 
 바뀐 셀 10개, 전부 v20 이다. 대상 밖 0.
 
 무라벨 카나리(`open/train_unlabeled.jsonl` 20,000건, `v20_decision`): 1 이 456건(2.28%),
-dev 7/200(3.50%) — 배율 0.65. 모델 판정을 남기는 보류(None)는 256건(1.28%), dev 0건.
+dev 7/200(3.50%) — 배율 0.65. 모델 판정을 남기는 보류(None)는 527건(2.64%), dev 0건.
 
 무라벨 2,000건에서 후보가 모델과 갈리는 층과 내리는 48셀의 사실 확인은
 `reports/label-compare/unlabeled-v20/README.md` 가 소유한다. 채택 판결 2026-09-23.
@@ -59,9 +59,11 @@ REPO = Path(__file__).resolve().parents[1]
 JUDGMENT_DOCS = ("공고문", "제안요청서")
 # Additions: only the 1468 (computer-related services) registration every dev positive had.
 SW_PROVIDER = re.compile(r"소프트웨어\s*사업자[^\n]{0,40}?(?:컴퓨터\s*관련\s*서비스|1468)")
-# Removals: any software-provider registration at all (1426, 1469, 1470, uncoded "등록 업체", ...).
-# A notice matching this but not SW_PROVIDER keeps the model's answer.
-ANY_SW_PROVIDER = re.compile(r"소프트웨어\s*(?:산업\s*)?사업자\s*(?:[(\[（]|(?:로\s*)?(?:등록|신고)|등록증)")
+# Removals need the notice to be silent on software providers. Any mention abstains - a registration phrased
+# "소프트웨어사업자- 컴퓨터관련서비스사업", "소프트웨어사업(…)[업종코드:1469]", "(업종코드 1468)", "SW사업자" or a
+# 확인서 in a submission list. Over-matching (a bare 1470 in a quantity) only keeps the model; missing a
+# registration makes a wrong removal.
+ANY_SW_PROVIDER = re.compile(r"소프트웨어\s*사업|SW\s*사업자|(?<!\d)14(?:26|6[89]|7[01])(?!\d)")
 # `제48조` 만으로는 안 된다 — 국가·지방 계약법 시행령·시행규칙 제48조(동가 입찰·개찰)가 dev 에 13건 있다.
 # The restriction statement cites its legal source: 제48조, the pre-renumbering 제24조의2, or the 하한 고시 by title.
 SW_CLAUSE = re.compile(
