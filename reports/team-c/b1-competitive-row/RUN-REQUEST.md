@@ -26,7 +26,7 @@ company 출력에 필드 하나를 더한다.
 | `reports/team-c/b1-competitive-row/competitive-row.diff` | `script.py` 8조각 + `tools/replay_run.py` 1조각 |
 
 **`script.py`·`tools/replay_run.py` 에 적용하지 않았다.** `git apply --check` 로 적용
-가능성만 확인했고(**`c9398ad`·`1b34786` 양쪽 통과**) 저장소의 두 파일은 그대로다.
+가능성만 확인했고(**`c9398ad`·`1b34786`·`37fe53e` 셋 다 통과**) 저장소의 두 파일은 그대로다.
 
 ```bash
 git apply --check reports/team-c/b1-competitive-row/competitive-row.diff   # 통과 확인됨

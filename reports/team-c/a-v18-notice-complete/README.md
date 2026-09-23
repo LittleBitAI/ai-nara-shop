@@ -42,14 +42,24 @@
 
 | 항목 | 값 |
 | --- | --- |
-| 기준 commit | **`1b34786`** (`origin/main`). 운영 코드는 지시가 지정한 `c9398ad` 와 **동일** |
+| 기준 commit | **`37fe53e`** (`origin/main`, 재베이스 후 재측정) |
 | 기준 CSV | HEAD 재생 `reports/runs/colab-1789902969401579900/dev-debug` · **Macro 0.609274806721** |
 | 후보 | `experiments/c_v18_notice_complete_candidate.py` (`verify_company_size` 만 정의) · **반려** |
 | 검사 | `tests/test_c_v18_notice_complete_candidate.py` · 11건 통과 · **반려된 후보의 동작 기록** |
 | 변경 안 한 것 | `script.py` · `tools/` · `notebooks/` — `git status --porcelain --untracked-files=no` 빈 출력 |
 
-`c9398ad` → `1b34786` 은 제 보고서 7파일 추가뿐이고
-`git diff c9398ad 1b34786 -- script.py tools/ notebooks/` 가 **빈 출력**이다. 기준 수치가 같아야 하고, 실제로 같았다.
+**베이스가 세 번 움직이는 동안 수치가 한 번도 안 바뀌었다.**
+
+| 베이스 | 기준 Macro | 후보 결과 |
+| --- | --- | --- |
+| `c9398ad` (지시가 지정) | 0.609274806721 | — |
+| `1b34786` (첫 판 측정) | 0.609274806721 | 4셀 · v18 2/4/5 · v16 4/3/2 |
+| **`37fe53e`** (이 판) | **0.609274806721** | **4셀 · v18 2/4/5 · v16 4/3/2 — 동일** |
+
+`37fe53e` 에는 **`20b1d43`(밴드 인용 게이트가 `restore_spacing` 을 부르게 한 수리)**이
+들어 있다. 그 수리는 `_company_size_bands()` 의 `quoted()` 를 고쳐 **이 후보가 여는
+게이트의 바로 앞 단계**를 건드리므로 다시 쟀다. **결과는 같았다** — 그 커밋 자신이
+"dev 중립, 재생 0.609274806721 그대로" 라고 적은 것과 맞물린다.
 
 ```bash
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789902969401579900/dev-debug \
@@ -265,13 +275,13 @@ A4 의 W5 가 잰 것은 문서·메타 같은 입력 신호라 원문만으로 
 
 ## 7-2. 기준선 실패 대조 — 내가 낸 실패는 0건
 
-`c9398ad` 워크트리와 이 브랜치에서 **같은 명령**(`pytest tests/ -q -p no:cacheprovider`)을
+`37fe53e` 워크트리와 이 브랜치에서 **같은 명령**(`pytest tests/ -q -p no:cacheprovider`)을
 돌려 실패 이름을 대조했다.
 
 | | 통과 | 실패·오류 |
 | --- | ---: | ---: |
-| `c9398ad` (기준선) | 391 (+1 skipped) | **4** |
-| `feat/c-v18-fn-audit` | **423** | **4** |
+| **`37fe53e`** (기준선) | 415 (+1 skipped) | **4** |
+| `feat/c-v18-fn-audit` | **426** | **4** |
 
 ```text
 브랜치에만 있는 실패 (내가 낸 것): 없음
@@ -281,7 +291,8 @@ A4 의 W5 가 잰 것은 문서·메타 같은 입력 신호라 원문만으로 
 
 네 건 모두 이름이 같다 — `test_a5_scope_pilot`(1) · `test_langfuse_tail`(1,
 `opentelemetry` 미설치) · `test_setup_agents`(2, ERROR).
-통과 수 증가(391→423)는 이 PR 이 더한 검사 21건(후보 11 + B1 회귀 10)이다.
+통과 수 증가(415→426)는 이 브랜치가 더한 **B1 회귀 검사 10건**과 skip 하나의 차이다
+(후보 검사 11건은 `37fe53e` 에 이미 들어가 있다 — PR #93 이 머지됐다).
 
 ## 8. 증거 수준
 

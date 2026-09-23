@@ -45,7 +45,7 @@ LABELS = ROOT / "open/dev_labels.csv"
 ITEMS = ["v14", "v15", "v16", "v17", "v18"]
 
 # 재생으로 실측한 값. 기준은 HEAD 재생이며 보관 회차의 submission.csv 가 아니다.
-# 기준 commit 1b34786 (운영 코드는 c9398ad 와 동일).
+# 기준 commit 37fe53e. c9398ad·1b34786 에서도 같은 값이었다 — 베이스 세 지점에서 불변이다.
 EXPECTED_HEAD = {"v14": (7, 2, 1), "v15": (4, 1, 2), "v16": (4, 2, 2),
                  "v17": (5, 6, 1), "v18": (1, 2, 6)}
 EXPECTED_CANDIDATE = {"v14": (7, 2, 1), "v15": (4, 1, 2), "v16": (4, 3, 2),
