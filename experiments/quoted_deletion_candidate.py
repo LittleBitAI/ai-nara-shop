@@ -72,6 +72,9 @@ ARTICLE_REACH = 25
 # 내리려면 인용이 좁은 자격을 실제로 적어야 한다. 중기업 표기가 없다는 것만으로는 내리지 않는다.
 NARROW = re.compile(r"소\s*기업|소\s*상\s*공\s*인|여\s*성\s*기\s*업|장\s*애\s*인\s*기\s*업|사\s*회\s*적\s*기\s*업")
 ENTITY = re.compile(NARROW.pattern + r"|중\s*소\s*기\s*업|중\s*기\s*업|기\s*업|업\s*체|사\s*업\s*자|자(?=[로이는가,\s])")
+# 주체를 찾기 전에 법률 이름을 같은 길이의 공백으로 가린다. `「소상공인 보호 및 지원에 관한 법률」`,
+# `소상공인기본법` 안의 소상공인은 자격 주체가 아니다(리뷰 라운드 7).
+BARE_LAW = re.compile(r"\S+법(?=\s*제\s*\d)")
 
 
 def baseline():
@@ -156,8 +159,10 @@ def v17_deletion(quote: str) -> Optional[str]:
     """v17 양성을 내릴 이유. 인용이 좁은 자격만 적고 중기업을 자격 주체로 적지 않으면 내린다."""
     if not (quote or "").strip():
         return None
+    blank = lambda m: " " * len(m.group())
+    masked = BARE_LAW.sub(blank, LAW_TITLE.sub(blank, quote))
     for article in SME_ARTICLE.finditer(quote):
-        entity = ENTITY.search(quote, article.end(), article.end() + ARTICLE_REACH)
+        entity = ENTITY.search(masked, article.end(), article.end() + ARTICLE_REACH)
         if not (entity and NARROW.fullmatch(entity.group())):
             return None   # 조문이 중소기업자를 자격으로 정했다
     body = BARE_TITLE.sub(" ", LAW_TITLE.sub(" ", quote))
