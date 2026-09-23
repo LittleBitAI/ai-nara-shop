@@ -120,7 +120,7 @@ python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <head>/submissi
 python -X utf8 -m pytest tests/test_c_competitive_row_diff.py -q
 #    10 passed 여야 한다. 적용 뒤에 돌리면 전제가 깨져 전부 skip 된다
 
-# 2) **실험 브랜치를 판다.** 작업 브랜치에 커밋하면 7단계에서 되돌릴 수 없다(§3-2)
+# 2) **실험 브랜치를 판다.** 작업 브랜치에 커밋하면 12단계에서 되돌릴 수 없다(§3-2)
 git rev-parse --abbrev-ref HEAD > /tmp/origin-branch    # 돌아올 자리를 적어 둔다
 git switch -c run/b1-competitive-row
 
@@ -139,41 +139,73 @@ print('바이트 동일', hashlib.sha256(a).hexdigest()[:16])
 " <head>/submission.csv <regr>/submission.csv
 #    실패하면 exit 1 이다. 뒤 단계를 이어 붙여도 회귀가 지나가지 않는다
 
-# 4) **실험 커밋으로 두 파일을 고정한다** — 회차 재생이 이 커밋에 걸린다
+# 4) **실험 커밋으로 두 파일을 고정하고 원격에 올린다**
+#    Colab 이 clone 뒤 `git fetch origin <ref>` 를 하므로 **push 하지 않으면 못 받는다**(§3-3)
 git add script.py tools/replay_run.py
 git commit -m "run: B1 competitive_row 회차 코드 고정"
-git rev-parse HEAD > /tmp/run-commit    # 이 값을 --code-commit 으로 쓴다
+git push -u origin run/b1-competitive-row
+git rev-parse HEAD > /tmp/run-sha        # **40자리 전체 SHA.** 약칭은 노트북이 거부한다
+git ls-remote origin run/b1-competitive-row   # 원격에 그 SHA 가 보여야 한다
 
-# 5) dev 200건 회차 1회 (company_size 단계 포함 전 파이프라인)
-#    같은 ZIP·같은 시드. 노트북 커밋과 위 실험 커밋을 회차 기록에 고정한다.
+# 5) dev 200건 **1회차** — Colab 노트북 첫 셀을 이렇게 둔다
+#      SOURCE_MODE = "clone"
+#      REPO_REF    = "<4단계의 40자리 SHA>"      ← "main" 이면 후보 코드가 아니다
+#    회차 뒤 결과 ZIP 안에서 확인한다
+#      source.json.commit 이 그 SHA 인가
+#      패키지된 script.py 에 COMPETITIVE_ROW_PATTERN 이 있는가
+#    노트북 자체의 커밋은 REPO_REF 와 별개로 회차 기록에 적는다
+#    **노트북을 맞추려고 실험 커밋을 다시 만들지 않는다 — SHA 가 바뀐다**
 
-# 6) 회차 등록 — docs/runs.md 등록 절차 그대로다
-#    결과 ZIP 한 쌍(colab-results-<숫자>.zip · submit.zip)을 artifacts/inbox/ 에 둔다
-python -X utf8 tools/register_run.py --inbox artifacts/inbox \
-  --code-commit $(cat /tmp/run-commit)
+# 6) 1회차 등록 — docs/runs.md 절차. **회차마다 inbox 를 따로 둔다**
+mkdir -p artifacts/inbox-run1
+#    결과 ZIP 한 쌍(colab-results-<숫자>.zip · submit.zip)을 거기에 둔다
+python -X utf8 tools/register_run.py --inbox artifacts/inbox-run1 \
+  --code-commit $(cat /tmp/run-sha)
 #    전달받은 해시가 있으면 --expect-results·--expect-submit 으로 같이 대조한다
-#    도구가 reports/runs/<run-id>/ 와 manifest.json 을 쓴다. 커밋은 하지 않는다
-#    manifest.json 의 code.commit 이 4단계 커밋과 같은지 눈으로 확인한다
+#    등록기가 source.json.commit 과 --code-commit 을 대조한다 — 다르면 여기서 죽는다
 
-# 7) 채점·대조
-python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <new>/submission.csv \
-  --output-dir <new-score>
-python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new>/submission.csv \
-  --truth open/dev_labels.csv --items v14,v15,v16,v17,v18 --output-dir <cmp-c>
-python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new>/submission.csv \
-  --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp-scope>
+# 7) 1회차 채점·대조
+python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <run1>/submission.csv \
+  --output-dir <run1-score>
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run1>/submission.csv \
+  --truth open/dev_labels.csv --items v14,v15,v16,v17,v18 --output-dir <cmp1-c>
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run1>/submission.csv \
+  --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp1-scope>
 
-# 8) 새 회차가 그 커밋의 코드로 재현되는지 확인한다
-python -X utf8 tools/replay_run.py --case <new>/dev-debug --verify
+# 8) 1회차가 그 커밋의 코드로 재현되는지 확인한다
+python -X utf8 tools/replay_run.py --case <run1>/dev-debug --verify
 #    --verify 는 manifest 의 code.commit 에서 script.py 를 꺼내 쓴다
 
-# 9) **작업 브랜치로 돌아온다.** 실험 커밋은 run/ 브랜치에 남는다
+# 9) **1회차가 잠정 기준을 넘을 때만 2회차를 돌린다**(§4-1)
+#    같은 실험 커밋 SHA · 같은 제출 ZIP 해시 · 같은 dev 입력 해시 · 같은 모델/seed/설정
+#    REPO_REF 도 같은 SHA 다. 코드를 다시 만들지 않는다
+
+# 10) 2회차 등록 — **별도 inbox**. 한 inbox 에 결과 ZIP 둘이면 등록기가 죽는다
+mkdir -p artifacts/inbox-run2
+python -X utf8 tools/register_run.py --inbox artifacts/inbox-run2 \
+  --code-commit $(cat /tmp/run-sha)
+python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <run2>/submission.csv \
+  --output-dir <run2-score>
+
+# 11) **후보↔후보 churn 을 잰다.** 이것이 이번 코드의 잡음 범위다
+python -X utf8 tools/compare_runs.py --before <run1>/submission.csv --after <run2>/submission.csv \
+  --truth open/dev_labels.csv --items v14,v15,v16,v17,v18 --output-dir <churn-c>
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run2>/submission.csv \
+  --truth open/dev_labels.csv --items v14,v15,v16,v17,v18 --output-dir <cmp2-c>
+python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <run2>/submission.csv \
+  --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp2-scope>
+#    두 manifest.json 의 code.commit·ZIP 해시·입력 해시를 대조해 같은 조건인지 확인한다
+
+# 12) **작업 브랜치로 돌아온다.** 실험 커밋은 origin 의 run/ 브랜치에 남는다
 git switch $(cat /tmp/origin-branch)
 grep -c COMPETITIVE_ROW_PATTERN script.py          # 0 이어야 한다
 grep -c competitive_row tools/replay_run.py        # 0 이어야 한다
 git rev-parse HEAD                                 # 실험 커밋이 아니어야 한다
 git status --porcelain -- script.py tools/replay_run.py   # 빈 출력
 ```
+
+**실험 ref 는 게시하되 운영 `main` 으로 병합하지 않는다.** 회차 기록의 `code.commit` 이
+가리킬 수 있고 다른 환경에서 `--verify` 가 찾을 수 있으면 된다.
 
 ### 3-1. 왜 실험 커밋이 필요한가 — 되돌리면 새 회차를 못 재생한다
 
@@ -244,8 +276,52 @@ git checkout -- code_a.py code_b.py
 | `grep -c competitive_row tools/replay_run.py` | `0` |
 | `git rev-parse HEAD` | 실험 커밋이 **아님** |
 
-실험 커밋을 `main` 에 올릴지 `run/` 브랜치에 둘지는 **정하지 않았다**(§9).
-회차 기록의 `code.commit` 이 가리키려면 그 커밋이 **어딘가에는 남아 있어야 한다.**
+### 3-3. 왜 push 인가 — 로컬 커밋은 Colab 이 못 받는다
+
+**첫 판은 `run/` 브랜치에 커밋만 하고 곧바로 GPU 회차를 요구했다. 그러면 못 돈다.**
+
+기본 노트북(`notebooks/colab-baseline.ipynb`)의 첫 셀이 이렇다.
+
+```python
+SOURCE_MODE = "clone"
+REPO_REF = "main"   # 재현 실행에서는 이전 source.json의 commit SHA 지정 가능
+```
+
+그리고 clone 셀이 이렇게 움직인다.
+
+```python
+run_logged("git-clone", ["git", "clone", "--depth", "1", "--branch", "main", REPO_URL, str(REPO)])
+if REPO_REF != "main":
+    if 7 <= len(REPO_REF) < 40 and all(c in "0123456789abcdef" for c in REPO_REF):
+        raise ValueError(f'REPO_REF="{REPO_REF}"는 약칭 SHA입니다. 40자 전체 SHA나 브랜치 이름을 쓰세요.')
+    run_logged("git-fetch-ref", ["git", "-C", str(REPO), "fetch", "--depth", "1", "origin", REPO_REF])
+```
+
+**세 가지가 따라 나온다.**
+
+1. **`origin` 에서 `fetch` 한다.** 로컬에만 있는 커밋은 받을 수 없다 → **push 해야 한다.**
+2. **약칭 SHA 를 거부한다.** `git rev-parse HEAD` 의 **40자리 전체**를 쓴다.
+3. **`REPO_REF="main"` 이면 후보 코드가 아니다.** 기본값 그대로 돌리면 회차가 헛돈다.
+
+**등록기가 이것을 다시 막는다.** `tools/register_run.py:build_manifest()` 가
+`source.json` 의 `commit` 과 `--code-commit` 을 대조한다.
+
+```python
+recorded = source.get("commit")
+if recorded and not (recorded.startswith(code_commit) or code_commit.startswith(recorded)):
+    raise ValueError(f"코드 커밋이 로그와 다르다: --code-commit {code_commit}, source.json {recorded}")
+```
+
+즉 `REPO_REF` 를 잘못 두면 **등록 단계에서 죽는다** — 조용히 지나가지 않는다.
+그래서 §3 5단계에서 `source.json.commit` 과 패키지된 `script.py` 의 마커를 **회차 직후**
+확인하게 했다.
+
+**노트북을 맞추려고 실험 커밋을 다시 만들지 않는다.** 그러면 SHA 가 바뀌어
+이미 적은 `REPO_REF`·`--code-commit` 과 어긋난다. 노트북 버전은 회차 기록에 따로 적는다.
+
+실험 커밋을 `main` 에 **병합하지는 않는다.** 다만 **push 는 해야 한다** —
+회차 기록의 `code.commit` 이 가리키고 다른 환경의 `--verify` 가 찾으려면
+그 커밋이 **원격에 남아 있어야 한다.**
 
 ## 4. 합격 기준 — **회차 전에 고정한다**
 
@@ -255,8 +331,19 @@ git checkout -- code_a.py code_b.py
 | --- | --- | --- | --- |
 | **1** | **v18 FN 감소** | **3셀 이상** (6 → 3 이하) | 같은 ZIP 재실행 churn 이 1~2셀이다. 그보다 커야 회차 잡음과 구분된다 |
 | **2** | **scope 를 함께 쓰는 항목의 TP 보존** | v10·v11·v12·v13 의 현재 **TP 셀 10개 전부 유지** | 같은 `scope` 사실을 소비한다. 하나라도 죽으면 이 관측이 TP 를 깎은 것이다 |
-| **3** | **대상 밖 항목 변화** | 같은 ZIP 재실행 churn 범위 **안** (과거 13쌍 실측 17~45셀) | 밖으로 새면 회귀다 |
+| **3** | **대상 밖 항목 변화** | 같은 ZIP 재실행 churn 범위 **안** | 밖으로 새면 회귀다 |
 | **4** | **추가 호출 0 · 출력 토큰 증가 실측** | dev 200건 추가 추론 **92.193초 한도 안** | 서버 예산 6,380/7,200초 중 남은 전부다 |
+
+**임계값은 그대로다. 바뀐 것은 무엇으로 재느냐다.**
+
+기준 1·3 이 말하는 "같은 ZIP 재실행 churn" 은 **이 코드의 재실행 churn** 이다.
+첫 판은 그 값을 **과거 13쌍의 17~45셀**로 적었는데, 그것은 **다른 코드의 잡음 범위**다.
+`compare_runs.py` 자신이 그렇게 말한다.
+
+> 이번 차이는 과거 관측 범위 안이다. **현재 코드의 churn 판정은 아니다.**
+> **새 후보는 같은 ZIP을 재실행해 그날 그 코드의 churn을 직접 잰다.**
+
+그래서 §4-1 을 둔다.
 
 ### 기준 1 의 근거 — v18 FN 6건의 최초 차단
 
@@ -286,10 +373,61 @@ git checkout -- code_a.py code_b.py
 넘으면 기준 4 위반이다. 다른 기준을 충족해도 **반려**한다 — 서버 예산을 넘기면
 제출 자체가 불가능하다.
 
+## 4-1. 두 회차로 판정한다 — **방법을 회차 전에 고정한다**
+
+기준 1·3 이 이 코드의 재실행 churn 을 요구하므로 **회차 하나로는 판정할 수 없다.**
+같은 조건으로 두 번 돌리고, 그 둘의 차이가 곧 이 코드의 잡음 범위다.
+
+### 1회차 — 잠정 판정
+
+| 결과 | 다음 |
+| --- | --- |
+| 기준 **2 또는 4 위반** | **즉시 반려.** 2회차를 돌리지 않는다 — TP 손실과 예산 초과는 잡음으로 설명되지 않는다 |
+| 기준 1 의 **v18 FN 감소 3셀 미만** | **즉시 반려.** 잡음을 빼기 전에 이미 못 넘었다 |
+| 그 밖 | **잠정 통과.** 2회차를 돌린다 |
+
+### 2회차 — 같은 조건이어야 한다
+
+다섯을 **1회차와 동일**하게 고정한다. 하나라도 다르면 churn 측정이 아니다.
+
+| 고정할 것 | 어디서 확인 |
+| --- | --- |
+| 실험 커밋 SHA | 두 `manifest.json` 의 `code.commit` |
+| 제출 ZIP 해시 | 두 `manifest.json` 의 `zip_sha256` |
+| dev 입력 해시 | 두 회차 기록의 입력 해시 |
+| 모델·seed·설정 | `model.json` · `run_report.json` 의 `reproduction.settings` |
+| `REPO_REF` | 같은 40자리 SHA |
+
+### 최종 판정 — 셋을 **전부** 만족해야 채택 후보다
+
+| # | 무엇 | 판정 |
+| --- | --- | --- |
+| **A** | **두 회차 모두** 기준 1(v18 FN ≤ 3)과 기준 2(v10~v13 TP 10 유지)를 만족 | 하나라도 한 회차에서 어긋나면 **반려** |
+| **B** | **v18 FN 감소폭이 후보↔후보 churn 보다 크다** | 감소폭 ≤ churn 이면 **반려.** 잡음과 구분되지 않는다 |
+| **C** | **대상 밖 바뀐 셀이 후보↔후보 churn 범위 안** | 넘으면 **회귀로 반려** |
+
+**B·C 의 churn 은 `<run1>` 대 `<run2>` 실측이다**(§3 11단계). 과거 13쌍의 17~45셀을
+쓰지 않는다 — 다른 코드의 값이다.
+
+### 미리 정해 두는 읽기 규칙
+
+- **두 회차의 평균을 쓰지 않는다.** 기준 1·2 는 **양쪽 모두** 만족해야 한다.
+  한 번 통과하고 한 번 실패하면 그것은 "통과" 가 아니라 **불안정**이다.
+- **더 좋은 회차를 고르지 않는다.** 두 회차를 다 보고한다.
+- **churn 이 크게 나와도 임계값을 올리지 않는다.** churn 이 v18 FN 감소폭보다 크면
+  이 관측으로는 못 가린다는 뜻이고, 그때의 답은 **반려**다.
+- **3회차를 추가하지 않는다.** 두 회차로 못 정하면 설계를 다시 본다.
+  회차를 늘려 통과시키는 것은 결과를 보고 기준을 고르는 것이다.
+
 ## 5. 회차에서 반드시 기록할 것
+
+**두 회차 각각에 대해** 적는다.
 
 | 항목 | 왜 |
 | --- | --- |
+| `source.json.commit` · 패키지 `script.py` 의 마커 유무 | 후보 코드로 돈 게 맞는지(§3-3) |
+| `manifest.json` 의 `code.commit` · `zip_sha256` · 입력 해시 | 두 회차가 같은 조건인지(§4-1) |
+| 노트북 커밋 | `REPO_REF` 와 별개로 기록한다 |
 | `company_size_inference_seconds` | 기준 4 판정 |
 | `company_size_response_count` · 출력 한도 실패 건수 | 스키마가 길어져 잘리는지 |
 | `competitive_row` 가 **null 이 아닌** 공고 수 | 발화율 |
@@ -297,6 +435,7 @@ git checkout -- code_a.py code_b.py
 | `scope` 분포 전→후 (competitive 78건이 몇으로) | 관측의 실제 효과 |
 | `039·040·041·044` 각각의 `competitive_row`·`scope`·v18 | 사정권 4건의 개별 결과 |
 | v10·v11·v12·v13 의 TP 셀 10개 개별 생존 | 기준 2 판정 |
+| **후보↔후보 churn** (셀 수 · 대상 항목 · 대상 밖) | **기준 B·C 판정. 이 코드의 잡음 범위다** |
 
 **`competitive_row` 가 목록 밖 번호였던 건수를 반드시 센다.** 모델이 공고 본문이나
 메타의 코드를 베껴 오면 이 관측은 무효다 — 그 경우 관측 자체를 반려한다.
@@ -309,8 +448,12 @@ git checkout -- code_a.py code_b.py
 | 모델이 지나치게 보수적이 되어 전부 `null` | competitive 78 → 거의 0 · v10~v13 TP 가 죽는다 | **기준 2 위반으로 반려** |
 | v18 은 열렸는데 v14·v17 FP 가 함께 는다 | 대상 항목 FP 증가 | 기준 1·3 을 각각 본다. Macro 로 뭉쳐 읽지 않는다 |
 | 출력이 길어져 한도 실패가 는다 | `company_size_response_count` < 200 | **기준 4 위반으로 반려** |
+| **`REPO_REF` 를 `main` 으로 둔 채 돌린다** | `source.json.commit` 이 실험 SHA 가 아니다 · 패키지 `script.py` 에 마커가 없다 | **그 회차를 버린다.** 등록기가 먼저 죽지만 죽기 전에 알아챈다(§3-3) |
+| **두 회차가 엇갈린다** | 1회차 통과 · 2회차 실패 | **반려.** 평균 내지 않는다. 그것은 통과가 아니라 불안정이다(§4-1) |
+| **churn 이 v18 FN 감소폭보다 크다** | 후보↔후보 churn ≥ 감소폭 | **반려.** 이 관측으로는 못 가린다는 뜻이다. 임계값을 올리지 않는다 |
 
 **무응답을 0 으로 채워 성공 처리하지 않는다.** 실패 건은 실패로 적는다.
+**3회차를 추가해 통과시키지 않는다.**
 
 ## 7. 증거 수준
 
@@ -325,8 +468,10 @@ git checkout -- code_a.py code_b.py
 | `script.py`·`tools/replay_run.py` 적용 | **안 함.** 임시 사본에서만 적용해 재생을 확인했다 |
 | 회차 코드 커밋 고정 | **안 함.** 회차를 안 돌렸다. §3 4단계가 그 절차다 |
 | 새 회차 재생 가능성 | **미측정.** 새 회차가 없어 `--verify` 를 못 돌렸다. §3-1 은 코드를 읽고 파싱 동작을 실측한 결론이지 회차로 확인한 것이 아니다 |
-| `register_run.py` 등록 | **미실행.** CLI 인자만 `--help` 로 확인했다(`--inbox`·`--code-commit`) |
-| 복구 절차 | **모형으로 확인함.** 임시 git 저장소에서 커밋 뒤 `git checkout --` 가 안 되돌리는 것을 재현했다(§3-2). 실제 두 파일로는 안 해 봤다 |
+| `register_run.py` 등록 | **미실행.** CLI 인자와 두 검사(`len(candidates)!=1`, `source.json` 대조)를 **소스로 확인**했다 |
+| 복구 절차 | **모형으로 확인함.** 임시 git 저장소에서 커밋 뒤 `git checkout --` 가 안 되돌리는 것과, 실험 브랜치 방식이 되돌리는 것을 둘 다 재현했다(§3-2) |
+| 실험 ref push | **안 함.** 회차를 안 돌렸다. §3-3 은 노트북·등록기 **소스를 읽은** 결론이고 Colab 에서 확인한 것이 아니다 |
+| **두 회차 반복** | **미실행.** §4-1 은 판정 **방법**을 고정한 것이고 churn 실측값이 아니다 |
 
 **TP/FP/FN 전→후가 없다.** 후보의 효과를 이 문서가 주장하지 않는다.
 `§1` 의 무리별 TP 수는 **현재 회차의 실측**이고 이 관측의 결과가 아니다.
@@ -355,9 +500,14 @@ git checkout -- code_a.py code_b.py
   근거 행을 더해도 안 풀린다.
 - **새 회차가 고정 커밋으로 실제 재생되는지.** §3-1 은 파싱 동작을 실측하고 코드를 읽어
   세운 결론이다. **새 회차가 없어 `--verify` 로 확인하지 못했다.** §3 8단계가 그 확인이다.
-- **실험 커밋을 어디에 남길지.** §3 은 `run/b1-competitive-row` 브랜치에 두고 작업
-  브랜치로 돌아온다. 그 브랜치를 `main` 에 올릴지, push 만 할지, 로컬에 둘지는 **정하지
-  않았다.** 회차 기록의 `code.commit` 이 가리키려면 **어딘가에는 남아 있어야 한다** —
-  로컬에만 두면 다른 환경에서 `--verify` 가 그 커밋을 못 찾는다.
-- **`register_run.py` 를 실제로 돌려 보지 않았다.** `--help` 로 인자만 확인했다.
-  `artifacts/inbox/` 에 둘 ZIP 한 쌍의 이름 규칙도 `docs/runs.md` 를 옮겨 적은 것이다.
+- **실험 ref 를 실제로 push 해 Colab 이 받는지.** §3-3 은 노트북과 등록기 **소스를 읽은**
+  결론이다. `git fetch --depth 1 origin <SHA>` 가 그 ref 로 실제로 되는지는 **안 해 봤다.**
+  `--depth 1` 이라 얕은 fetch 로 그 커밋을 받을 수 있어야 한다.
+- **`register_run.py` 를 실제로 돌려 보지 않았다.** CLI 인자와 두 검사
+  (`len(candidates) != 1`, `source.json` 대조)를 **소스로** 확인했다.
+  `artifacts/inbox-run1`·`-run2` 를 쓰는 것도 그 검사에서 유도한 것이지 돌려 본 것이 아니다.
+- **후보↔후보 churn 이 얼마일지 모른다.** §4-1 의 기준 B·C 가 그 값에 걸려 있는데
+  **회차 전에는 알 수 없다.** 과거 13쌍의 17~45셀은 다른 코드의 값이라 쓰지 않는다.
+  churn 이 v18 FN 감소폭보다 크면 이 관측으로는 못 가린다 — 그때의 답은 반려다.
+- **두 회차로 충분한지.** 회차 쌍 하나로 재는 churn 은 그 자체가 표본 1 이다.
+  더 늘리면 정밀해지지만 **회차를 늘려 통과시키는 길**과 구분이 어려워져 둘로 고정했다.
