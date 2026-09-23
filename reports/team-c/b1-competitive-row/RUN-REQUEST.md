@@ -120,28 +120,42 @@ python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <head>/submissi
 python -X utf8 -m pytest tests/test_c_competitive_row_diff.py -q
 #    10 passed 여야 한다. 적용 뒤에 돌리면 전제가 깨져 전부 skip 된다
 
-# 2) diff 적용 — script.py 와 tools/replay_run.py 둘 다 바뀐다
+# 2) **실험 브랜치를 판다.** 작업 브랜치에 커밋하면 7단계에서 되돌릴 수 없다(§3-2)
+git rev-parse --abbrev-ref HEAD > /tmp/origin-branch    # 돌아올 자리를 적어 둔다
+git switch -c run/b1-competitive-row
+
+# 3) diff 적용 — script.py 와 tools/replay_run.py 둘 다 바뀐다
 git apply reports/team-c/b1-competitive-row/competitive-row.diff
 
-# 2-1) 적용 뒤의 회귀 확인은 CSV 바이트를 직접 본다
+# 3-1) 적용 뒤의 회귀 확인은 CSV 바이트를 직접 본다. **불일치면 종료 코드 1로 멈춘다**
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789902969401579900/dev-debug \
   --output-dir <regr>
-python -X utf8 -c "import sys,hashlib; a=open(sys.argv[1],'rb').read(); b=open(sys.argv[2],'rb').read(); \
-print('바이트 동일' if a==b else '★ 다르다 — 여기서 멈춘다', hashlib.sha256(a).hexdigest()[:16])" \
-  <head>/submission.csv <regr>/submission.csv
-#    "바이트 동일" 이 아니면 여기서 멈춘다
+python -X utf8 -c "
+import sys, hashlib
+a = open(sys.argv[1], 'rb').read(); b = open(sys.argv[2], 'rb').read()
+if a != b:
+    raise SystemExit('★ 다르다 — 여기서 멈춘다')
+print('바이트 동일', hashlib.sha256(a).hexdigest()[:16])
+" <head>/submission.csv <regr>/submission.csv
+#    실패하면 exit 1 이다. 뒤 단계를 이어 붙여도 회귀가 지나가지 않는다
 
-# 3) **실험 커밋으로 두 파일을 고정한다** — 회차 재생이 이 커밋에 걸린다
+# 4) **실험 커밋으로 두 파일을 고정한다** — 회차 재생이 이 커밋에 걸린다
 git add script.py tools/replay_run.py
 git commit -m "run: B1 competitive_row 회차 코드 고정"
-git rev-parse HEAD          # 이 값을 회차 기록의 code.commit 으로 쓴다
+git rev-parse HEAD > /tmp/run-commit    # 이 값을 --code-commit 으로 쓴다
 
-# 4) dev 200건 회차 1회 (company_size 단계 포함 전 파이프라인)
+# 5) dev 200건 회차 1회 (company_size 단계 포함 전 파이프라인)
 #    같은 ZIP·같은 시드. 노트북 커밋과 위 실험 커밋을 회차 기록에 고정한다.
 
-# 5) 회차 등록·채점
-python -X utf8 tools/register_run.py --zip <새 ZIP>
-#    manifest.json 의 code.commit 이 3) 의 커밋인지 확인한다 (docs/runs.md 보관 규약)
+# 6) 회차 등록 — docs/runs.md 등록 절차 그대로다
+#    결과 ZIP 한 쌍(colab-results-<숫자>.zip · submit.zip)을 artifacts/inbox/ 에 둔다
+python -X utf8 tools/register_run.py --inbox artifacts/inbox \
+  --code-commit $(cat /tmp/run-commit)
+#    전달받은 해시가 있으면 --expect-results·--expect-submit 으로 같이 대조한다
+#    도구가 reports/runs/<run-id>/ 와 manifest.json 을 쓴다. 커밋은 하지 않는다
+#    manifest.json 의 code.commit 이 4단계 커밋과 같은지 눈으로 확인한다
+
+# 7) 채점·대조
 python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <new>/submission.csv \
   --output-dir <new-score>
 python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new>/submission.csv \
@@ -149,13 +163,16 @@ python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new
 python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new>/submission.csv \
   --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp-scope>
 
-# 6) 새 회차가 그 커밋의 코드로 재현되는지 확인한다
+# 8) 새 회차가 그 커밋의 코드로 재현되는지 확인한다
 python -X utf8 tools/replay_run.py --case <new>/dev-debug --verify
 #    --verify 는 manifest 의 code.commit 에서 script.py 를 꺼내 쓴다
 
-# 7) 작업 트리를 되돌린다 (실험 커밋은 이력에 남는다)
-git checkout -- script.py tools/replay_run.py
-git diff --stat            # 빈 출력이어야 한다
+# 9) **작업 브랜치로 돌아온다.** 실험 커밋은 run/ 브랜치에 남는다
+git switch $(cat /tmp/origin-branch)
+grep -c COMPETITIVE_ROW_PATTERN script.py          # 0 이어야 한다
+grep -c competitive_row tools/replay_run.py        # 0 이어야 한다
+git rev-parse HEAD                                 # 실험 커밋이 아니어야 한다
+git status --porcelain -- script.py tools/replay_run.py   # 빈 출력
 ```
 
 ### 3-1. 왜 실험 커밋이 필요한가 — 되돌리면 새 회차를 못 재생한다
@@ -197,6 +214,38 @@ git worktree add <dir> <실험 커밋>
 python -X utf8 <dir>/tools/replay_run.py --case <case> --script <dir>/script.py \
   --data-dir open/data --input open/dev.jsonl --output-dir <out>
 ```
+
+### 3-2. 왜 실험 **브랜치**인가 — 커밋한 뒤에는 `git checkout --` 가 안 되돌린다
+
+**첫 판은 작업 브랜치에 커밋하고 `git checkout -- script.py tools/replay_run.py` 로
+되돌린다고 적었다. 그 명령은 되돌리지 않는다.** 커밋한 순간 그 두 파일의 **HEAD 판이
+곧 후보 코드**라서, `checkout --` 는 후보를 다시 꺼낼 뿐이다.
+
+임시 저장소에서 그대로 재현했다.
+
+```text
+base 커밋        : code_a.py = ORIGINAL
+실험 커밋        : code_a.py = PATCHED
+git checkout -- code_a.py code_b.py
+  → code_a.py  = PATCHED        ← 안 되돌려졌다
+  → git diff --stat = (빈 출력)  ← 그래서 복구 검사로도 못 쓴다
+```
+
+**`git diff --stat` 이 빈 출력인 것이 오히려 함정이다.** 되돌아왔다는 뜻이 아니라
+"작업 트리가 HEAD 와 같다" 는 뜻이고, 그 HEAD 가 후보다.
+
+그래서 §3 에서 **실험 커밋을 별도 브랜치(`run/b1-competitive-row`)에 만들고
+작업 브랜치로 `git switch` 해서 돌아온다.** 복구 확인도 `git diff` 대신
+**마커 부재와 HEAD 값**을 직접 본다.
+
+| 확인 | 기대 |
+| --- | --- |
+| `grep -c COMPETITIVE_ROW_PATTERN script.py` | `0` |
+| `grep -c competitive_row tools/replay_run.py` | `0` |
+| `git rev-parse HEAD` | 실험 커밋이 **아님** |
+
+실험 커밋을 `main` 에 올릴지 `run/` 브랜치에 둘지는 **정하지 않았다**(§9).
+회차 기록의 `code.commit` 이 가리키려면 그 커밋이 **어딘가에는 남아 있어야 한다.**
 
 ## 4. 합격 기준 — **회차 전에 고정한다**
 
@@ -274,8 +323,10 @@ python -X utf8 <dir>/tools/replay_run.py --case <case> --script <dir>/script.py 
 | 실제 GPU 회차 | **미실행** |
 | 대회 서버 | **미실행** |
 | `script.py`·`tools/replay_run.py` 적용 | **안 함.** 임시 사본에서만 적용해 재생을 확인했다 |
-| 회차 코드 커밋 고정 | **안 함.** 회차를 안 돌렸다. §3 3단계가 그 절차다 |
+| 회차 코드 커밋 고정 | **안 함.** 회차를 안 돌렸다. §3 4단계가 그 절차다 |
 | 새 회차 재생 가능성 | **미측정.** 새 회차가 없어 `--verify` 를 못 돌렸다. §3-1 은 코드를 읽고 파싱 동작을 실측한 결론이지 회차로 확인한 것이 아니다 |
+| `register_run.py` 등록 | **미실행.** CLI 인자만 `--help` 로 확인했다(`--inbox`·`--code-commit`) |
+| 복구 절차 | **모형으로 확인함.** 임시 git 저장소에서 커밋 뒤 `git checkout --` 가 안 되돌리는 것을 재현했다(§3-2). 실제 두 파일로는 안 해 봤다 |
 
 **TP/FP/FN 전→후가 없다.** 후보의 효과를 이 문서가 주장하지 않는다.
 `§1` 의 무리별 TP 수는 **현재 회차의 실측**이고 이 관측의 결과가 아니다.
@@ -303,6 +354,10 @@ python -X utf8 <dir>/tools/replay_run.py --case <case> --script <dir>/script.py 
 - **`041` 의 `unverified_scope` 가 이 관측으로 풀리는지.** 인용 검증 실패가 원인이면
   근거 행을 더해도 안 풀린다.
 - **새 회차가 고정 커밋으로 실제 재생되는지.** §3-1 은 파싱 동작을 실측하고 코드를 읽어
-  세운 결론이다. **새 회차가 없어 `--verify` 로 확인하지 못했다.** §3 6단계가 그 확인이다.
-- **실험 커밋을 어느 시점에 되돌릴지.** 작업 트리는 §3 7단계에서 되돌리지만 커밋은 이력에
-  남는다. 그 커밋을 `main` 에 올릴지 실험 브랜치에 둘지는 정하지 않았다.
+  세운 결론이다. **새 회차가 없어 `--verify` 로 확인하지 못했다.** §3 8단계가 그 확인이다.
+- **실험 커밋을 어디에 남길지.** §3 은 `run/b1-competitive-row` 브랜치에 두고 작업
+  브랜치로 돌아온다. 그 브랜치를 `main` 에 올릴지, push 만 할지, 로컬에 둘지는 **정하지
+  않았다.** 회차 기록의 `code.commit` 이 가리키려면 **어딘가에는 남아 있어야 한다** —
+  로컬에만 두면 다른 환경에서 `--verify` 가 그 커밋을 못 찾는다.
+- **`register_run.py` 를 실제로 돌려 보지 않았다.** `--help` 로 인자만 확인했다.
+  `artifacts/inbox/` 에 둘 ZIP 한 쌍의 이름 규칙도 `docs/runs.md` 를 옮겨 적은 것이다.
