@@ -1,5 +1,5 @@
 {
-  "head": "a92c04d",
+  "head": "7e73b87",
   "paths": {
     "candidate": "experiments/qualification_candidate.py",
     "script": "script.py",
@@ -11,7 +11,7 @@
     "candidate_replay": "reports/team-d/final/replay/submission.csv"
   },
   "sha256": {
-    "candidate": "0d092970c0d38efa5e1696e05733d5f52c1afe9e5e838c130bfd1281777a793c",
+    "candidate": "21d17128f4964d501c297e77245fd4d36a90d8528589b916e1f1f7283717c65e",
     "script": "eb37c194affd1aac23b2d5e17db66a7e6d7a030fc421a75d52008983bd8d46ee",
     "dev_input": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
     "dev_labels": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
