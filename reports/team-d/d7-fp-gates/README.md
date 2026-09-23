@@ -144,7 +144,7 @@ v5는 **상한과 금액을 둘 다 읽었을 때만** 반증으로 쓴다. 셋 
 
 | 경로 | 내용 |
 | --- | --- |
-| [head-replay/](head-replay/) | 기준 — 후보 없이 `1b34786` 코드로 돌린 재생 CSV |
+| [head-replay/](head-replay/) | 기준 — 후보 없이 `origin/main`(`37fe53e`) 코드로 돌린 재생 CSV |
 | [head-score/](head-score/) | 기준 채점 |
 | [replay/](replay/) | 수정 후 재생 CSV와 `manifest.json` (`model_called: false`) |
 | [score/](score/) | 수정 후 채점 |
