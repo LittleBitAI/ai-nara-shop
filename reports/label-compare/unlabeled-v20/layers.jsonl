@@ -41,7 +41,7 @@
 {"id": "PPS-D-016719", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}
 {"id": "PPS-D-020541", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
 {"id": "PPS-D-005874", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}
-{"id": "PPS-D-001203", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
+{"id": "PPS-D-001203", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": true, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
 {"id": "PPS-D-001043", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
 {"id": "PPS-D-019430", "layer": "U", "model_v20": 0, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {"제안요청서": 1}}
 {"id": "PPS-D-005761", "layer": "U", "model_v20": 0, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
@@ -75,7 +75,7 @@
 {"id": "PPS-D-016722", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": true, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}
 {"id": "PPS-D-006589", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
 {"id": "PPS-D-021640", "layer": "U", "model_v20": 0, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
-{"id": "PPS-D-014608", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
+{"id": "PPS-D-014608", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": true, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
 {"id": "PPS-D-021064", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}
 {"id": "PPS-D-003098", "layer": "U", "model_v20": 0, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {"제안요청서": 1}}
 {"id": "PPS-D-001687", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}

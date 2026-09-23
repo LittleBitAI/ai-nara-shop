@@ -50,6 +50,13 @@ class DecisionTest(unittest.TestCase):
                 "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
         self.assertEqual(candidate.v20_decision(r), 0)
 
+    def test_clause_outside_judgment_docs_abstains(self):
+        # PPS-D-001203 shape: the sentence only in 과업지시서 does not settle v20.
+        r = {"meta": {"면허업종제한목록": "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]"},
+             "docs": [{"type": "공고문", "text": "입찰 공고"},
+                      {"type": "과업지시서", "text": "「소프트웨어 진흥법」제48조에 따른 참여 제한"}]}
+        self.assertIsNone(candidate.v20_decision(r))
+
     def test_1468_in_other_wording_adds(self):
         r = rec("소프트웨어사업자(업종코드:1468)와 정보통신공사업(업종코드:0036)로 입찰참가 등록한 자")
         self.assertEqual(candidate.v20_decision(r), 1)

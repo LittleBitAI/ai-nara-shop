@@ -56,6 +56,7 @@ from typing import Any, Dict, Optional
 
 REPO = Path(__file__).resolve().parents[1]
 
+JUDGMENT_DOCS = ("공고문", "제안요청서")
 # Additions: only the 1468 (computer-related services) registration every dev positive had.
 SW_PROVIDER = re.compile(r"소프트웨어\s*사업자[^\n]{0,40}?(?:컴퓨터\s*관련\s*서비스|1468)")
 # Removals: any software-provider registration at all (1426, 1469, 1470, uncoded "등록 업체", ...).
@@ -104,9 +105,15 @@ def v20_decision(rec: Dict[str, Any]) -> Optional[int]:
     제48조 sentence is present. A notice registering some other software category without
     the sentence is left to the model — calling it either way would be a legal judgment.
     """
-    texts = [doc.get("text") or "" for doc in rec.get("docs") or []]
-    if any(SW_CLAUSE.search(t) for t in texts):
+    docs = rec.get("docs") or []
+    texts = [doc.get("text") or "" for doc in docs]
+    # 지침 제3조② puts the statement in 공고문 or 제안요청서 (script.py `software_docs`).
+    # Only there does the sentence settle v20. Elsewhere (과업지시서, 규격서) dev has no case
+    # either way — 40 of 20,000 unlabeled — so the model keeps its answer.
+    if any(SW_CLAUSE.search(doc.get("text") or "") for doc in docs if doc.get("type") in JUDGMENT_DOCS):
         return 0
+    if any(SW_CLAUSE.search(t) for t in texts):
+        return None
     if sw_participation_missing(rec):
         return 1
     licenses = (rec.get("meta") or {}).get("면허업종제한목록") or ""
