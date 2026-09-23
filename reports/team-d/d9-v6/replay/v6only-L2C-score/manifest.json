@@ -1,0 +1,62 @@
+{
+  "artifact_id": "score-v6only-L2C-score",
+  "version": 1,
+  "status": "draft",
+  "run_id": "v6only-L2C-score",
+  "baseline_run": null,
+  "created_at": "2026-09-23T11:28:20.163238+00:00",
+  "sources": [
+    {
+      "role": "truth",
+      "path": "open/dev_labels.csv",
+      "sha256": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35"
+    },
+    {
+      "role": "pred",
+      "path": "reports/team-d/d9-v6/replay/v6only-L2C/submission.csv",
+      "sha256": "fefcd7ccf3fa102bf58d559241a5013d8720f2ca30f0371523d8c2de07d2930d"
+    }
+  ],
+  "generator": {
+    "path": "tools/score.py",
+    "sha256": "17cb568c299239e52d3c843a668cc0d1436b18b2b68656f929f5e5a2d8e5b7a3",
+    "argv": [
+      "python",
+      "-X",
+      "utf8",
+      "tools/score.py",
+      "--truth",
+      "open/dev_labels.csv",
+      "--pred",
+      "reports/team-d/d9-v6/replay/v6only-L2C/submission.csv",
+      "--output-dir",
+      "reports/team-d/d9-v6/replay/v6only-L2C-score"
+    ],
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'reports/team-d/d9-v6/replay/v6only-L2C/submission.csv' '--output-dir' 'reports/team-d/d9-v6/replay/v6only-L2C-score'",
+    "settings": {
+      "output_dir": "reports/team-d/d9-v6/replay/v6only-L2C-score",
+      "zero_division": 0,
+      "items": 24
+    }
+  },
+  "environment": {
+    "python": "3.14.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cwd": "."
+  },
+  "mode": "local_scoring",
+  "model": null,
+  "prompt_hash": null,
+  "seed": null,
+  "parents": [],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "execution_status": "complete",
+  "validation": {
+    "csv_contract": true,
+    "evidence_substring": false,
+    "evidence_quality": false
+  },
+  "elapsed_seconds_before_publish": 0.14256939999904716
+}
