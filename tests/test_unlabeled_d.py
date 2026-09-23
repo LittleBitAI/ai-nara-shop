@@ -34,6 +34,15 @@ class Layers(unittest.TestCase):
         self.assertEqual((out["v17"]["R"], out["v17"]["Z"]), (0, 2))
         self.assertNotIn(("v3", ""), seen, "B=0 셀은 판정하지 않는다")
 
+    def test_rejects_values_outside_the_csv_contract(self):
+        """Review round 1: a corrupted cell must not be counted as Z."""
+        candidate = types.SimpleNamespace(v3_deletion=lambda q, r: None, v17_deletion=lambda q: None)
+        for bad in ("2", "", " 1", "1.0"):
+            with self.subTest(value=bad):
+                rows = [{"id": "X", "v3": bad, "e3": "q", "v17": "0", "e17": ""}]
+                with self.assertRaises(ValueError):
+                    layers(rows, {"X": {}}, candidate)
+
 
 if __name__ == "__main__":
     unittest.main()

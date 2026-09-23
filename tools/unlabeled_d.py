@@ -33,7 +33,10 @@ def layers(rows, recs, candidate):
     out = {item: {"D": [], "R": 0, "Z": 0} for item in ITEMS}
     for row in rows:
         for item, evidence in ITEMS.items():
-            if row[item] != "1":
+            if row[item] not in ("0", "1"):
+                # A corrupted cell counted as Z would silently shrink D (review round 1).
+                raise ValueError(f"{row['id']} {item}={row[item]!r}: CSV 계약 밖 값이다")
+            if row[item] == "0":
                 out[item]["Z"] += 1
                 continue
             quote = row[evidence]
@@ -48,7 +51,9 @@ def layers(rows, recs, candidate):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--run", required=True, help="Drive 폴더를 받은 곳. u00/output/submission.csv, u00/ids.json …")
+    parser.add_argument("--run", required=True, action="append",
+                        help="Drive 폴더를 받은 곳. u00/output/submission.csv, u00/ids.json … "
+                             "여러 번 주면 묶음을 합친다(보관본은 회차별 폴더에 나뉘어 있다)")
     parser.add_argument("--input", default=str(ROOT / "open/train_unlabeled.jsonl"))
     parser.add_argument("--order", default=str(ROOT / "reports/label-compare/unlabeled-d/ids.txt"))
     parser.add_argument("--draw", default="v3=19,v17=32", help="항목별 추첨 수")
@@ -60,7 +65,11 @@ def main(argv=None):
     order = {identifier: k for k, identifier in enumerate(Path(args.order).read_text(encoding="utf-8").split())}
     wanted = dict(pair.split("=") for pair in args.draw.split(","))
 
-    shards = sorted(p.parent for p in Path(args.run).glob("u*/ids.json"))
+    shards = sorted((p.parent for run in args.run for p in Path(run).glob("u*/ids.json")),
+                    key=lambda s: s.name)
+    names = [s.name for s in shards]
+    if len(set(names)) != len(names):
+        raise ValueError(f"같은 묶음이 두 폴더에 있다: {sorted({n for n in names if names.count(n) > 1})}")
     ids = [i for s in shards for i in json.loads((s / "ids.json").read_text(encoding="utf-8"))]
     idset = set(ids)
     recs = {}
