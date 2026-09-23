@@ -38,8 +38,11 @@ CASE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
 
 # 판정 문서(artifacts/review/quoted-fp-result.md)가 `오탐` 이라 한 셀. 이 회차 재생에서
 # 바뀌는 셀은 정확히 이 여덟이어야 한다. 하나라도 늘거나 줄면 규칙이 문서와 갈라진 것이다.
+# The base moves when production gates change: since main's #96, production
+# `performance_below_budget()` reads the evidence quote and already drops 03 and 25, so the
+# candidate no longer changes them against the HEAD replay.
 EXPECTED_CHANGED = {
-    ("PPS-DEV-03", "v3"), ("PPS-DEV-25", "v3"), ("PPS-DEV-112", "v3"), ("PPS-DEV-170", "v3"),
+    ("PPS-DEV-112", "v3"), ("PPS-DEV-170", "v3"),
     ("PPS-DEV-038", "v17"), ("PPS-DEV-102", "v17"), ("PPS-DEV-120", "v17"), ("PPS-DEV-172", "v17"),
 }
 
