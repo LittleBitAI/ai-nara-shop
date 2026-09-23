@@ -27,6 +27,9 @@
 
 ## 첫 작업 큐
 
+`b-v24-budget-axis`: ready / [작업서](tasks/b-v24-budget-axis.md). 꺼 둔 v24 예산 축을 필드별 대응·표시 반올림
+동등성으로 다시 세워 v24 를 올리는 경로로 쓴다(S7-5). 대상 미탐 `029`. 지금 축은 dev 3발화 중 정탐 1 · 무라벨 배율 2.0.
+
 `c-notice-region-limit`: review / [작업서](tasks/c-notice-region-limit.md). v5~v7 의 지방 고시금액을
 S6 지역제한 금액(시·도 3억 5천만원, 그 밖 5억원)으로 적용한다. 독립 리뷰 8라운드 `머지 허용`.
 dev 이득(v5 FP 1→0)은 #96 이 먼저 가져가 main 대비 dev 변화 0셀이다. 남는 차이는 시·도 구간뿐이다.
