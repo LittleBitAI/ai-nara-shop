@@ -806,9 +806,9 @@ def _docs_dropped(rec):
 
 # (a) 이 계약의 견적서·입찰서를 지정정보처리장치로 제출한다고 말하는 문장.
 #     낱말이 어딘가 있는 것으로는 부족하다 — 시스템과 제출이 한 문장 안에서 **이어져야** 한다.
-#     그래서 `제출` 하나하나를 보고 창 안에서 셋을 맞춘다.
-#       · 앞 `QUOTE_SYSTEM_REACH` 자 안에 지정정보처리장치 이름이 있다
-#       · 앞뒤 `QUOTE_OBJECT_REACH` 자 안에 그 제출물(견적서·입찰서)이 있다
+#     그래서 `제출` 하나하나를 보고 한 도막 안에서 셋을 맞춘다.
+#       · 그 앞에서 지정정보처리장치가 제출의 수단으로 표시됐다(`_system_is_the_means()`)
+#       · 그 앞의 제출물이 견적서·입찰서다
 #       · 바로 뒤가 `제출 확인`·`제출 여부`처럼 제출 사실의 조회가 아니다
 #     `견적서 제출 여부는 나라장터 …에서 확인하여야 합니다` 는 시스템이 `제출` 뒤에 있어 떨어지고,
 #     `공동수급협정서는 … 제출하여야 합니다` 는 제출물이 견적서·입찰서가 아니라 떨어진다.
@@ -821,7 +821,6 @@ QUOTE_DOCUMENT = re.compile(
 QUOTE_TARGET = re.compile(r"전자견적서|견적서|입찰서")
 QUOTE_SUBMIT_WORD = re.compile(r"제출")
 QUOTE_LOOKUP_ONLY = re.compile(r"^\s*(?:여부|확인|사실|결과|내역|현황)")
-QUOTE_SYSTEM_REACH = 80
 
 
 # 전자 제출이 아닌 제출 방식. 이것이 대상과 `제출` 사이에 있으면 전자 제출이 아니다.
@@ -833,15 +832,17 @@ QUOTE_OFFLINE = re.compile(r"우편|등기|방문|직접\s*제출|지참|팩스|
 # 자리에서 한 일은 열람이다. 그래서 수단·방향 표지를 요구한다.
 QUOTE_MEANS_MARK = re.compile(r"(?:을|를)\s*(?:이용|통하|통해|경유)|(?:으)?로\s*(?:제출|송신)"
                               r"|에\s*제출|을\s*통한")
-# 시스템 이름과 그 표지 사이에는 **시스템 안의 것**을 가리키는 말이 낄 수 있다 —
-# `나라장터 시스템의 "입찰정보"를 이용하여 제출`. 그래서 붙어 있기를 요구하지 않고,
-# 사이에 **다른 행위**가 끼지 않았는지로 가른다. 열람·조회·공고는 제출이 아니다.
-QUOTE_MEANS_REACH = 30
-QUOTE_OTHER_ACTION = re.compile(r"열람|조회|확인|게시|공고|안내|출력|내려받|다운로드|접수처|방문")
-# 표지가 붙은 대상이 시스템 자신인지 그 안의 자료인지는 낱말로 갈리지 않는다 —
-# `시스템의 "입찰정보"를 이용하여 제출` 은 맞고 `나라장터의 서식을 이용하여 작성한 … 현장
-# 접수처에 제출` 은 아닌데, `입찰정보` 와 `서식` 을 목록으로 가르면 또 목록 싸움이 된다.
-# 그래서 **그 `이용` 이 무엇을 시키는지**를 본다: 표지 뒤 첫 행위가 제출이어야 한다.
+# 표지가 붙은 것 — `이용`·`통하` 의 목적어 머리 낱말 — 이 **제출 경로 자체**여야 한다.
+# 시스템 이름 바로 뒤(`국가종합전자조달시스템(G2B)을`)거나, 시스템 안에서 제출을 맡는 기능
+# (`안전 입찰서비스를`·`전자입찰시스템을`·`입찰서 제출기능을`)일 때만이다. `나라장터의 서식을
+# 이용하여` 는 머리가 서식이라 시스템 안의 자료를 쓴 것이고, 그 이용과 시스템을 통한 제출은
+# 뒤따르는 동사로도 갈리지 않는다(`…서식을 이용하여 현장으로 제출`, PR #114 6라운드 P1).
+# 머리가 제출 경로가 아니면 (a) 를 세우지 않는다 — 내리는 쪽의 보류다. 메뉴 이름
+# `시스템의 "입찰정보"를 이용하여 제출`(`PPS-D-015016`)도 제출 경로라 말하지 않아 보류된다.
+QUOTE_MEANS_GAP = 40
+QUOTE_CHANNEL_HEAD = re.compile(
+    r"(?:^|(?:시스템|입찰\s*서비스|제출\s*기능))[\s\"'“”‘’]*(?:\([^()]{0,40}\))?[\s\"'“”‘’]*$")
+# 표지가 시스템에 붙었어도 그 `이용` 이 시키는 첫 행위가 제출이어야 한다.
 # 첫 행위가 작성·등록·열람이면 시스템은 그 일에 쓰인 것이고 제출 수단이 아니다.
 QUOTE_ACTION = re.compile(r"제출|송신|작성|열람|조회|확인|게시|공고|출력|등록|접수|발급|교부|내려받|다운로드")
 QUOTE_SUBMIT_ACTION = re.compile(r"제출|송신")
@@ -850,15 +851,12 @@ QUOTE_SUBMIT_ACTION = re.compile(r"제출|송신")
 def _system_is_the_means(text):
     """이 앞말에서 **지정정보처리장치가 제출의 수단으로 쓰였다**고 말하는가."""
     for system in QUOTE_SYSTEM.finditer(text):
-        window = text[system.end():system.end() + QUOTE_MEANS_REACH]
-        mark = QUOTE_MEANS_MARK.search(window)
-        if mark is None:
-            continue
-        if QUOTE_OTHER_ACTION.search(window[:mark.start()]):
-            continue
+        mark = QUOTE_MEANS_MARK.search(text, system.end(), system.end() + QUOTE_MEANS_GAP)
+        if mark is None or not QUOTE_CHANNEL_HEAD.search(text[system.end():mark.start()]):
+            continue             # 표지가 없거나 제출 경로가 아닌 것에 붙었다
         if QUOTE_SUBMIT_ACTION.search(mark.group(0)):
             return True          # `…로 제출`·`…에 제출` — 표지 자체가 제출이다
-        after = text[system.end() + mark.end():]
+        after = text[mark.end():]
         action = QUOTE_ACTION.search(after)
         if action is None or not QUOTE_SUBMIT_ACTION.match(action.group(0)):
             continue             # 첫 행위가 제출이 아니면 시스템은 그 일에 쓰인 것이다
