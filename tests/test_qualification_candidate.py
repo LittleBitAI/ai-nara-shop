@@ -600,6 +600,24 @@ class V6BasicRegionRules(unittest.TestCase):
                 self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
                 self.assertIsNone(self.decide(rec, 0))
 
+    def test_u_does_not_raise_when_the_place_label_comes_first(self):
+        """PR #114 재리뷰 3라운드 P1 — 장소가 제한보다 **먼저** 나오는 역순.
+
+        토큰은 자기 앞의 가장 가까운 역할 표시에 속한다. 그것이 납품 장소면 뒤에
+        참가자격 제한이 또 나오더라도 이 토큰은 제한 대상이 아니다.
+        """
+        cases = [
+            "납품장소는 [지역:r2|단위=기초|광역=경기도] 본점소재지는 경기도"
+            " [지역:r1|단위=광역|광역=경기도]에 있는 업체",
+            "현장 위치: [지역:r2|단위=기초|광역=경기도] 주된 영업소가 경기도"
+            " [지역:r1|단위=광역|광역=경기도]에 있는 업체",
+        ]
+        for tail in cases:
+            with self.subTest(tail[:20]):
+                rec = self.one_line_notice("가. 입찰참가자격: " + tail)
+                self.assertEqual([], candidate.confirmed_basic_region_sentences(rec))
+                self.assertIsNone(self.decide(rec, 0))
+
     def test_u_evidence_carries_the_token_even_on_a_very_long_line(self):
         """PR #114 리뷰 P1 — 480자로 앞부분만 자르면 인용에 `단위=기초` 가 안 남는다."""
         padding = "입찰참가자격 안내입니다. " * 30
@@ -748,6 +766,9 @@ class V6SmallQuoteException(unittest.TestCase):
             ("공동수급협정서는 나라장터에서 열람하고 국가종합전자조달시스템을 이용하여"
              " 제출하여야 한다", False),
             ("견적서는 우편으로 내고 국가종합전자조달시스템을 이용하여 제출하여야 한다", False),
+            # PR #114 재리뷰 3라운드 P1 — 제출 방식이 문서명 앞에 오는 어순.
+            ("나라장터에서 열람 후 우편으로 입찰서를 제출한다", False),
+            ("나라장터를 이용하여 방문으로 견적서를 제출한다", False),
             ("라. 공동수급협정서는 반드시 조달청 전자입찰시스템을 이용하여"
              " 국가종합전자조달시스템 전자 입찰 특별유의서에 따라 제출하여야 합니다.", False),
             ("사. 견적서 제출 여부는 나라장터 시스템의 전자문서함에서 확인하여야 합니다.", False),

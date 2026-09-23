@@ -694,11 +694,24 @@ def _binds_limit_to_token(segment):
     anchors = [(m.start(), m.end()) for m in REGION_LIMIT_ANCHOR.finditer(segment)]
     if not anchors:
         return False
+    roles = [(m.start(), m.end()) for m in ROLE_SWITCH.finditer(segment)]
     tokens = [(m.start(), m.end()) for m in _submission().ANON_REGION.finditer(segment)
               if "단위=기초" in m.group(0)]
     tokens += [(m.start(), m.end()) for m in BASIC_AGENCY_TARGET.finditer(segment)]
-    for anchor in anchors:
-        for token in tokens:
+    for token in tokens:
+        # 토큰은 **자기 앞의 가장 가까운 역할 표시**에 속한다. 그것이 납품 장소면
+        # 뒤에 참가자격 제한이 또 나오더라도 이 토큰은 제한 대상이 아니다.
+        # `납품장소는 […기초…] 본점소재지는 경기도 […광역…]에 있는 업체` 가 그 꼴이다.
+        before_anchor = max((a for a in anchors if a[1] <= token[0]), default=None)
+        before_role = max((r for r in roles if r[1] <= token[0]), default=None)
+        if before_role and (before_anchor is None or before_role[0] > before_anchor[0]):
+            continue
+        candidates = [before_anchor] if before_anchor else []
+        # 앞에 아무 표시도 없으면 뒤의 제한을 본다 — `경기도 […기초…] 지역 업체`(`061`).
+        if before_anchor is None:
+            following = min((a for a in anchors if a[0] >= token[1]), default=None)
+            candidates = [following] if following else []
+        for anchor in candidates:
             lo, hi = (anchor[1], token[0]) if anchor[0] <= token[0] else (token[1], anchor[0])
             if lo > hi:
                 continue
@@ -794,12 +807,13 @@ def _says_electronic_quote(line):
                 continue
             if QUOTE_LOOKUP_ONLY.match(segment[submit.end():submit.end() + 8]):
                 continue
+            # 제출 방식은 문서명 **앞에도** 온다 — `우편으로 입찰서를 제출한다`.
+            # 그래서 대상과 `제출` 사이가 아니라 그 도막에서 `제출` 앞 전체를 본다.
+            if QUOTE_OFFLINE.search(segment[:submit.start()]):
+                continue
             preceding = list(QUOTE_DOCUMENT.finditer(segment[:submit.start()]))
             if preceding:
-                target = preceding[-1]
-                if not QUOTE_TARGET.fullmatch(target.group(0)):
-                    continue
-                if QUOTE_OFFLINE.search(segment[target.end():submit.start()]):
+                if not QUOTE_TARGET.fullmatch(preceding[-1].group(0)):
                     continue
                 return True
             # 대상이 생략된 도막은 줄 전체를 본다. 그 줄의 서류가 전부 견적서·입찰서이고
