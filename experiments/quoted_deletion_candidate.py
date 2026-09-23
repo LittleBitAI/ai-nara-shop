@@ -64,11 +64,14 @@ BARE_TITLE = re.compile(r"중소\s*기업\s*(?:기본\s*법|범위\s*및\s*확�
                         r"|중소\s*벤처\s*기업\s*부")
 MID_SIZE = re.compile(r"중\s*[·・ㆍ․,./]?\s*소\s*기업|중\s*기업")
 # 조문으로 자격을 정한 표기. 중소기업기본법 제2조는 중소기업자(소기업+중기업)를 정의한다.
-# `제2조제2항에 따른 소기업` 처럼 뒤에 좁은 자격을 적었을 때만 좁은 것이다(리뷰 라운드 5).
-SME_ARTICLE = re.compile(r"중\s*소\s*기\s*업\s*기\s*본\s*법[」｣』]?\s*제\s*2\s*조"
-                         r"(?:\s*제\s*\d+\s*[항호])*\s*에\s*따른\s*(\S+)")
+# 조문 뒤 25자 안의 첫 자격 주체가 좁은 자격일 때만 좁다(`제2조제2항에 따른 소기업`).
+# 연결 표현(`에 따른`·`의 규정에 의한`·`에서 정한` …)은 끝이 없어 세지 않는다 — 첫 주체가 좁지
+# 않거나 주체를 못 찾으면 조문이 중소기업자를 정한 것으로 본다(리뷰 라운드 5·6).
+SME_ARTICLE = re.compile(r"중\s*소\s*기\s*업\s*기\s*본\s*법[」｣』]?\s*제\s*2\s*조(?:\s*제\s*\d+\s*[항호])*")
+ARTICLE_REACH = 25
 # 내리려면 인용이 좁은 자격을 실제로 적어야 한다. 중기업 표기가 없다는 것만으로는 내리지 않는다.
 NARROW = re.compile(r"소\s*기업|소\s*상\s*공\s*인|여\s*성\s*기\s*업|장\s*애\s*인\s*기\s*업|사\s*회\s*적\s*기\s*업")
+ENTITY = re.compile(NARROW.pattern + r"|중\s*소\s*기\s*업|중\s*기\s*업|기\s*업|업\s*체|사\s*업\s*자|자(?=[로이는가,\s])")
 
 
 def baseline():
@@ -153,8 +156,10 @@ def v17_deletion(quote: str) -> Optional[str]:
     """v17 양성을 내릴 이유. 인용이 좁은 자격만 적고 중기업을 자격 주체로 적지 않으면 내린다."""
     if not (quote or "").strip():
         return None
-    if any(not NARROW.match(entity) for entity in SME_ARTICLE.findall(quote)):
-        return None   # 조문이 중소기업자를 자격으로 정했다
+    for article in SME_ARTICLE.finditer(quote):
+        entity = ENTITY.search(quote, article.end(), article.end() + ARTICLE_REACH)
+        if not (entity and NARROW.fullmatch(entity.group())):
+            return None   # 조문이 중소기업자를 자격으로 정했다
     body = BARE_TITLE.sub(" ", LAW_TITLE.sub(" ", quote))
     if MID_SIZE.search(body) or not NARROW.search(body):
         return None
