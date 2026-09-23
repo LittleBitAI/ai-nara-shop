@@ -65,6 +65,11 @@ git apply reports/team-c/b1-competitive-row/competitive-row.diff           # 회
 새 경로에서 필수, legacy·플래그 꺼짐 경로에서 제외, 검증 실패 시 `unknown`(`general` 아님),
 그리고 **diff 가 저장소에 적용돼 있지 않음**까지 본다.
 
+> **이 검사는 미적용 저장소를 전제한다.** 현재 저장소 파일을 사본으로 떠서 거기에 diff 를
+> 적용해 전후를 비교하기 때문이다. **`git apply` 앞에서 돌린다**(§3 절차 1단계).
+> 이미 적용된 저장소에서는 전제가 깨졌음을 알리며 **10건 전부 skip** 된다 — 빨간불로 두면
+> 진짜 회귀와 구분되지 않는다. 적용 뒤의 확인은 CSV 바이트를 직접 비교한다(§3 2-1단계).
+
 ## 1. 왜 이 관측인가 — 입력 신호로는 못 가른다
 
 `039`·`040`·`041`·`044` 는 `scope` 를 **사업명·품명**으로 `competitive` 라 했다.
@@ -111,20 +116,32 @@ python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <head>/submissi
   --output-dir <head-score>
 #    Macro 0.609274806721 · v14 7/2/1 · v15 4/1/2 · v16 4/2/2 · v17 5/6/1 · v18 1/2/6
 
-# 1) diff 적용 — script.py 와 tools/replay_run.py 둘 다 바뀐다
+# 1) 회귀 검사는 **적용 전에** 돌린다. 이 검사는 미적용 저장소를 전제한다
+python -X utf8 -m pytest tests/test_c_competitive_row_diff.py -q
+#    10 passed 여야 한다. 적용 뒤에 돌리면 전제가 깨져 전부 skip 된다
+
+# 2) diff 적용 — script.py 와 tools/replay_run.py 둘 다 바뀐다
 git apply reports/team-c/b1-competitive-row/competitive-row.diff
 
-# 1-1) 회귀 확인. 적용 후에도 보관 회차 재생이 HEAD 와 바이트 동일해야 한다
+# 2-1) 적용 뒤의 회귀 확인은 CSV 바이트를 직접 본다
 python -X utf8 tools/replay_run.py --case reports/runs/colab-1789902969401579900/dev-debug \
   --output-dir <regr>
-#    <regr>/submission.csv 와 <head>/submission.csv 가 바이트 동일. 다르면 여기서 멈춘다
-python -X utf8 -m pytest tests/test_c_competitive_row_diff.py -q
+python -X utf8 -c "import sys,hashlib; a=open(sys.argv[1],'rb').read(); b=open(sys.argv[2],'rb').read(); \
+print('바이트 동일' if a==b else '★ 다르다 — 여기서 멈춘다', hashlib.sha256(a).hexdigest()[:16])" \
+  <head>/submission.csv <regr>/submission.csv
+#    "바이트 동일" 이 아니면 여기서 멈춘다
 
-# 2) dev 200건 회차 1회 (company_size 단계 포함 전 파이프라인)
-#    같은 ZIP·같은 시드. 노트북 커밋을 회차 기록에 고정한다.
+# 3) **실험 커밋으로 두 파일을 고정한다** — 회차 재생이 이 커밋에 걸린다
+git add script.py tools/replay_run.py
+git commit -m "run: B1 competitive_row 회차 코드 고정"
+git rev-parse HEAD          # 이 값을 회차 기록의 code.commit 으로 쓴다
 
-# 3) 회차 등록·채점
+# 4) dev 200건 회차 1회 (company_size 단계 포함 전 파이프라인)
+#    같은 ZIP·같은 시드. 노트북 커밋과 위 실험 커밋을 회차 기록에 고정한다.
+
+# 5) 회차 등록·채점
 python -X utf8 tools/register_run.py --zip <새 ZIP>
+#    manifest.json 의 code.commit 이 3) 의 커밋인지 확인한다 (docs/runs.md 보관 규약)
 python -X utf8 tools/score.py --truth open/dev_labels.csv --pred <new>/submission.csv \
   --output-dir <new-score>
 python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new>/submission.csv \
@@ -132,14 +149,54 @@ python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new
 python -X utf8 tools/compare_runs.py --before <head>/submission.csv --after <new>/submission.csv \
   --truth open/dev_labels.csv --items v10,v11,v12,v13 --output-dir <cmp-scope>
 
-# 4) 되돌린다
+# 6) 새 회차가 그 커밋의 코드로 재현되는지 확인한다
+python -X utf8 tools/replay_run.py --case <new>/dev-debug --verify
+#    --verify 는 manifest 의 code.commit 에서 script.py 를 꺼내 쓴다
+
+# 7) 작업 트리를 되돌린다 (실험 커밋은 이력에 남는다)
 git checkout -- script.py tools/replay_run.py
 git diff --stat            # 빈 출력이어야 한다
 ```
 
-**회차 기록의 `reproduction.settings` 에 `company_size_competitive_row: true` 가 들어간다.**
-그 회차를 나중에 재생할 때 재생기가 이 키를 읽어 새 스키마로 파싱한다 — 그래서 새 회차도
-옛 회차도 각자의 스키마로 재생된다.
+### 3-1. 왜 실험 커밋이 필요한가 — 되돌리면 새 회차를 못 재생한다
+
+**첫 판은 "설정 키만 있으면 새 회차도 재생된다" 고 적었다. 틀렸다.**
+
+`reproduction.settings.company_size_competitive_row` 를 **읽는 코드가 이 diff 안에만** 있다.
+두 파일을 되돌리면 그 키는 아무도 안 본다. 그보다 앞서, **미적용 `script.py` 는 새 응답의
+`competitive_row` 를 파싱 단계에서 버린다.**
+
+실측(같은 JSON 을 양쪽에 먹였다):
+
+| 코드 | 파싱 | `competitive_row` |
+| --- | --- | --- |
+| 미적용 `script.py` | OK · 키 **15**개 | **버려짐** |
+| 적용 `script.py` | OK · 키 **16**개 | 보존 |
+
+`parse_judgment` 가 `{k: facts[k] for k in properties}` 로 스키마 밖 필드를 버리기 때문이다.
+필드가 사라지면 `verified_competitive_row()` 가 `None` 을 내고(애초에 그 함수도 없다)
+**`scope=competitive` 가 `null` 이거나 목록 밖 행이어도 `unknown` 게이트를 거치지 않는다.**
+즉 **되돌린 코드로는 새 회차의 근거 행 판정을 재현할 수 없다.**
+
+그래서 `docs/runs.md` 보관 규약대로 **회차에 쓴 코드를 커밋으로 고정하고
+`manifest.json` 의 `code.commit` 에 적는다**(출처 `source.json`·`git-commit.log`).
+이후 그 회차의 재생은 **그 커밋의 코드**로 한다.
+
+**한 가지 더 — `--verify` 는 `script.py` 만 꺼낸다.** `tools/replay_run.py:run_script()` 가
+`git show <commit>:script.py` 로 한 파일만 읽고 재생기 자신은 HEAD 것을 쓴다.
+
+| 무엇을 재생하나 | 되는가 | 이유 |
+| --- | --- | --- |
+| **새 회차**를 `--verify` 로 | **된다** | 고정 커밋의 `script.py` 가 쓰이고, `parse_judgment` 의 `company_size_competitive_row` 기본값이 `True` 라 HEAD 재생기가 그 키를 안 넘겨도 새 스키마로 파싱된다 |
+| **옛 보관 회차**를 diff 적용 상태에서 | **재생기도 그 커밋 것이어야 한다** | HEAD 재생기는 키를 안 넘기고 기본값이 `True` 라 옛 응답이 "사실 필드 결손" 으로 죽는다. 고정 커밋의 `tools/replay_run.py` 가 `settings.get(...)` 로 꺼 준다 |
+
+**두 파일을 함께 고정해야 하는 이유가 이것이다.** 워크트리로 통째로 꺼내 쓰면 확실하다.
+
+```bash
+git worktree add <dir> <실험 커밋>
+python -X utf8 <dir>/tools/replay_run.py --case <case> --script <dir>/script.py \
+  --data-dir open/data --input open/dev.jsonl --output-dir <out>
+```
 
 ## 4. 합격 기준 — **회차 전에 고정한다**
 
@@ -217,6 +274,8 @@ git diff --stat            # 빈 출력이어야 한다
 | 실제 GPU 회차 | **미실행** |
 | 대회 서버 | **미실행** |
 | `script.py`·`tools/replay_run.py` 적용 | **안 함.** 임시 사본에서만 적용해 재생을 확인했다 |
+| 회차 코드 커밋 고정 | **안 함.** 회차를 안 돌렸다. §3 3단계가 그 절차다 |
+| 새 회차 재생 가능성 | **미측정.** 새 회차가 없어 `--verify` 를 못 돌렸다. §3-1 은 코드를 읽고 파싱 동작을 실측한 결론이지 회차로 확인한 것이 아니다 |
 
 **TP/FP/FN 전→후가 없다.** 후보의 효과를 이 문서가 주장하지 않는다.
 `§1` 의 무리별 TP 수는 **현재 회차의 실측**이고 이 관측의 결과가 아니다.
@@ -243,3 +302,7 @@ git diff --stat            # 빈 출력이어야 한다
 - **`서비스보조목록` 의 29행 규모.** 목록이 커지면 토큰이 늘어 기준 4 가 흔들린다.
 - **`041` 의 `unverified_scope` 가 이 관측으로 풀리는지.** 인용 검증 실패가 원인이면
   근거 행을 더해도 안 풀린다.
+- **새 회차가 고정 커밋으로 실제 재생되는지.** §3-1 은 파싱 동작을 실측하고 코드를 읽어
+  세운 결론이다. **새 회차가 없어 `--verify` 로 확인하지 못했다.** §3 6단계가 그 확인이다.
+- **실험 커밋을 어느 시점에 되돌릴지.** 작업 트리는 §3 7단계에서 되돌리지만 커밋은 이력에
+  남는다. 그 커밋을 `main` 에 올릴지 실험 브랜치에 둘지는 정하지 않았다.

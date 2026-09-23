@@ -9,6 +9,13 @@
   3. 새(비-legacy) 경로에서는 `competitive_row` 가 **필수**다
   4. 검증 실패 시 `scope` 는 `unknown` 이고 **`general` 로 뒤집지 않는다**
 
+**전제: 저장소에 diff 가 적용돼 있지 않아야 한다.** 모든 검사가 현재 저장소 파일을 사본으로
+떠서 거기에 diff 를 적용해 전후를 비교하기 때문이다. 이미 적용된 저장소에서는 사본 적용이
+실패하므로 **건너뛴다**(빨간불로 두면 회귀와 구분이 안 된다).
+
+그래서 **`git apply` 전에 돌린다.** 적용 뒤의 확인은 재생 CSV 를 바이트로 직접 비교하는
+쪽이며 절차는 `reports/team-c/b1-competitive-row/RUN-REQUEST.md` §3 에 있다.
+
 모델을 부르지 않는다. diff 는 임시 사본에만 적용하고 저장소의 `script.py` 는 건드리지 않는다.
 """
 
@@ -42,6 +49,20 @@ def load_module(name, path):
     return module
 
 
+def diff_already_applied() -> bool:
+    """저장소에 이 diff 가 이미 적용돼 있는가. 마커 상수 하나로 가린다."""
+    return "COMPETITIVE_ROW_PATTERN" in (ROOT / "script.py").read_text(encoding="utf-8")
+
+
+def require_unapplied():
+    """적용된 저장소에서는 건너뛴다 — 이 파일은 미적용을 전제한다."""
+    if diff_already_applied():
+        raise unittest.SkipTest(
+            "저장소에 competitive-row.diff 가 이미 적용돼 있다. "
+            "이 검사는 미적용 저장소를 전제하므로 `git apply` 앞에서 돌린다 "
+            "(RUN-REQUEST §3).")
+
+
 def replay_to(script_path: str, out_dir: Path) -> bytes:
     """그 코드로 보관 회차를 재생하고 제출 CSV 바이트를 돌려준다."""
     tools = Path(script_path).parent / "tools" / "replay_run.py"
@@ -56,7 +77,10 @@ def replay_to(script_path: str, out_dir: Path) -> bytes:
 
 
 class DiffApplies(unittest.TestCase):
-    """diff 자체의 계약."""
+    """diff 자체의 계약. **미적용 저장소를 전제한다.**"""
+
+    def setUp(self):
+        require_unapplied()
 
     def test_diff_applies_cleanly_to_the_repository(self):
         proc = subprocess.run(["git", "apply", "--check", str(DIFF)],
@@ -76,6 +100,7 @@ class ArchivedReplayUnchanged(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        require_unapplied()
         if not (CASE / "diagnostics.jsonl").is_file():
             raise unittest.SkipTest(f"{CASE} 가 없다")
         if shutil.which("git") is None:
@@ -120,6 +145,7 @@ class PatchedSchemaContract(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        require_unapplied()
         if shutil.which("git") is None:
             raise unittest.SkipTest("git 이 없다")
         cls.tmp = tempfile.TemporaryDirectory()
