@@ -611,6 +611,10 @@ class BaselineTests(unittest.TestCase):
         def judged(item, quote):
             rec = record()
             rec["docs"][0]["text"] = "앞 문장. 공고에 실제로 있는 구절. 뒤 문장."
+            if item == "v20":
+                # `v20_decision()` (#111) overrides the model from the notice. A 1468 software
+                # registration with no 제48조 statement is the notice's own v20=1.
+                rec["meta"]["면허업종제한목록"] = "소프트웨어사업자(컴퓨터관련서비스사업)(1468)"
             obj = valid()
             obj[item] = {"위반여부": 1, "근거문구": quote}
             return baseline.postprocess(obj, rec)[item]["위반여부"]

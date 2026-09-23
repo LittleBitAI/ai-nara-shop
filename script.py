@@ -1592,6 +1592,99 @@ def amount_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optiona
 DISABLED_AXES = ("예산",)
 
 
+# ----- B9: the budget axis rebuilt field by field (#119) -----
+#
+# Ported from `experiments/b_v24_budget_axis_candidate.py`, which holds the design notes
+# and the measurements. It meets both conditions above and two more: each notice amount
+# is compared with its own registered field, equality allows display rounding, a
+# bid-specific amount outranks project totals, and a unit-price contract compares totals
+# only. It does not go into `AXES`: `postprocess` uses it only to raise v24 to 1, quoting
+# the notice amount. dev v24 4/12/4 → 5/12/3.
+_SP = r"[ \t　]*"          # spacing inside one line; a quote never crosses a line
+ESTIMATE, BASIC, BUDGET, BID, PROJECT = "estimate", "basic", "budget", "bid", "project"
+# `추정금액` is this contract's total, not an estimate: 국가계약법 시행규칙 제2조제2호
+# defines it as 추정가격 + 부가가치세 + 관급재료.
+BUDGET_LABELS = (
+    (ESTIMATE, rf"추{_SP}정{_SP}가{_SP}격"),
+    (BID, rf"입{_SP}찰{_SP}대{_SP}상{_SP}금{_SP}액|입{_SP}찰{_SP}금{_SP}액"
+          rf"|(?:용{_SP}역|구{_SP}매|공{_SP}사){_SP}예{_SP}정{_SP}금{_SP}액|추{_SP}정{_SP}금{_SP}액"),
+    (PROJECT, rf"총{_SP}사{_SP}업{_SP}비|사{_SP}업{_SP}(?:예{_SP}산|금{_SP}액)"),
+    (BASIC, rf"기{_SP}초{_SP}(?:금{_SP}액|가{_SP}격)"),
+    (BUDGET, rf"배{_SP}정{_SP}(?:예{_SP}산(?:{_SP}금{_SP}액)?|금{_SP}액)"),
+)
+BUDGET_KIND = {f"k{i}": kind for i, (kind, _pattern) in enumerate(BUDGET_LABELS)}
+BUDGET_AMOUNT = r"(?P<amount>\d{1,3}(?:,\d{3})+|\d{5,})"
+BUDGET_LABELED = re.compile(
+    "(?:" + "|".join(f"(?P<k{i}>{pattern})" for i, (_kind, pattern) in enumerate(BUDGET_LABELS)) + ")"
+    + rf"{_SP}(?:\([^)\n]{{0,15}}\))?{_SP}[:：]?{_SP}(?:금{_SP})?" + BUDGET_AMOUNT + rf"{_SP}원")
+# `추정가격 230,000,000원 미만` is a threshold in a rule, not this notice's price.
+BUDGET_THRESHOLD = re.compile(rf"{_SP}(?:이상|미만|이하|초과)")
+# `사업예산: 1,750,000원 × 18명 = 31,500,000원` — the total is after `=`.
+BUDGET_FORMULA = re.compile(rf"{_SP}[×xX*+][^=\n]{{0,30}}={_SP}(?:금{_SP})?" + BUDGET_AMOUNT + rf"{_SP}원")
+UNIT_PRICE = re.compile(rf"단{_SP}가{_SP}(?:계{_SP}약|입{_SP}찰|견{_SP}적)")
+# `1차년도 용역예정금액`, `상반기 기초금액` — one phase, while the registration holds the whole bid.
+BUDGET_PHASE = re.compile(rf"(?:\d+{_SP}차(?:{_SP}년{_SP}도)?|[상하]{_SP}반{_SP}기|\d+{_SP}분{_SP}기){_SP}$")
+# `사업금액 23,400,000원 23,400,000원 …` — a label heading a row of per-lot amounts.
+BUDGET_TABLE_ROW = re.compile(rf"{_SP}(?:금{_SP})?\d{{1,3}}(?:,\d{{3}})+{_SP}원")
+BUDGET_FIELD = {ESTIMATE: "입찰추정가격", BASIC: "배정예산금액", BUDGET: "배정예산금액",
+                BID: "배정예산금액", PROJECT: "배정예산금액"}
+BUDGET_MIN_AMOUNT = 1_000_000       # same floor as `amount_diff`: fees and unit prices sit below it
+BUDGET_MAX_DISPLAY_UNIT = 1_000     # budgets are shown truncated to 1,000 won at most
+
+
+def _display_unit(value: int) -> int:
+    unit = 1
+    while unit < BUDGET_MAX_DISPLAY_UNIT and value % (unit * 10) == 0:
+        unit *= 10
+    return unit
+
+
+def same_amount(shown: int, registered: int) -> bool:
+    """Equal up to display rounding or the 1 won VAT back-calculation residual."""
+    gap = shown - registered
+    if abs(gap) <= 1 or abs(gap) < _display_unit(shown):
+        return True
+    # The registration may be entered truncated below 1,000 won (unlabeled `PPS-D-001227`
+    # notice 408,801,326 · registered 408,801,000). Truncation only lowers it.
+    return 0 <= gap < _display_unit(registered)
+
+
+def budget_mismatch(rec: Dict[str, Any]) -> Optional[str]:
+    """The first notice amount that differs from its own registered field, or None."""
+    meta = rec.get("meta") or {}
+    registered = {field: _int(meta.get(field)) for field in set(BUDGET_FIELD.values())}
+    found = []
+    for doc in rec.get("docs") or []:
+        text = doc.get("text") or ""
+        for match in BUDGET_LABELED.finditer(text):
+            rest = text[match.end():]
+            line_start = text.rfind("\n", 0, match.start()) + 1
+            if BUDGET_THRESHOLD.match(rest) or BUDGET_TABLE_ROW.match(rest) \
+                    or BUDGET_PHASE.search(text[line_start:match.start()]):
+                continue
+            formula = BUDGET_FORMULA.match(rest)
+            amount = _int((formula or match).group("amount"))
+            quote = text[match.start():match.end() + (formula.end() if formula else 0)]
+            kind = next(BUDGET_KIND[group] for group in BUDGET_KIND if match.group(group))
+            found.append((kind, amount, quote.strip()))
+    kinds = {kind for kind, _amount, _quote in found}
+    unit_price = any(UNIT_PRICE.search(doc.get("text") or "") for doc in rec.get("docs") or [])
+    for kind, amount, quote in found:
+        if kind == PROJECT and kinds & {BID, BUDGET, BASIC}:
+            continue                                    # a bid-specific amount outranks project totals
+        if unit_price and kind in (ESTIMATE, BASIC):
+            continue                                    # per-unit under a unit-price contract
+        own = registered[BUDGET_FIELD[kind]]            # field by field
+        if amount is None or own is None or amount < BUDGET_MIN_AMOUNT or own < BUDGET_MIN_AMOUNT:
+            continue
+        if same_amount(amount, own) or (kind == BASIC and amount < own):
+            continue
+        if any(same_amount(amount, other) for other in registered.values() if other):
+            continue                                    # same money, other VAT basis
+        return quote
+    return None
+
+
 def industry_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optional[str]:
     """공고가 업종을 거는데 등록이 제한 없음이거나, 요구 코드가 등록 목록에 없는가.
 
@@ -2300,6 +2393,71 @@ def v6_not_a_basic_region_limit(evidence: str, rec: Dict[str, Any]) -> bool:
     return False
 
 
+# ----- v20 from two facts in the notice (#111) -----
+#
+# Ported from `experiments/v20_sw_clause_candidate.py`, which holds the case table,
+# the measurements and the known weaknesses. v20 is decided from the notice, not the
+# model: a software project (1468 registration required) with no 소프트웨어 진흥법
+# 제48조 floor statement is 1; a floor statement in 공고문·제안요청서, or no software
+# provider at all, is 0; anything in between keeps the model's answer.
+# dev v20 1/4/4 → 5/2/0.
+SW_STATEMENT_DOCS = ("공고문", "제안요청서")
+# Additions: only the 1468 (computer-related services) registration every dev positive had.
+SW_PROVIDER = re.compile(r"소프트웨어\s*사업자[^\n]{0,40}?(?:컴퓨터\s*관련\s*서비스|1468)")
+# Removals need the notice to be silent on software providers. Any mention abstains; missing a
+# registration makes a wrong removal, over-matching only keeps the model.
+ANY_SW_PROVIDER = re.compile(r"소프트웨어\s*사업|SW\s*사업자|(?<!\d)14(?:26|6[89]|7[01])(?!\d)")
+# `제48조` alone is not enough — 국가·지방 계약법 시행령·시행규칙 제48조 (tie bids) appears 13 times
+# in dev. The statement cites 제48조, the pre-renumbering 제24조의2, or the 하한 고시 by title.
+SW_CLAUSE = re.compile(
+    r"소프트웨어\s*(?:산업\s*)?진흥법[」』｣\s]*제\s?48조"
+    r"|소프트웨어\s*산업\s*진흥법[」』｣\s]*제\s?24조의\s?2"
+    r"|제48조\s*\(중소\s*소프트웨어"
+    r"|대기업인?\s*소프트웨어\s*사업자가?\s*참여\s*할\s*수\s*있는\s*사\s*업\s*금\s*액")
+# v20 is about the amount floor (제48조제2항). A citation naming another paragraph, or with no
+# floor wording nearby, is not that statement.
+SW_OTHER_PARAGRAPH = re.compile(r"\s*(?:제\s*)?(?:[13-9]|[①③-⑨])\s*항")
+SW_FLOOR = re.compile(r"하한|사업\s*금액|\d\s*억|대기업|중견|중소\s*소프트웨어\s*사업자\s*만")
+# Field or name vocabulary is not the statement. Without a source citation the model keeps its answer.
+SW_HINT = re.compile(r"대기업인?\s*소프트웨어|중소\s*소프트웨어\s*사업자|사업금액별\s*참여|입찰참여\s*제한금액")
+
+
+def floor_restriction_cited(text: str) -> bool:
+    for m in SW_CLAUSE.finditer(text):
+        if SW_OTHER_PARAGRAPH.match(text, m.end()):
+            continue
+        if SW_FLOOR.search(text[max(0, m.start() - 100):m.end() + 200]):
+            return True
+    return False
+
+
+def sw_participation_missing(rec: Dict[str, Any]) -> Optional[bool]:
+    """For a software project, whether the 제48조 statement is missing; None otherwise."""
+    texts = [doc.get("text") or "" for doc in rec.get("docs") or []]
+    meta = rec.get("meta") or {}
+    if "1468" not in (meta.get("면허업종제한목록") or "") and not any(SW_PROVIDER.search(t) for t in texts):
+        return None
+    return not any(SW_CLAUSE.search(t) for t in texts)
+
+
+def v20_decision(rec: Dict[str, Any]) -> Optional[int]:
+    """1 or 0 when the notice's text settles v20, None to keep the model's answer."""
+    docs = rec.get("docs") or []
+    texts = [doc.get("text") or "" for doc in docs]
+    # 지침 제3조② puts the statement in 공고문 or 제안요청서. Only there does it settle v20.
+    if any(floor_restriction_cited(doc.get("text") or "") for doc in docs
+           if doc.get("type") in SW_STATEMENT_DOCS):
+        return 0
+    if any(SW_CLAUSE.search(t) or SW_HINT.search(t) for t in texts):
+        return None
+    if sw_participation_missing(rec):
+        return 1
+    licenses = (rec.get("meta") or {}).get("면허업종제한목록") or ""
+    if "소프트웨어사업자" in licenses or any(ANY_SW_PROVIDER.search(t) for t in texts):
+        return None
+    return 0
+
+
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """후처리: ① 부재탐지 5항목 근거 빈칸 고정 ② 위반이 아니면 근거 빈칸 ③ 근거문구 원문 대조(NFC)
     ④ 근거가 위반 조건을 스스로 부정하면 양성을 내린다(evidence_refutes)
@@ -2322,6 +2480,19 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
         if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
             hit, ev = 0, ""
         out[v] = {"위반여부": hit, "근거문구": ev}
+    # B9 (#119): a budget amount that differs from its own registered field raises v24.
+    if out["v24"]["위반여부"] == 0:
+        quote = budget_mismatch(rec)
+        for doc in rec["docs"] if quote else ():
+            cleaned = clean_evidence(quote, doc["text"])
+            if cleaned:
+                out["v24"] = {"위반여부": 1, "근거문구": cleaned}
+                break
+    # #111: where the notice settles v20, it overrides the model. v20 is an absence item,
+    # so its evidence stays blank.
+    decision = v20_decision(rec)
+    if decision is not None:
+        out["v20"] = {"위반여부": decision, "근거문구": ""}
     return out
 
 
