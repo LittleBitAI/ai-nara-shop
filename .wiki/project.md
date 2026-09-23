@@ -2,7 +2,7 @@
 scope: project
 severity: contract
 triggers: ['\S']
-reads: [docs/workflow.md, docs/contest.md, docs/rules.md, docs/data.md, docs/items.md, docs/design.md, docs/contracts.md]
+reads: [docs/workflow.md, docs/contest.md, docs/rules.md, docs/data.md, docs/items.md, docs/qna.md, docs/design.md, docs/contracts.md]
 ---
 
 # 대회 작업 계약
@@ -19,6 +19,7 @@ reads: [docs/workflow.md, docs/contest.md, docs/rules.md, docs/data.md, docs/ite
 대회 제약은 `docs/rules.md`, 입력·출력은 `docs/data.md`, 공정 경계는 `docs/design.md`에서 읽는다.
 대회 평가·운영은 `docs/contest.md`에서 읽는다. `archive/contest/`는 보관본이므로 기본 읽기 대상에서 제외한다.
 항목 작업 전 `docs/items.md`에서 v1~v24의 공식 이름·부재탐지·관련 조문을 확인한다. 번호의 뜻을 추측하지 않는다.
+운영진 토크 답변과 운영진이 인정한 dev 라벨 노이즈는 `docs/qna.md`가 소유한다. 판정 규칙을 dev 한 건에 맞추기 전에 그 표본이 노이즈 표에 있는지 본다.
 판정에는 대회 제공 자료만 사용한다. 공용 코딩 위키를 법령 자료로 사용하지 않는다.
 외부 API 라벨링과 오프라인 제출 추론을 분리한다. R6의 확장 용도는 Q1 확인 전 보류한다.
 `docs/rules.md`의 A표에서 허용된 활용 방법을 찾고 R표의 조건을 함께 적용한다. 명시적 허용을 임의로 금지하지 않고, 애매한 부분만 Q로 분리한다.
