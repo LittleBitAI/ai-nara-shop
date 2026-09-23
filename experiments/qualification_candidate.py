@@ -838,6 +838,13 @@ QUOTE_MEANS_MARK = re.compile(r"(?:을|를)\s*(?:이용|통하|통해|경유)|(?
 # 사이에 **다른 행위**가 끼지 않았는지로 가른다. 열람·조회·공고는 제출이 아니다.
 QUOTE_MEANS_REACH = 30
 QUOTE_OTHER_ACTION = re.compile(r"열람|조회|확인|게시|공고|안내|출력|내려받|다운로드|접수처|방문")
+# 표지가 붙은 대상이 시스템 자신인지 그 안의 자료인지는 낱말로 갈리지 않는다 —
+# `시스템의 "입찰정보"를 이용하여 제출` 은 맞고 `나라장터의 서식을 이용하여 작성한 … 현장
+# 접수처에 제출` 은 아닌데, `입찰정보` 와 `서식` 을 목록으로 가르면 또 목록 싸움이 된다.
+# 그래서 **그 `이용` 이 무엇을 시키는지**를 본다: 표지 뒤 첫 행위가 제출이어야 한다.
+# 첫 행위가 작성·등록·열람이면 시스템은 그 일에 쓰인 것이고 제출 수단이 아니다.
+QUOTE_ACTION = re.compile(r"제출|송신|작성|열람|조회|확인|게시|공고|출력|등록|접수|발급|교부|내려받|다운로드")
+QUOTE_SUBMIT_ACTION = re.compile(r"제출|송신")
 
 
 def _system_is_the_means(text):
@@ -849,6 +856,12 @@ def _system_is_the_means(text):
             continue
         if QUOTE_OTHER_ACTION.search(window[:mark.start()]):
             continue
+        if QUOTE_SUBMIT_ACTION.search(mark.group(0)):
+            return True          # `…로 제출`·`…에 제출` — 표지 자체가 제출이다
+        after = text[system.end() + mark.end():]
+        action = QUOTE_ACTION.search(after)
+        if action is None or not QUOTE_SUBMIT_ACTION.match(action.group(0)):
+            continue             # 첫 행위가 제출이 아니면 시스템은 그 일에 쓰인 것이다
         return True
     return False
 
