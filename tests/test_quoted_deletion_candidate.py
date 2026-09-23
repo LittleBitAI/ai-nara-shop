@@ -117,6 +117,29 @@ class V3ScoringBand(unittest.TestCase):
             with self.subTest(quote=quote):
                 self.assertIsNone(candidate.v3_deletion(quote, notice(text)))
 
+    def test_other_qualification_wording_between_is_kept(self):
+        """리뷰 라운드 2: 자격 표지 목록에 없는 표기라도 표의 다음 행이 아니면 구간으로 보지 않는다."""
+        text = ("제안서 평가 기준 및 배점: 가격평가 20점.\n"
+                "입찰에 참가할 수 있는 자: 사업예산의 100% 이상 실적이 있는 업체.\n"
+                "평가 가점: 사업예산의 80% 이상은 4점")
+        for quote in ("사업예산의 100% 이상 실적이 있는 업체", "사업예산의 100% 이상"):
+            with self.subTest(quote=quote):
+                self.assertIsNone(candidate.v3_deletion(quote, notice(text)))
+
+    def test_quote_also_used_as_qualification_is_kept(self):
+        """리뷰 라운드 2: 같은 문구가 배점표와 참가자격에 모두 나오면 어느 쪽 근거인지 모른다."""
+        text = ("평가항목 | 배점\n수행실적 | 예산의 100% 이상 | 6점\n예산의 80% 이상 | 4점\n"
+                "참가자격: 예산의 100% 이상 수행실적을 보유한 업체")
+        self.assertIsNone(candidate.v3_deletion("예산의 100% 이상", notice(text)))
+
+    def test_repeated_same_band_is_not_a_table(self):
+        text = "평가 배점\n참가자격\n가. 사업예산의 100% 이상\n나. 사업예산의 100% 이상 실적 증명서를 낸다"
+        self.assertIsNone(candidate.v3_deletion("가. 사업예산의 100% 이상", notice(text)))
+
+    def test_lower_band_of_different_base_is_kept(self):
+        text = "평가 배점\n참가자격 | 사업예산의 100% 이상 | \n신용평가 | 등급 80% 이상"
+        self.assertIsNone(candidate.v3_deletion("사업예산의 100% 이상", notice(text)))
+
     def test_quote_not_in_documents_is_kept(self):
         self.assertIsNone(candidate.v3_deletion("예산금액의 100% 이상", notice("무관한 본문 배점")))
 

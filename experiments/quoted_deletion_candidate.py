@@ -16,8 +16,9 @@
    `performance_below_budget()` 은 문서 전체에서 실적 근처 금액의 최댓값을 읽어 다른 조항의
    금액을 집는다 — PPS-DEV-03 은 인용이 3천만원인데 1억을 읽었다. 여기서는 모델이 위반의
    근거로 댄 그 문장의 금액만 본다.
- ② 인용이 배점표의 최상위 구간이다. 인용 바로 뒤에 더 낮은 비율 구간이 이어지고 앞쪽에
-   배점·평가 표지가 있으면, 그것은 입찰을 막는 참가자격이 아니라 점수 구간이다.
+ ② 인용이 배점표의 구간 칸이다. 문서의 모든 등장 자리에서 바로 다음 행(칸 구분선·배점·행 번호만
+   사이에 둔)이 같은 기준 문구의 더 낮은 비율이고 앞쪽에 배점·평가 표지가 있으면, 그것은 입찰을
+   막는 참가자격이 아니라 점수 구간이다.
 
 **v17 1억원 미만 일반물품 중소기업 제한.** v15 는 소기업 제한, v18 은 소기업 제한 없음이다.
 v17 은 중기업까지 허용한 제한이라, 인용이 중소기업·중기업을 자격 주체로 적지 않으면 그
@@ -35,12 +36,12 @@ from typing import Any, Dict, Optional
 
 # ----- v3 -----
 PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
-PERCENT_FLOOR = re.compile(r"(\d+(?:\.\d+)?)\s*%\s*이상")
-BAND_REACH = 150     # 인용 끝에서 다음 구간을 찾을 범위. 표 한두 행이다
+# 배점표의 구간 칸: `<기준 문구> N% 이상`. 기준 문구는 한두 어절이다.
+BAND_CELL = re.compile(r"([가-힣]+(?:\s[가-힣]+)?)\s*(\d+(?:\.\d+)?)\s*%\s*이상")
+# 구간 칸과 다음 행 사이에 올 수 있는 것: 칸 구분선, 배점 숫자, `나.`·`2)` 같은 행 번호.
+ROW_GAP = r"[\s|│\d점]*(?:[가-힣\d]\s*[.)]\s*)?"
 CUE_REACH = 600      # 인용 앞에서 배점표 표지를 찾을 범위
 SCORING_CUE = re.compile(r"배\s*점|평\s*가|점\s*수|\d+\s*점")
-# 참가자격 절의 표지. 배점 표지보다 뒤(인용 쪽)에 있거나 인용 안에 있으면 그 인용은 배점표가 아니다.
-QUALIFICATION_CUE = re.compile(r"참\s*가\s*자\s*격|자\s*격\s*요\s*건|제\s*한")
 
 # ----- v17 -----
 # 괄호로 묶인 법령 이름, 괄호 없이 쓴 중소기업 관련 법령·기관·서식 이름.
@@ -87,24 +88,30 @@ def _below_budget(quote, rec):
 
 
 def _scoring_band(quote, rec):
-    floor = PERCENT_FLOOR.search(quote)
-    if not floor or QUALIFICATION_CUE.search(quote):
+    """인용이 배점표 구간 칸이고, 문서의 모든 등장 자리에서 바로 다음 행이 같은 기준의 낮은 구간인가.
+
+    참가자격을 적는 표기는 끝이 없어 그것이 없음을 보는 방식은 새 표기마다 뚫렸다(리뷰 라운드 1·2).
+    그래서 표 구조가 있음을 요구한다. 같은 문구가 한 곳에서라도 표의 칸이 아니면 — 참가자격
+    문장에도 나오면 — 모델이 어느 쪽을 근거로 댔는지 모르므로 내리지 않는다.
+    """
+    cell = BAND_CELL.search(quote)
+    if not cell:
         return False
-    top = float(floor.group(1))
+    base, top = cell.group(1), float(cell.group(2))
+    next_row = re.compile(ROW_GAP + r"\s*".join(map(re.escape, base.replace(" ", "")))
+                          + r"\s*(\d+(?:\.\d+)?)\s*%")
+    seen = False
     for doc in rec.get("docs", []):
         text = doc.get("text") or ""
         start = text.find(quote)
-        if start < 0:
-            continue
-        end = start + len(quote)
-        lower = [float(p) for p in PERCENT.findall(text[end:end + BAND_REACH])]
-        before = text[max(0, start - CUE_REACH):start]
-        scoring = [m.end() for m in SCORING_CUE.finditer(before)]
-        qualification = [m.end() for m in QUALIFICATION_CUE.finditer(before)]
-        # 가장 가까운 절 표지가 배점이어야 한다. 사이에 참가자격 절이 끼면 경계를 넘은 것이다.
-        if any(p < top for p in lower) and scoring and max(scoring) > max(qualification, default=-1):
-            return True
-    return False
+        while start >= 0:
+            seen = True
+            row = next_row.match(text, start + len(quote))
+            if not (row and float(row.group(1)) < top
+                    and SCORING_CUE.search(text[max(0, start - CUE_REACH):start])):
+                return False
+            start = text.find(quote, start + 1)
+    return seen
 
 
 def v3_deletion(quote: str, rec: Dict[str, Any]) -> Optional[str]:
