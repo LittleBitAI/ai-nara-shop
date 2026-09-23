@@ -7,7 +7,7 @@
 {"id": "PPS-D-018253", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}
 {"id": "PPS-D-016143", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}
 {"id": "PPS-D-004024", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}
-{"id": "PPS-D-018094", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
+{"id": "PPS-D-018094", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": true, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
 {"id": "PPS-D-004126", "layer": "U", "model_v20": 0, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": false, "dropped_doc_counts": {}}
 {"id": "PPS-D-000197", "layer": "K", "model_v20": 1, "rule_v20": 1, "rule_abstains": false, "sw_required": true, "license_1468": true, "dropped_doc_counts": {}}
 {"id": "PPS-D-017428", "layer": "W", "model_v20": 1, "rule_v20": 0, "rule_abstains": false, "sw_required": false, "license_1468": false, "dropped_doc_counts": {}}

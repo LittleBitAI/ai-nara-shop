@@ -75,6 +75,12 @@ class DecisionTest(unittest.TestCase):
                 "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
         self.assertIsNone(candidate.v20_decision(r))
 
+    def test_certificate_field_abstains(self):
+        # PPS-D-018094 shape: a submission-list certificate field, no source citation.
+        r = rec("소프트웨어사업자신고확인서 사본(“공공입찰참여 제한금액: 없음” 증빙) 1부",
+                "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
+        self.assertIsNone(candidate.v20_decision(r))
+
     def test_1468_in_other_wording_adds(self):
         r = rec("소프트웨어사업자(업종코드:1468)와 정보통신공사업(업종코드:0036)로 입찰참가 등록한 자")
         self.assertEqual(candidate.v20_decision(r), 1)

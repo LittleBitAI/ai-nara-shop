@@ -3,10 +3,10 @@
   "run_dir": "reports/label-compare/unlabeled-d/run-1790141381430477242",
   "notices": 2000,
   "layers": {
-    "W": 46,
+    "W": 45,
     "Z": 1889,
     "U": 34,
-    "K": 31
+    "K": 32
   },
   "targets_with_dropped_docs": 12
 }
