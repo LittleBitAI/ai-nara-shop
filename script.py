@@ -1342,6 +1342,37 @@ V9_WINDOW = 300                                                # 근거 앞뒤�
 # "호환"은 제한일 수 있고 "상당"은 공고에서 대개 금액(상당액·상당가격) 뜻이라 넣지 않는다.
 V9_EQUIVALENT = re.compile(r"동등|이상의?\s*(?:제품|성능|사양)|또는\s*그\s*이상")
 V9_SPEC_FLOOR = re.compile(r"이상\s*$")
+# v17 is an SME restriction that admits mid-size firms (v15 small-only, v18 no small-firm
+# restriction). A quote that names only a narrow qualification — small firms, micro
+# enterprises, women-owned — does not establish it. Law titles contain "중소기업" without
+# naming the eligible entity, so they are masked first. Adopted from
+# experiments/quoted_deletion_candidate.py after the unlabeled 6,000 audit
+# (reports/label-compare/unlabeled-d): 32 drawn deletions, 0 labeller losses.
+V17_LAW_TITLE = re.compile(r"[「｢『][^」｣』]*(?:법|법률|령|규정|규칙|고시|지침|기준|요령)[」｣』]")
+V17_BARE_TITLE = re.compile(r"중소\s*기업\s*(?:기본\s*법|범위\s*및\s*확인|현황\s*정보|제품\s*구매\s*촉진|청)"
+                            r"|중소\s*벤처\s*기업\s*부")
+V17_BARE_LAW = re.compile(r"[가-힣]+법(?=\s*제\s*\d)")   # Hangul only: keep an entity before a separator
+V17_MID_SIZE = re.compile(r"중\s*[·・ㆍ․,./]?\s*소\s*기업|중\s*기업")
+# Article 2 of the SME Framework Act defines SMEs (small + mid-size). It narrows only when the
+# first entity after it is a narrow one ("제2조제2항에 따른 소기업"). Connectives vary without
+# end, so they are not listed; no entity found means the article designates SMEs.
+V17_SME_ARTICLE = re.compile(r"중\s*소\s*기\s*업\s*기\s*본\s*법[」｣』]?\s*제\s*2\s*조(?:\s*제\s*\d+\s*[항호])*")
+V17_ARTICLE_REACH = 25
+V17_NARROW = re.compile(r"소\s*기업|소\s*상\s*공\s*인|여\s*성\s*기\s*업|장\s*애\s*인\s*기\s*업|사\s*회\s*적\s*기\s*업")
+V17_ENTITY = re.compile(V17_NARROW.pattern
+                        + r"|중\s*소\s*기\s*업|중\s*기\s*업|기\s*업|업\s*체|사\s*업\s*자|자(?=[로이는가,\s])")
+
+
+def v17_quote_is_narrow(evidence: str) -> bool:
+    """True when the quote names only a narrow qualification and no mid-size entity."""
+    blank = lambda m: " " * len(m.group())   # noqa: E731 — keeps positions for the article window
+    masked = V17_BARE_LAW.sub(blank, V17_LAW_TITLE.sub(blank, evidence))
+    for article in V17_SME_ARTICLE.finditer(evidence):
+        entity = V17_ENTITY.search(masked, article.end(), article.end() + V17_ARTICLE_REACH)
+        if not (entity and V17_NARROW.fullmatch(entity.group())):
+            return False
+    body = V17_BARE_TITLE.sub(" ", V17_LAW_TITLE.sub(" ", evidence))
+    return bool(V17_NARROW.search(body)) and not V17_MID_SIZE.search(body)
 
 
 def _region_names(text: Optional[str]) -> set:
@@ -1605,7 +1636,7 @@ def meta_discrepancies(rec: Dict[str, Any]) -> List[str]:
 
 
 def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
-    """근거 원문이 해당 항목의 위반 조건을 스스로 부정하는가(v9·v19·v21·v24).
+    """근거 원문이 해당 항목의 위반 조건을 스스로 부정하는가(v5·v9·v17·v19·v21·v24).
 
     v24 만 빈 근거에서도 답한다. 나머지는 인용을 읽어 판단하므로 인용이 없으면 부정할
     근거도 없지만, v24 의 대조 검사는 인용이 아니라 공고와 등록값을 본다. 아래 조기
@@ -1649,6 +1680,8 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
             floor = v21_minimum_share(rec)
             return floor is None or all(share >= floor for share in shares)
         return bool(V21_JOINT_BARRED.search(evidence))
+    if item == "v17":
+        return v17_quote_is_narrow(evidence)
     if item == "v9":
         if V9_SPEC_FLOOR.search(evidence):
             return True
