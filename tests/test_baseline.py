@@ -706,16 +706,14 @@ class BaselineTests(unittest.TestCase):
         # 부가세·산식 구성값·표시 반올림을 불일치로 읽었다. 의도된 교환이다.
         self.assertIn("예산", baseline.DISABLED_AXES)
         self.assertEqual(judged("v24", "용역금액: 금37,930,000원", meta=meta), 0)
-        # v9: 곁에 동등품 허용이 있거나 사양 하한이면 내리고, 모델명만이면 둔다.
+        # v9: 사양 하한이면 내리고, 모델명이면 둔다. 곁에 "동등 이상" 이 있어도 둔다 —
+        # 운영진이 그 표현만으로 v9 를 정하지 말라고 했다(S7-14).
         self.assertEqual(judged("v9", "형식명 : ABC-100",
-                                text="형식명 : ABC-100 (동등 이상의 제품 가능)"), 0)
+                                text="형식명 : ABC-100 (동등 이상의 제품 가능)"), 1)
         self.assertEqual(judged("v9", "CPU i5-14500 프로세서 이상"), 0)
         self.assertEqual(judged("v9", "제조사·모델명 : ABC 터보젯"), 1)
         self.assertEqual(judged("v9", "형식명 : ABC-100",
                                 text="형식명 : ABC-100 과 호환되어야 함"), 1)
-        # 곁의 "상당"은 대개 금액 뜻이라 동등품 허용으로 읽지 않는다.
-        self.assertEqual(judged("v9", "형식명 : ABC-100",
-                                text="형식명 : ABC-100 1대 (부가세 상당액 포함)"), 1)
 
         # 근거가 비었거나 원문에 없는 양성은 내린다 — D4-4 의 근거 계약이고
         # test_violation_without_a_verified_quote_is_lowered 가 그 규칙을 소유한다.

@@ -1338,9 +1338,12 @@ V21_FLOOR_NATIONAL = 10.0
 V21_PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
 V21_JOINT_BARRED = re.compile(
     r"공동\s*(?:수급|계약|도급|참여|이행)[^.。]*?(?:불허|불가|허용하지\s*않|금지)")
-V9_WINDOW = 300                                                # 근거 앞뒤로 볼 글자 수
-# "호환"은 제한일 수 있고 "상당"은 공고에서 대개 금액(상당액·상당가격) 뜻이라 넣지 않는다.
-V9_EQUIVALENT = re.compile(r"동등|이상의?\s*(?:제품|성능|사양)|또는\s*그\s*이상")
+# v9 는 인용이 성능 하한(`… 이상`)으로 끝날 때만 내린다 — 성능 하한은 모델명이 아니다(항목 정의).
+# 이 규칙도 `추천모델: … 동급 이상` 처럼 모델을 적은 인용을 내린다 — B6 보고서 §4 가 다음 칸으로 남겼다.
+# 근거 곁의 "동등 이상" 문구로 내리던 게이트(B4)는 뺐다. 운영진이 그 표현만으로 v9 를 정하지
+# 말라고 답했고(S7-14), 모델명·제조사명이 적히면 성립한다고 했다(S7-4). 무라벨 2,000건에서
+# 그 게이트가 내린 12셀 중 넷이 `모델명 : …` 머리말·브랜드+식별자 꼴이었다
+# (`reports/team-b/b6-v9-equivalent/`).
 V9_SPEC_FLOOR = re.compile(r"이상\s*$")
 
 
@@ -1650,13 +1653,7 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
             return floor is None or all(share >= floor for share in shares)
         return bool(V21_JOINT_BARRED.search(evidence))
     if item == "v9":
-        if V9_SPEC_FLOOR.search(evidence):
-            return True
-        for doc in rec["docs"]:
-            at = doc["text"].find(evidence)
-            if at >= 0:
-                window = doc["text"][max(0, at - V9_WINDOW):at + len(evidence) + V9_WINDOW]
-                return bool(V9_EQUIVALENT.search(window))
+        return bool(V9_SPEC_FLOOR.search(evidence))
     return False
 
 
