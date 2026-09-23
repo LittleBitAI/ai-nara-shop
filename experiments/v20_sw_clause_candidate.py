@@ -34,7 +34,7 @@ H4(`colab-1789902969401579900`)와 A8 두 회차에서 v20 은 TP 1 / FP 4 / FN 
 바뀐 셀 10개, 전부 v20 이다. 대상 밖 0.
 
 무라벨 카나리(`open/train_unlabeled.jsonl` 20,000건, `v20_decision`): 1 이 456건(2.28%),
-dev 7/200(3.50%) — 배율 0.65. 모델 판정을 남기는 보류(None)는 527건(2.64%), dev 3건(모두 모델 0, 재생 불변).
+dev 7/200(3.50%) — 배율 0.65. 모델 판정을 남기는 보류(None)는 595건(2.98%), dev 4건(모두 모델 0, 재생 불변).
 
 무라벨 2,000건에서 후보가 모델과 갈리는 층과 내리는 48셀의 사실 확인은
 `reports/label-compare/unlabeled-v20/README.md` 가 소유한다. 채택 판결 2026-09-23.
@@ -71,6 +71,21 @@ SW_CLAUSE = re.compile(
     r"|소프트웨어\s*산업\s*진흥법[」』｣\s]*제\s?24조의\s?2"
     r"|제48조\s*\(중소\s*소프트웨어"
     r"|대기업인?\s*소프트웨어\s*사업자가?\s*참여\s*할\s*수\s*있는\s*사\s*업\s*금\s*액")
+# v20 is about the amount floor (제48조제2항). A citation naming another paragraph (제4항 상호출자제한기업집단,
+# PPS-D-009887) or with no floor wording nearby (PPS-DEV-088) is not that statement.
+OTHER_PARAGRAPH = re.compile(r"\s*(?:제\s*)?(?:[13-9]|[①③-⑨])\s*항")
+FLOOR = re.compile(r"하한|사업\s*금액|\d\s*억|대기업|중견|중소\s*소프트웨어\s*사업자\s*만")
+
+
+def floor_restriction_cited(text: str) -> bool:
+    for m in SW_CLAUSE.finditer(text):
+        if OTHER_PARAGRAPH.match(text, m.end()):
+            continue
+        if FLOOR.search(text[max(0, m.start() - 100):m.end() + 200]):
+            return True
+    return False
+
+
 # Field or name vocabulary is not the statement: a bare 중소 소프트웨어사업자 (PPS-D-004071 cites 시행령 제41조
 # "중소 소프트웨어사업자의 기준" as a qualification) or a certificate field "입찰참여 제한금액: 없음"
 # (PPS-D-018094, a submission list). Without a source citation the model keeps its answer.
@@ -115,7 +130,7 @@ def v20_decision(rec: Dict[str, Any]) -> Optional[int]:
     # 지침 제3조② puts the statement in 공고문 or 제안요청서 (script.py `software_docs`).
     # Only there does the sentence settle v20. Elsewhere (과업지시서, 규격서) dev has no case
     # either way — 40 of 20,000 unlabeled — so the model keeps its answer.
-    if any(SW_CLAUSE.search(doc.get("text") or "") for doc in docs if doc.get("type") in JUDGMENT_DOCS):
+    if any(floor_restriction_cited(doc.get("text") or "") for doc in docs if doc.get("type") in JUDGMENT_DOCS):
         return 0
     if any(SW_CLAUSE.search(t) or SW_HINT.search(t) for t in texts):
         return None

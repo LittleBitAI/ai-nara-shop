@@ -74,7 +74,7 @@ every value of `U1` (a tie only when `K1 = U1 = 0`) — the additions, where the
 not decide the sign. `P` includes `Z1`, the positives neither side predicts; see the bounds under Result.
 
 Every removal rests on a text fact, not a legal reading: the notice has no software-provider registration of
-any kind, or it contains the 제48조 sentence. dev (current detector): 187/187 notices without a software term are v20=0, 3/3 with
+any kind, or it contains the 제48조 sentence. dev (current detector): 187/187 notices without a software term are v20=0, 2/2 with
 the sentence are v20=0.
 
 A first regex pass over the removals found notices registering other software categories (1426, 1470) or
@@ -110,6 +110,13 @@ for "no registration" did mention one — "소프트웨어사업자- 컴퓨터�
 the safe side, so `ANY_SW_PROVIDER` is now any 소프트웨어사업 / SW사업자 mention or a software industry code
 (1426, 1468–1471). None of the remaining no-registration removals mentions a software term. 0 decisions
 on 20,000: 19,017 · 1: 456 · None: 527.
+
+Review round 4, fourth face of the same question: `PPS-D-009887` cites only 제48조**제4항**
+(상호출자제한기업집단) — a separate restriction, not the amount floor v20 is about (제2항). A citation now
+removes only if it names no other paragraph and floor wording (하한, 사업금액, an 억 amount, 대기업, 중견,
+중소 소프트웨어사업자만) sits within the sentence around it. dev `088` (제48조 + 상호출자 only, label 0, model 0)
+now abstains too; genuine floor sentences that cite the 지침 by name next to a 제4항 citation (`004625`)
+abstain as well — the safe side, not widened. Decisions on 20,000: 0 → 18,949 · 1 → 456 · None → 595.
 Layers now: U 34, W 44, K 33 (8 abstain), Z 1,889; candidate predicts 67.
 
 [experiments/v20_fact_check.py](../../../experiments/v20_fact_check.py) asks an external LLM the two facts
@@ -131,7 +138,7 @@ has a verified quote. Only then are the 48 removals checked. A removal the LLM r
 
 So every removal is one of the two facts, read the same way by two independent readers. `W1 = 0` then
 holds as far as the definition does: dev has 0 positives among 187 notices without a software term
-(95% Wilson upper bound 2.01% for 0/187, about 0.8 expected among 41) and among 3 with the sentence.
+(95% Wilson upper bound 2.01% for 0/187, about 0.8 expected among 41) and among 2 with the sentence.
 If `W1 = 0` the candidate beats the model on v20 for any `U1`. Worst case `U1 = 0`, pred 67 vs 77, the
 smallest `K1` (of 33) that still wins:
 
@@ -151,5 +158,5 @@ set. Server score is still the only direct measurement.
 
 ## 상태
 
-Adopted 2026-09-23 (PR #111, held unmerged for the combined submission build). Review rounds 1–3: four P1
+Adopted 2026-09-23 (PR #111, held unmerged for the combined submission build). Review rounds 1–4: five P1
 repaired, plus two gaps found auditing the same families (half-width bracket, registration phrasings). No unlabeled v20 labels; external verdict labelling stays blocked. Not in `script.py`.

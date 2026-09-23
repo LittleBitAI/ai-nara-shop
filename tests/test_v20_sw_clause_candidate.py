@@ -88,6 +88,20 @@ class DecisionTest(unittest.TestCase):
                      "소트프웨어 개발 촉진법에 의한 소프트웨어 사업자"):
             self.assertIsNone(candidate.v20_decision(rec(text)), text)
 
+    def test_other_paragraph_or_no_floor_abstains(self):
+        # PPS-D-009887: only 제48조제4항 (상호출자제한기업집단). PPS-DEV-088: 제48조 with no floor wording.
+        for text in ("소프트웨어진흥법 제48조 제4항에 따라 상호출자제한기업집단에 속하는 회사는 입찰에 참여할 수 없음",
+                     "「소프트웨어 진흥법」 제48조에 따라 ‘상호출자제한기업집단 소속회사’에 해당하지 아니하는 업체"):
+            r = rec(text, "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
+            self.assertIsNone(candidate.v20_decision(r), text)
+
+    def test_paragraph_4_with_floor_words_nearby_abstains(self):
+        # PPS-D-004625 shape: 대기업 wording sits next to a citation that names only 제4항.
+        r = rec("지침에 의거 대기업 소프트웨어 사업자는 본 입찰에 참여할 수 없으며,「소프트웨어 진흥법」"
+                "제48조 제4항에 따라 상호출자제한기업집단에 속하는 기업도 입찰에 참여할 수 없습니다.",
+                "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
+        self.assertIsNone(candidate.v20_decision(r))
+
     def test_1468_in_other_wording_adds(self):
         r = rec("소프트웨어사업자(업종코드:1468)와 정보통신공사업(업종코드:0036)로 입찰참가 등록한 자")
         self.assertEqual(candidate.v20_decision(r), 1)
