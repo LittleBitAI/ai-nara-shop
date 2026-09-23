@@ -74,7 +74,7 @@ NARROW = re.compile(r"소\s*기업|소\s*상\s*공\s*인|여\s*성\s*기\s*업|�
 ENTITY = re.compile(NARROW.pattern + r"|중\s*소\s*기\s*업|중\s*기\s*업|기\s*업|업\s*체|사\s*업\s*자|자(?=[로이는가,\s])")
 # 주체를 찾기 전에 법률 이름을 같은 길이의 공백으로 가린다. `「소상공인 보호 및 지원에 관한 법률」`,
 # `소상공인기본법` 안의 소상공인은 자격 주체가 아니다(리뷰 라운드 7).
-BARE_LAW = re.compile(r"\S+법(?=\s*제\s*\d)")
+BARE_LAW = re.compile(r"[가-힣]+법(?=\s*제\s*\d)")   # 한글만. 구분자 앞 주체는 남긴다(라운드 8)
 
 
 def baseline():
