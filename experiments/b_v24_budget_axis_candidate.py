@@ -16,9 +16,11 @@ the operating code and applies four conditions taken from what the amounts mean
 2. Display rounding — two amounts are equal when one is the other shown at a coarser
    unit (10/100/1,000 won, read from trailing zeros), or they differ by the 1 won left
    by a VAT back-calculation.
-3. Bid scope — when the notice states a bid-target amount (`입찰대상금액`, `입찰금액`,
-   `용역예정금액`, `추정금액`), project totals (`사업예산`…) are not compared:
-   `배정예산금액` is what was budgeted for this bid.
+3. Bid scope — when the notice states an amount specific to this bid (`입찰대상금액`,
+   `입찰금액`, `용역예정금액`, `추정금액`, `배정예산`, `기초금액`), project totals
+   (`사업예산`…) are not compared: `배정예산금액` is what was budgeted for this bid.
+   Likewise an amount for one phase (`1차년도 …`, `상반기 …`) or heading a row of
+   per-lot amounts is not the bid total.
 4. Unit-price contract — when the notice says it is a unit-price contract, `기초금액`
    and `추정가격` are per-unit, so only the totals are compared. A registered amount
    below `MIN_AMOUNT` is a unit price too and is not compared with a notice total.
@@ -69,6 +71,11 @@ THRESHOLD = re.compile(rf"{_}(?:이상|미만|이하|초과)")
 # `사업예산: 1,750,000원 × 18명 = 31,500,000원` — the total is after `=`.
 FORMULA = re.compile(rf"{_}[×xX*][^=\n]{{0,30}}={_}(?:금{_})?" + AMOUNT + rf"{_}원")
 UNIT_PRICE = re.compile(rf"단{_}가{_}(?:계{_}약|입{_}찰|견{_}적)")
+# `1차년도 용역예정금액`, `장기계속 1차 사업예산`, `상반기 기초금액` — one phase of the
+# contract, while the registration holds the whole bid.
+PHASE = re.compile(rf"(?:\d+{_}차(?:{_}년{_}도)?|[상하]{_}반{_}기|\d+{_}분{_}기){_}$")
+# `사업금액 23,400,000원 23,400,000원 …` — a label heading a row of per-lot amounts.
+TABLE_ROW = re.compile(rf"{_}(?:금{_})?\d{{1,3}}(?:,\d{{3}})+{_}원")
 FIELD = {ESTIMATE: "입찰추정가격", BASIC: "배정예산금액", BUDGET: "배정예산금액",
          BID: "배정예산금액", PROJECT: "배정예산금액"}
 MIN_AMOUNT = 1_000_000       # same floor as `amount_diff`: fees and unit prices sit below it
@@ -117,7 +124,9 @@ def budget_mismatch(rec: Dict[str, Any]) -> Optional[str]:
         text = doc.get("text") or ""
         for match in LABELED.finditer(text):
             rest = text[match.end():]
-            if THRESHOLD.match(rest):
+            line_start = text.rfind("\n", 0, match.start()) + 1
+            if THRESHOLD.match(rest) or TABLE_ROW.match(rest) \
+                    or PHASE.search(text[line_start:match.start()]):
                 continue
             formula = FORMULA.match(rest)
             amount = _as_int((formula or match).group("amount"))
@@ -127,7 +136,7 @@ def budget_mismatch(rec: Dict[str, Any]) -> Optional[str]:
     kinds = {kind for kind, _amount, _quote in found}
     unit_price = any(UNIT_PRICE.search(doc.get("text") or "") for doc in rec.get("docs") or [])
     for kind, amount, quote in found:
-        if kind == PROJECT and BID in kinds:
+        if kind == PROJECT and kinds & {BID, BUDGET, BASIC}:
             continue                                    # condition 3
         if unit_price and kind in (ESTIMATE, BASIC):
             continue                                    # condition 4

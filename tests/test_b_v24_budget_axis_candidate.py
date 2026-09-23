@@ -85,6 +85,20 @@ class BudgetAxisTest(unittest.TestCase):
                    배정예산금액=284098320, 입찰추정가격=258271200)
         self.assertIsNone(candidate.budget_mismatch(rec))
 
+    def test_condition3_base_amount_is_bid_specific_too(self):
+        rec = _rec("라. 기초금액 : 금183,000,000원\n※ 총사업비 : 금251,400,000원(금이억오천일백사십만원)",
+                   배정예산금액=183000000, 입찰추정가격=166363636)
+        self.assertIsNone(candidate.budget_mismatch(rec))
+
+    def test_phase_amount_is_not_the_bid_total(self):
+        rec = _rec("○ 본 용역은 장기계속계약입니다. [1차년도 용역예정금액:147,153,000원, 1차년도 용역기간]",
+                   배정예산금액=174985000, 입찰추정가격=159077273)
+        self.assertIsNone(candidate.budget_mismatch(rec))
+
+    def test_table_row_is_not_one_total(self):
+        rec = _rec("사업금액 23,400,000원 23,400,000원 23,400,000원", 배정예산금액=70200000, 입찰추정가격=63818182)
+        self.assertIsNone(candidate.budget_mismatch(rec))
+
     def test_condition4_registered_unit_price_is_not_a_total(self):
         rec = _rec("구매예정금액 : 금 36,900,000원", 배정예산금액=3500, 입찰추정가격=3182)
         self.assertIsNone(candidate.budget_mismatch(rec))
