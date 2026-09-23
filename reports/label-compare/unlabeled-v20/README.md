@@ -149,7 +149,7 @@ smallest `K1` (of 33) that still wins:
 | 3 | 31 | 48 (impossible) |
 
 Simulation (seed 20260923, 20,000 draws; rule-1 precision Beta(6,3) from dev 5/7, abstain-kept model
-precision Beta(2,5) from dev 1/5, rule-0 positive rate Beta(1,191) from dev 0/190 for both W and Z):
+precision Beta(2,5) from dev 1/5, rule-0 positive rate Beta(1,190) from dev 0/189 for both W and Z):
 P(candidate wins v20) 1.0, v20 F1 gain 5%/50% +0.254/+0.411, Macro +0.0106/+0.0171. With `Z1 = 40`
 fixed: 1.0, F1 +0.196/+0.322, Macro +0.0082/+0.0134.
 
