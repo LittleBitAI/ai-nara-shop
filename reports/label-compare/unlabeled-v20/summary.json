@@ -1,0 +1,12 @@
+{
+  "run_commit": "58af667c45540f15315934ef87188d4189e8b72d",
+  "run_dir": "reports/label-compare/unlabeled-d/run-1790141381430477242",
+  "notices": 2000,
+  "layers": {
+    "W": 48,
+    "Z": 1887,
+    "U": 36,
+    "K": 29
+  },
+  "targets_with_dropped_docs": 12
+}
