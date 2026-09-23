@@ -107,6 +107,16 @@ class V3ScoringBand(unittest.TestCase):
         text = "참가자격\n가. 입찰 금액의 100% 이상\n나. 입찰 금액의 60% 이상 100% 미만\n"
         self.assertIsNone(candidate.v3_deletion("가. 입찰 금액의 100% 이상", notice(text)))
 
+    def test_qualification_between_scoring_text_and_lower_band_is_kept(self):
+        """리뷰 라운드 1: 평가 절 뒤에 참가자격 절이 오면 그 사이의 경계를 넘지 않는다."""
+        text = ("제안서 평가 기준 및 배점: 가격평가 20점.\n"
+                "입찰참가자격: 사업예산의 100% 이상 실적이 있는 업체로 제한한다.\n"
+                "평가 가점: 사업예산의 80% 이상은 4점")
+        for quote in ("입찰참가자격: 사업예산의 100% 이상 실적이 있는 업체로 제한한다.",
+                      "사업예산의 100% 이상 실적이 있는 업체"):
+            with self.subTest(quote=quote):
+                self.assertIsNone(candidate.v3_deletion(quote, notice(text)))
+
     def test_quote_not_in_documents_is_kept(self):
         self.assertIsNone(candidate.v3_deletion("예산금액의 100% 이상", notice("무관한 본문 배점")))
 
@@ -134,7 +144,11 @@ class V17MidSizeEntity(unittest.TestCase):
                       "「중소기업제품 구매촉진 및 판로지원에 관한 법률」 제8조의 요건을 갖춘 중소기업자",
                       "중소기업기본법 제2조 제2항에 따른 중·소기업 또는 소상공인",
                       "｢중소기업기본법｣ 제2조에 따른 중・소기업자",
-                      "중,소기업제한", "중기업 및 소기업"):
+                      "중,소기업제한", "중기업 및 소기업",
+                      # 리뷰 라운드 1: 인용 부호로 묶인 자격 주체는 법령 이름이 아니다
+                      "참가자격은 「중소기업」 또는 「소상공인」으로 제한한다",
+                      # 같은 결함의 괄호 없는 쪽: 법령 이름의 앞머리만 보고 자격 주체를 지우지 않는다
+                      "중소기업 범위에 해당하는 업체", "중소기업제품을 생산하는 업체"):
             with self.subTest(quote=quote):
                 self.assertIsNone(candidate.v17_deletion(quote))
 

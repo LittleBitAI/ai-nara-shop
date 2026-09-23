@@ -39,11 +39,16 @@ PERCENT_FLOOR = re.compile(r"(\d+(?:\.\d+)?)\s*%\s*이상")
 BAND_REACH = 150     # 인용 끝에서 다음 구간을 찾을 범위. 표 한두 행이다
 CUE_REACH = 600      # 인용 앞에서 배점표 표지를 찾을 범위
 SCORING_CUE = re.compile(r"배\s*점|평\s*가|점\s*수|\d+\s*점")
+# 참가자격 절의 표지. 배점 표지보다 뒤(인용 쪽)에 있거나 인용 안에 있으면 그 인용은 배점표가 아니다.
+QUALIFICATION_CUE = re.compile(r"참\s*가\s*자\s*격|자\s*격\s*요\s*건|제\s*한")
 
 # ----- v17 -----
 # 괄호로 묶인 법령 이름, 괄호 없이 쓴 중소기업 관련 법령·기관·서식 이름.
-LAW_TITLE = re.compile(r"[「｢『][^」｣』]*[」｣』]")
-BARE_TITLE = re.compile(r"중소\s*기업\s*(?:기본법|범위|현황|제품|청)|중소\s*벤처\s*기업부")
+# 괄호는 법령 이름처럼 끝날 때만 지운다. 「중소기업」 처럼 자격 주체를 인용 부호로 묶은 것은 남긴다.
+LAW_TITLE = re.compile(r"[「｢『][^」｣』]*(?:법|법률|령|규정|규칙|고시|지침|기준|요령)[」｣』]")
+# 괄호 없는 쪽은 이름 전체가 맞을 때만 지운다. `중소기업 범위에 해당하는 업체` 의 중소기업은 자격 주체다.
+BARE_TITLE = re.compile(r"중소\s*기업\s*(?:기본\s*법|범위\s*및\s*확인|현황\s*정보|제품\s*구매\s*촉진|청)"
+                        r"|중소\s*벤처\s*기업\s*부")
 MID_SIZE = re.compile(r"중\s*[·・ㆍ․,./]?\s*소\s*기업|중\s*기업")
 
 
@@ -83,7 +88,7 @@ def _below_budget(quote, rec):
 
 def _scoring_band(quote, rec):
     floor = PERCENT_FLOOR.search(quote)
-    if not floor:
+    if not floor or QUALIFICATION_CUE.search(quote):
         return False
     top = float(floor.group(1))
     for doc in rec.get("docs", []):
@@ -93,7 +98,11 @@ def _scoring_band(quote, rec):
             continue
         end = start + len(quote)
         lower = [float(p) for p in PERCENT.findall(text[end:end + BAND_REACH])]
-        if any(p < top for p in lower) and SCORING_CUE.search(text[max(0, start - CUE_REACH):start]):
+        before = text[max(0, start - CUE_REACH):start]
+        scoring = [m.end() for m in SCORING_CUE.finditer(before)]
+        qualification = [m.end() for m in QUALIFICATION_CUE.finditer(before)]
+        # 가장 가까운 절 표지가 배점이어야 한다. 사이에 참가자격 절이 끼면 경계를 넘은 것이다.
+        if any(p < top for p in lower) and scoring and max(scoring) > max(qualification, default=-1):
             return True
     return False
 
