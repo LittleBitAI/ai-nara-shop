@@ -768,6 +768,11 @@ def _company_size_bands(facts, rec, max_chars):
     """
     visible = build_context(rec, max_chars)
     def quoted(value):
+        # `verify_document_requirements()` 의 같은 이름 함수와 같은 판정을 쓴다. 복원기를
+        # 안 부르면 줄바꿈이 공백으로 눌린 정확한 인용이 미검증으로 떨어진다 —
+        # `PPS-DEV-043`·`PPS-DEV-22` 가 그래서 `unverified_qualification` 으로 막혔고,
+        # 둘 다 v18 양성이다. 모델이 틀린 것이 아니라 게이트가 옆의 복원기를 안 썼다.
+        value = restore_spacing(value, rec, visible) or value
         return bool(value and value.strip() and value in visible
                     and any(value in d["text"] for d in rec["docs"]))
     if facts["scope"] == "unknown" or not quoted(facts["scope_quote"]):

@@ -1,0 +1,68 @@
+{
+  "baseline_commit": "1c646047ce2a37ca5b27d1b4c43a4b0a32ce6f89",
+  "baseline_macro_f1": 0.2208013652894021,
+  "candidate_macro_f1": 0.6102659462701191,
+  "macro_f1_delta": 0.389464580980717,
+  "paired_baseline_macro_f1": 0.44138161855686203,
+  "paired_baseline_description": "English instructions, Korean legal terms, 24-item first pass",
+  "paired_macro_f1_delta": 0.16888432771325707,
+  "paired_baseline_items": {
+    "v10": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 7,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 7
+    },
+    "v11": {
+      "tp": 2,
+      "fp": 2,
+      "fn": 4,
+      "precision": 0.5,
+      "recall": 0.3333333333333333,
+      "f1": 0.4,
+      "support": 6
+    },
+    "v13": {
+      "tp": 3,
+      "fp": 77,
+      "fn": 3,
+      "precision": 0.0375,
+      "recall": 0.5,
+      "f1": 0.06976744186046512,
+      "support": 6
+    }
+  },
+  "pilot_items": {
+    "v10": {
+      "tp": 4,
+      "fp": 8,
+      "fn": 3,
+      "precision": 0.3333333333333333,
+      "recall": 0.5714285714285714,
+      "f1": 0.42105263157894735,
+      "support": 7
+    },
+    "v11": {
+      "tp": 2,
+      "fp": 2,
+      "fn": 4,
+      "precision": 0.5,
+      "recall": 0.3333333333333333,
+      "f1": 0.4,
+      "support": 6
+    },
+    "v13": {
+      "tp": 3,
+      "fp": 8,
+      "fn": 3,
+      "precision": 0.2727272727272727,
+      "recall": 0.5,
+      "f1": 0.35294117647058826,
+      "support": 6
+    }
+  },
+  "quality_pass": true
+}

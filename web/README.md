@@ -1,7 +1,14 @@
 # 회차 진단 화면
 
 Colab 결과를 넣으면 v1~v24 항목별 F1과, dev 200건 중 어디를 맞고 어디를 틀렸는지를
-원문까지 열어서 보는 화면이다. 제출물이 아니다 — `tools/package.py`의 루트 allowlist는
+원문까지 열어서 보는 화면이다.
+
+머리줄에서 **법령** 으로 넘어가면 다른 화면이 선다. 왼쪽에서 `v1` 을 누르면 그 항목의 근거
+조문만 발췌로 선다 — 인용은 150,515자 중 네 곳이고, 그 네 곳을 보려고 전문을 스크롤하지
+않는다. 앞뒤 문맥이 필요하면 `전문` 으로 바꾸면 그 자리로 내려가 색이 칠해진다.
+한 항목이 법령 하나에
+안 들어가고(v1 은 국가·지방 시행령 네 조문), 시행령 제21조 하나는 항목 열 개가 나눠 쓴다 —
+그 대조를 법령 × 항목 격자와 조문 점프로 한다. 제출물이 아니다 — `tools/package.py`의 루트 allowlist는
 `script.py`·`requirements.txt` 둘뿐이라 이 폴더는 제출 ZIP에 안 들어간다.
 
 ## 돌리는 법 — 결과 ZIP을 `artifacts/inbox/`에 넣고 런처를 실행한다
@@ -34,8 +41,9 @@ python -X utf8 tools/build_report.py --latest   # 또는 --all / --run <id> / --
 cd web; npm install; npm run dev                # http://localhost:5310
 ```
 
-`npm run dev` 상태에서만 돈다. Vite가 `open/dev.jsonl`·`open/dev_labels.csv`를
-그 자리에서 서빙하기 때문이고, 사본을 만들지 않으려고 그렇게 했다.
+`npm run dev` 상태에서만 돈다. Vite가 `open/dev.jsonl`·`open/dev_labels.csv`와 법령 전문
+23개를 그 자리에서 서빙하기 때문이고, 사본을 만들지 않으려고 그렇게 했다. 내보내는 이름은
+폴더를 읽어 만든 목록이다 — 경로를 받아 검사하지 않는다.
 
 ### 런처 세 파일이 하는 일
 
@@ -61,6 +69,8 @@ python -X utf8 tools/build_report.py --run <run-id> --share
 | --- | --- |
 | 점수·정오 격자·제출 근거·모델 흔적 | `web/public/runs/<run-id>.json` (build_report.py) |
 | 24항목 이름·부재탐지, 금액 경계 | `web/public/items.json` (`docs/items.md`·`script.py`에서) |
+| 항목별 근거 조문이 법령 어디인가 | `web/public/laws.json` (`항목표.json` → `experiments/law_index.py`) |
+| 법령 전문 | `open/data/법령패키지/법령/*.txt` |
 | 공고 원문·나라장터 등록값 | `open/dev.jsonl` |
 | 정답 라벨·정답 근거 | `open/dev_labels.csv` |
 

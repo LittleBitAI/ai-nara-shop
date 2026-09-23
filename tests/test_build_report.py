@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import re
 import io
 import json
 import os
@@ -9,6 +10,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import unicodedata
 import unittest
 import zipfile
 
@@ -204,6 +206,30 @@ class BuildReportTests(unittest.TestCase):
         self.assertIn("dev_labels.csv", config)
         self.assertNotIn("startsWith(OPEN", config, "경로 접두사 검사로 되돌아갔다")
         self.assertNotIn("normalize(join(OPEN", config, "경로를 받아 정규화하는 방식으로 되돌아갔다")
+        # 법령 전문의 이름은 **코드에 못 박는다.** 폴더를 읽어 목록을 만들면 그 폴더에 둔
+        # `leak.txt` 가 무엇이든(하드 링크는 권한 없이 만들어지고 isFile()이 true다, 그냥
+        # 갖다 둔 파일도 마찬가지) 그대로 허용된다. 막아야 할 것은 링크의 종류가 아니라
+        # 목록이 동적이라는 것이다. (리뷰 라운드 1·2 P0)
+        self.assertIn("const LAW_FILES = [", config, "법령 목록이 동적 탐색으로 되돌아갔다")
+        self.assertNotIn("readdirSync(join(OPEN, LAW_DIR))", config,
+                         "폴더가 발견한 이름을 그대로 허용 목록에 넣는다")
+
+    def test_served_law_names_match_the_package(self):
+        """vite 에 못 박은 법령 이름이 제공 스냅샷과 한 글자도 안 다르다.
+
+        못 박은 목록의 값은 안전이지만 대가는 어긋남이다 — 스냅샷이 바뀌면 화면은 403 을
+        받고 이유는 안 보인다. 어긋나면 여기서 터진다.
+        """
+        config = (ROOT / "web/vite.config.js").read_text(encoding="utf-8")
+        listed = re.findall(r"^  '(.+\.txt)',$", config, re.M)
+        files = [path.name for path in (ROOT / "open/data/법령패키지/법령").glob("*.txt")]
+        package = {unicodedata.normalize("NFC", name) for name in files}
+        self.assertEqual(set(listed), package)
+        # **접기 전후로 수가 같아야 한다.** NFC 와 NFD 는 디스크에서 서로 다른 파일이고,
+        # 집합으로 접으면 둘이 하나로 보여 허용된 URL 이 어느 실물을 내보낼지 열거 순서가
+        # 정하게 된다. vite 는 그 경우 시작을 멈춘다. (리뷰 라운드 3 P0)
+        self.assertEqual(len(files), len(package), "정규화하면 같아지는 법령 파일이 둘이다")
+        self.assertEqual(len(listed), len(set(listed)), "못 박은 목록에 같은 이름이 두 번 있다")
 
     def test_zip_slip_is_refused(self):
         for name in ("../escape.csv", "/abs.csv", "dev/../../out.csv"):
@@ -302,6 +328,28 @@ class BuildReportTests(unittest.TestCase):
         report = build_report.build(self.score, "colab-0", entries, ROOT)
         self.assertEqual(report["evidence"][identifier], {"v1": "인용"})
         self.assertEqual(len(report["evidence"]), 1)
+
+    def test_law_map_points_at_the_real_text(self):
+        """법령 지도의 조각이 제공 원문의 **그 자리**에 있다.
+
+        오프셋이 틀리면 미니맵은 멀쩡히 그려지고 엉뚱한 곳을 가리킨다 — 화면에서는
+        안 보이는 종류의 오류다. 조각 본문이 그 오프셋의 원문과 글자까지 같은지 본다.
+        """
+        payload = build_report.law_map()
+        law_index = build_report.load_module("law_index", ROOT / "experiments/law_index.py")
+        texts = law_index.laws(str(ROOT / "open/data"))
+        self.assertTrue(payload["segments"])
+        for segment in payload["segments"]:
+            at, size = segment["at"], segment["chars"]
+            self.assertGreaterEqual(at, 0, segment["law"])
+            self.assertEqual(texts[segment["law"]][at:at + size], segment["text"])
+
+        # 인용이 있는 칸은 조각이 있어야 한다. "해당 없음" 은 조문이 없다고 적은 칸이다.
+        for item, axes in payload["cites"].items():
+            for axis, entry in axes.items():
+                self.assertNotIn("error", entry, f"{item} {axis}")
+                if entry["citation"] and "해당 없음" not in entry["citation"]:
+                    self.assertTrue(entry["segs"], f"{item} {axis} 의 인용이 조각으로 안 풀렸다")
 
 
 if __name__ == "__main__":
