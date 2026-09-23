@@ -4,7 +4,7 @@
 | --- | --- |
 | 작업서 | [`docs/tasks/b-v24-budget-axis.md`](../../../docs/tasks/b-v24-budget-axis.md) |
 | 후보 | [`experiments/b_v24_budget_axis_candidate.py`](../../../experiments/b_v24_budget_axis_candidate.py) |
-| 검사 | [`tests/test_b_v24_budget_axis_candidate.py`](../../../tests/test_b_v24_budget_axis_candidate.py) — 22개 |
+| 검사 | [`tests/test_b_v24_budget_axis_candidate.py`](../../../tests/test_b_v24_budget_axis_candidate.py) — 23개 |
 | 기준 | main `d205485` dev 재생(`colab-1789902969401579900/dev-debug` 원응답) — v24 4/12/4 (F1 0.333), Macro 0.618427228373 |
 | dev 재생 | v24 4/12/4 → 5/12/3 (F1 0.333 → 0.400) · Macro → 0.621205006151 (+0.002777777778) · 바뀐 셀 `PPS-DEV-29` v24·e24 하나 |
 | 무라벨 20,000건 전수 | 최종 발화 137 (0.69%) · dev 2 (1.0%) · 배율 0.685 (라운드 2 138 · 라운드 1 161 · 지금 축 605 · 2.017) |
@@ -158,7 +158,7 @@ HEAD 와 후보로 재생했다. HEAD v24 양성 36 은 b7 보고서와 같다. 
 오탐 꼴이 9 건인데 원인이 아홉 갈래다. 라운드 1 의 셋을 막자 다음 셋이 아니라 긴 꼬리가 나왔다.
 `+` 산식은 라운드 7 의 "`=` 뒤 총액" 의도를 `×` 만으로 구현한 파서 결함이고, 나머지는 하나씩 규칙이 더 필요하다.
 
-## 리뷰 라운드 1 반영 — `+` 산식 수정, 반올림 지적은 되물음
+## 리뷰 반영 — `+` 산식 수정, 반올림은 절사 방향으로 좁힘
 
 독립 리뷰(PR #119 라운드 1)가 둘을 냈다.
 
@@ -169,7 +169,12 @@ HEAD 와 후보로 재생했다. HEAD v24 양성 36 은 b7 보고서와 같다. 
   재현됐다. 제안대로 공고 쪽 단위만 보게 고쳐 전수로 재 보니 새로 발화하는 공고가 둘이었고, 둘 다 지적한 바로 그 꼴이었다 —
   등록이 1,000원 미만을 버린 것(`PPS-D-001227` 공고 408,801,326 · 등록 408,801,000, `PPS-D-000075` 36,647,468 · 36,647,000).
   같은 돈을 등록 쪽에서 절사한 것이라 `000043`(공고 쪽 반올림)의 거울이다. 그래서 양쪽 단위를 보는 원래 규칙으로 되돌리고
-  근거를 적어 리뷰어에게 되묻는다(`test_condition2_registration_truncated_below_1000_won_is_equal`).
+  근거를 적어 리뷰어에게 되물었다(`test_condition2_registration_truncated_below_1000_won_is_equal`).
+
+라운드 2 에서 리뷰어가 위 지적을 철회하고 방향을 짚었다 — 절사는 등록값을 낮추기만 하므로, 등록이 공고보다 높으면
+(`배정예산: 20,000,001원` · 등록 20,001,000) 등록 쪽 단위를 쓸 수 없다. 수락해 등록 쪽 완화를 `등록 ≤ 공고` 에만 걸었다
+(`test_condition2_registration_above_the_notice_is_not_truncation`). 무라벨 20,000건 전수에서 이 수정으로 바뀐 공고는 0건이고,
+dev 재생 CSV 는 바이트 단위로 같다(SHA-256 `0308a5c5…`).
 
 ## 판정 근거
 

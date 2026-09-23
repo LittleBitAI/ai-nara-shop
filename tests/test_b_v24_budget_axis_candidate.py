@@ -115,6 +115,11 @@ class BudgetAxisTest(unittest.TestCase):
         rec = _rec("사업예산 : 금 408,801,326 원", 배정예산금액=408801000, 입찰추정가격=408801000)
         self.assertIsNone(candidate.budget_mismatch(rec))
 
+    def test_condition2_registration_above_the_notice_is_not_truncation(self):
+        # Truncation only lowers the registered amount (review round 2).
+        rec = _rec("배정예산: 20,000,001원", 배정예산금액=20001000)
+        self.assertIsNotNone(candidate.budget_mismatch(rec))
+
     def test_sum_formula_total_is_after_equals(self):
         rec = _rec("라. 사업예산 : 금51,840,000원 + 금219,537,000원 = 금271,377,000원 (천원 미만 절사)",
                    배정예산금액=271377000, 입찰추정가격=271377000)

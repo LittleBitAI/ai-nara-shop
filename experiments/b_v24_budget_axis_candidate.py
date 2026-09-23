@@ -15,8 +15,8 @@ the operating code and applies four conditions taken from what the amounts mean
    (`사업예산 27,200,000` with registered estimate 27,200,000) and is not a mismatch.
 2. Display rounding — two amounts are equal when one is the other shown at a coarser
    unit (10/100/1,000 won, read from trailing zeros), or they differ by the 1 won left
-   by a VAT back-calculation. Either side can be the rounded one: notices round
-   (`PPS-D-000043`) and registrations truncate below 1,000 won (`PPS-D-001227`).
+   by a VAT back-calculation. Notices round either way (`PPS-D-000043`); registrations
+   may truncate below 1,000 won, which only lowers them (`PPS-D-001227`).
 3. Bid scope — when the notice states an amount specific to this bid (`입찰대상금액`,
    `입찰금액`, `용역예정금액`, `추정금액`, `배정예산`, `기초금액`), project totals
    (`사업예산`…) are not compared: `배정예산금액` is what was budgeted for this bid.
@@ -106,10 +106,12 @@ def _display_unit(value: int) -> int:
 
 def same_amount(shown: int, registered: int) -> bool:
     """Condition 2: equal up to display rounding or the 1 won VAT back-calculation residual."""
-    # Both sides: the registration is also entered truncated below 1,000 won
-    # (unlabeled `PPS-D-001227` notice 408,801,326 · registered 408,801,000).
-    gap = abs(shown - registered)
-    return gap <= 1 or gap < max(_display_unit(shown), _display_unit(registered))
+    gap = shown - registered
+    if abs(gap) <= 1 or abs(gap) < _display_unit(shown):
+        return True
+    # The registration may be entered truncated below 1,000 won (unlabeled `PPS-D-001227`
+    # notice 408,801,326 · registered 408,801,000). Truncation only lowers it.
+    return 0 <= gap < _display_unit(registered)
 
 
 def _as_int(value) -> Optional[int]:
