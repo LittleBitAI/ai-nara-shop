@@ -74,11 +74,14 @@ class LocalGoodsServiceLimit(unittest.TestCase):
         rec["meta"]["제한지역코드목록"] = "대전광역시, 세종특별자치시, 충청북도, 충청남도"
         self.assertEqual(350_000_000, script.region_price_limit(rec))
 
-    def test_a_province_restricting_only_to_sejong_is_sejong(self):
-        """시·도는 제 관할로만 지역을 제한한다. 제한 지역이 세종 하나면 세종 발주다."""
+    def test_a_restriction_to_sejong_alone_is_not_the_agency(self):
+        """지역제한은 현장·납품지의 시·도로 건다(지방 시행규칙 제25조제3항). 발주기관의 소재지가 아니다.
+
+        대전광역시가 세종 납품지 물품을 세종 업체로 제한해도 발주기관은 대전이고 3억 5천만원이다.
+        """
         rec = notice("지방정부", extra="세종특별자치시에 주된 영업소의 소재지를 두고 있어야 함")
         rec["meta"]["제한지역코드목록"] = "세종특별자치시"
-        self.assertEqual(500_000_000, script.region_price_limit(rec))
+        self.assertEqual(350_000_000, script.region_price_limit(rec))
 
     def test_document_order_does_not_decide_the_agency(self):
         """발주기관은 공고문에서 읽는다. 배열 순서가 바뀌어도 같은 값이어야 한다."""
