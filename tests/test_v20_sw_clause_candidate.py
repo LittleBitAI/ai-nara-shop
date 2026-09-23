@@ -63,6 +63,12 @@ class DecisionTest(unittest.TestCase):
                 "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
         self.assertEqual(candidate.v20_decision(r), 0)
 
+    def test_halfwidth_bracket_citation_removes(self):
+        # PPS-D-019424 shape: ｢…｣ half-width brackets around the law name.
+        r = rec("｢소프트웨어 진흥법｣ 제48조제2항에 따라 대기업의 입찰 참여를 제한",
+                "[소프트웨어사업자(컴퓨터관련서비스사업)(1468)]")
+        self.assertEqual(candidate.v20_decision(r), 0)
+
     def test_bare_sme_software_name_abstains(self):
         # PPS-D-004071 shape: a 시행령 제41조 title as a qualification is not the restriction.
         r = rec("「소프트웨어 진흥법 시행령」 제41조(중소 소프트웨어사업자의 기준 등) 제1항 제1호에 해당하는 자",

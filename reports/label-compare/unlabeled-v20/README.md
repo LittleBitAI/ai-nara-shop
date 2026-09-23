@@ -12,10 +12,10 @@ dev 재생은 v20 1/4/4 → 5/2/0, Macro +0.026389 지만 양성 5건을 보고 
 
 | 층 | 모델 → 후보 | 공고 |
 | --- | --- | ---: |
-| U | 0 → 1 (후보가 올림) | 35 |
+| U | 0 → 1 (후보가 올림) | 34 |
 | W | 1 → 0 (후보가 내림) | 46 |
 | K | 1 → 1 (6 은 후보 보류, 모델 유지) | 31 |
-| Z | 0 → 0 | 1,888 |
+| Z | 0 → 0 | 1,889 |
 
 현재 후보 기준이다. 첫 판(보류 없음)은 U 35 · W 53 · K 24 였다.
 
@@ -27,10 +27,10 @@ dev 재생은 v20 1/4/4 → 5/2/0, Macro +0.026389 지만 양성 5건을 보고 
 라벨의 양성 수를 `U1`·`W1`·`K1`, Z 층의 놓친 양성을 `Z1` 이라 하면 무라벨 2,000건에서
 
 - 모델: TP = `K1 + W1`, 예측 77
-- 후보: TP = `K1 + U1`, 예측 66 (첫 판 59)
+- 후보: TP = `K1 + U1`, 예측 65 (첫 판 59)
 - 정답 양성 P = `K1 + W1 + U1 + Z1`
 
-F1 = 2TP / (예측 + P) 이므로 후보가 이기는 조건은 `(K1+U1)/(66+P) > (K1+W1)/(77+P)` 이다.
+F1 = 2TP / (예측 + P) 이므로 후보가 이기는 조건은 `(K1+U1)/(65+P) > (K1+W1)/(77+P)` 이다.
 `Z1` 은 라벨하지 않으므로 0 과 dev 비율(FN 0/200 이던 후보 기준 0, 모델 기준 4/200 → 40)의
 양 끝에서 둘 다 계산해 부호가 같을 때만 채택 근거로 쓴다.
 
@@ -91,9 +91,11 @@ Review round 2 found that a bare name counted as the sentence: `PPS-D-004071` ci
 "중소 소프트웨어사업자의 기준" as a qualification, with no 대기업 or 하한 wording, and was set to 0. The
 pattern is now split. The restriction itself (제48조, the pre-renumbering 제24조의2, the 하한 고시 title
 "대기업인 소프트웨어사업자가 참여할 수 있는 사업금액의 하한", 사업금액별 참여, 입찰참여 제한금액) removes; a bare
-`중소 소프트웨어사업자` / `대기업인 소프트웨어` abstains (61 of 20,000 unlabeled, 0 in dev). The three W
+`중소 소프트웨어사업자` / `대기업인 소프트웨어` abstains (56 of 20,000 unlabeled, 0 in dev). The three W
 removals that had matched only the loose names (`003055`, `014211`, `018645`) quote 제24조의2 and the 하한
-title and still remove. Layers now: U 35, W 46, K 31 (6 abstain), Z 1,888; candidate predicts 66.
+title and still remove. The same audit found the 제48조 citation missed half-width `｢…｣` brackets
+(9 of 20,000, 0 in dev; `PPS-D-019424` was set to 1 while citing 제48조); the bracket class now has `｣`.
+Layers now: U 34, W 46, K 31 (6 abstain), Z 1,889; candidate predicts 65.
 
 [experiments/v20_fact_check.py](../../../experiments/v20_fact_check.py) asks an external LLM the two facts
 (no verdict) and verifies every quote as a substring. Pass line, fixed before running: on dev
@@ -112,19 +114,19 @@ has a verified quote. Only then are the 48 removals checked. A removal the LLM r
 So every removal is one of the two facts, read the same way by two independent readers. `W1 = 0` then
 holds as far as the definition does: dev has 0 positives among 191 notices without registration
 (95% Wilson upper bound 1.97%, about 0.8 expected among 42) and among 3 with the sentence.
-If `W1 = 0` the candidate beats the model on v20 for any `U1`. Worst case `U1 = 0`, pred 66 vs 77, the
+If `W1 = 0` the candidate beats the model on v20 for any `U1`. Worst case `U1 = 0`, pred 65 vs 77, the
 smallest `K1` (of 31) that still wins:
 
 | `W1` | `Z1 = 0` | `Z1 = 40` |
 | ---: | ---: | ---: |
-| 1 | 7 | 11 |
-| 2 | 16 | 25 |
-| 3 | 26 | 41 (impossible) |
+| 1 | 7 | 10 |
+| 2 | 14 | 22 |
+| 3 | 23 | 37 (impossible) |
 
 Simulation (seed 20260923, 20,000 draws; rule-1 precision Beta(6,3) from dev 5/7, abstain-kept model
 precision Beta(2,5) from dev 1/5, rule-0 positive rate Beta(1,195) from dev 0/194 for both W and Z):
-P(candidate wins v20) 1.0, v20 F1 gain 5%/50% +0.266/+0.427, Macro +0.0111/+0.0178. With `Z1 = 40`
-fixed: 1.0, F1 +0.209/+0.334, Macro +0.0087/+0.0139.
+P(candidate wins v20) 1.0, v20 F1 gain 5%/50% +0.264/+0.425, Macro +0.0110/+0.0177. With `Z1 = 40`
+fixed: 1.0, F1 +0.202/+0.331, Macro +0.0084/+0.0138.
 
 What this does not measure: the additions `U1` and whether the unlabeled 2,000 stand in for the evaluation
 set. Server score is still the only direct measurement.
@@ -132,4 +134,4 @@ set. Server score is still the only direct measurement.
 ## 상태
 
 Adopted 2026-09-23 (PR #111, held unmerged for the combined submission build). Review rounds 1–2: three P1
-repaired. No unlabeled v20 labels; external verdict labelling stays blocked. Not in `script.py`.
+repaired, plus the bracket gap found auditing the same pattern. No unlabeled v20 labels; external verdict labelling stays blocked. Not in `script.py`.
