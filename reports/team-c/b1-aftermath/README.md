@@ -35,6 +35,14 @@ python -X utf8 reports/team-c/b1-aftermath/fact_drift.py
 python -X utf8 reports/team-c/b1-aftermath/row_conditions.py
 ```
 
+분석 스크립트 넷은 작업 트리의 `script.py` 를 부르지 않는다. `pin.py` 가 `git show` 로
+기준 회차 응답은 `57e6134`, 후보 회차 응답은 `9ed0805`(`origin/run/b1-competitive-row`)의
+`script.py` 로 읽는다. 후보 코드에만 `competitive_row` 파싱과 `verified_competitive_row()`
+게이트가 있어서다. `trace_cells.py` 의 사유는 그 판의 `verify_company_size()` 가 돌려준 값이고,
+`gate_role.py` 의 발동 판정은 후보 판의 `verified_competitive_row()` 를 그대로 부른다.
+그래서 이후 `main` 이 바뀌어도 출력은 같다. 고정 전 출력과 비교하면 숫자는 전부 같고
+`trace_cells.py` 에 `102` 의 `competitive_row` 줄 하나가 더 나온다.
+
 ### 1-1. 기준을 판정 당시 코드로 되돌린 이유
 
 **처음에 보관 회차 CSV 를 기준으로 써서 75셀·대상 밖 63 이 나왔다. 틀린 기준이었다.**
@@ -101,22 +109,26 @@ C 영역에서 이번 공고로 고칠 것은 없다.
 
 ### 2-2. `043` TP→FN · `038` FN→TP · `127`·`187` 새 FP
 
-네 건 모두 **모델이 낸 사실이 달라져** 밴드 게이트의 사유가 바뀐 것이다.
+세 건(`043`·`038`·`127`)은 모델이 낸 사실이 달라졌고, `043`·`038` 은 그 때문에 밴드
+게이트의 사유가 바뀌었다. **`187` 은 다르다** — 열거한 사실이 전부 같고 사유만 바뀌었다.
+원인을 닫지 못했고 아래에 따로 적는다.
 
 | 공고 | 셀 | 바뀐 사실 | 게이트 사유 | 게이트 발동? |
 | --- | --- | --- | --- | --- |
 | **043** | v18 1→0 (라벨 1) | `qualification` **unrestricted → sme_allowed** | `decided` → **`unverified_qualification`** | 아니오 |
 | **038** | v18 0→1 (라벨 1) · v17 1→0 | `qualification` **sme_allowed → unrestricted** · `priority_exception` unknown → no | `unverified_qualification` → **`decided`** | 아니오 |
 | **127** | v18 0→1 (라벨 0) | `qualification_role` **none → checklist** · `priority_exception` **yes → no** | (밴드 통과) | 아니오 |
-| **187** | v18 0→1 (라벨 0) | — | `unverified_qualification` → **`decided`** | 아니오 |
+| **187** | v18 0→1 (라벨 0) | 없음 (원응답에서 다른 것은 `qualification_quote` 뿐) | `unverified_qualification` → `decided` | 아니오 |
 
 **`038` 과 `043` 은 정확히 반대 방향으로 같은 필드가 움직였다** — 한쪽은
 `sme_allowed → unrestricted`, 다른 쪽은 `unrestricted → sme_allowed`.
 `unrestricted` 여야 v18 밴드가 서므로 하나가 열리고 하나가 닫혔다.
 
-**`187` 은 이 단계에서 원인 불명이다.** 위 아홉 사실 필드가 모두 같은데 사유만
-`unverified_qualification` → `decided` 로 바뀌었다. **인용 문자열이 달라져 `quoted()`
-검증을 통과한 것으로 보이지만 확인하지 않았다 — 추측을 원인으로 승격하지 않는다.**
+**`187` 은 원인 미확인이다.** `trace_cells.py` 가 열거한 사실 필드가 모두 같은데 사유만
+`unverified_qualification` → `decided` 로 바뀌었다. 두 원응답의 `company_size` 전 필드를
+대조하면 달라진 것은 `qualification_quote` 문자열 하나다 — 이것은 관측이다.
+그 인용이 어느 검증을 통과해 사유가 바뀌었는지는 추적하지 않았고, 추측을 원인으로
+승격하지 않는다. 따라서 네 건 중 원인이 닫힌 것은 세 건이다.
 
 > **`187` 은 처음 나온 이름이 아니다.** `five-stuck-analysis.md` 의 H3 실측에서
 > **"자격·역할·자격인용·완전관측만 교체 → v18 FP 187 추가"** 가 이미 기록돼 있다.
@@ -254,8 +266,8 @@ B1 회차가 가리킨 방향은 "행이 있는가" 가 아니라 **"그 행의 
 
 ## 6. 미확인 사항
 
-- **`187` 이 `decided` 로 바뀐 실제 원인.** 아홉 사실 필드가 같은데 사유만 바뀌었다.
-  인용 검증을 의심하지만 **확인하지 않았고 추측을 원인으로 적지 않는다.**
+- **`187` 이 `decided` 로 바뀐 실제 원인.** 열거한 사실이 같고 원응답에서 다른 것은
+  `qualification_quote` 뿐이다. 그 인용이 사유를 바꾼 경로는 추적하지 않았고 원인으로 적지 않는다.
 - **`038`·`043` 맞바꿈이 우연인지.** 2회차 없이 판정 불가. 요청서 §4-1 이 요구한
   동일 조건 2회차가 필요하다.
 - **대상 밖 22셀의 건별 원인.** 항목·방향까지만 셌다. 다른 파트 소유 항목이 섞여 있다.

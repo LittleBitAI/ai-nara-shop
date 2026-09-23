@@ -3,15 +3,16 @@
 같은 dev 200건에 같은 모델·같은 설정이고 프롬프트에 필드 하나가 늘었다.
 사실이 넓게 흔들렸다면 34셀은 눈에 보인 일부일 뿐이다.
 
+원응답의 JSON 만 읽으므로 두 회차 모두 후보 회차 코드(`9ed0805`)의 `extract_json` 으로
+읽는다(pin.py).
+
     py -X utf8 reports/team-c/b1-aftermath/fact_drift.py
 """
-import importlib.util
 import json
-import sys
 from collections import Counter
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
+from pin import CAND_REV, ROOT, load_script
+
 BASE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
 CAND = ROOT / "reports/runs/colab-1790141677344456786/dev-debug"
 FIELDS = ("scope", "qualification", "qualification_role", "qualification_complete",
@@ -32,10 +33,7 @@ def facts(case, script):
 
 
 def main():
-    spec = importlib.util.spec_from_file_location("submission", ROOT / "script.py")
-    script = importlib.util.module_from_spec(spec)
-    sys.modules["submission"] = script
-    spec.loader.exec_module(script)
+    script = load_script(CAND_REV)
 
     a, b = facts(BASE, script), facts(CAND, script)
     shared = sorted(set(a) & set(b))

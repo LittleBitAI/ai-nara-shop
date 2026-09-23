@@ -10,25 +10,19 @@
 submission.csv 를 기준으로 쓰면 그 뒤에 병합된 후처리가 섞인다(docs/workflow.md W5).
 그 사이 D 파트의 v3~v6 게이트가 머지돼 현재 HEAD 재생은 0.618427228373 이고
 판정 당시 기준은 0.609274806721 이다 — 판정을 만든 코드로 재현해야 같은 34셀이 나온다.
+
+사실과 사유도 같은 원칙이다. 기준 응답은 `57e6134`, 후보 응답은 `9ed0805`(후보의
+`competitive_row` 파싱·게이트가 있는 코드)의 `verify_company_size` 를 그대로 불러
+사유를 낸다 — 작업 트리의 `script.py` 는 쓰지 않는다(pin.py).
 """
 import csv
-import importlib.util
 import json
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
+from pin import BASE_REV, CAND_REV, ROOT, load_script
+
 BASE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"   # 기준
 CAND = ROOT / "reports/runs/colab-1790141677344456786/dev-debug"   # B1 후보 회차
-
-
-def load_script():
-    spec = importlib.util.spec_from_file_location("submission", ROOT / "script.py")
-    m = importlib.util.module_from_spec(spec)
-    sys.modules["submission"] = m
-    spec.loader.exec_module(m)
-    m.load_sme_reference(str(ROOT / "open/data"))
-    return m
 
 
 def responses(case):
@@ -55,6 +49,8 @@ def legacy_flags(script, case):
         out["company_size_clause_quotes"] = bool(settings.get("company_size_clause_quotes"))
     if hasattr(script, "QUALIFICATION_ROLES"):
         out["company_size_qualification_role"] = bool(settings.get("company_size_qualification_role"))
+    if hasattr(script, "COMPETITIVE_ROW_PATTERN"):
+        out["company_size_competitive_row"] = bool(settings.get("company_size_competitive_row"))
     return out
 
 
@@ -73,32 +69,15 @@ def company_facts(script, case, want=None):
             continue
         focused, _ = script.parse_judgment(text, expected_items=script.COMPANY_SIZE_KEYS, **flags)
         facts = focused["company_size"]
-        # 밴드 게이트가 무엇을 돌려주는지 — 이것이 v14~v18 을 가른다
-        _bands, reason = script._company_size_bands(
-            _normalised(script, facts, rec, chars[identifier]), rec, chars[identifier])
+        # 그 회차 코드의 실제 소비자가 돌려주는 사유 — 이것이 v14~v18 을 가른다
+        _verified, reason = script.verify_company_size(facts, rec, chars[identifier])
         out[identifier] = {**facts, "_reason": reason}
     return out
 
 
-def _normalised(script, facts, rec, max_chars):
-    """`verify_company_size` 가 밴드에 넘기기 전에 하는 정규화를 그대로 재현한다."""
-    visible = script.build_context(rec, max_chars)
-    facts = dict(facts)
-    if "qualification_role" in facts:
-        role = facts["qualification_role"]
-        allowed = ("small_only", "sme_allowed") if role == "eligibility" else (
-            ("unrestricted",) if role in ("checklist", "legal_reference", "none") else ())
-        if facts.get("qualification") not in allowed:
-            facts["qualification"] = "unknown"
-    for key in ("scope_quote", "qualification_quote"):
-        fixed = script.restore_spacing(facts.get(key), rec, visible)
-        if fixed is not None:
-            facts[key] = fixed
-    return facts
-
-
-FIELDS = ("scope", "qualification", "qualification_role", "qualification_complete",
-          "priority_exception", "size_exception", "requirements_complete", "_reason")
+FIELDS = ("scope", "competitive_row", "qualification", "qualification_role",
+          "qualification_complete", "priority_exception", "size_exception",
+          "requirements_complete", "_reason")
 
 
 def verdict(truth_value, predicted):
@@ -111,14 +90,14 @@ def verdict(truth_value, predicted):
 
 
 def main():
-    script = load_script()
+    base_script, cand_script = load_script(BASE_REV), load_script(CAND_REV)
     truth = {r["id"]: r for r in csv.DictReader(open(ROOT / "open/dev_labels.csv", encoding="utf-8"))}
     if len(sys.argv) < 2:
         raise SystemExit("기준 재생 CSV 경로를 인자로 준다 (판정 당시 코드로 재생한 것)")
     base_csv = {r["id"]: r for r in csv.DictReader(open(sys.argv[1], encoding="utf-8"))}
     cand_csv = {r["id"]: r for r in csv.DictReader(open(CAND / "submission.csv", encoding="utf-8"))}
 
-    changed = [(i, v) for i in base_csv for v in script.ITEMS if base_csv[i][v] != cand_csv[i][v]]
+    changed = [(i, v) for i in base_csv for v in base_script.ITEMS if base_csv[i][v] != cand_csv[i][v]]
     focus = ["v14", "v15", "v16", "v17", "v18"]
 
     print(f"바뀐 셀 {len(changed)} · 대상 밖 {sum(1 for _, v in changed if v not in focus)}\n")
@@ -140,8 +119,8 @@ def main():
     want = {i for i, v in changed if v in focus}
     want |= {"PPS-DEV-038", "PPS-DEV-043", "PPS-DEV-127", "PPS-DEV-187"}
     print("\n=== 대상 항목에서 바뀐 공고의 사실 전→후 ===")
-    b_facts = company_facts(script, BASE, want)
-    c_facts = company_facts(script, CAND, want)
+    b_facts = company_facts(base_script, BASE, want)
+    c_facts = company_facts(cand_script, CAND, want)
     for i in sorted(want, key=lambda x: (len(x), x)):
         moved = [v for v in focus if base_csv[i][v] != cand_csv[i][v]]
         bf, cf = b_facts.get(i, {}), c_facts.get(i, {})

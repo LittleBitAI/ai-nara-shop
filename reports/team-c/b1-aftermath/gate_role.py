@@ -1,26 +1,22 @@
 """바뀐 셀에 competitive_row 게이트가 실제로 관여했는가.
 
 게이트는 `scope=="competitive"` 이고 지목한 행이 제공 목록 **밖**일 때만 scope 를
-`unknown` 으로 만든다. 그 조건이 성립한 공고를 센다.
+`unknown` 으로 만든다. 그 조건이 성립한 공고를 센다. 판정은 후보 회차 코드
+(`9ed0805`)의 `verified_competitive_row` 를 그대로 부른다(pin.py).
 
-    py -X utf8 reports/team-c/b1-aftermath/gate_role.py
+    py -X utf8 reports/team-c/b1-aftermath/gate_role.py <기준 재생 CSV>
 """
 import csv
-import importlib.util
 import json
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
+from pin import CAND_REV, ROOT, load_script
+
 CAND = ROOT / "reports/runs/colab-1790141677344456786/dev-debug"
 
 
 def main():
-    spec = importlib.util.spec_from_file_location("submission", ROOT / "script.py")
-    script = importlib.util.module_from_spec(spec)
-    sys.modules["submission"] = script
-    spec.loader.exec_module(script)
-    script.load_sme_reference(str(ROOT / "open/data"))
+    script = load_script(CAND_REV)
 
     texts, chars = {}, {}
     for line in (CAND / "diagnostics.jsonl").read_text(encoding="utf-8").splitlines():
@@ -43,16 +39,12 @@ def main():
         competitive += 1
         row = facts.get("competitive_row")
         visible = script.build_context(rec, chars[rec["id"]])
-        lookup = script.sme_product_lookup(rec, visible, script._PRODUCTS)
-        supplied = {p["세부품명번호"] for p in lookup.get("일치후보") or ()}
-        supplied |= {r[0] for r in lookup.get("서비스보조목록") or ()}
         if row:
             with_row += 1
-            if row not in supplied:
+        if script.verified_competitive_row(facts, rec, visible) is False:
+            fired.append(rec["id"])          # null 이거나 목록 밖 → 게이트 발동
+            if row:
                 outside.append((rec["id"], row))
-                fired.append(rec["id"])
-        else:
-            fired.append(rec["id"])          # null → 게이트 발동
 
     print(f"scope=competitive                : {competitive}건")
     print(f"  competitive_row 있음           : {with_row}건")

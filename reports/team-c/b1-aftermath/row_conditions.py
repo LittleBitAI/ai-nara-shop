@@ -1,34 +1,23 @@
 """지목된 행의 조건이 이 공고의 구매 대상과 맞는가 — 제공 고시 자료만 쓴다.
 
 B1 회차가 가리킨 방향의 근거를 만든다. 후보 코드나 프롬프트를 만들지 않는다.
-대조표만 낸다.
+대조표만 낸다. 카탈로그·금액 함수는 후보 회차 코드(`9ed0805`)의 것을 쓴다(pin.py).
 
     py -X utf8 reports/team-c/b1-aftermath/row_conditions.py
 """
 import csv
-import importlib.util
 import io
 import json
 import re
-import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
+from pin import CAND_REV, ROOT, load_script
+
 CAND = ROOT / "reports/runs/colab-1790141677344456786/dev-debug"
 SCOPE_ITEMS = ("v10", "v11", "v12", "v13")
 
 
-def load():
-    spec = importlib.util.spec_from_file_location("submission", ROOT / "script.py")
-    m = importlib.util.module_from_spec(spec)
-    sys.modules["submission"] = m
-    spec.loader.exec_module(m)
-    m.load_sme_reference(str(ROOT / "open/data"))
-    return m
-
-
 def main():
-    script = load()
+    script = load_script(CAND_REV)
     rows = {p["세부품명번호"]: p for p in script._PRODUCTS}
 
     texts, chars = {}, {}
