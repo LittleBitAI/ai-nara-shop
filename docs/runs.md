@@ -90,6 +90,13 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `a8-v20-1790059133832323156` | `e6d9b98` | episode-2 a8 0.589442740036 · control 0.586932341938 (OFF=ON) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 일부 | [reports/runs/a8-v20-1790059133832323156/](../reports/runs/a8-v20-1790059133832323156/) |
 | `colab-1790081509639025520` | `227631f` | 0.6102659462701191 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1790081509639025520/](../reports/runs/colab-1790081509639025520/) |
 | `colab-1790141677344456786` | `9ed0805` | 0.575482169261194 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790141677344456786/](../reports/runs/colab-1790141677344456786/) |
+| `d7-v3-firing-1790141895014299603` | `c236a67` | 점수 없음 — v3 게이트 발화율 무라벨/dev 0.686 (표본 1,000건) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/d7-v3-firing-1790141895014299603/](../reports/runs/d7-v3-firing-1790141895014299603/) |
+
+`d7-v3-firing-…`도 제출 파이프라인 회차가 아닙니다. 24항목 기본 호출만 돌려 v3 판정과
+인용을 받고 그 위에서 게이트 발화를 센 W5 측정이며, 제출 ZIP도 Macro F1도 없습니다.
+dev 200건과 무라벨 첫 1,000건이고 `complete: false`입니다 — 20,000건 전수가 아닙니다.
+게이트 발화가 dev 7건·무라벨 24건이라 배율 0.686의 구간이 0.23~2.08로 넓습니다.
+`register_run.py`는 `colab-results-*.zip`과 `submit.zip` 한 쌍만 받으므로 손으로 등록했습니다.
 
 `a5-scope-…`는 제출 파이프라인 회차가 아닙니다. `company_size` 한 단계만 GPU로 돌리고
 나머지는 보관 원응답으로 재생한 A/B이며 제출 ZIP이 없습니다. 위 네 값을 위 행들의

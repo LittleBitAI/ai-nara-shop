@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "nvidia-smi",
+    "--query-gpu=name,memory.total,driver_version",
+    "--format=csv,noheader"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv",
+  "started": 1790137887.7166066,
+  "returncode": 0,
+  "elapsed_seconds": 0.022194385528564453
+}
