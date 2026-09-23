@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "c236a67244cc871a815084788493ec6d3f39d27e"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv/repo",
+  "started": 1790137854.4482288,
+  "returncode": 0,
+  "elapsed_seconds": 0.4548013210296631
+}

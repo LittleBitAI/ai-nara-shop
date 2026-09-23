@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv/repo",
+  "started": 1790137854.903379,
+  "returncode": 0,
+  "elapsed_seconds": 0.5732038021087646
+}
