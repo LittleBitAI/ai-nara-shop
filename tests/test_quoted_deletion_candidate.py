@@ -81,6 +81,24 @@ class V3Amount(unittest.TestCase):
             with self.subTest(quote=quote):
                 self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))
 
+    def test_amount_not_bound_to_performance_in_same_sentence_is_ignored(self):
+        """리뷰 라운드 4: 같은 절이라도 금액이 실적 문구에 문법적으로 붙어 있지 않으면 실적액이 아니다."""
+        for quote in ("자본금 3천만원 이상인 업체로서 최근 5년간 사업예산 이상 수행실적을 보유한 자",
+                      "자본금 3천만원 이상인 업체로서 동종 수행실적을 보유한 자",
+                      "자본금 3천만원 이상인 업체로서 수행실적을 보유한 자",
+                      "동종 실적 보유 업체, 자본금 3천만원 이상"):
+            with self.subTest(quote=quote):
+                self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))
+
+    def test_budget_reference_blocks_amount_rule(self):
+        quote = "용역 실적이 3천만원 이상이고 그 합계가 사업예산 이상인 업체"
+        self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))
+
+    def test_amount_bound_after_the_amount(self):
+        quote = "단일 계약 건으로 3억원(부가세 포함) 이상의 사업을 수행한 업체"
+        self.assertEqual(candidate.v3_deletion(quote, notice(quote, 1_136_363_636, 1_250_000_000)),
+                         "below_budget")
+
     def test_multiple_of_one_or_more_blocks_amount_rule(self):
         quote = "수행실적 3천만원 이상(사업예산의 1.5배 이상)"
         self.assertIsNone(candidate.v3_deletion(quote, notice(quote)))

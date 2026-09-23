@@ -12,7 +12,7 @@
 각자 단독 적용한 결과와 합친 결과가 같다.
 
 **v3 실적제한 1배수 이상.** 항목표 비고가 `사업예산 기준` 이다. 두 경우만 내린다.
- ① 인용이 적은 요구실적 금액이 추정가격·배정예산 **둘 다의** 1배 미만이다. 운영
+ ① 인용에서 실적 문구에 붙은 요구실적 금액이 추정가격·배정예산 **둘 다의** 1배 미만이다. 운영
    `performance_below_budget()` 은 문서 전체에서 실적 근처 금액의 최댓값을 읽어 다른 조항의
    금액을 집는다 — PPS-DEV-03 은 인용이 3천만원인데 1억을 읽었다. 여기서는 모델이 위반의
    근거로 댄 그 문장의 금액만 본다.
@@ -38,9 +38,15 @@ from typing import Any, Dict, Optional
 PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
 # 1배 이상을 비율로 적은 표기. 이것이 있으면 금액 규칙은 쉰다.
 RATIO = re.compile(r"(\d+(?:\.\d+)?)\s*(%|배)")
-# 요구실적 금액은 실적 문구와 같은 절에 있는 금액만 센다. 자본금·보증금은 실적이 아니다.
-CLAUSE_SPLIT = re.compile(r"\s및\s|[;\n]|,\s")
-PERFORMANCE_WORD = re.compile(r"실\s*적|수\s*행|납\s*품|준\s*공")
+# 요구가 예산·추정가격 자체를 기준으로 적혔다(`사업예산 이상`). 금액 비교의 대상이 아니다.
+BUDGET_FLOOR = re.compile(r"(?:사업\s*예산|예산\s*금액|배정\s*예산|추정\s*가격|기초\s*금액)\s*(?:의\s*)?이\s*상")
+# 요구실적 금액은 실적 문구에 문법적으로 붙은 금액만 센다. 같은 문장·같은 절에 있다는 것으로는
+# 부족했다(리뷰 라운드 3·4: 자본금이 `및`·`로서` 로 이어져 실적액으로 읽혔다).
+#  앞에 붙음: `실적이 3천만원`, `준공금액이 5억원`
+#  뒤에 붙음: `3억원(부가세 포함) 이상의 사업을 수행`, `1억원 이상 실적`
+BOUND_BEFORE = re.compile(r"(?:실\s*적|(?:준\s*공|계\s*약|납\s*품|수\s*행)\s*금\s*액)\s*[이가은는의]?\s*$")
+BOUND_AFTER = re.compile(r"\s*(?:\([^()]{0,20}\)\s*)?이\s*상\s*[의인]?\s*"
+                         r"(?:[가-힣]{1,6}[을를의]\s+)?(?:[가-힣]*실\s*적|[가-힣]*수\s*행|납\s*품)")
 # 배점표의 구간 칸: `<기준 문구> N% 이상`. 기준 문구는 한두 어절이다.
 BAND_CELL = re.compile(r"([가-힣]+(?:\s[가-힣]+)?)\s*(\d+(?:\.\d+)?)\s*%\s*이상")
 # 구간 칸과 다음 행 사이에 올 수 있는 것: 칸 구분선, 배점 숫자, `나.`·`2)` 같은 행 번호.
@@ -70,12 +76,16 @@ def baseline():
     return module
 
 
-def _amounts(quote):
+def _performance_amounts(quote):
+    """실적 문구에 앞이나 뒤로 붙은 금액. 붙은 것이 없으면 빈 목록이다."""
     script = baseline()
     values = []
     for match in script.MONEY.finditer(quote):
         value = script.parse_money(match)
-        if value is not None and script.MONEY_MIN <= value <= script.MONEY_MAX:
+        if value is None or not script.MONEY_MIN <= value <= script.MONEY_MAX:
+            continue
+        if (BOUND_BEFORE.search(quote[max(0, match.start() - 20):match.start()])
+                or BOUND_AFTER.match(quote, match.end())):
             values.append(value)
     return values
 
@@ -86,8 +96,9 @@ def _below_budget(quote, rec):
              if isinstance(b, (int, float)) and not isinstance(b, bool) and b > 0]
     if any(float(n) >= (100 if unit == "%" else 1) for n, unit in RATIO.findall(quote)):
         return False   # 1배 이상 비율을 적었다. 금액과 어느 쪽이 요구인지 가리지 않는다
-    amounts = [a for clause in CLAUSE_SPLIT.split(quote) if PERFORMANCE_WORD.search(clause)
-               for a in _amounts(clause)]
+    if BUDGET_FLOOR.search(quote):
+        return False
+    amounts = _performance_amounts(quote)
     if not bases or not amounts:
         return False
     return max(amounts) < min(bases)   # 두 기준 모두의 1배 미만일 때만
