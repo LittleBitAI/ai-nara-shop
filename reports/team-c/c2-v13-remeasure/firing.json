@@ -1,0 +1,14 @@
+{
+ "dev_n": 200,
+ "with_company_response": 200,
+ "applicable": 118,
+ "changed_cells": 1,
+ "overlap": [
+  {
+   "id": "PPS-DEV-03",
+   "label": "0",
+   "scope": "general",
+   "reason": "decided"
+  }
+ ]
+}

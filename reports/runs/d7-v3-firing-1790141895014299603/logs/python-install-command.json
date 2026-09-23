@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "/usr/bin/python3",
+    "-m",
+    "uv",
+    "venv",
+    "--python",
+    "3.12.13",
+    "--seed",
+    "/content/d7-v3-firing-xvyvomtv/venv"
+  ],
+  "cwd": "/content/d7-v3-firing-xvyvomtv",
+  "started": 1790137907.1451192,
+  "returncode": 0,
+  "elapsed_seconds": 2.161216974258423
+}

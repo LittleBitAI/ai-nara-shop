@@ -730,6 +730,94 @@ class BaselineTests(unittest.TestCase):
         out = baseline.postprocess(obj, rec)
         self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 0, 0, 0])
 
+    def test_scope_gates_lower_only_the_out_of_scope_positives(self):
+        """v3·v4·v5·v6 의 적용범위 게이트. 내리는 자리와 **안 내리는 자리**를 함께 고정한다."""
+        def judged(item, quote, text=None, meta=None):
+            rec = record()
+            rec["docs"][0]["text"] = text or f"앞 문장. {quote} 뒤 문장."
+            rec["meta"].update(meta or {})
+            obj = valid()
+            obj[item] = {"위반여부": 1, "근거문구": quote}
+            obj["v1"] = {"위반여부": 1, "근거문구": quote}
+            out = baseline.postprocess(obj, rec)
+            self.assertEqual(out["v1"]["위반여부"], 1)  # 다른 항목은 그대로
+            return out[item]["위반여부"]
+
+        # ----- v3: 배수는 **인용 안에서** 읽는다. 조문은 1배 이내를 허용한다.
+        small = {"입찰추정가격": 89_090_909}
+        self.assertEqual(judged("v3", "5년 이내 용역 실적이 3천만원 이상인 업체", meta=small), 0)
+        # 같은 인용인데 본문에 더 큰 금액이 따로 있어도 판단은 인용을 따른다.
+        # 문서 최댓값을 집던 옛 코드가 여기서 배수 1.12 를 읽어 오탐을 살렸다.
+        self.assertEqual(judged("v3", "5년 이내 용역 실적이 3천만원 이상인 업체",
+                                text="총 사업비는 1억원이다. 5년 이내 용역 실적이 3천만원 이상인 업체",
+                                meta=small), 0)
+        # **비율 표기로는 내리지 않는다.** 한 인용 안에서 어느 비율이 실적 요구인지 가릴
+        # 방법을 못 세웠다 — 세 번 시도했고 세 번 다 정탐을 지웠다(리뷰 P1 세 라운드).
+        # 아래 다섯은 전부 **양성 보존**이고, 그 이유가 서로 다르다.
+        self.assertEqual(judged("v3", "실적 3억원 이상 (부가세 10% 포함)",
+                                meta={"입찰추정가격": 100_000_000}), 1)      # 곁의 부가세율
+        for joiner in (", ", ". ", "로서 "):                                 # 구분자만 바뀐 같은 문장
+            self.assertEqual(judged("v3", "유사용역 실적 3억원 이상인 업체" + joiner +
+                                          "입찰보증금은 사업비의 5% 이상 납부",
+                                    meta={"입찰추정가격": 100_000_000}), 1)
+        self.assertEqual(judged("v3", "유사사업 수행실적 예산금액의 100% 이상",
+                                meta={"입찰추정가격": 56_202_727}), 1)        # 금액이 없다
+        self.assertEqual(judged("v3", "가. 입찰 금액의 100% 이상",
+                                meta={"입찰추정가격": 147_905_232}), 1)       # 실적도 금액도 없다
+        # 금액과 비율이 같이 있으면 **금액으로** 판정한다. 1배 이상이면 그대로 둔다.
+        self.assertEqual(judged("v3", "단일 건으로 455,000,000원 이상(기초금액의 130% 이상)의 실적",
+                                meta={"입찰추정가격": 318_181_818}), 1)
+        # 1배 이상을 요구하는 인용은 그대로 둔다.
+        self.assertEqual(judged("v3", "단일 건 3억 원 이상의 유사사업 실적",
+                                meta={"입찰추정가격": 227_272_727}), 1)
+        # 근거가 비면 내린다. 근거 계약이 먼저 걸리므로 함수 자체로 확인한다.
+        self.assertEqual(baseline.performance_below_budget({"meta": small}, ""), 0.0)
+        # 기준액이나 금액을 못 읽으면 내리지 않는다 — 모르는 것을 근거로 내리지 않는다.
+        self.assertIsNone(baseline.performance_below_budget({"meta": {}}, "실적 3천만원"))
+        self.assertIsNone(baseline.performance_below_budget({"meta": small}, "실적이 있는 업체"))
+
+        # ----- v4: 검출기의 미탐은 "기관 제한이 없다"가 아니다. 0을 1로만 올린다.
+        institution = "가. 입찰참가자격: 최근 3년 이내 공공기관에서 발주한 유사용역 실적이 있는 업체"
+        self.assertEqual(judged("v4", institution), 1)
+        # 익명화된 기관 토큰은 검출기 어휘 밖이라 None 이 나온다. 그것으로 모델 양성을
+        # 내리면 정답까지 지운다 — 한때 그렇게 했다가 리뷰 P1 으로 되돌렸다.
+        anonymous = "입찰참가자격: [수요기관(기초자치단체)|지역=r1]이 발주한 유사용역 실적을 보유한 업체"
+        self.assertIsNone(baseline.detect_institution_performance(
+            {"docs": [{"doc_id": "a", "type": "공고문", "text": anonymous}]}))
+        self.assertEqual(judged("v4", anonymous), 1)
+
+        # ----- v5: 고시금액 경계는 계약법·업무구분마다 다르다(REGION_PRICE_LIMIT).
+        region = "주된 영업소가 서울특별시 관내에 있는 업체"
+        local = {"적용계약법": "지방계약법", "업무구분": "일반용역"}
+        self.assertEqual(judged("v5", region, meta={**local, "입찰추정가격": 262_727_273}), 0)
+        self.assertEqual(judged("v5", region, meta={**local, "입찰추정가격": 555_308_000}), 1)
+        national = {"적용계약법": "국가계약법", "업무구분": "일반용역"}
+        self.assertEqual(judged("v5", region, meta={**national, "입찰추정가격": 200_000_000}), 0)
+        self.assertEqual(judged("v5", region, meta={**national, "입찰추정가격": 727_272_727}), 1)
+        # **판단할 수 없으면 반증이 아니다.** `region_restriction_allowed()` 는 v7 을 지키려고
+        # 모르면 True(= 못 막는다)를 내는데, 그것을 "위반이 아니다"로 읽으면 판단 불가인
+        # 공고의 v5 양성을 지운다(리뷰 P1). 세 가지 불명 모두에서 양성이 서 있어야 한다.
+        self.assertEqual(judged("v5", region, meta={**national, "입찰추정가격": None}), 1)
+        self.assertEqual(judged("v5", region, meta={"적용계약법": None, "업무구분": "일반용역",
+                                                    "입찰추정가격": 727_272_727}), 1)
+        self.assertEqual(judged("v5", region, meta={"적용계약법": "국가계약법", "업무구분": None,
+                                                    "입찰추정가격": 727_272_727}), 1)
+        # **v7 은 같은 표를 다른 방향으로 쓴다.** 고시금액 미만은 v7 의 구간이므로
+        # v5 를 내리는 그 기록에서 v7 은 그대로 서 있어야 한다.
+        self.assertEqual(judged("v7", region, meta={**local, "입찰추정가격": 262_727_273}), 1)
+
+        # ----- v6: 근거가 시·군·구 제한을 가리켜야 한다.
+        basic = "주된 영업소가 서울특별시 [지역:r1|단위=기초|광역=서울특별시] 내에 있는 업체"
+        self.assertEqual(judged("v6", basic), 1)
+        self.assertEqual(judged("v6", "본 입찰은 전자입찰로만 집행합니다."), 0)
+        self.assertEqual(judged("v6", "서울특별시 또는 경기도에 소재한 업체"), 0)
+        # **기초 단위를 이름으로만 적은 인용도 지역제한이다.** 광역명도 익명화 토큰도 없다는
+        # 이유로 내리면 시·군·구 제한 정탐을 잃는다(리뷰 P1). 이름 뒤에는 조사가 붙는다.
+        self.assertEqual(judged("v6", "주된 영업소가 고양시에 있는 업체"), 1)
+        self.assertEqual(judged("v6", "본점 소재지가 성남시의 관내인 업체"), 1)
+        # 두 음절 이상을 앞에 요구하므로 `실시`·`고시` 같은 낱말은 기초 단위로 세지 않는다.
+        self.assertEqual(judged("v6", "본 용역은 2026년 3월에 실시에 들어갑니다."), 0)
+
     def test_mock_cli_and_invalid_inputs(self):
         with tempfile.TemporaryDirectory(prefix="t1 한글 ") as tmp:
             tmp = Path(tmp)
