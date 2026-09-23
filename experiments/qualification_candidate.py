@@ -597,10 +597,14 @@ def basic_region_sentences(rec):
 CLAUSE_BREAK = ",，;；"
 CLAUSE_OPEN = "([{（［｛【〔「『"
 CLAUSE_CLOSE = ")]}）］｝】〕」』"
+# **쉼표만으로는 모자란다.** 접속 어미로 이어 붙인 문장이 흔하고, 그 앞뒤는 역할이 다르다 —
+# `본점소재지가 경기도 […광역…]에 있는 업체이며 납품장소는 […기초…]` 에 쉼표가 없다.
+# 어미에서도 끊어야 제한 대상과 납품 장소가 한 도막에 들어오지 않는다(PR #114 재리뷰 P1).
+CLAUSE_CONNECTIVE = re.compile(r"(?:이며|하며|되며|으며|이고|하고|되고|고서|한\s*뒤|한\s*후)(?=\s)")
 
 
 def _clauses(line):
-    """(줄 안 시작위치, 절). 괄호 깊이를 세면서 자른다."""
+    """(줄 안 시작위치, 절). 쉼표·세미콜론에서 자른다. 괄호 깊이를 센다."""
     depth = start = 0
     for index, char in enumerate(line):
         if char in CLAUSE_OPEN:
@@ -611,6 +615,45 @@ def _clauses(line):
             yield start, line[start:index]
             start = index + 1
     yield start, line[start:]
+
+
+def _segments(line):
+    """(줄 안 시작위치, 도막). 절을 다시 접속 어미에서 자른 것 — 역할을 가르는 단위다."""
+    for clause_start, clause in _clauses(line):
+        depth = start = 0
+        for index, char in enumerate(clause):
+            if char in CLAUSE_OPEN:
+                depth += 1
+            elif char in CLAUSE_CLOSE:
+                depth = max(0, depth - 1)
+        depth = 0
+        cut = 0
+        for match in CLAUSE_CONNECTIVE.finditer(clause):
+            if _bracket_depth(clause, match.start()):
+                continue
+            yield clause_start + cut, clause[cut:match.end()]
+            cut = match.end()
+        yield clause_start + cut, clause[cut:]
+
+
+def _bracket_depth(text, position):
+    """`position` 이 괄호 안인가."""
+    depth = 0
+    for char in text[:position]:
+        if char in CLAUSE_OPEN:
+            depth += 1
+        elif char in CLAUSE_CLOSE:
+            depth = max(0, depth - 1)
+    return depth > 0
+
+
+# 지역 토큰의 역할을 참가 제한이 아닌 것으로 바꾸는 말. 제한 대상과 토큰 사이에 이것이
+# 끼면 그 토큰은 제한 대상이 아니다 — 납품 장소·현장·개찰 장소다.
+ROLE_SWITCH = re.compile(
+    r"납품\s*장소|납품장소|납품\s*소재지|배송|인도\s*장소|설치\s*장소"
+    r"|사업\s*장소|사업장소|사업\s*위치|과업\s*(?:위치|장소|구역)|이행\s*장소"
+    r"|공사\s*위치|현장\s*위치|용역\s*위치|대상\s*위치|위\s*치\s*[:：]"
+    r"|개찰|설명회|접수\s*장소|제출\s*장소")
 
 
 def confirmed_basic_region_sentences(rec):
@@ -629,15 +672,48 @@ def confirmed_basic_region_sentences(rec):
                 continue
             if NOT_REGION_LIMIT.search(line) or not _is_qualification_context(text, line_start):
                 continue
-            for offset, clause in _clauses(line):
-                if not REGION_LIMIT_ANCHOR.search(clause):
-                    continue
-                if NOT_REGION_LIMIT.search(clause) or not has_confirmed_basic_signal(clause):
+            for offset, segment in _segments(line):
+                if NOT_REGION_LIMIT.search(segment) or not _binds_limit_to_token(segment):
                     continue
                 found.append({"doc_id": doc.get("doc_id"), "doc_type": doc.get("type"),
                               "text": text, "start": line_start + offset,
-                              "sentence": clause, "line": line})
+                              "sentence": segment, "line": line})
     return found
+
+
+def _binds_limit_to_token(segment):
+    """이 도막에서 **제한 대상과 기초 토큰이 실제로 묶이는가.**
+
+    한 도막에 둘이 있다는 것으로는 부족하다. `본점소재지가 경기도 […광역…]에 있는 업체
+    납품장소는 […기초…]` 처럼 역할이 바뀌는 말이 사이에 끼면 그 토큰은 제한 대상이 아니다.
+    그래서 둘 사이를 실제로 읽고, 역할을 바꾸는 말이 끼면 묶지 않는다.
+
+    괄호 안은 정의를 덧붙이는 자리라 사이 거리에서 빼고 본다 — `본점소재지(개인사업자인
+    경우에는 … 사업장의 소재지)가 [수요기관(기초자치단체)]내에` 의 괄호가 90자쯤 된다.
+    """
+    anchors = [(m.start(), m.end()) for m in REGION_LIMIT_ANCHOR.finditer(segment)]
+    if not anchors:
+        return False
+    tokens = [(m.start(), m.end()) for m in _submission().ANON_REGION.finditer(segment)
+              if "단위=기초" in m.group(0)]
+    tokens += [(m.start(), m.end()) for m in BASIC_AGENCY_TARGET.finditer(segment)]
+    for anchor in anchors:
+        for token in tokens:
+            lo, hi = (anchor[1], token[0]) if anchor[0] <= token[0] else (token[1], anchor[0])
+            if lo > hi:
+                continue
+            between = re.sub(r"\([^)]*\)|（[^）]*）", " ", segment[lo:hi])
+            if ROLE_SWITCH.search(between):
+                continue
+            if len(between.strip()) > LIMIT_TOKEN_REACH:
+                continue
+            return True
+    return False
+
+
+# 제한 대상과 토큰이 떨어져 있어도 되는 거리. 괄호를 뺀 뒤의 글자 수다.
+# dev 양성 다섯 중 가장 먼 것이 `PPS-DEV-072` 의 `를 계속 경기도 `(11자)다.
+LIMIT_TOKEN_REACH = 60
 
 
 def price_below_region_limit(rec):
@@ -693,30 +769,46 @@ QUOTE_LOOKUP_ONLY = re.compile(r"^\s*(?:여부|확인|사실|결과|내역|현�
 QUOTE_SYSTEM_REACH = 80
 
 
+# 전자 제출이 아닌 제출 방식. 이것이 대상과 `제출` 사이에 있으면 전자 제출이 아니다.
+QUOTE_OFFLINE = re.compile(r"우편|등기|방문|직접\s*제출|지참|팩스|FAX|이메일|전자우편|인편|우송")
+
+
 def _says_electronic_quote(line):
     """이 줄이 **견적서·입찰서를** 지정정보처리장치로 제출한다고 말하는가.
 
-    창 안에 낱말이 같이 있는 것으로는 부족하다. `견적서는 나라장터에서 열람하고
-    공동수급협정서는 제출한다` 는 시스템·견적서·제출이 다 창 안에 있지만 내는 것은
-    협정서다(PR #114 리뷰 P1). 그래서 **그 `제출` 의 대상이 무엇인지**를 본다 —
-    바로 앞에 나온 서류가 견적서·입찰서여야 한다.
+    셋이 한 줄에 있는 것으로는 부족하고, `제출` 의 대상만 봐도 부족하다.
+    `견적서는 나라장터에서 열람하고 입찰서는 우편으로 제출한다` 는 대상이 입찰서인데도
+    전자 제출이 아니다 — `나라장터` 는 열람에, `우편` 은 제출에 붙었다(PR #114 재리뷰 P1).
 
-    대상이 생략된 문장(`국가종합전자조달시스템을 이용하여 제출하여야 하며`)은 줄 안의
-    서류가 전부 견적서·입찰서일 때만 인정한다. 다른 서류가 섞여 있으면 가리지 못한다.
+    그래서 **도막 단위로** 본다. 접속 어미에서 끊으면 위 문장은
+    `견적서는 나라장터에서 열람하고` / `입찰서는 우편으로 제출한다` 로 갈리고, 제출이 있는
+    도막에 시스템이 없다. 한 도막 안에서 셋이 다 서야 인정한다 —
+    시스템 · 견적서·입찰서인 제출 대상 · 그 사이에 다른 제출 방식이 없을 것.
+
+    대상이 생략된 도막(`국가종합전자조달시스템을 이용하여 제출하여야 하며`)은 그 도막의
+    서류가 전부 견적서·입찰서일 때만 인정한다.
     """
-    for submit in QUOTE_SUBMIT_WORD.finditer(line):
-        before = line[max(0, submit.start() - QUOTE_SYSTEM_REACH):submit.start()]
-        if not QUOTE_SYSTEM.search(before):
-            continue
-        if QUOTE_LOOKUP_ONLY.match(line[submit.end():submit.end() + 8]):
-            continue
-        preceding = QUOTE_DOCUMENT.findall(line[:submit.start()])
-        if preceding:
-            if QUOTE_TARGET.fullmatch(preceding[-1]):
+    for _, segment in _segments(line):
+        for submit in QUOTE_SUBMIT_WORD.finditer(segment):
+            if not QUOTE_SYSTEM.search(segment[:submit.start()]):
+                continue
+            if QUOTE_LOOKUP_ONLY.match(segment[submit.end():submit.end() + 8]):
+                continue
+            preceding = list(QUOTE_DOCUMENT.finditer(segment[:submit.start()]))
+            if preceding:
+                target = preceding[-1]
+                if not QUOTE_TARGET.fullmatch(target.group(0)):
+                    continue
+                if QUOTE_OFFLINE.search(segment[target.end():submit.start()]):
+                    continue
                 return True
-            continue
-        documents = QUOTE_DOCUMENT.findall(line)
-        if documents and all(QUOTE_TARGET.fullmatch(name) for name in documents):
+            # 대상이 생략된 도막은 줄 전체를 본다. 그 줄의 서류가 전부 견적서·입찰서이고
+            # 줄 어디에도 다른 제출 방식이 없을 때만 인정한다 — 모르면 인정하지 않는다.
+            documents = QUOTE_DOCUMENT.findall(line)
+            if not documents or not all(QUOTE_TARGET.fullmatch(n) for n in documents):
+                continue
+            if QUOTE_OFFLINE.search(line):
+                continue
             return True
     return False
 
