@@ -20,6 +20,7 @@ def f1(tp, fp, fn):
 print("| item | pos | TP | FP | FN | labeler F1 | sens | FP rate | model F1 | verdict |")
 print("| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |")
 tot = {"trust": 0, "cond": 0, "drop": 0}
+lab_f1, model_f1 = [], []
 for v in V:
     tp = fp = fn = mtp = mfp = mfn = 0
     for i in ids:
@@ -29,6 +30,8 @@ for v in V:
         tp += g & p; fp += (1 - g) & p; fn += g & (1 - p)
         mtp += g & m; mfp += (1 - g) & m; mfn += g & (1 - m)
     F = f1(tp, fp, fn)
+    lab_f1.append(F)
+    model_f1.append(f1(mtp, mfp, mfn))
     verdict = "trust" if F >= 0.80 else "cond" if F >= 0.60 else "drop"
     tot[verdict] += 1
     neg = len(ids) - tp - fn
@@ -36,3 +39,4 @@ for v in V:
     print(f"| {v} | {tp+fn} | {tp} | {fp} | {fn} | {F:.3f} | {tp/(tp+fn) if tp+fn else 0:.2f} "
           f"| {fp/neg if neg else 0:.3f} | {f1(mtp,mfp,mfn):.3f} | {verdict}{border} |")
 print(tot)
+print(f"macro F1 labeler {sum(lab_f1) / 24:.4f} model {sum(model_f1) / 24:.4f}")
