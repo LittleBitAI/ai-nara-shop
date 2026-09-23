@@ -1,10 +1,10 @@
 {
-  "artifact_id": "score-head-score",
+  "artifact_id": "score-head-new-score",
   "version": 1,
   "status": "draft",
-  "run_id": "head-score",
+  "run_id": "head-new-score",
   "baseline_run": null,
-  "created_at": "2026-09-22T10:51:54.660849+00:00",
+  "created_at": "2026-09-23T00:32:11.153820+00:00",
   "sources": [
     {
       "role": "truth",
@@ -13,7 +13,7 @@
     },
     {
       "role": "pred",
-      "path": "reports/team-d/d7-fp-gates/head-replay/submission.csv",
+      "path": "<외부>/submission.csv",
       "sha256": "7dd13743d39564db6d9e27609117a3fc4012c17db22c037febb787b5eeb21d93"
     }
   ],
@@ -28,13 +28,13 @@
       "--truth",
       "open/dev_labels.csv",
       "--pred",
-      "reports/team-d/d7-fp-gates/head-replay/submission.csv",
+      "<외부>/submission.csv",
       "--output-dir",
-      "reports/team-d/d7-fp-gates/head-score"
+      "<외부>/head-new-score"
     ],
-    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'reports/team-d/d7-fp-gates/head-replay/submission.csv' '--output-dir' 'reports/team-d/d7-fp-gates/head-score'",
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' '<외부>/submission.csv' '--output-dir' '<외부>/head-new-score'",
     "settings": {
-      "output_dir": "reports/team-d/d7-fp-gates/head-score",
+      "output_dir": "<외부>/head-new-score",
       "zero_division": 0,
       "items": 24
     }
@@ -58,5 +58,5 @@
     "evidence_substring": false,
     "evidence_quality": false
   },
-  "elapsed_seconds_before_publish": 0.20259839999198448
+  "elapsed_seconds_before_publish": 0.21956169998156838
 }
