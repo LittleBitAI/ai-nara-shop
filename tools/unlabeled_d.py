@@ -28,17 +28,35 @@ def load(path, name):
     return module
 
 
-def check_prefix(ids, failed, order):
-    """Shards plus the failed set must be exactly the first k IDs of the sample order.
+def check_shards(metas, recompute):
+    """Every shard comes from one code and from exactly the notices read now (review round 3).
 
-    A missing shard or an unexplained gap would still yield a D, just from a non-random
-    subset of the sample (review round 2). Check the whole contract here, once.
+    metas: [{name, commit, code_sha256, records_sha256}], recompute(meta) -> records_sha256 of
+    the input notices for that shard. The run hashes the notices it actually read, so a mixed
+    code or a different input file shows up here even when the IDs agree.
+    """
+    for key in ("commit", "code_sha256"):
+        values = {m[key] for m in metas}
+        if len(values) != 1:
+            raise ValueError(f"묶음마다 {key} 가 다르다: {sorted(values)} — 다른 회차를 섞지 않는다")
+    for meta in metas:
+        if recompute(meta) != meta["records_sha256"]:
+            raise ValueError(f"{meta['name']}: 입력 공고가 회차가 읽은 것과 다르다(records_sha256)")
+
+
+def check_prefix(ids, failed, order, notices):
+    """Shards plus the failed set must be exactly the first `notices` IDs of the sample order.
+
+    A missing shard, an unexplained gap or a failed tail missing from F would still yield a D,
+    just from a non-random subset of the sample (review rounds 2-3). Check it here, once.
     """
     if len(set(ids)) != len(ids):
         raise ValueError("묶음들에 같은 ID 가 두 번 있다")
     if set(ids) & set(failed):
         raise ValueError(f"성공과 실패 집합 F 에 같이 있다: {sorted(set(ids) & set(failed))[:5]}")
     seen = set(ids) | set(failed)
+    if len(seen) != notices:
+        raise ValueError(f"성공 {len(ids)} + 실패 집합 F {len(failed)} != 계획 {notices}건")
     if seen != set(order[:len(seen)]):
         missing = [i for i in order[:len(seen)] if i not in seen]
         raise ValueError(f"표본 순서의 앞 {len(seen)}건이 아니다 — 빠진 ID {missing[:5]} "
@@ -86,7 +104,15 @@ def main(argv=None):
     script = load(ROOT / "script.py", "submission")
     candidate = load(ROOT / "experiments/quoted_deletion_candidate.py", "quoted_deletion_candidate")
     candidate.baseline = lambda: script
-    order = {identifier: k for k, identifier in enumerate(Path(args.order).read_text(encoding="utf-8").split())}
+    # The sample manifest pins both the order file and the input it was drawn from.
+    order_path = Path(args.order)
+    manifest = json.loads(order_path.with_suffix(".manifest.json").read_text(encoding="utf-8"))
+    if hashlib.sha256(order_path.read_bytes()).hexdigest() != manifest["ids_sha256"]:
+        raise ValueError(f"{order_path} 가 표본 manifest 와 다르다")
+    raw = Path(args.input).read_bytes()
+    if hashlib.sha256(raw).hexdigest() != manifest["input_sha256"]:
+        raise ValueError(f"{args.input} 가 표본을 뽑은 입력과 다르다(input_sha256)")
+    order = {identifier: k for k, identifier in enumerate(order_path.read_text(encoding="utf-8").split())}
     wanted = dict(pair.split("=") for pair in args.draw.split(","))
 
     shards = sorted((p.parent for run in args.run for p in Path(run).glob("u*/ids.json")),
@@ -95,20 +121,32 @@ def main(argv=None):
     if len(set(names)) != len(names):
         raise ValueError(f"같은 묶음이 두 폴더에 있다: {sorted({n for n in names if names.count(n) > 1})}")
     ids = [i for s in shards for i in json.loads((s / "ids.json").read_text(encoding="utf-8"))]
-    failed = set()
+    # Every run folder must carry its completion summary; without it a failed tail is
+    # indistinguishable from a smaller sample (review round 3). The largest plan is the sample.
+    failed, notices = set(), 0
     for run in args.run:
         summary_path = Path(run) / "summary.json"
-        if summary_path.is_file():
-            failed |= set(json.loads(summary_path.read_text(encoding="utf-8")).get("failed", []))
-    order_list = Path(args.order).read_text(encoding="utf-8").split()
-    check_prefix(ids, failed, order_list)
+        if not summary_path.is_file():
+            raise ValueError(f"{run} 에 summary.json 이 없다 — 끝난 회차인지 알 수 없다")
+        run_summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        failed |= set(run_summary["failed"])
+        notices = max(notices, run_summary["notices"])
+    check_prefix(ids, failed, list(order), notices)
     idset = set(ids)
     recs = {}
-    for line in Path(args.input).read_bytes().decode("utf-8").split("\n"):
+    for line in raw.decode("utf-8").split("\n"):
         if line.strip():
             record = json.loads(line)
             if record["id"] in idset:
                 recs[record["id"]] = script.normalize(record)
+    metas = []
+    for s in shards:
+        report = json.loads((s / "output/run_report.json").read_text(encoding="utf-8"))
+        done = json.loads((s / "DONE.json").read_text(encoding="utf-8"))
+        metas.append({"name": s.name, "commit": done["commit"], "code_sha256": report["code_sha256"],
+                      "records_sha256": report["records_sha256"],
+                      "ids": json.loads((s / "ids.json").read_text(encoding="utf-8"))})
+    check_shards(metas, lambda m: script.records_sha256([recs[i] for i in m["ids"]]))
     rows, sources = [], {}
     for s in shards:
         path = s / "output/submission.csv"

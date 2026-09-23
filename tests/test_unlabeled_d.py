@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.unlabeled_d import check_prefix, layers  # noqa: E402
+from tools.unlabeled_d import check_prefix, check_shards, layers  # noqa: E402
 
 
 class SampleContract(unittest.TestCase):
@@ -16,8 +16,13 @@ class SampleContract(unittest.TestCase):
     ORDER = ["A", "B", "C", "D", "E", "F"]
 
     def test_full_prefix_passes(self):
-        check_prefix(["A", "B", "C", "D"], set(), self.ORDER)
-        check_prefix(["A", "C", "D"], {"B"}, self.ORDER)
+        check_prefix(["A", "B", "C", "D"], set(), self.ORDER, 4)
+        check_prefix(["A", "C", "D"], {"B"}, self.ORDER, 4)
+
+    def test_short_of_the_planned_sample_is_rejected(self):
+        """Review round 3: without the run summary a failed tail looks like a smaller sample."""
+        with self.assertRaises(ValueError):
+            check_prefix(["A", "B"], set(), self.ORDER, 3)
 
     def test_missing_shard_or_gap_is_rejected(self):
         for ids, failed in ((["C", "D"], set()),          # first shard missing
@@ -26,7 +31,25 @@ class SampleContract(unittest.TestCase):
                             (["A", "B", "B"], set())):    # duplicate
             with self.subTest(ids=ids, failed=failed):
                 with self.assertRaises(ValueError):
-                    check_prefix(ids, failed, self.ORDER)
+                    check_prefix(ids, failed, self.ORDER, len(set(ids) | failed))
+
+
+class ShardProvenance(unittest.TestCase):
+    """Review round 3: every shard must come from one code and from the notices read now."""
+
+    def meta(self, name, code="c1", commit="k1", records="h-" ):
+        return {"name": name, "commit": commit, "code_sha256": code, "records_sha256": records + name}
+
+    def test_consistent_shards_pass(self):
+        check_shards([self.meta("u00"), self.meta("u01")], lambda m: "h-" + m["name"])
+
+    def test_mixed_code_or_changed_content_is_rejected(self):
+        for metas, recompute in (([self.meta("u00"), self.meta("u01", code="c2")], lambda m: "h-" + m["name"]),
+                                 ([self.meta("u00"), self.meta("u01", commit="k2")], lambda m: "h-" + m["name"]),
+                                 ([self.meta("u00")], lambda m: "other")):
+            with self.subTest(metas=metas):
+                with self.assertRaises(ValueError):
+                    check_shards(metas, recompute)
 
 
 class Layers(unittest.TestCase):

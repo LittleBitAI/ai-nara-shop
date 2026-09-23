@@ -64,7 +64,13 @@ python -X utf8 tools/unlabeled_d.py `
   --run reports/label-compare/unlabeled-d/run-1790158912214587070 --out <새 폴더>
 ```
 
-결과 `d.jsonl` 은 `run-1790158912214587070/d/d.jsonl` 과 바이트 동일하다. 같은 묶음이 두 폴더에 있으면 거부한다.
+결과 `d.jsonl` 은 `run-1790158912214587070/d/d.jsonl` 과 바이트 동일하다.
+
+도구는 D 를 내기 전에 출처 전체를 확인하고, 하나라도 어긋나면 거부한다.
+- `ids.txt` 와 `--input` 이 표본 manifest 의 해시와 같다
+- 모든 `--run` 폴더에 `summary.json` 이 있고, 성공 ID + 실패 집합 F 가 계획 건수(가장 큰 `notices`)와 같으며 표본 순서의 앞부분과 정확히 같다. 같은 묶음이 두 폴더에 있으면 거부
+- 모든 묶음의 코드(`DONE.json` commit, `run_report` code_sha256)가 같고, 각 묶음의 `records_sha256` 이 지금 읽은 입력 공고로 다시 계산한 값과 같다
+- CSV 셀이 운영 후처리 계약을 지킨다 — 값은 0/1, v3·v17 양성은 인용이 있고 음성은 없다
 
 ## 회차 2 결과 — 6,000건, v17 채택 · v3 기각
 
