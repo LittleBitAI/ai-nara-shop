@@ -28,7 +28,7 @@ class LocalGoodsServiceLimit(unittest.TestCase):
                 self.assertEqual(350_000_000, script.region_price_limit(notice(agency)))
 
     def test_sejong_and_lower_tiers_use_five_hundred_million(self):
-        cases = (notice("지방정부", extra="[수요기관(지방정부)] [지역:r1|단위=기초|광역=세종특별자치시]"),
+        cases = (notice("지방정부", extra="개찰장소 세종특별자치시 회계과 입찰집행관 PC"),
                  notice("기초자치단체"),
                  notice("중학교", owner="교육기관"),
                  notice("교육청", owner="교육기관"),
@@ -57,9 +57,9 @@ class LocalGoodsServiceLimit(unittest.TestCase):
         linked["docs"][0]["text"] = linked["docs"][0]["text"].replace(
             "[수요기관(지방정부)]", "[수요기관(지방정부)|지역=r1]")
         self.assertEqual(500_000_000, script.region_price_limit(linked))
-        # 발주기관 토큰 바로 뒤의 지역은 그 기관의 소재지다(무라벨 `PPS-D-014240`·`PPS-D-017264`)
-        adjacent = notice("지방정부", extra="접수장소: [수요기관(지방정부)] [지역:r1|단위=읍면동|광역=세종특별자치시]")
-        self.assertEqual(500_000_000, script.region_price_limit(adjacent))
+        # 기관 토큰 바로 뒤에 붙은 지역도 납품지다(무라벨 `PPS-D-014240` 의 `납품장소` 표기)
+        adjacent = notice("지방정부", extra="납품장소: [수요기관(지방정부)] [지역:r1|단위=읍면동|광역=세종특별자치시]")
+        self.assertEqual(350_000_000, script.region_price_limit(adjacent))
 
     def test_unbound_region_tokens_are_sites_not_the_agency(self):
         """기관에 묶이지 않은 지역 토큰은 현장·납품지다. 세종이어도, 아니어도 발주처를 정하지 않는다."""
