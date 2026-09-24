@@ -43,11 +43,17 @@ class ScopePilotTests(unittest.TestCase):
             output = Path(directory)
             pilot.hybrid_replay(payload, output)
             # 일부러 갈린 셀의 목록은 `replay_run.DELIBERATE_MOVES` 한 벌이 소유한다.
+            # `absence-replay` is the A5 H2 absence rule itself, which the bundle ported: its three v11
+            # positives are already in that CSV, so against it those cells do not move.
+            h2_cells = {("PPS-DEV-040", "v11"), ("PPS-DEV-061", "v11"), ("PPS-DEV-062", "v11")}
             for name, baseline in [('head', 'head-replay'), ('h2', 'absence-replay')]:
                 expected = pilot.ROOT/'reports/team-c/a5-label-definition'/baseline/'submission.csv'
+                moved = pilot.replay_run.DELIBERATE_MOVES
+                if name == 'h2':
+                    moved = [cell for cell in moved if cell not in h2_cells]
                 self.assertEqual(pilot.replay_run.csv_cell_diff((output/f'{name}-hybrid.csv').read_bytes(),
                                                                 expected.read_bytes()),
-                                 pilot.replay_run.DELIBERATE_MOVES)
+                                 moved)
 
     def test_schema_restoration_and_grounding_are_separate_from_semantics(self):
         original = script.company_size_schema

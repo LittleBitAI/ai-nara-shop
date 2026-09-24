@@ -47,13 +47,13 @@ ITEMS = ["v14", "v15", "v16", "v17", "v18"]
 # 재생으로 실측한 값. 기준은 HEAD 재생이며 보관 회차의 submission.csv 가 아니다.
 # 기준 commit 37fe53e. c9398ad·1b34786 에서도 같은 값이었다 — 베이스 세 지점에서 불변이다.
 # v17 은 운영 v17 인용 게이트(`v17_quote_is_narrow`)가 FP 넷(038·102·120·172)을 내려 6 → 2 다.
-EXPECTED_HEAD = {"v14": (7, 2, 1), "v15": (4, 1, 2), "v16": (4, 2, 2),
-                 "v17": (5, 2, 1), "v18": (1, 2, 6)}
 EXPECTED_CANDIDATE = {"v14": (7, 2, 1), "v15": (4, 1, 2), "v16": (4, 3, 2),
                       "v17": (5, 2, 1), "v18": (2, 4, 5)}
-# 판정이 실제로 바뀌는 셀. 22 만 TP 이고 나머지 셋은 FP 다.
-EXPECTED_CHANGED = {("PPS-DEV-22", "v18"), ("PPS-DEV-132", "v16"),
-                    ("PPS-DEV-163", "v18"), ("PPS-DEV-195", "v18")}
+# The rule is ported into script.py (feat/b-dev-gain-bundle), so HEAD now equals the candidate.
+# Measured before the port: HEAD v16 (4, 2, 2) · v18 (1, 2, 6), and the candidate moved exactly
+# ("PPS-DEV-22", "v18") TP · ("PPS-DEV-132", "v16") · ("PPS-DEV-163", "v18") · ("PPS-DEV-195", "v18").
+EXPECTED_HEAD = EXPECTED_CANDIDATE
+EXPECTED_CHANGED = set()
 
 
 def load_script():
@@ -196,7 +196,7 @@ class ReplayStoredRun(unittest.TestCase):
         for item, expected in EXPECTED_CANDIDATE.items():
             self.assertEqual(self.score(self.cand, item), expected, item)
 
-    def test_changed_cells_are_exactly_these_four(self):
+    def test_changed_cells_are_none_after_the_port(self):
         # 정답 CSV 는 e1~e24 근거 열도 들고 있다. 판정 열만 센다.
         changed = {(i, v) for i in self.head for v in self.script.ITEMS
                    if self.head[i][v]["위반여부"] != self.cand[i][v]["위반여부"]}

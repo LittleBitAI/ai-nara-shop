@@ -45,7 +45,9 @@ class ObserveTests(unittest.TestCase):
         self.assertEqual(counted["count"], 200)
         # 게이트는 모델 양성에서만 발화하고, 내리기만 한다.
         self.assertLessEqual(counted["gate_fired"], counted["model_v3"])
-        self.assertEqual(counted["final_v3"], counted["model_v3"] - counted["gate_fired"])
+        # The bundle's v3 deletion (#98 quoted_deletion) can lower a v3 the scope gate left alone,
+        # so the final count is at most model minus gate, not exactly that.
+        self.assertLessEqual(counted["final_v3"], counted["model_v3"] - counted["gate_fired"])
         for row in rows:
             if not row["model_v3"]:
                 self.assertEqual(row["gate_fired"], 0)
