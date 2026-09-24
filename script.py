@@ -159,7 +159,13 @@ MAX_TOKENS = 2048                       # 24항목 JSON과 짧은 인용을 위�
 # post-processing. The main call asks for the top LOGPROBS_K log-probabilities per token; P(1) per
 # item is recorded with each response. An empty ITEM_THRESHOLDS keeps the argmax answer unchanged.
 LOGPROBS_K = 5
-ITEM_THRESHOLDS: Dict[str, float] = {}
+# Tuned on dev 200 by tools/tune_thresholds.py from round colab-1790250265636150570 (c248bb1):
+# dev replay Macro 0.662425 -> 0.693747. Split-half check (tune on one half, score the other)
+# kept a gain both ways, +0.0056 and +0.0127. v4, v9 and v24 were picked in both halves; the
+# other five cuts each move one dev cell. Fitted to dev on purpose (user decision 2026-09-24).
+ITEM_THRESHOLDS: Dict[str, float] = {
+    "v1": 0.8, "v3": 0.8, "v4": 0.95, "v6": 0.6, "v9": 0.999, "v22": 0.9, "v23": 0.6, "v24": 0.01,
+}
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
