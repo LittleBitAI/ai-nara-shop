@@ -24,30 +24,49 @@ v11 의 **FN 4건이 전부 한 곳**에서 막힌다 — 후처리 경쟁제품
 | 항목 | 값 |
 | --- | --- |
 | 기준 commit | **`5efea8f`** (`origin/main`, PR #115 머지 뒤) |
-| 기준 CSV | **HEAD 재생** `reports/runs/colab-1789902969401579900/dev-debug` · Macro **0.652084267143** |
+| 기준 CSV | 재생 `reports/runs/colab-1789902969401579900/dev-debug` · Macro **0.652084267143** |
 | 기준 v11 | **2 / 3 / 4** · F1 0.363636 |
 | 변경 안 한 것 | `script.py` · `tools/` · `notebooks/` — `git diff --stat` 빈 출력 |
 
+**여기 적힌 수는 전부 `5efea8f` 의 `script.py` 로 낸 것이다.** 아래 명령이 그 코드를
+`--script`·`--rev` 로 못 박는다. **작업 트리 판을 쓰는 명령은 안 적는다** — 그러면
+`main` 이 움직인 뒤 같은 명령이 다른 수를 내면서 이 표는 그대로 남는다.
+
 ```bash
+# ① 기준 CSV 와 Macro — 고정 코드로 재생·채점한다
+git show 5efea8f:script.py > <tmp>/script.py
+py -X utf8 tools/replay_run.py --case reports/runs/colab-1789902969401579900/dev-debug \
+  --script <tmp>/script.py --output-dir <head>
+py -X utf8 tools/score.py --truth open/dev_labels.csv --pred <head>/submission.csv \
+  --output-dir <score>          # → Macro F1=0.652084267143
+
+# ② 경로 분해 — 스크립트가 같은 커밋을 스스로 꺼내 쓴다
 py -X utf8 reports/team-c/c5-v11-paths/paths.py
 ```
 
-**판정 코드를 커밋으로 고정했다.** 리뷰 [P2]. 첫 판의 스크립트는 작업 트리의 `script.py` 를
-불러 쓰고 `paths.json` 을 **늘 덮어썼다.** 그러면 판정 코드가 바뀐 뒤에 위 명령을 그대로
-돌리기만 해도 **이 표의 commit·Macro 는 그대로인 채 근거 수만 바뀐다** — 다음 사람은 그
-JSON 을 §1 의 코드가 낸 것으로 읽는다.
+### 1-0. 왜 고정하나 — 리뷰 [P2]
 
-이제 `BASE_REV = "5efea8f"` 의 `script.py` 를 꺼내 쓰고, 다른 코드로 돌리면 **산출물을
-안 덮고 거부한다.** `paths.json` 에 `code_commit` 도 같이 적는다.
+첫 판은 둘 다 **작업 트리의 `script.py`** 를 썼다. 그러면 판정 코드가 바뀐 뒤에 문서의
+명령을 그대로 돌리기만 해도 **이 표의 commit·Macro 는 그대로인 채 수만 바뀐다.** 다음
+사람은 그것을 §1 의 코드가 낸 값으로 읽는다.
+
+고친 것 셋.
+
+| | 무엇 |
+| --- | --- |
+| **재생·채점** | 명령에 `--script`(고정 커밋에서 꺼낸 것)를 박았다. 작업 트리 판을 안 쓴다 |
+| **경로 분해** | `paths.py` 가 `BASE_REV = "5efea8f"` 를 `git show` 로 꺼내 쓴다 |
+| **덮어쓰기** | 다른 커밋으로 돌리면 화면에만 내고 **거부**한다. `paths.json` 에 `code_commit` 도 적는다 |
 
 ```bash
 py -X utf8 reports/team-c/c5-v11-paths/paths.py --rev <다른 커밋>
 #   → 화면에만 내고 "[덮어쓰지 않았다]" 로 거부한다
 ```
 
-검사 5건이 이것을 고정한다(`tests/test_c5_v11_paths.py`) — 작업 트리 판을 안 읽는 것,
+검사 일곱이 이것을 고정한다(`tests/test_c5_v11_paths.py`) — 작업 트리 판을 안 읽는 것,
 `BASE_REV` 가 이 표의 기준 commit 과 같은 것, 다른 커밋에서 파일이 안 바뀌는 것,
-고정 커밋에서 보관 산출물이 재현되는 것.
+고정 커밋에서 보관 산출물이 재현되는 것, **그리고 고정 재생이 이 표의 Macro 와 v11 을
+실제로 낸다는 것**.
 
 ### 1-1. 기준선이 두 번 움직였다 — 그래도 v11 은 안 움직였다
 

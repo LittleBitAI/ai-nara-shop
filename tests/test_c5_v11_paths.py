@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -100,6 +101,68 @@ class RefusesToOverwrite(unittest.TestCase):
     def test_the_pinned_commit_reproduces_the_saved_result(self):
         before, after, _proc = self.run_with(paths.BASE_REV)
         self.assertEqual(before, after, "고정 커밋인데 산출물이 달라졌다")
+
+
+class DocumentedRerunReproducesTheBaseline(unittest.TestCase):
+    """**§1 에 적힌 명령이 §1 에 적힌 수를 내는가.** 리뷰 [P2] 의 나머지 절반.
+
+    `paths.py` 를 고정해도 §1 의 `기준 CSV`·`Macro` 는 별도 명령(`replay_run` + `score`)이
+    낸 값이다. 그 명령이 **작업 트리의 `script.py`** 를 쓰면, 코드가 바뀐 뒤 같은 명령이
+    다른 Macro 를 내면서 이 표는 그대로 남는다 — 고정한 쪽과 안 한 쪽이 갈린다.
+
+    그래서 여기서는 **보고서에서 수를 읽어와** 고정 커밋 재생이 그것을 내는지 본다.
+    보고서를 고치면 검사가 따라 움직이고, 재생이 달라지면 검사가 먼저 운다.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        if shutil.which("git") is None:
+            raise unittest.SkipTest("git 이 없다")
+        if not (ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
+                / "diagnostics.jsonl").is_file():
+            raise unittest.SkipTest("보관 회차가 없다")
+        cls.report = REPORT.read_text(encoding="utf-8")
+        cls.tmp = tempfile.TemporaryDirectory()
+        root = Path(cls.tmp.name)
+        pinned = root / "script.py"
+        pinned.write_bytes(subprocess.run(
+            ["git", "-C", str(ROOT), "show", f"{paths.BASE_REV}:script.py"],
+            capture_output=True, check=True).stdout)
+        run = subprocess.run(
+            [sys.executable, "-X", "utf8", str(ROOT / "tools/replay_run.py"),
+             "--case", str(ROOT / "reports/runs/colab-1789902969401579900/dev-debug"),
+             "--script", str(pinned), "--output-dir", str(root / "head")],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=ROOT)
+        if run.returncode != 0:
+            raise AssertionError(f"고정 재생 실패\n{run.stdout}\n{run.stderr}")
+        score = subprocess.run(
+            [sys.executable, "-X", "utf8", str(ROOT / "tools/score.py"),
+             "--truth", str(ROOT / "open/dev_labels.csv"),
+             "--pred", str(root / "head/submission.csv"),
+             "--output-dir", str(root / "score")],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=ROOT)
+        if score.returncode != 0:
+            raise AssertionError(f"채점 실패\n{score.stdout}\n{score.stderr}")
+        cls.metrics = json.loads((root / "score/metrics.json").read_text(encoding="utf-8"))
+
+    @classmethod
+    def tearDownClass(cls):
+        if hasattr(cls, "tmp"):
+            cls.tmp.cleanup()
+
+    def test_the_pinned_replay_gives_the_documented_macro(self):
+        found = re.search(r"Macro \*\*([0-9.]+)\*\*|Macro F1=([0-9.]+)", self.report)
+        self.assertIsNotNone(found, "README §1 에서 Macro 를 못 찾았다")
+        documented = found[1] or found[2]
+        self.assertEqual(f"{self.metrics['macro_f1']:.12f}", documented,
+                         "고정 커밋 재생이 보고서의 Macro 를 못 낸다 — 둘 중 하나가 낡았다")
+
+    def test_the_pinned_replay_gives_the_documented_v11(self):
+        found = re.search(r"기준 v11 \| \*\*(\d+) / (\d+) / (\d+)\*\*", self.report)
+        self.assertIsNotNone(found, "README §1 에서 기준 v11 을 못 찾았다")
+        item = self.metrics["items"]["v11"]
+        self.assertEqual((item["tp"], item["fp"], item["fn"]),
+                         tuple(int(found[i]) for i in (1, 2, 3)))
 
 
 if __name__ == "__main__":
