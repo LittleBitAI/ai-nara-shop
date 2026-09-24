@@ -58,7 +58,12 @@ ABSENCE = ["v10", "v11", "v16", "v18", "v20"]          # 부재탐지 항목: �
 # 내리는 것이고 여기 적힌 것만 예외다. v24 는 공고서와 나라장터 등록값의 대조형이라 근거가
 # 한 구절로 안 잡히는 것이 정상이고, 조문 없는 항목에 조문형 계약을 씌우지 않는다.
 # 빼면 dev 에서 +0.001497 인데 churn 상한 0.004689 아래라 측정으로 정당화되지 않는다.
-EVIDENCE_EXEMPT = ["v24"]
+# v9 joined with the bundle (2026-09-25): its model positives without a verbatim quote are kept.
+# Dev +0.0023 on colab-1790250265636150570 (050 TP, one FP). Fitted to dev on purpose.
+EVIDENCE_EXEMPT = ["v24", "v9"]
+# Items whose quote gets its whitespace restored before the evidence check. v1 only: applied to
+# every item it also revived v6/v9 false positives; for v1 alone it recovers PPS-DEV-01 (+0.0053).
+QUOTE_RESTORE_ITEMS = ("v1",)
 
 # ----- 금액 경계: 제공 조문에서 온다 (experiments/sme_candidate.py와 같은 출처) -----
 # 고시금액: 재정경제부장관 고시 1.가 (물품 및 용역) — 국가계약법 시행령 제2조제3호.
@@ -3152,6 +3157,9 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
         hit = 1 if cell.get("위반여부") == 1 else 0
         ev = ""
         if hit and v not in ABSENCE:
+            if v in QUOTE_RESTORE_ITEMS and isinstance(cell.get("근거문구"), str):
+                cell["근거문구"] = (restore_spacing(cell["근거문구"], rec, build_context(rec))
+                                   or cell["근거문구"])
             for doc in rec["docs"]:
                 ev = clean_evidence(cell.get("근거문구"), doc["text"])
                 if ev:

@@ -726,14 +726,15 @@ class BaselineTests(unittest.TestCase):
         # test_violation_without_a_verified_quote_is_lowered 가 그 규칙을 소유한다.
         # 여기서는 evidence_refutes 가 못 본 자리도 같은 계약에 걸린다는 것만 본다.
         # v24 는 그 계약에서 빠지지만 대조 검사가 대신 받는다 — 이 기록에는 축이 찾을
-        # 불일치가 없으므로 결국 같이 내려간다. 네 자리 모두 0 인 이유가 서로 다르다.
+        # 불일치가 없으므로 결국 같이 내려간다. v9 는 번들(2026-09-25)에서 계약 면제가 됐다 —
+        # 원문 그대로의 인용이 없어도 모델 양성을 둔다(dev +0.0023). 그래서 v9 만 1 이다.
         rec = record()
         obj = valid()
         for item in ("v9", "v19", "v21", "v24"):
             obj[item] = {"위반여부": 1, "근거문구": None}
         obj["v21"]["근거문구"] = "원문에 없는 공동수급 불가"
         out = baseline.postprocess(obj, rec)
-        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 0, 0, 0])
+        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [1, 0, 0, 0])
 
     def test_v6_raises_a_basic_region_limit_the_model_missed(self):
         """D9 의 U — 참가자격의 시·군·구 제한을 모델이 0 으로 둔 자리에서 올린다.
