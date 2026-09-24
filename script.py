@@ -2726,15 +2726,24 @@ V23_BRIEFING_EVALUATION = re.compile(
 V23_BRIEFING_EVALUATION_REACH = 40
 V23_BRIEFING_WINDOW = 120
 V23_BRIEFING_SKIPPED = re.compile(r"생략|미실시|실시하지\s*(?:않|아니)|갈음|해당\s*없음|없음")
+# 설명 문구와 날짜 사이에 이것이 끼면 그 날짜는 그 항목의 것이지 설명의 것이 아니다.
+# 단독 `일시`는 넣지 않는다 — `제안요청 설명회` ⏎ `일시 : …` 처럼 설명 자신의 날짜를
+# 그렇게 적는 공고가 있다(`PPS-DEV-28`·`139`·`141`).
+V23_OTHER_SCHEDULE = re.compile(
+    r"제출\s*기간|접수\s*기간|제출\s*마감|접수\s*마감|등록\s*마감|마감\s*일시|개찰|평가|공고\s*기간")
 
 # 원문 날짜. 슬래시 표기(`2026/03/23`)까지 읽는다 — 마감일을 원문에서 뽑기 때문이다.
 V23_DATE = re.compile(r"(20\d{2})\s*[.년/\-]\s*(\d{1,2})\s*[.월/\-]\s*(\d{1,2})")
 
-# 1단 — 마감이라고 스스로 말하는 자리.
+# 1단 — 마감이라고 스스로 말하는 자리. **무엇의 마감인지가 적혀 있어야 인정한다.**
+# 조문의 기산점은 「제안서 제출마감일」이다. 참가자격 등록 마감은 시행령 제13조·입찰참가자격
+# 등록규정의 별개 기한이고 기산점이 아니다. 전에는 주어와 동사가 둘 다 선택이라 `마감` 한
+# 낱말로 매치돼 `등록마감`·`자격 등록 마감`이 제안서 제출마감 행세를 했다(리뷰 P1).
+# 그래서 제출물 이름이나 `제출·접수` 중 하나를 **필수**로 만들고 `등록`을 뺀다.
 V23_DEADLINE_CLOSING = re.compile(
-    r"(?:제안서|입찰서|가격입찰서|기술제안서|제안·?가격|가격제안서|참가신청서)?\s*"
-    r"(?:제출|접수|등록)?\s*마감\s*(?:일시|일자|일)?"
-    r"|접수\s*마감")
+    r"(?:제안서|입찰서|가격입찰서|기술제안서|제안·?가격|가격제안서|참가신청서)\s*"
+    r"(?:제출|접수)?\s*마감\s*(?:일시|일자|일)?"
+    r"|(?:제출|접수)\s*마감\s*(?:일시|일자|일)?")
 # 2단 — 기간·일시로만 적힌 자리. 창 안의 마지막 날짜를 끝으로 읽는다.
 # `제출/접수` 와 `기간/일시` 사이만 줄바꿈을 넘게 한다. 공고가 앵커와 날짜를 다른 줄에 적는
 # 꼴(`바. 제안서 및 가격입찰서 제출 [방문접수]` 다음 줄에 `❍ 일 시 : …`)을 읽기 위한 것이다.
@@ -2792,7 +2801,13 @@ def v23_applies(rec: Dict[str, Any]) -> bool:
 
 
 def v23_briefing_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str, str]]:
-    """설명일. 공고게시일 이후의 가장 이른 날짜를 설명일로 읽는다."""
+    """설명일. 공고게시일 이후의 가장 이른 날짜를 설명일로 읽는다.
+
+    창 안의 아무 날짜나 쓰지 않는다. 설명 문구와 그 날짜 **사이에 다른 일정 항목의 라벨**이
+    끼어 있으면 그 날짜는 그 항목의 것이지 설명의 것이 아니다. 조문의 기산점은 설명을
+    **실시한 날**이므로, 실시일이 안 적힌 문구(`과업설명: <제안요청서> 참조`) 뒤의 제출·등록
+    일정 날짜를 설명일로 읽으면 없는 기산점을 지어내는 것이 된다(무라벨 `PPS-D-000870`).
+    """
     posted = _v23_as_date((rec.get("meta") or {}).get("공고게시일자"))
     if posted is None:
         return None
@@ -2810,6 +2825,8 @@ def v23_briefing_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str, str]]:
             for d in V23_DATE.finditer(window):
                 held = _v23_date_at(d)
                 if held is None or held < posted:
+                    continue
+                if V23_OTHER_SCHEDULE.search(window[:d.start()]):
                     continue
                 if best is None or held < best[0]:
                     best = (held, window.strip()[:V23_QUOTE_MAX], text)
@@ -2839,7 +2856,11 @@ def v23_deadline_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str]]:
                 found = [d for d in found if d >= posted]
                 if not found:
                     continue
-                bucket.append(((max(found) if take_last else min(found)),
+                # 1단은 **앵커 바로 뒤 첫 날짜**가 그 마감이다. 창 전체의 가장 이른 날짜를
+                # 고르면 뒤따르는 별개 항목의 **개시일**을 마감으로 집는다 — 무라벨
+                # `PPS-D-013261` 에서 `등록 마감일시: 3/23` 창이 다음 줄 `입찰서 제출기간:
+                # 3/20 ~` 의 개시일을 골랐다(리뷰 P1). 2단은 기간의 끝을 읽으므로 그대로 max 다.
+                bucket.append(((max(found) if take_last else found[0]),
                                window.strip()[:V23_QUOTE_MAX]))
     for bucket in (closing, period):
         if bucket:
