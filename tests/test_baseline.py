@@ -732,6 +732,99 @@ class BaselineTests(unittest.TestCase):
         out = baseline.postprocess(obj, rec)
         self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 0, 0, 0])
 
+    def test_v6_raises_a_basic_region_limit_the_model_missed(self):
+        """D9 의 U — 참가자격의 시·군·구 제한을 모델이 0 으로 둔 자리에서 올린다.
+
+        올리는 쪽의 기초 신호는 **익명화 토큰뿐**이다. dev 는 200건 전부 익명화라
+        시·군·구 지명이 토큰으로 오고, 이름으로 읽으면 `체결시`·`반드시` 를 문다.
+        """
+        basic = "[지역:r1|단위=기초|광역=경기도]"
+        wide = "[지역:r2|단위=광역|광역=경기도]"
+        def judged(text, meta=None):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "업무구분": "일반용역",
+                                "계약방법": "제한경쟁", "낙찰방법": "적격심사제",
+                                "입찰추정가격": 50_000_000, **(meta or {})})
+            out = baseline.postprocess(valid(), rec)
+            return out["v6"]
+
+        raised = judged(f"가. 주된 영업소의 소재지를 경기도 {basic}에 둔 업체")
+        self.assertEqual(1, raised["위반여부"])
+        self.assertIn("단위=기초", raised["근거문구"], "근거에 토큰이 남아야 한다")
+
+        # 융합 꼴. 주어와 서술이 한 낱말에 붙어 토큰이 앞에 와도 된다.
+        self.assertEqual(1, judged(f"가. 입찰참가자격: 지역제한(경기도 {basic}) 대상 용역입니다.")["위반여부"])
+
+        # 토큰의 역할이 납품 장소면 올리지 않는다 — 어순·구분자와 무관하다.
+        for tail in (f"업체, 납품장소는 {basic}", f"업체이며 납품장소는 {basic}",
+                     f"업체 납품장소는 {basic}"):
+            with self.subTest(tail[:14]):
+                self.assertEqual(0, judged(
+                    f"가. 입찰참가자격: 본점소재지가 경기도 {wide}에 있는 {tail}")["위반여부"])
+        self.assertEqual(0, judged(
+            f"가. 입찰참가자격: 납품장소는 {basic} 본점소재지는 경기도 {wide}에 있는 업체")["위반여부"])
+        self.assertEqual(0, judged(
+            f"가. 입찰참가자격: 납품장소의 소재지가 {basic}이며 본점소재지는 {wide}")["위반여부"])
+
+        # 이름으로 적은 `체결시`·`반드시` 는 기초 신호가 아니다.
+        self.assertFalse(baseline._v6_confirmed_basic("계약 체결시 서명 또는 날인하여"))
+        self.assertFalse(baseline._v6_confirmed_basic("반드시 나라장터에 등록하여야"))
+
+        # 금액과 소액수의 — 모르거나 예외 구간이면 올리지 않는다.
+        limit = f"가. 주된 영업소의 소재지를 경기도 {basic}에 둔 업체"
+        self.assertEqual(0, judged(limit, {"입찰추정가격": 500_000_000})["위반여부"])
+        self.assertEqual(0, judged(limit, {"입찰추정가격": None})["위반여부"])
+        self.assertEqual(0, judged(limit, {"낙찰방법": "소액수의견적"})["위반여부"])
+        # 국가계약의 소액수의는 지방 예외 조문 밖이라 올린다.
+        self.assertEqual(1, judged(limit, {"적용계약법": "국가계약법",
+                                           "낙찰방법": "소액수의견적"})["위반여부"])
+
+    def test_v6_quote_follows_the_bound_token_on_a_long_line(self):
+        """PR #128 리뷰 P2 — 긴 참가자격 줄에서 앞선 광역 토큰이 창을 끌고 가면 안 된다.
+
+        `ANON_REGION` 은 `단위=광역` 도 물기 때문에, 도막 안의 아무 지역 토큰이나 중심으로
+        잡으면 480자 상한에서 정작 묶인 기초 토큰이 인용 밖으로 밀려 정탐을 놓친다.
+        """
+        wide = "[지역:r1|단위=광역|광역=경기도]"
+        basic = "[지역:r2|단위=기초|광역=경기도]"
+        for repeats in (20, 65):
+            with self.subTest(repeats=repeats):
+                line = (f"가. 입찰참가자격: 사업 대상 지역은 {wide} 이다. "
+                        + "공고 안내 문구입니다. " * repeats
+                        + f"본점소재지를 {basic}에 둔 업체")
+                rec = record()
+                rec["docs"][0]["text"] = line
+                rec["meta"].update({"적용계약법": "지방계약법", "업무구분": "일반용역",
+                                    "계약방법": "제한경쟁", "낙찰방법": "적격심사제",
+                                    "입찰추정가격": 50_000_000})
+                quote = baseline.v6_should_raise(rec)
+                self.assertIsNotNone(quote, "긴 줄에서 정탐을 놓쳤다")
+                self.assertLessEqual(len(quote), baseline.QUOTE_MAX)
+                self.assertIn("단위=기초", quote, "묶인 토큰이 인용 밖으로 밀렸다")
+                self.assertIn(quote, line, "근거가 원문의 연속 구간이 아니다")
+                self.assertEqual(1, baseline.postprocess(valid(), rec)["v6"]["위반여부"])
+
+    def test_v6_reads_the_ordering_agency_token_only_on_the_raising_side(self):
+        """`PPS-DEV-071` 의 `[수요기관(기초자치단체)]내에 소재`.
+
+        올리는 쪽은 이 토큰을 기초 신호로 읽어야 `071` 을 올린다. 다만 **제한의 대상일
+        때만** 기초다 — 발주기관을 가리키기만 하는 문장은 아니다.
+
+        내리는 게이트(`_has_basic_unit`)는 **그대로 둔다.** 거기에 넣으면 게이트가 덜
+        내리게 되는데, 그 변화는 dev 에서 한 셀도 안 움직여 채점된 근거가 없다.
+        U 는 게이트 뒤에서 돌아 자기 근거가 게이트를 다시 타지 않으므로 필요도 없다.
+        """
+        target = "본점소재지가 [수요기관(기초자치단체)]내에 소재하고"
+        mention = "[수요기관(기초자치단체)]이 제시하는 시방서에 따라 납품이 가능한 업체"
+        self.assertTrue(baseline._v6_confirmed_basic(target))
+        self.assertFalse(baseline._v6_confirmed_basic(mention))
+        self.assertTrue(baseline._v6_evidence_supports_v6(target))
+        self.assertFalse(baseline._v6_evidence_supports_v6(mention))
+        self.assertFalse(baseline._v6_evidence_supports_v6(""))
+        # 내리는 게이트는 main 과 같은 판정을 유지한다.
+        self.assertFalse(baseline._has_basic_unit(target))
+
     def test_scope_gates_lower_only_the_out_of_scope_positives(self):
         """v3·v4·v5·v6 의 적용범위 게이트. 내리는 자리와 **안 내리는 자리**를 함께 고정한다."""
         def judged(item, quote, text=None, meta=None):
