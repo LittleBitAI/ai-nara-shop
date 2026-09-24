@@ -42,7 +42,9 @@ CASE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
 # `performance_below_budget()` reads the evidence quote and already drops 03 and 25, and
 # since the v17 adoption production `v17_quote_is_narrow()` drops 038, 102, 120 and 172.
 # Only the rejected v3 scoring-band cells are still the candidate's own.
-EXPECTED_CHANGED = {("PPS-DEV-112", "v3"), ("PPS-DEV-170", "v3")}
+# v17 was ported by #98 and v3 by feat/b-dev-gain-bundle, so the candidate now moves nothing.
+# Measured before the v3 port: ("PPS-DEV-112", "v3") and ("PPS-DEV-170", "v3"), both 1 -> 0.
+EXPECTED_CHANGED = set()
 
 
 def notice(text, estimated=89_090_909, budget=98_000_000):

@@ -246,8 +246,16 @@ class CompanySizeTests(unittest.TestCase):
             out, _ = script.verify_company_size(facts(), notice(price), 16000)
             self.assertEqual(out, {})
 
+    def test_complete_notice_decides_even_with_a_dropped_attachment(self):
+        """Bundle (C, #93/#97): 제한사항은 입찰공고에 명시해야 하므로 공고문이 온전하면 첨부가 빠져도 판정한다."""
+        rec, f = notice(), facts("unrestricted")
+        rec["dropped_doc_counts"] = {"제안요청서": 1}
+        out, reason = script.verify_company_size(f, rec, 16000)
+        self.assertEqual(out["v16"]["위반여부"], 1)
+        self.assertEqual(reason, "decided")
+
     def test_missing_documents_do_not_prove_absence(self):
-        for change in ("incomplete", "dropped", "truncated", "unobserved"):
+        for change in ("incomplete", "truncated", "unobserved"):
             rec, f = notice(), facts("unrestricted")
             if change == "incomplete":
                 rec["input_completeness"]["완전관측"] = False
