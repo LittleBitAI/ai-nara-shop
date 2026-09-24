@@ -154,6 +154,11 @@ META_FIELDS = [
 SEED = 20260826
 MAX_MODEL_LEN = 16384                   # 베이스라인 모델 컨텍스트 길이
 MAX_TOKENS = 2048                       # 24항목 JSON과 짧은 인용을 위한 출력 예약
+# S7-12: a fixed per-item threshold on the model's own 위반여부 0/1 token probability is allowed
+# post-processing. The main call asks for the top LOGPROBS_K log-probabilities per token; P(1) per
+# item is recorded with each response. An empty ITEM_THRESHOLDS keeps the argmax answer unchanged.
+LOGPROBS_K = 5
+ITEM_THRESHOLDS: Dict[str, float] = {}
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
@@ -947,7 +952,7 @@ class VLLMRunner:
                             "chat_template_sha256": hashlib.sha256(
                                 str(self.tok.chat_template).encode("utf-8")).hexdigest()}
         self.sp = SamplingParams(
-            temperature=0.0, max_tokens=max_tokens, seed=seed,
+            temperature=0.0, max_tokens=max_tokens, seed=seed, logprobs=LOGPROBS_K,
             structured_outputs=StructuredOutputsParams(json=schema, disable_any_whitespace=True),
         )
         import torch
@@ -982,13 +987,21 @@ class VLLMRunner:
                              chat_template_kwargs={"enable_thinking": False})
         for output in outs:
             completion = output.outputs[0] if output.outputs else None
-            self.last_response_info.append({
+            info = {
                 "prompt_tokens": len(output.prompt_token_ids) if output.prompt_token_ids is not None else None,
                 "output_tokens": len(completion.token_ids) if completion else 0,
                 "finish_reason": completion.finish_reason if completion else None,
                 "stop_reason": completion.stop_reason if completion else None,
                 "max_tokens": sp.max_tokens,
-            })
+            }
+            if completion is not None and getattr(completion, "logprobs", None):
+                steps = [(step[token].decoded_token or "",
+                          {alt.decoded_token or "": alt.logprob for alt in step.values()})
+                         for token, step in zip(completion.token_ids, completion.logprobs)]
+                probabilities = item_probabilities(steps)
+                if probabilities:
+                    info["item_p1"] = probabilities
+            self.last_response_info.append(info)
         return [o.outputs[0].text if o.outputs else "" for o in outs]
 
     def retry_chat(self, batch, items=None):
@@ -1082,7 +1095,7 @@ def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: in
 
 def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
               emit=None, debug_responses=False, items=None, phase="baseline",
-              baseline_texts=None, indices=None) -> List[Optional[str]]:
+              baseline_texts=None, indices=None, probabilities=None) -> List[Optional[str]]:
     """실패 공고만 재시도한다. 실제 러너는 출력 항목을 분할하며 결손은 허용하지 않는다."""
     if indices is not None and len(indices) != len(batch):
         raise ValueError("선택 공고 인덱스 건수 불일치")
@@ -1115,6 +1128,8 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
                    error_message=str(error), **fields)
             raise
         record("response", status="valid", **fields)
+        if probabilities is not None and info.get("item_p1") and fields["id"] is not None:
+            probabilities[fields["id"]] = info["item_p1"]
 
     stage = "call"
     batch_failed = False
@@ -1171,6 +1186,53 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
 
 
 # ===== 6. 파싱·후처리 =====
+VIOLATION_KEY = '"위반여부":'
+ITEM_KEY = re.compile(r'"(v\d{1,2})":\{')
+
+
+def item_probabilities(steps) -> Dict[str, float]:
+    """P(위반여부 = 1) per item from the generated tokens.
+
+    steps: [(chosen token text, {candidate token text: logprob}), ...] in generation order.
+    The digit after `"위반여부":` may share a token with its neighbours, so each candidate is
+    placed at the same offset and read at the digit's position. P(1) is renormalised over the
+    candidates that put a 0 or 1 there; items whose digit is not found are left out.
+    """
+    out, text = {}, ""
+    for chosen, candidates in steps:
+        before, after = text, text + chosen
+        start = after.rfind(VIOLATION_KEY)
+        at = start + len(VIOLATION_KEY) if start >= 0 else -1
+        if len(before) <= at < len(after) and after[at] in "01":
+            keys = ITEM_KEY.findall(after[:at])
+            weights = {"0": 0.0, "1": 0.0}
+            for token, logprob in candidates.items():
+                placed = before + token
+                if len(placed) > at and placed[at] in weights:
+                    weights[placed[at]] += math.exp(logprob)
+            total = weights["0"] + weights["1"]
+            if keys and total > 0:
+                out[keys[-1]] = weights["1"] / total
+        text = after
+    return out
+
+
+def apply_thresholds(parsed, probabilities, thresholds=None):
+    """S7-12: set 위반여부 from P(1) >= a fixed per-item threshold. Items with no threshold or no
+    recorded probability keep the model's answer. A lowered item loses its quote."""
+    thresholds = ITEM_THRESHOLDS if thresholds is None else thresholds
+    if not probabilities or not thresholds:
+        return parsed
+    for item, cut in thresholds.items():
+        p = probabilities.get(item)
+        if p is None or item not in parsed:
+            continue
+        hit = int(p >= cut)
+        if hit != parsed[item].get("위반여부"):
+            parsed[item] = {**parsed[item], "위반여부": hit, **({} if hit else {"근거문구": None})}
+    return parsed
+
+
 FENCE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.S)
 
 
@@ -2838,6 +2900,7 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                              "limit": limit, "chunk": chunk, "max_chars": max_chars,
                              "debug_responses": debug_responses, "max_model_len": MAX_MODEL_LEN,
                              "temperature": 0, "thinking": False, "sme_items": SME_ITEMS,
+                             "logprobs": LOGPROBS_K, "item_thresholds": dict(ITEM_THRESHOLDS),
                              "sme_selection": "baseline_v13_positive",
                              "extra_call_items": extra_call_items(),
                              "company_size_items": BAND_ITEMS, "company_size_document_checks": True,
@@ -2915,11 +2978,13 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     # 배치 추론
     t_inf = time.time()
     texts: List[str] = []
+    baseline_probabilities: Dict[str, Dict[str, float]] = {}
     for s in range(0, len(msgs_all), chunk):
         emit("chunk_started", chunk_start=s, count=len(msgs_all[s:s + chunk]))
         texts.extend(run_chunk(runner, msgs_all[s:s + chunk], start=s,
                                ids=[r["id"] for r in recs[s:s + chunk]], emit=emit,
-                               debug_responses=debug_responses))
+                               debug_responses=debug_responses,
+                               probabilities=baseline_probabilities))
         log(f"  {min(s + chunk, len(msgs_all))}/{len(msgs_all)}건 … {time.time() - t_inf:.0f}s")
     inf_seconds = time.time() - t_inf
 
@@ -3039,6 +3104,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     for index, (rec, text, sme_text, split_text, product_text, mc) in enumerate(
             zip(recs, texts, sme_texts, split_texts, product_texts, sme_chars)):
         parsed, _ = parse_judgment(text)
+        parsed = apply_thresholds(parsed, baseline_probabilities.get(rec["id"]))
         baseline_rows.append(to_row(rec["id"], postprocess(parsed, rec)))
         # 판정 스키마 단계를 얹는다. 실패·구간 밖은 merge_extra_call이 합동 판정으로 남긴다.
         # 재생 도구가 같은 함수를 쓴다 — 여기서만 얹으면 보관 원응답이 회차를 재현하지 못한다.
