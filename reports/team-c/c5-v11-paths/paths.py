@@ -16,20 +16,32 @@ v11 을 쓸 수 있는 자리는 운영 코드에 둘뿐이다.
     py -X utf8 reports/team-c/c5-v11-paths/paths.py
 
 모델을 부르지 않는다. 보관 회차의 원응답만 읽는다.
+
+**판정 코드를 커밋으로 고정한다.** 작업 트리의 `script.py` 를 부르면 `main` 이 움직일 때마다
+같은 보관 응답에서 다른 수가 나오고, 그것이 **보고서의 커밋·Macro 는 그대로인 채**
+추적 파일 `paths.json` 을 덮어쓴다 — 리뷰 [P2] 가 잡은 자리다. 그래서 `BASE_REV` 의
+`script.py` 를 꺼내 쓰고, 다른 코드로 돌리면 **산출물을 안 덮고 거부한다.**
+
+    py -X utf8 reports/team-c/c5-v11-paths/paths.py --rev <다른 커밋>   # 화면에만 낸다
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import importlib.util
 import io
 import json
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 CASE = ROOT / "reports/runs/colab-1789902969401579900/dev-debug"
 ITEM = "v11"
+# 이 폴더의 수를 낸 판정 코드. 보고서 §1 의 기준 commit 과 같아야 한다.
+BASE_REV = "5efea8f"
 
 
 def load(name, path):
@@ -38,6 +50,22 @@ def load(name, path):
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def load_pinned(rev):
+    """`rev:script.py` 를 임시 파일로 꺼내 모듈로 싣는다. 작업 트리 판을 안 쓴다."""
+    source = subprocess.run(["git", "-C", str(ROOT), "show", f"{rev}:script.py"],
+                            capture_output=True, check=True).stdout
+    path = Path(tempfile.mkdtemp(prefix=f"script-{rev}-")) / "script.py"
+    path.write_bytes(source)
+    return load(f"submission_{rev}", path)
+
+
+def resolve(rev):
+    """축약 커밋을 40자로 편다. 없는 커밋이면 여기서 죽는다."""
+    out = subprocess.run(["git", "-C", str(ROOT), "rev-parse", f"{rev}^{{commit}}"],
+                         capture_output=True, text=True, check=True)
+    return out.stdout.strip()
 
 
 def read_responses():
@@ -68,8 +96,13 @@ def gate_trace(script, rec):
     return {"직생요구": True, "카탈로그": True, "중소허용": False, "막힌곳": None}
 
 
-def main():
-    script = load("submission", ROOT / "script.py")
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--rev", default=BASE_REV,
+                        help="판정에 쓸 script.py 의 커밋. 기본은 이 폴더가 고정한 것")
+    args = parser.parse_args(argv)
+    pinned, wanted = resolve(BASE_REV), resolve(args.rev)
+    script = load_pinned(args.rev)
     _, products = script.load_sme_reference(str(ROOT / "open/data"))
     settings = json.loads((CASE / "run_report.json").read_text(encoding="utf-8"))
     settings = settings["reproduction"]["settings"]
@@ -123,12 +156,20 @@ def main():
                 "앞단계": before, **trace,
             })
 
-    payload = {"item": ITEM, "dev_n": 200, "cells": rows,
-               "gate_tally": dict(sorted(tally.items()))}
-    with io.open(Path(__file__).with_name("paths.json"), "w",
-                 encoding="utf-8", newline="\n") as stream:
-        json.dump(payload, stream, ensure_ascii=False, indent=1)
-        stream.write("\n")
+    payload = {"item": ITEM, "dev_n": 200, "code_commit": wanted,
+               "cells": rows, "gate_tally": dict(sorted(tally.items()))}
+    target = Path(__file__).with_name("paths.json")
+    if wanted == pinned:
+        with io.open(target, "w", encoding="utf-8", newline="\n") as stream:
+            json.dump(payload, stream, ensure_ascii=False, indent=1)
+            stream.write("\n")
+    else:
+        # **다른 코드의 수로 보관 산출물을 덮지 않는다.** 덮으면 보고서의 커밋·Macro 는
+        # 그대로인 채 근거만 바뀌고, 다음 사람은 그 JSON 을 §1 의 코드가 낸 것으로 읽는다.
+        print(f"\n[덮어쓰지 않았다] --rev {args.rev} ({wanted[:7]}) 는 이 폴더가 고정한 "
+              f"{BASE_REV} ({pinned[:7]}) 가 아니다.\n"
+              f"  {target.name} 은 그대로 두고 화면에만 냈다. 보관 산출물을 갱신하려면 "
+              f"보고서 §1 의 기준 commit 과 BASE_REV 를 같이 옮겨라.", file=sys.stderr)
 
     print(f'{"공고":<6}{"판정":<5}{"경로":<14}{"앞단계":>6}{"직생":<7}{"카탈로그":<10}'
           f'{"중소허용":<9}{"막힌곳"}')
