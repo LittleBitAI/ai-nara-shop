@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-ht1ys59o/repo",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "feat/d-v23-axis-a"
+  ],
+  "cwd": "/content/t1-colab-ht1ys59o",
+  "started": 1790231907.3060691,
+  "returncode": 0,
+  "elapsed_seconds": 0.47054147720336914
+}
