@@ -83,16 +83,38 @@ def digest(text):
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def build_prompt(table):
+# With --law-excerpt the statute clauses travel inside the prompt and the bundle carries no
+# statute package. Past runs spent most of their tokens searching the 4.8 MB package with file
+# tools (~9 turns and ~420k cache-read tokens per notice); a single turn without tools is the fix.
+FILE_SOURCES = """- The statute snapshot under ./법령패키지/ in your working directory. Read it with your file tools.
+  ./법령패키지/중기부고시/중기부고시_경쟁제품_세부품명.csv is the product list to match 세부품명번호 against.
+Do not search the web, do not open files outside your working directory, and do not rely on statutes
+you remember."""
+INLINE_SOURCES = """- The statute clauses quoted verbatim under "Statute excerpt" below, copied from the provided snapshot.
+You have no tools. Do not rely on statutes you remember."""
+
+
+def build_prompt(table, items=ITEMS, excerpt=None):
     lines = []
-    for item in ITEMS:
+    for item in items:
         entry = table[item]
         tag = "  [부재탐지: the violation is a missing mandatory requirement]" if entry["부재탐지"] else ""
         note = f" ({entry['비고']})" if entry.get("비고") else ""
         laws = " | ".join(part for part in (entry.get("국가계약법"), entry.get("지방계약법")) if part)
         reference = f"\n    근거 조문: {laws}" if laws else ""
         lines.append(f"- {item}: {entry['항목명']}{note}{tag}{reference}")
-    return HEAD + "\n" + "\n".join(lines) + "\n" + TAIL + "\n"
+    head, tail = HEAD, TAIL
+    assert FILE_SOURCES in head and "exactly v1 through v24" in tail   # the replacements below must bite
+    if excerpt is not None:
+        head = head.replace(FILE_SOURCES, INLINE_SOURCES)
+    if list(items) != ITEMS:
+        head = head.replace("against a fixed list of 24 possible\nviolations",
+                            f"against {len(items)} of the 24 possible\nviolations")
+        tail = tail.replace("exactly v1 through v24", "exactly " + ", ".join(items))
+    body = head + "\n" + "\n".join(lines) + "\n"
+    if excerpt is not None:
+        body += "\nStatute excerpt:\n" + excerpt.strip() + "\n"
+    return body + tail + "\n"
 
 
 def build_notice(module, rec):
@@ -145,7 +167,18 @@ def cover_ids(truth, per_item, negatives=0):
 
 
 def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
-           truth_path=None, cover=None, negatives=0):
+           truth_path=None, cover=None, negatives=0, items=ITEMS, excerpt_path=None,
+           question_path=None, keys=()):
+    # --question: the labeler reads facts under the given keys and code decides the verdict.
+    question = Path(question_path).read_text(encoding="utf-8") if question_path else None
+    if (question is None) != (not keys):
+        raise ValueError("--question 과 --keys 는 함께 쓴다")
+    items = list(items)
+    if not items or any(item not in ITEMS for item in items):
+        raise ValueError(f"항목은 v1~v24 중에서 고른다: {items}")
+    excerpt = Path(excerpt_path).read_text(encoding="utf-8") if excerpt_path else None
+    if excerpt is not None and not excerpt.strip():
+        raise ValueError(f"조문 발췌가 비었다: {excerpt_path}")
     bundle = Path(bundle).resolve()
     if bundle == ROOT or ROOT in bundle.parents:
         raise ValueError(f"번들을 저장소 안에 만들 수 없다: {bundle}. "
@@ -178,7 +211,7 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
     if not laws.is_dir():
         raise ValueError(f"제공 법령 스냅샷이 없다: {laws}")
 
-    prompt = build_prompt(table)
+    prompt = question if question is not None else build_prompt(table, items, excerpt)
     staged = bundle.with_name(bundle.name + ".partial")
     if staged.exists():
         shutil.rmtree(staged)
@@ -189,7 +222,8 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
         (staged / "notices" / f"{rec['id']}.md").write_text(text, encoding="utf-8", newline="\n")
         notices.append({"id": rec["id"], "sha256": digest(text), "chars": len(text)})
     (staged / "prompt.md").write_text(prompt, encoding="utf-8", newline="\n")
-    shutil.copytree(laws, staged / "법령패키지")
+    if excerpt is None and question is None:
+        shutil.copytree(laws, staged / "법령패키지")
     manifest = {
         "purpose": "external_label_comparison",
         "note": "정답 라벨은 들어 있지 않다. 저장소 밖에 두어 dev 정답·과거 오답 분석과 분리한다.",
@@ -198,7 +232,12 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
         "input_sha256": module.file_sha256(input_path),
         "item_table_sha256": module.file_sha256(Path(data_dir) / "항목표.json"),
         "prompt_sha256": digest(prompt),
-        "law_file_count": sum(1 for p in laws.rglob("*") if p.is_file()),
+        "items": None if question is not None else items,
+        "question": module.record_path(str(question_path)) if question_path else None,
+        "keys": list(keys) or None,
+        "law_excerpt": module.record_path(str(excerpt_path)) if excerpt_path else None,
+        "law_excerpt_sha256": digest(excerpt) if excerpt is not None else None,
+        "law_file_count": 0 if excerpt is not None or question is not None else sum(1 for p in laws.rglob("*") if p.is_file()),
         "selection": selection,
         "notice_count": len(notices), "notices": notices,
     }
@@ -208,7 +247,35 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
     return manifest
 
 
-def parse_labels(module, text, identifier, notice_text):
+def unwrap(reply):
+    """Split a `claude -p --output-format json` envelope into (reply text, usage). Plain text passes."""
+    try:
+        data = json.loads(reply)
+    except ValueError:
+        return reply, None
+    if isinstance(data, dict) and data.get("type") == "result" and "result" in data:
+        keys = ("usage", "num_turns", "total_cost_usd", "duration_ms")
+        return data["result"] or "", {key: data.get(key) for key in keys}
+    return reply, None
+
+
+def parse_facts(module, text, identifier, notice_text, keys):
+    """A --question reply: one JSON object with exactly `keys`. Values are kept as given."""
+    if "�" in text:
+        raise ValueError(f"{identifier}: 응답에 깨진 문자가 있다")
+    data = module.extract_json(text)
+    if not isinstance(data, dict) or sorted(data) != sorted(keys):
+        raise ValueError(f"{identifier}: 키 불일치 {sorted(data) if isinstance(data, dict) else data}")
+    checks = {}
+    for key in (k for k in keys if k.endswith("quote")):     # `quote`, `v9_quote`, ...
+        quote = data.get(key)
+        if quote is not None and not isinstance(quote, str):
+            raise ValueError(f"{identifier}: {key} 는 문자열이거나 null이다")
+        checks[f"{key}_원문일치"] = bool(quote) and quote in notice_text
+    return {**data, **checks}
+
+
+def parse_labels(module, text, identifier, notice_text, items=ITEMS):
     if "�" in text:
         # 자식이 cp949로 내보내고 부모가 UTF-8로 읽으면 한국어 키가 깨진 채로 도착한다.
         # 그대로 두면 "필드 불일치 ['��...']"라는 엉뚱한 줄에서 터져 인코딩 사고로 안 보인다.
@@ -217,10 +284,10 @@ def parse_labels(module, text, identifier, notice_text):
     data = module.extract_json(text)
     if not isinstance(data, dict):
         raise ValueError(f"{identifier}: JSON 객체가 아니다")
-    if sorted(data) != sorted(ITEMS):
+    if sorted(data) != sorted(items):
         raise ValueError(f"{identifier}: 항목 키 불일치 {sorted(data)}")
     parsed = {}
-    for item in ITEMS:
+    for item in items:
         cell = data[item]
         if not isinstance(cell, dict) or sorted(cell) != sorted(CELL):
             raise ValueError(f"{identifier}/{item}: 필드 불일치 "
@@ -248,6 +315,8 @@ def label(module, *, bundle, cmd, out, model_label, ids=(), limit=None, timeout=
     prompt = (bundle / "prompt.md").read_text(encoding="utf-8")
     if digest(prompt) != manifest["prompt_sha256"]:
         raise ValueError(f"{bundle}/prompt.md 가 manifest와 다르다. 두 모델에 같은 프롬프트를 줘야 한다")
+    items = manifest.get("items") or ITEMS          # bundles made before --items label all 24
+    keys = manifest.get("keys")
     out = Path(out)
     done = set()
     if out.exists():
@@ -283,26 +352,29 @@ def label(module, *, bundle, cmd, out, model_label, ids=(), limit=None, timeout=
                 text=True, encoding="utf-8", errors="replace", timeout=timeout,
                 env={**os.environ, "PYTHONIOENCODING": "utf-8"})
             elapsed = time.perf_counter() - began
-            reply = completed.stdout or ""
             (bundle / "raw" / model_label).mkdir(parents=True, exist_ok=True)
             (bundle / "raw" / model_label / f"{entry['id']}.txt").write_text(
-                reply, encoding="utf-8", newline="\n")
-            print(f"[{index}/{len(todo)}] {entry['id']} {elapsed:.1f}s exit={completed.returncode}",
+                completed.stdout or "", encoding="utf-8", newline="\n")
+            reply, usage = unwrap(completed.stdout or "")
+            print(f"[{index}/{len(todo)}] {entry['id']} {elapsed:.1f}s exit={completed.returncode}"
+                  + (f" turns={usage['num_turns']} usage={json.dumps(usage['usage'])}" if usage else ""),
                   file=sys.stderr, flush=True)
             try:
                 if completed.returncode != 0:
                     raise ValueError(f"명령이 {completed.returncode}로 끝났다: "
                                      f"{(completed.stderr or '').strip()[:200]}")
-                labels = parse_labels(module, reply, entry["id"], notice)
+                labels = (parse_facts(module, reply, entry["id"], notice, keys) if keys
+                          else parse_labels(module, reply, entry["id"], notice, items))
             except ValueError as exc:
                 failures.append({"id": entry["id"], "error": str(exc)})
                 continue
             stream.write(json.dumps({
-                "id": entry["id"], "model": model_label, "labels": labels,
+                "id": entry["id"], "model": model_label, ("facts" if keys else "labels"): labels,
                 "prompt_sha256": manifest["prompt_sha256"], "notice_sha256": entry["sha256"],
                 "command": cmd, "elapsed_seconds": elapsed,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "raw_sha256": digest(reply),
+                "raw_sha256": digest(completed.stdout or ""),
+                **({"usage": usage} if usage else {}),
             }, ensure_ascii=False) + "\n")
             stream.flush()
     summary = {
@@ -385,6 +457,12 @@ def main(argv=None):
                     help="항목마다 양성 N건을 덮는 공고만 고른다. 전량보다 훨씬 적은 시간에 24항목을 덮는다")
     ex.add_argument("--negatives", type=int, default=0,
                     help="양성이 하나도 없는 공고를 몇 건 더 넣을지. 오탐 측정의 편향을 줄인다")
+    ex.add_argument("--items", default="", help="쉼표로 구분한 항목. 비우면 24항목 전부")
+    ex.add_argument("--question", help="항목 판정 대신 사실만 묻는 프롬프트 파일. 판정은 코드가 한다. --keys 와 함께")
+    ex.add_argument("--keys", default="", help="--question 응답 JSON 의 키, 쉼표 구분")
+    ex.add_argument("--law-excerpt",
+                    help="제공 스냅샷에서 그대로 옮긴 조문 발췌 파일. 주면 프롬프트에 넣고 법령 패키지를 번들에 넣지 않는다. "
+                         "도구 없는 명령(--tools \"\")과 함께 쓴다")
 
     ru = sub.add_parser("run", help="번들의 공고를 외부 CLI에 하나씩 물어 라벨을 모은다")
     ru.add_argument("--bundle", required=True)
@@ -414,7 +492,10 @@ def main(argv=None):
                 result = export(module, input_path=args.input, data_dir=args.data_dir,
                                 bundle=args.bundle, ids=ids, limit=args.limit,
                                 truth_path=args.truth_path, cover=args.cover,
-                                negatives=args.negatives)
+                                negatives=args.negatives,
+                                items=[x.strip() for x in args.items.split(",") if x.strip()] or ITEMS,
+                                excerpt_path=args.law_excerpt, question_path=args.question,
+                                keys=[x.strip() for x in args.keys.split(",") if x.strip()])
             else:
                 result = label(module, bundle=args.bundle, cmd=args.cmd, out=args.out,
                                model_label=args.model_label, ids=ids, limit=args.limit,

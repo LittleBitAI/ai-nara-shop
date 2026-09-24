@@ -1,0 +1,13 @@
+{
+  "purpose": "external_label_comparison",
+  "model": "sonnet5-v21-facts",
+  "command": "claude -p --model claude-sonnet-5 --effort medium --tools \"\" --strict-mcp-config --system-prompt \"You extract facts from Korean public procurement notices. Follow the user message exactly and answer with the requested JSON only.\" --disable-slash-commands --no-session-persistence --output-format json",
+  "bundle_prompt_sha256": "d68c9801b70808e3f0c279462efaa3f0b9ad952d4e9265b1cd270a8ceb2446ee",
+  "requested": 84,
+  "labelled": 84,
+  "skipped_already_done": 0,
+  "failures": [],
+  "elapsed_seconds": 533.3351227999992,
+  "created_at": "2026-09-24T03:04:30.513047+00:00",
+  "note": "외부 LLM은 라벨 생성 단계 전용이다(R6). 제출 추론에서 호출하지 않는다."
+}
