@@ -999,6 +999,7 @@ class VLLMRunner:
                           {alt.decoded_token or "": alt.logprob for alt in step.values()})
                          for token, step in zip(completion.token_ids, completion.logprobs)]
                 probabilities = item_probabilities(steps)
+                info["item_p1_count"] = len(probabilities)   # 0 here means the reader missed the digits
                 if probabilities:
                     info["item_p1"] = probabilities
             self.last_response_info.append(info)
@@ -1186,8 +1187,9 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
 
 
 # ===== 6. 파싱·후처리 =====
-VIOLATION_KEY = '"위반여부":'
-ITEM_KEY = re.compile(r'"(v\d{1,2})":\{')
+# The model pretty-prints (`"위반여부": 1` with newlines), so both keys allow whitespace.
+VIOLATION_KEY = re.compile(r'"위반여부"\s*:\s*')
+ITEM_KEY = re.compile(r'"(v\d{1,2})"\s*:\s*\{')
 
 
 def item_probabilities(steps) -> Dict[str, float]:
@@ -1201,8 +1203,9 @@ def item_probabilities(steps) -> Dict[str, float]:
     out, text = {}, ""
     for chosen, candidates in steps:
         before, after = text, text + chosen
-        start = after.rfind(VIOLATION_KEY)
-        at = start + len(VIOLATION_KEY) if start >= 0 else -1
+        offset = max(0, len(before) - 40)       # the key ends at most a few tokens back
+        found = [m.end() + offset for m in VIOLATION_KEY.finditer(after[offset:])]
+        at = found[-1] if found else -1
         if len(before) <= at < len(after) and after[at] in "01":
             keys = ITEM_KEY.findall(after[:at])
             weights = {"0": 0.0, "1": 0.0}
