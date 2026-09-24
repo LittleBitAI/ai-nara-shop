@@ -2368,8 +2368,28 @@ BASIC_REGION_NAME = re.compile(r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)"
                                r"(?:(?![가-힣])|(?=[에의은는이가을를와과로내산]))")
 
 
+# 발주기관 토큰으로 기초를 적은 공고가 있다 — `PPS-DEV-071` 의
+# `본점소재지(…)가 [수요기관(기초자치단체)]내에 소재하고`. data.md D3 이 기관 유형을
+# 판단에 쓸 수 있다고 한다. 지명을 복원하지는 않는다(R10).
+#
+# **그 토큰이 제한의 대상일 때만** 기초 신호다. 존재만 보면
+# `[수요기관(기초자치단체)]이 제시하는 시방서에 따라 납품이 가능한 업체` 처럼 발주기관을
+# 가리키기만 하는 문장까지 기초로 읽는다 — 그 공고의 제한은 `충청북도`(광역)다
+# (무라벨 `PPS-D-011742` 실측).
+BASIC_AGENCY_TARGET = re.compile(
+    r"\[수요기관\(기초자치단체\)[^\]]*\]\s*(?:내|안|관내)?\s*(?:에|에서)?\s*(?:소재|있는|위치|둔|두고)"
+    r"|\[수요기관\(기초자치단체\)[^\]]*\]\s*(?:내에|관내에|안에)")
+
+
 def _has_basic_unit(text: str) -> bool:
-    """이 인용이 기초(시·군·구) 단위 제한을 가리키는가."""
+    """이 인용이 기초(시·군·구) 단위 제한을 가리키는가.
+
+    **여기에 `BASIC_AGENCY_TARGET` 을 넣지 않는다.** 넣으면 내리는 게이트가 덜 내리게 되고,
+    그것은 이 변경이 재려는 가설이 아니다 — 무라벨 5,500건에서 27셀이 1 로 남는데
+    dev 에서는 한 셀도 안 움직여 채점된 근거가 없다(실측). 올리는 쪽에서 그 토큰이 필요한
+    자리는 `_v6_confirmed_basic()` 이 따로 가지고 있고, U 는 이 게이트 뒤에서 돌아
+    자기 근거가 게이트를 다시 타지 않는다.
+    """
     if any(unit == "기초" for unit in ANON_REGION.findall(text or "")):
         return True
     # 광역 이름을 먼저 지운다. "서울특별시"의 "특별시"를 기초로 세지 않기 위해서다.
@@ -2391,6 +2411,218 @@ def v6_not_a_basic_region_limit(evidence: str, rec: Dict[str, Any]) -> bool:
     if len(wide) >= 2 and not _has_basic_unit(evidence):
         return True                                     # ③ 광역 확대 — v7 의 몫이다
     return False
+
+
+# ----- v6 올림 (D9 의 U 규칙, PR #114 에서 후보로 검증) -----
+#
+# 운영진이 S7-15 에서 `단위=기초` 를 시·군·구 지명 표시라고 공인했다. 참가자격의 지역 제한
+# 문장 안에 그 토큰이 있고, 추정가격이 지역제한 금액 미만이고, 지방 소액수의 견적이 아니면
+# v6 이다. 위 게이트는 내리기만 하므로 이 규칙이 dev 미탐 `070`·`071` 을 올린다.
+#
+# **관계를 "금지어가 없다" 로 세우지 않는다.** 후보에서 그렇게 만들었다가 리뷰 여섯 라운드
+# 동안 같은 자리가 계속 뚫렸다(납품 장소 토큰, 역순 어순, 장소를 꾸미는 소재지). 무엇이
+# 있으면 성립하는지를 적는다 — 지역 제한 문장은 두 꼴 중 하나다.
+#   ① 주어-서술  `<참가 업체의 소재지 주어>` … `<지역>` … `<두다·소재하다·있다>`
+#   ② 융합       `지역제한(<지역>)` · `<지역> 지역 업체`
+# ①의 주어는 **참가 업체의 것**이어야 한다. `납품장소의 소재지` 는 `소재지` 가 있어도
+# 머리가 납품 장소이므로 주어가 아니다.
+
+# 절 경계. 쉼표·세미콜론에서 자르되 괄호 안에서는 자르지 않는다 —
+# `본점소재지(개인사업자인 경우에는 … 허가ㆍ인가ㆍ면허 …)가 [수요기관(기초자치단체)]내에`
+# 처럼 제한 대상과 토큰 사이에 괄호가 통째로 끼는 문장이 흔하다.
+V6_CLAUSE_BREAK = ",，;；"
+V6_BRACKET_OPEN = "([{（［｛【〔「『"
+V6_BRACKET_CLOSE = ")]}）］｝】〕」』"
+# 쉼표만으로는 모자란다. 접속 어미로 이어 붙인 문장의 앞뒤는 역할이 다르다 —
+# `본점소재지가 경기도 […광역…]에 있는 업체이며 납품장소는 […기초…]` 에 쉼표가 없다.
+V6_CONNECTIVE = re.compile(r"(?:이며|하며|되며|으며|이고|하고|되고|고서|한\s*뒤|한\s*후)(?=\s)")
+
+# 참가 업체의 소재지 주어. 머리 낱말까지 묶어서 본다.
+V6_PARTICIPANT_SUBJECT = re.compile(
+    r"(?:법인\s*등기(?:부|사항증명서)?\s*상\s*)?"
+    r"(?:본점|본사|주된\s*영업소|주\s*사무소|주사무소|사업장|영업소)"
+    r"\s*(?:의\s*)?(?:소재지|소재\s*지)?(?:가|는|를|을|은|에)?")
+# 주어와 서술이 한 낱말에 붙은 꼴. 토큰이 앞에 와도 된다.
+V6_FUSED_LIMIT = re.compile(r"지역\s*제한|지역제한|지역\s*업체|관내\s*업체|관할\s*구역")
+# ①의 서술. 토큰이 이 서술의 자리에 놓여야 제한이 성립한다.
+V6_LOCATED = re.compile(r"둔|두고|두어|둘|소재|있는|있어야|위치|한정|제한")
+# 지역 토큰의 역할을 참가 제한이 아닌 것으로 바꾸는 말.
+V6_ROLE_SWITCH = re.compile(
+    r"납품\s*장소|납품장소|납품\s*소재지|배송|인도\s*장소|설치\s*장소"
+    r"|사업\s*장소|사업장소|사업\s*위치|과업\s*(?:위치|장소|구역)|이행\s*장소"
+    r"|공사\s*위치|현장\s*위치|용역\s*위치|대상\s*위치|위\s*치\s*[:：]"
+    r"|개찰|설명회|접수\s*장소|제출\s*장소")
+# 지역 이름이 나와도 참가 업체의 소재 지역을 한정하지 않는 문장. 무라벨 전수 확인에서 나왔다 —
+# 소송 관할 법원, 지역업체 보호·지원 조항, 동점자 우선순위는 참가를 막지 않는다.
+V6_NOT_A_LIMIT = re.compile(
+    r"관할\s*법원|소송|재판"
+    r"|지역\s*업체\s*보호|지역업체\s*보호|보호\s*및\s*지원|지원지침"
+    r"|우선으로\s*한다|우선한다|우선순위|선순위|우대|가점")
+V6_PREDICATE_REACH = 40   # 토큰 뒤에서 서술을 찾을 범위(괄호를 뺀 뒤)
+V6_SUBJECT_REACH = 60     # 주어와 토큰 사이 거리 상한(괄호를 뺀 뒤)
+# 줄 단위 관문. 도막 판정 앞에 한 번 더 건다 — 주어 정규식의 `사업장` 이
+# `사업장소 : [지역:r1…] 소재 일정 장소` 의 `사업장소` 를 물어, 사업 장소를 참가 제한으로
+# 읽는다(무라벨에서 3건 실측). 소재지 계열 낱말이 줄 어딘가에 있어야 한다.
+V6_LIMIT_ANCHOR = re.compile(
+    r"본점\s*소재지|주된\s*영업소|영업소(?:가|를|의|는)|사업장의?\s*소재지"
+    r"|소재지를|소재지\)?\s*가|소재지가"
+    r"|관내\s*(?:에\s*)?(?:있는|소재|업체)"
+    r"|지역\s*제한|지역제한|지역\s*업체|관할\s*구역")
+
+
+def _v6_bracket_depth(text: str, position: int) -> int:
+    depth = 0
+    for char in text[:position]:
+        if char in V6_BRACKET_OPEN:
+            depth += 1
+        elif char in V6_BRACKET_CLOSE:
+            depth = max(0, depth - 1)
+    return depth
+
+
+def _v6_segments(line: str):
+    """(줄 안 시작위치, 도막). 쉼표·세미콜론과 접속 어미에서 자른다 — 역할을 가르는 단위다."""
+    depth = start = 0
+    clauses = []
+    for index, char in enumerate(line):
+        if char in V6_BRACKET_OPEN:
+            depth += 1
+        elif char in V6_BRACKET_CLOSE:
+            depth = max(0, depth - 1)
+        elif depth == 0 and char in V6_CLAUSE_BREAK:
+            clauses.append((start, line[start:index]))
+            start = index + 1
+    clauses.append((start, line[start:]))
+    for clause_start, clause in clauses:
+        cut = 0
+        for match in V6_CONNECTIVE.finditer(clause):
+            if _v6_bracket_depth(clause, match.start()):
+                continue
+            yield clause_start + cut, clause[cut:match.end()]
+            cut = match.end()
+        yield clause_start + cut, clause[cut:]
+
+
+def _v6_confirmed_basic(text: str) -> bool:
+    """**올리는 쪽**이 쓰는 기초 신호. 익명화 토큰과 발주기관 토큰만 센다.
+
+    dev 입력은 200건 전부 `anon_applied=True` 라 시·군·구 지명이 토큰으로 바뀌어 있다.
+    그러므로 익명화를 뚫고 남은 `○○시` 꼴 낱말은 기초 지명이라는 증거가 아니다.
+    실제로 `BASIC_REGION_NAME` 은 `[가-힣]{2,4}(?:시|군|구)` 라서 **`체결시`·`반드시`** 를
+    문고, 그 둘이 `PPS-DEV-32`·`PPS-DEV-076` 을 올려 dev 오탐 2건을 만들었다(실측).
+    내리는 쪽(`_has_basic_unit`)은 반대로 이름까지 세는 것이 안전하므로 그대로 둔다.
+    """
+    if BASIC_AGENCY_TARGET.search(text or ""):
+        return True
+    return any(unit == "기초" for unit in ANON_REGION.findall(text or ""))
+
+
+def _v6_strip_parentheses(text: str) -> str:
+    return re.sub(r"\([^)]*\)|（[^）]*）|【[^】]*】", " ", text)
+
+
+def _v6_binds(segment: str) -> bool:
+    """이 도막에서 제한 대상과 기초 토큰이 실제로 묶이는가."""
+    tokens = [(m.start(), m.end()) for m in ANON_REGION.finditer(segment)
+              if "단위=기초" in m.group(0)]
+    tokens += [(m.start(), m.end()) for m in BASIC_AGENCY_TARGET.finditer(segment)]
+    if not tokens:
+        return False
+    subjects = [(m.start(), m.end()) for m in V6_PARTICIPANT_SUBJECT.finditer(segment)]
+    fused = [(m.start(), m.end()) for m in V6_FUSED_LIMIT.finditer(segment)]
+    roles = [(m.start(), m.end()) for m in V6_ROLE_SWITCH.finditer(segment)]
+    for token in tokens:
+        # 꼴 ① — 주어가 토큰 앞에 있고, 토큰 자리에 소재 서술이 온다.
+        subject = max((x for x in subjects if x[1] <= token[0]), default=None)
+        if subject is not None:
+            between = _v6_strip_parentheses(segment[subject[1]:token[0]])
+            if (not V6_ROLE_SWITCH.search(between)
+                    and len(between.strip()) <= V6_SUBJECT_REACH):
+                # 서술을 찾는 창에 토큰 자신을 포함한다 — 발주기관 토큰은
+                # `[수요기관(기초자치단체)]내에 소재` 까지를 한 덩어리로 물기 때문이다.
+                after = _v6_strip_parentheses(
+                    segment[token[0]:token[1] + V6_PREDICATE_REACH])
+                if V6_LOCATED.search(after):
+                    return True
+        # 꼴 ② — 융합 제한과 이웃해 있다.
+        for limit in fused:
+            lo, hi = ((limit[1], token[0]) if limit[0] <= token[0]
+                      else (token[1], limit[0]))
+            if lo > hi:
+                continue
+            between = _v6_strip_parentheses(segment[lo:hi])
+            if V6_ROLE_SWITCH.search(between) or len(between.strip()) > V6_SUBJECT_REACH:
+                continue
+            role = max((r for r in roles if r[1] <= token[0]), default=None)
+            if role and role[0] > limit[0]:
+                continue        # 토큰 앞에 다른 역할이 더 가까우면 그 역할의 것이다
+            return True
+    return False
+
+
+def v6_basic_region_limits(rec: Dict[str, Any]):
+    """참가자격에서 시·군·구로 제한한 자리. (문서, 도막) 목록을 돌려준다."""
+    found = []
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        position = 0
+        for line in text.split("\n"):
+            start, position = position, position + len(line) + 1
+            if not line.strip() or not V6_LIMIT_ANCHOR.search(line):
+                continue
+            if V6_NOT_A_LIMIT.search(line) or not _is_qualification_context(text, start):
+                continue
+            for offset, segment in _v6_segments(line):
+                if V6_NOT_A_LIMIT.search(segment) or not _v6_binds(segment):
+                    continue
+                found.append((text, segment))
+    return found
+
+
+def v6_should_raise(rec: Dict[str, Any]) -> Optional[str]:
+    """v6 을 0 에서 1 로 올릴 근거문구. 없으면 None.
+
+    금액은 `region_price_limit()` 을 쓴다. 같은 파일의 `region_restriction_allowed()` 는
+    쓰지 않는다 — 그 True 는 "허용 구간이다"가 아니라 "못 막는다"여서, 올리는 쪽에 쓰면
+    금액을 모르는 공고까지 올린다.
+    """
+    meta = rec.get("meta") or {}
+    if meta.get("적용계약법") == "지방계약법" and meta.get("낙찰방법") == "소액수의견적":
+        return None          # 소액수의 예외의 범위를 확인할 수 없다 — 모르면 올리지 않는다
+    limit = region_price_limit(rec)
+    price = estimated_price(rec)
+    if limit is None or price is None or price >= limit:
+        return None
+    for text, segment in v6_basic_region_limits(rec):
+        quote = segment.strip()
+        if len(quote) > QUOTE_MAX:
+            anchors = [m.start() for m in ANON_REGION.finditer(segment)]
+            anchors += [m.start() for m in BASIC_AGENCY_TARGET.finditer(segment)]
+            if not anchors:
+                continue
+            low = max(0, min(anchors) - QUOTE_MAX // 3)
+            quote = segment[low:low + QUOTE_MAX].strip()
+        cleaned = clean_evidence(quote, text)
+        if cleaned and _v6_evidence_supports_v6(cleaned):
+            return cleaned
+    return None
+
+
+def _v6_evidence_supports_v6(quote: str) -> bool:
+    """올린 근거가 v6 을 스스로 입증하는가. 내리는 게이트와 같은 조건을 올리는 쪽 신호로 본다.
+
+    U 는 게이트 **뒤**에서 도므로 이 근거가 게이트를 타지 않는다. 그래서 같은 계약을
+    여기서 다시 건다 — 안 걸면 검사받지 않은 양성이 남는다. 다른 점은 기초 신호를
+    `_v6_confirmed_basic()`(익명화 토큰 + 발주기관 토큰)으로 본다는 것뿐이다.
+    게이트 쪽 `_has_basic_unit()` 은 이름까지 세지만, 그 이름 읽기가 `체결시`·`반드시` 를
+    무는 것이라 올리는 쪽에서는 쓰지 않는다.
+    """
+    # 게이트의 ②③은 둘 다 `기초 신호 없음`을 요구한다. 토큰이 확인되면 어느 쪽도 안 걸리므로
+    # 남는 조건은 ①(근거 빔)과 토큰의 존재뿐이다. 광역 개수로 더 막지 않는다 —
+    # `PPS-DEV-070` 의 인용에 `강원도`·`강원특별자치도` 가 함께 있고 게이트도 그것을 남긴다.
+    if not (quote or "").strip():
+        return False                                    # ① 근거 없는 양성
+    return _v6_confirmed_basic(quote)
 
 
 # ----- v20 from two facts in the notice (#111) -----
@@ -2479,6 +2711,16 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 hit, ev = 0, ""
         if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
             hit, ev = 0, ""
+        if v == "v6" and hit == 0 and cell.get("위반여부") != 1:
+            # D9 의 U — **모델이 v6=0 을 낸 자리에서만** 올린다. 게이트가 내린 셀
+            # (모델은 1 이라 했다)까지 올리면 측정한 적 없는 다른 규칙이 된다 —
+            # 무라벨 2,000건에서 7건이 18건으로 늘어난다(실측).
+            # 내리는 게이트 **뒤**에 두는 이유는 앞에 두면 게이트가 같은 인용을 다시 보고
+            # 도로 내릴 수 있어서다. 올리는 근거는 `v6_should_raise()` 안에서 그 게이트를
+            # 이미 통과한 것이다.
+            raised = v6_should_raise(rec)
+            if raised:
+                hit, ev = 1, raised
         out[v] = {"위반여부": hit, "근거문구": ev}
     # B9 (#119): a budget amount that differs from its own registered field raises v24.
     if out["v24"]["위반여부"] == 0:

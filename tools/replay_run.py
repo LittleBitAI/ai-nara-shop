@@ -190,7 +190,11 @@ DELIBERATE_MOVES = [
     ("PPS-DEV-064", "v20"),
     ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"), ("PPS-DEV-068", "e24"),
     ("PPS-DEV-068", "v20"),
-    ("PPS-DEV-068", "v24"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
+    ("PPS-DEV-068", "v24"),
+    # D10 — v6 올림이 모델이 놓친 시·군·구 제한 둘을 세운다. 정답은 둘 다 v6=1 이다.
+    ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"),
+    ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"),
+    ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-090", "e9"), ("PPS-DEV-090", "v9"),
     ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"), ("PPS-DEV-099", "v24"),
     ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e17"), ("PPS-DEV-102", "e6"),
@@ -229,6 +233,9 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-050", "v9"),
     ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v24"),
     ("PPS-DEV-063", "v12"), ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"),
+    # D10 — v6 올림이 모델이 놓친 시·군·구 제한 둘을 세운다. 정답은 둘 다 v6=1 이다.
+    ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"),
+    ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"),
     ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-09", "e6"),
     ("PPS-DEV-09", "v6"), ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"),
@@ -266,6 +273,9 @@ DELIBERATE_MOVES_A7 = [
     ("PPS-DEV-036", "v19"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"),
     ("PPS-DEV-039", "v21"), ("PPS-DEV-050", "v9"), ("PPS-DEV-056", "v20"),
     ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"), ("PPS-DEV-068", "v20"),
+    # D10 — v6 올림이 모델이 놓친 시·군·구 제한 둘을 세운다. 정답은 둘 다 v6=1 이다.
+    ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"),
+    ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-090", "e9"), ("PPS-DEV-090", "v9"),
     ("PPS-DEV-092", "v6"), ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e17"),
     ("PPS-DEV-102", "e6"), ("PPS-DEV-102", "v17"),

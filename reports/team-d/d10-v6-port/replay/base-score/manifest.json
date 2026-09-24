@@ -1,0 +1,62 @@
+{
+  "artifact_id": "score-base-score",
+  "version": 1,
+  "status": "draft",
+  "run_id": "base-score",
+  "baseline_run": null,
+  "created_at": "2026-09-23T22:46:51.868356+00:00",
+  "sources": [
+    {
+      "role": "truth",
+      "path": "open/dev_labels.csv",
+      "sha256": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35"
+    },
+    {
+      "role": "pred",
+      "path": "reports/team-d/d10-v6-port/replay/base/submission.csv",
+      "sha256": "632205bd89df3ce51bc35d095e1a034a64aef9a678d528c9f81587112c0b2149"
+    }
+  ],
+  "generator": {
+    "path": "tools/score.py",
+    "sha256": "17cb568c299239e52d3c843a668cc0d1436b18b2b68656f929f5e5a2d8e5b7a3",
+    "argv": [
+      "python",
+      "-X",
+      "utf8",
+      "tools/score.py",
+      "--truth",
+      "open/dev_labels.csv",
+      "--pred",
+      "reports/team-d/d10-v6-port/replay/base/submission.csv",
+      "--output-dir",
+      "reports/team-d/d10-v6-port/replay/base-score"
+    ],
+    "command": "& 'python' '-X' 'utf8' 'tools/score.py' '--truth' 'open/dev_labels.csv' '--pred' 'reports/team-d/d10-v6-port/replay/base/submission.csv' '--output-dir' 'reports/team-d/d10-v6-port/replay/base-score'",
+    "settings": {
+      "output_dir": "reports/team-d/d10-v6-port/replay/base-score",
+      "zero_division": 0,
+      "items": 24
+    }
+  },
+  "environment": {
+    "python": "3.14.6",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "cwd": "."
+  },
+  "mode": "local_scoring",
+  "model": null,
+  "prompt_hash": null,
+  "seed": null,
+  "parents": [],
+  "reviewer": null,
+  "reviewed_at": null,
+  "decision": null,
+  "execution_status": "complete",
+  "validation": {
+    "csv_contract": true,
+    "evidence_substring": false,
+    "evidence_quality": false
+  },
+  "elapsed_seconds_before_publish": 0.11367730000347365
+}
