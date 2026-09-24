@@ -187,6 +187,24 @@
       "macro_f1": 0.575482169261194
     },
     {
+      "id": "colab-1790246262386880643",
+      "date": "2026-09-24",
+      "kind": "gpu-run",
+      "code": "a8f17ee",
+      "evidence": "reports/runs/colab-1790246262386880643/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.6429816346712968
+    },
+    {
+      "id": "colab-1790250265636150570",
+      "date": "2026-09-24",
+      "kind": "gpu-run",
+      "code": "c248bb1",
+      "evidence": "reports/runs/colab-1790250265636150570/score/metrics.json",
+      "note": "제출 파이프라인 dev 200건",
+      "macro_f1": 0.6571081080369007
+    },
+    {
       "id": "a5-scope-1789959906563639676/episode-1/control/h2",
       "date": "2026-09-17",
       "kind": "gpu-pilot",
@@ -464,6 +482,15 @@
       "macro_f1": 0.5314739081,
       "evidence": null,
       "note": "비공개 1,853건 · 같은 ZIP dev None · 6386초"
+    },
+    {
+      "id": "server/21253f3",
+      "date": "2026-09-24",
+      "kind": "server",
+      "code": "21253f3",
+      "macro_f1": 0.5571175451,
+      "evidence": null,
+      "note": "비공개 1,853건 · 같은 ZIP dev None · 6397초"
     }
   ]
 }

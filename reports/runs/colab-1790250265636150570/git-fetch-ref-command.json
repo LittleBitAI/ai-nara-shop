@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-pf102bao/repo",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "c248bb1997bdb6687dd8c165bef59c2c9a7d4b8b"
+  ],
+  "cwd": "/content/t1-colab-pf102bao",
+  "started": 1790247404.7960484,
+  "returncode": 0,
+  "elapsed_seconds": 0.4630870819091797
+}
