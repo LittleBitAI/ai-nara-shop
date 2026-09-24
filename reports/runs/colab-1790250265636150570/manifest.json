@@ -1,0 +1,129 @@
+{
+  "run_id": "colab-1790250265636150570",
+  "archive": "colab-results-1790250265636150570.zip",
+  "zip_sha256": {
+    "results": "f7990266dfaf98880083402443bd77655397711186fedd30e05296d44db01791",
+    "submit": "7e55a299b881d913b1041065c47addc29c53cb8059e268ade3f0876a42a2ebfc"
+  },
+  "registered_at": "2026-09-24T11:46:15.537134+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "c248bb1997bdb6687dd8c165bef59c2c9a7d4b8b",
+    "commit": "c248bb1997bdb6687dd8c165bef59c2c9a7d4b8b",
+    "given_commit": "c248bb1997bdb6687dd8c165bef59c2c9a7d4b8b"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "dev-debug": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 185.4,
+        "baseline_inference": 367.0,
+        "extra_inference": 108.4,
+        "inference_total": 724.2,
+        "run_total": 916.791,
+        "wall_clock": 921.0541038513184
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 108,
+        "extra_selected": 108,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 26,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 130,
+        "evidence_dropped_not_verbatim": 92,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "dev": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 208.3,
+        "baseline_inference": 367.1,
+        "extra_inference": 109.1,
+        "inference_total": 725.0,
+        "run_total": 940.072,
+        "wall_clock": 945.1215057373047
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 107,
+        "extra_selected": 107,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 31,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 129,
+        "evidence_dropped_not_verbatim": 94,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.6571081080369007
+    },
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 463.7,
+        "baseline_inference": 32.6,
+        "extra_inference": 12.2,
+        "inference_total": 60.2,
+        "run_total": 524.44,
+        "wall_clock": 529.3510828018188
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 6,
+        "extra_selected": 6,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 7,
+        "evidence_dropped_not_verbatim": 7,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.6571081080369007,
+    "baseline_macro_f1_same_run": 0.4980777802976079,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": true,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1790250265636150570.zip",
+    "submit": "artifacts/inbox/submit.zip"
+  }
+}
