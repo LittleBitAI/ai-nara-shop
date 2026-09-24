@@ -2736,14 +2736,20 @@ V23_OTHER_SCHEDULE = re.compile(
 V23_DATE = re.compile(r"(20\d{2})\s*[.년/\-]\s*(\d{1,2})\s*[.월/\-]\s*(\d{1,2})")
 
 # 1단 — 마감이라고 스스로 말하는 자리. **무엇의 마감인지가 적혀 있어야 인정한다.**
-# 조문의 기산점은 「제안서 제출마감일」이다. 참가자격 등록 마감은 시행령 제13조·입찰참가자격
-# 등록규정의 별개 기한이고 기산점이 아니다. 전에는 주어와 동사가 둘 다 선택이라 `마감` 한
-# 낱말로 매치돼 `등록마감`·`자격 등록 마감`이 제안서 제출마감 행세를 했다(리뷰 P1).
-# 그래서 제출물 이름이나 `제출·접수` 중 하나를 **필수**로 만들고 `등록`을 뺀다.
-V23_DEADLINE_CLOSING = re.compile(
-    r"(?:제안서|입찰서|가격입찰서|기술제안서|제안·?가격|가격제안서|참가신청서)\s*"
-    r"(?:제출|접수)?\s*마감\s*(?:일시|일자|일)?"
-    r"|(?:제출|접수)\s*마감\s*(?:일시|일자|일)?")
+# 조문의 기산점은 「제안서 제출마감일」이다. 참가자격 등록·입찰참가신청서 제출은 시행령
+# 제13조·입찰참가자격 등록규정의 별개 기한이고 기산점이 아니다. 둘 다 대개 제안서
+# 제출마감보다 **앞**이라 이것을 마감으로 읽으면 기간이 짧게 나와 위반을 과탐한다.
+#
+# 두 층으로 나눈다. 섞어서 가장 이른 것을 고르면 앞선 참가 기한이 제안서 마감을 밀어낸다.
+#  (a) 제출물 이름이 붙은 마감 — 가장 단단한 신호다. `참가신청서`는 여기 넣지 않는다.
+V23_DEADLINE_NAMED = re.compile(
+    r"(?:제안서|입찰서|가격입찰서|기술제안서|제안·?가격|가격제안서)\s*"
+    r"(?:제출|접수)?\s*마감\s*(?:일시|일자|일)?")
+#  (b) 이름 없는 제출·접수 마감. 목적어를 확인해 **참가 절차의 기한이면 버린다.**
+V23_DEADLINE_PLAIN = re.compile(r"(?:제출|접수)\s*마감\s*(?:일시|일자|일)?")
+V23_DEADLINE_NOT_PROPOSAL = re.compile(
+    r"참가\s*신청서?|참가\s*등록|자격\s*등록|이용자\s*등록|입찰\s*등록|등록\s*마감")
+V23_DEADLINE_SUBJECT_REACH = 20
 # 2단 — 기간·일시로만 적힌 자리. 창 안의 마지막 날짜를 끝으로 읽는다.
 # `제출/접수` 와 `기간/일시` 사이만 줄바꿈을 넘게 한다. 공고가 앵커와 날짜를 다른 줄에 적는
 # 꼴(`바. 제안서 및 가격입찰서 제출 [방문접수]` 다음 줄에 `❍ 일 시 : …`)을 읽기 위한 것이다.
@@ -2845,24 +2851,30 @@ def v23_deadline_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str]]:
     posted = _v23_as_date((rec.get("meta") or {}).get("공고게시일자"))
     if posted is None:
         return None
-    closing, period = [], []
+    named, plain, period = [], [], []
     for doc in rec.get("docs") or []:
         text = doc.get("text") or ""
-        for pattern, bucket, take_last in ((V23_DEADLINE_CLOSING, closing, False),
+        for pattern, bucket, take_last in ((V23_DEADLINE_NAMED, named, False),
+                                           (V23_DEADLINE_PLAIN, plain, False),
                                            (V23_DEADLINE_PERIOD, period, True)):
             for m in pattern.finditer(text):
+                if bucket is plain and V23_DEADLINE_NOT_PROPOSAL.search(
+                        text[max(0, m.start() - V23_DEADLINE_SUBJECT_REACH):m.start()]):
+                    continue                # `입찰참가신청서 제출 마감일시` 따위
                 window = text[m.start():min(len(text), m.end() + V23_DEADLINE_WINDOW)]
                 found = [d for d in (_v23_date_at(x) for x in V23_DATE.finditer(window)) if d]
                 found = [d for d in found if d >= posted]
                 if not found:
                     continue
-                # 1단은 **앵커 바로 뒤 첫 날짜**가 그 마감이다. 창 전체의 가장 이른 날짜를
+                # 마감 앵커는 **바로 뒤 첫 날짜**가 그 마감이다. 창 전체의 가장 이른 날짜를
                 # 고르면 뒤따르는 별개 항목의 **개시일**을 마감으로 집는다 — 무라벨
                 # `PPS-D-013261` 에서 `등록 마감일시: 3/23` 창이 다음 줄 `입찰서 제출기간:
                 # 3/20 ~` 의 개시일을 골랐다(리뷰 P1). 2단은 기간의 끝을 읽으므로 그대로 max 다.
                 bucket.append(((max(found) if take_last else found[0]),
                                window.strip()[:V23_QUOTE_MAX]))
-    for bucket in (closing, period):
+    # 층을 섞지 않는다. 이름이 붙은 마감이 하나라도 있으면 그것이 제안서 제출마감이고,
+    # 앞선 참가 절차의 기한이 그 자리를 뺏지 못한다(리뷰 P1 재지적).
+    for bucket in (named, plain, period):
         if bucket:
             bucket.sort(key=lambda pair: pair[0])
             return bucket[0]

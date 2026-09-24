@@ -2,6 +2,7 @@
 
 import copy
 import csv
+from datetime import date
 import importlib.util
 import json
 import os
@@ -996,6 +997,48 @@ class BaselineTests(unittest.TestCase):
             "마. 사업설명회 : 2026. 2. 3.(화) 14:00" + gap
             + "바. 입찰참가자격 등록 마감일시 : 2026. 2. 5.(목) 18:00" + gap
             + "사. 제안서 제출 마감일시 : 2026. 2. 6.(금) 16:00"))
+
+    def test_v23_keeps_the_proposal_deadline_when_an_entry_deadline_comes_first(self):
+        """리뷰 P1 재지적 — 참가신청서 제출 마감이 제안서 마감 자리를 뺏으면 안 된다.
+
+        `입찰참가신청서 제출 마감일시` 는 `등록 마감` 과 달리 `제출 마감` 꼴이라 이름 없는
+        마감 앵커에 걸린다. 그리고 참가 절차의 기한은 대개 제안서 제출마감보다 **앞**이라,
+        후보를 섞어 가장 이른 것을 고르면 그것이 제안서 마감을 밀어내고 간격이 실제보다
+        **길게** 나와 위반을 놓친다.
+
+        그래서 층을 나눈다 — 제출물 이름이 붙은 마감이 하나라도 있으면 그것이 제안서
+        제출마감이고, 이름 없는 마감은 목적어를 확인해 참가 절차의 기한이면 버린다.
+        """
+        gap = "\n\n" + "공고 관련 안내 문구입니다. " * 10 + "\n\n"
+
+        def judged(text, price=290_909_091):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": price})
+            return baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        # 설명 2/5 → 제안서 마감 2/12 = 7일 < 20일. 앞선 참가신청서 마감 2/1 을 쓰면 놓친다.
+        both = ("가. 입찰참가신청서 제출 마감일시 : 2026. 2. 1.(일) 18:00" + gap
+                + "나. 사업설명회 : 2026. 2. 5.(목) 14:00" + gap
+                + "다. 제안서 제출 마감일시 : 2026. 2. 12.(목) 16:00")
+        self.assertEqual(1, judged(both))
+        rec = record()
+        rec["docs"][0]["text"] = both
+        rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                            "공고게시일자": "20260114", "입찰추정가격": 290_909_091})
+        self.assertEqual(date(2026, 2, 12), baseline.v23_deadline_day(rec)[0],
+                         "제안서 마감이 아니라 참가 절차의 기한을 골랐다")
+
+        # 참가신청서 마감밖에 없으면 제안서 마감을 못 읽은 것이다 — 그것으로 재지 않는다.
+        self.assertEqual(0, judged(
+            "가. 입찰참가신청서 제출 마감일시 : 2026. 2. 1.(일) 18:00" + gap
+            + "나. 사업설명회 : 2026. 1. 20.(화) 14:00"))
+
+        # 이름이 안 붙은 `접수마감` 은 여전히 쓴다 — `PPS-DEV-28` 이 그 꼴이다.
+        self.assertEqual(1, judged(
+            "제안요청 설명회\n\n일시 : 2026.01.20.(화) 15:00" + gap
+            + "접수마감\n\n2026.01.23. 15:00 까지"))
 
     def test_v23_reads_a_zero_estimate_as_an_unknown_amount(self):
         """C — `입찰추정가격 == 0` 은 `1억원 미만`이 아니라 **미입력**이다.
