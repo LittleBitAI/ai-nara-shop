@@ -143,6 +143,15 @@ class CandidateShape(unittest.TestCase):
         source = self.sources["c5_v11_absence_signal_candidate.py"]
         self.assertIn("verify_document_requirements", source)
 
+    def test_no_candidate_ever_lowers_the_item(self):
+        """**올리기만 한다.** 보고서의 무라벨 검증이 "1→0 해당 없음" 이라고 적는 근거다.
+
+        이미 1 인 셀을 건드리지 않고, 쓰는 값은 1 하나뿐이다.
+        """
+        for name, source in self.sources.items():
+            self.assertIn('already != 1', source, name)
+            self.assertNotIn('"위반여부": 0', source, name)
+
 
 if __name__ == "__main__":
     unittest.main()
