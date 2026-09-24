@@ -2767,10 +2767,16 @@ def _v23_date_at(match) -> Optional[date]:
 
 
 def v23_required_days(rec: Dict[str, Any]) -> Optional[int]:
-    """추정가격이 정하는 필요 기간. 금액을 모르면 판정하지 않는다."""
+    """추정가격이 정하는 필요 기간. 금액을 모르면 판정하지 않는다.
+
+    `0` 은 금액이 아니라 **미입력**으로 읽는다. 조문이 기간을 추정가격 구간으로 정하므로
+    금액을 모르면 구간도 못 정한다. 이 저장소의 금액 계약도 같다 — `notice_price()` 가
+    `price > 0` 일 때만 금액으로 인정하고 `region_restriction_allowed()` 도 `not price` 를
+    미상으로 다룬다. 배정예산으로 물러서지 않는다. 조문의 기준은 추정가격이다.
+    """
     meta = rec.get("meta") or {}
     price = meta.get("입찰추정가격")
-    if not isinstance(price, (int, float)):
+    if not isinstance(price, (int, float)) or price <= 0:
         return None
     for floor, days in V23_THRESHOLDS:
         if price >= floor:
@@ -2810,8 +2816,18 @@ def v23_briefing_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str, str]]:
     return best
 
 
-def v23_deadline_day(rec: Dict[str, Any], after: date) -> Optional[Tuple[date, str]]:
-    """제안서 제출마감일. `meta.개찰예정일자`를 쓰지 않고 원문에서 읽는다."""
+def v23_deadline_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str]]:
+    """제안서 제출마감일. `meta.개찰예정일자`를 쓰지 않고 원문에서 읽는다.
+
+    **설명일을 기준선으로 쓰지 않는다.** 마감일은 공고의 성질이지 설명회의 성질이 아니다.
+    전에는 `설명일 이후`인 날짜만 후보로 받았는데, 그러면 진짜 제출마감이 설명일보다
+    앞선 공고에서 그 날짜가 지워지고 같은 창의 뒤쪽 날짜(`개찰 일시`·`가격평가 및
+    협상적격자발표`)가 마감 행세를 한다. 순서는 후보를 고르는 필터가 아니라
+    `v23_axis_a()` 가 거는 **전제 조건**이다.
+    """
+    posted = _v23_as_date((rec.get("meta") or {}).get("공고게시일자"))
+    if posted is None:
+        return None
     closing, period = [], []
     for doc in rec.get("docs") or []:
         text = doc.get("text") or ""
@@ -2820,7 +2836,7 @@ def v23_deadline_day(rec: Dict[str, Any], after: date) -> Optional[Tuple[date, s
             for m in pattern.finditer(text):
                 window = text[m.start():min(len(text), m.end() + V23_DEADLINE_WINDOW)]
                 found = [d for d in (_v23_date_at(x) for x in V23_DATE.finditer(window)) if d]
-                found = [d for d in found if d > after]
+                found = [d for d in found if d >= posted]
                 if not found:
                     continue
                 bucket.append(((max(found) if take_last else min(found)),
@@ -2836,6 +2852,12 @@ def v23_axis_a(rec: Dict[str, Any]) -> Optional[str]:
     """설명일과 제출마감일이 **둘 다 원문에서 확인될 때만** 판정한다.
 
     날짜 하나라도 못 읽으면 올리지 않는다 — 기간을 셀 수 없으면 위반을 증명할 수 없다.
+
+    그리고 **설명일이 제출마감일보다 앞서야 한다.** 조문이 설명을 "제안서 제출마감일의
+    전일부터 기산하여 … 전에 실시"하라고 하므로, 제출이 끝난 뒤에 열리는 설명회는 이 항의
+    설명이 아니라 제3절 4-아(제안서 평가 시 설명·질의응답)다. 이름이 아니라 순서로 가른다 —
+    정답 양성 다섯이 사업설명회·과업설명회·현장설명회·제안요청 설명회·제안요청서 설명을
+    하나씩 쓰므로 명칭은 판별력이 없다.
     """
     need = v23_required_days(rec)
     if need is None:
@@ -2843,8 +2865,8 @@ def v23_axis_a(rec: Dict[str, Any]) -> Optional[str]:
     held = v23_briefing_day(rec)
     if held is None:
         return None
-    due = v23_deadline_day(rec, held[0])
-    if due is None:
+    due = v23_deadline_day(rec)
+    if due is None or held[0] >= due[0]:
         return None
     if (due[0] - held[0]).days >= need:
         return None

@@ -888,6 +888,73 @@ class BaselineTests(unittest.TestCase):
             "6. 사업설명 : 과업설명회 개최 — 2026. 2. 3.(화) 15:00\n\n"
             "7. 제안서 발표 및 평가 (세부사항 제안요청서 참조)" + deadline))
 
+    def test_v23_needs_the_briefing_to_come_before_the_proposal_deadline(self):
+        """B-1 — 제출이 끝난 뒤 열리는 설명회는 제3절 2-다의 설명이 아니다.
+
+        조문이 설명을 "제안서 제출마감일의 전일부터 기산하여 … 전에 실시"하라고 하므로
+        설명일은 제출마감보다 앞이어야 한다. 이름이 아니라 **순서**로 가른다 — 정답 양성
+        다섯이 사업설명회·과업설명회·현장설명회·제안요청 설명회·제안요청서 설명을 하나씩
+        써서 명칭은 판별력이 없다.
+
+        마감일을 설명일 기준으로 고르면 이 판정을 할 수 없다. 진짜 마감이 설명일보다
+        앞선 공고에서 그 날짜가 지워지고 같은 창의 **뒤쪽 날짜**(개찰·평가·발표)가 마감
+        행세를 하기 때문이다(무라벨 `PPS-D-002583`·`PPS-D-020771` 에서 실측).
+        """
+        def judged(text, meta=None):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": 54_545_455,
+                                **(meta or {})})
+            return baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        # 설명 문구의 창이 뒷줄 날짜를 삼키지 않도록 사이를 벌린다. 실제 공고도 두 항목이
+        # 떨어져 있다. 창이 남의 날짜를 줍는 문제는 이 검사의 대상이 아니다(별개 가설).
+        gap = "\n\n" + "공고 관련 안내 문구입니다. " * 10 + "\n\n"
+
+        def notice(briefing):
+            return (f"마. 사업설명회 : {briefing}" + gap
+                    + "바. 제안서 접수\n\n❍ 접수일시 : 2026. 2. 6.(금) 09:00" + gap
+                    + "사. 개찰일시 : 2026. 2. 11.(수) 10:00")
+
+        self.assertEqual(1, judged(notice("2026. 2. 3.(화) 14:00")),
+                         "설명일이 마감보다 앞이면 종전대로 판정한다")
+        # 설명일만 마감 뒤로 옮기면 대상에서 빠진다. 뒤따르는 개찰일을 마감으로 갈아끼워
+        # 억지로 간격을 만들지 않는다.
+        self.assertEqual(0, judged(notice("2026. 2. 10.(화) 14:00")))
+        self.assertEqual(0, judged(notice("2026. 2. 6.(금) 14:00")),
+                         "설명일과 마감일이 같은 날이어도 대상이 아니다")
+
+        # 개찰·평가 날짜밖에 없으면 마감일을 못 읽은 것이다. 그것을 마감으로 쓰지 않는다.
+        self.assertEqual(0, judged(
+            "마. 사업설명회 : 2026. 2. 3.(화) 14:00" + gap
+            + "사. 개찰일시 : 2026. 2. 20.(금) 10:00" + gap + "아. 제안서 평가 : 2026. 2. 25.(수)"))
+
+    def test_v23_reads_a_zero_estimate_as_an_unknown_amount(self):
+        """C — `입찰추정가격 == 0` 은 `1억원 미만`이 아니라 **미입력**이다.
+
+        조문이 기간을 추정가격 구간으로 정하므로 금액을 모르면 구간도 못 정한다.
+        저장소의 금액 계약도 같다 — `notice_price()` 가 `price > 0` 일 때만 금액으로
+        인정한다. 배정예산으로 물러서지 않는다. 조문의 기준은 추정가격이다.
+        """
+        text = ("마. 사업설명회 : 2026. 2. 3.(화) 14:00\n\n"
+                "바. 제안서 접수\n\n❍ 접수일시 : 2026. 2. 6.(금) 09:00")
+        def judged(price, **extra):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": price, **extra})
+            return baseline.v23_required_days(rec), baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        self.assertEqual((10, 1), judged(54_545_455))
+        self.assertEqual((20, 1), judged(290_909_091))
+        self.assertEqual((40, 1), judged(3_272_727_273))
+        # 0 과 음수, 숫자가 아닌 값은 전부 미상이다. 배정예산이 있어도 물러서지 않는다.
+        self.assertEqual((None, 0), judged(0, 배정예산금액=25_000_000_000))
+        self.assertEqual((None, 0), judged(-1))
+        self.assertEqual((None, 0), judged(None))
+        self.assertEqual((None, 0), judged(""))
+
     def test_scope_gates_lower_only_the_out_of_scope_positives(self):
         """v3·v4·v5·v6 의 적용범위 게이트. 내리는 자리와 **안 내리는 자리**를 함께 고정한다."""
         def judged(item, quote, text=None, meta=None):
