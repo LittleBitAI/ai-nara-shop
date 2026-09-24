@@ -1,0 +1,11 @@
+{
+  "argv": [
+    "/content/t1-colab-0z7nrrqq/venv/bin/python",
+    "script.py",
+    "--debug-responses"
+  ],
+  "cwd": "/content/t1-colab-0z7nrrqq/cases/dev-debug",
+  "started": 1790228642.6006553,
+  "returncode": 0,
+  "elapsed_seconds": 914.0237486362457
+}

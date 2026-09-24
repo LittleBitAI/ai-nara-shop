@@ -91,6 +91,7 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `colab-1790081509639025520` | `227631f` | 0.6102659462701191 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 없음 | [reports/runs/colab-1790081509639025520/](../reports/runs/colab-1790081509639025520/) |
 | `colab-1790141677344456786` | `9ed0805` | 0.575482169261194 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790141677344456786/](../reports/runs/colab-1790141677344456786/) |
 | `d7-v3-firing-1790141895014299603` | `c236a67` | 점수 없음 — v3 게이트 발화율 무라벨/dev 0.686 (표본 1,000건) | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/d7-v3-firing-1790141895014299603/](../reports/runs/d7-v3-firing-1790141895014299603/) |
+| `colab-1790229556644838226` | `427b971` | 0.6835958111550385 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790229556644838226/](../reports/runs/colab-1790229556644838226/) |
 
 `d7-v3-firing-…`도 제출 파이프라인 회차가 아닙니다. 24항목 기본 호출만 돌려 v3 판정과
 인용을 받고 그 위에서 게이트 발화를 센 W5 측정이며, 제출 ZIP도 Macro F1도 없습니다.
