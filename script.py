@@ -163,6 +163,11 @@ MAX_TOKENS = 2048                       # 24항목 JSON과 짧은 인용을 위�
 # post-processing. The main call asks for the top LOGPROBS_K log-probabilities per token; P(1) per
 # item is recorded with each response. An empty ITEM_THRESHOLDS keeps the argmax answer unchanged.
 LOGPROBS_K = 5
+# Experiment B: Gemma 4 thinking on the main 24-item call only (None = off). The engine gets the
+# `gemma4` reasoning parser so the JSON schema applies after the thought channel; the other calls
+# and every retry keep thinking off, as before. The main call's output room grows by the budget
+# and its prompt budget shrinks by the same amount, so the JSON is not cut short.
+BASELINE_THINKING_BUDGET: Optional[int] = 512
 # Tuned on dev 200 by tools/tune_thresholds.py from round colab-1790250265636150570 (c248bb1):
 # dev replay Macro 0.662425 -> 0.693747. Split-half check (tune on one half, score the other)
 # kept a gain both ways, +0.0056 and +0.0127. v4, v9 and v24 were picked in both halves; the
@@ -999,6 +1004,8 @@ class VLLMRunner:
                   gpu_memory_utilization=gpu_mem, seed=seed, tensor_parallel_size=tp, dtype="auto")
         if quant:
             kw["quantization"] = quant
+        if BASELINE_THINKING_BUDGET is not None:
+            kw["reasoning_parser"] = "gemma4"
         self.llm = LLM(**kw)
         self.tok = self.llm.get_tokenizer()
         self.environment = {"vllm": vllm.__version__, "python": platform.python_version(),
@@ -1008,6 +1015,11 @@ class VLLMRunner:
             temperature=0.0, max_tokens=max_tokens, seed=seed, logprobs=LOGPROBS_K,
             structured_outputs=StructuredOutputsParams(json=schema, disable_any_whitespace=True),
         )
+        # The main call alone thinks. Extra calls and retries copy `self.sp` and switch it off.
+        self.thinking_sp = copy.deepcopy(self.sp)
+        if BASELINE_THINKING_BUDGET is not None:
+            self.thinking_sp.max_tokens = max_tokens + BASELINE_THINKING_BUDGET
+            self.thinking_sp.thinking_token_budget = BASELINE_THINKING_BUDGET
         import torch
         self.environment.update(
             cuda=torch.version.cuda,
@@ -1018,9 +1030,9 @@ class VLLMRunner:
         )
         self.load_seconds = time.time() - t0
 
-    def count_tokens(self, messages: List[Dict[str, str]]) -> int:
+    def count_tokens(self, messages: List[Dict[str, str]], thinking: bool = False) -> int:
         ids = self.tok.apply_chat_template(messages, add_generation_prompt=True, tokenize=True,
-                                           enable_thinking=False)
+                                           enable_thinking=thinking)
         if hasattr(ids, "keys") and "input_ids" in ids:
             ids = ids["input_ids"]
         return len(ids)
@@ -1032,12 +1044,15 @@ class VLLMRunner:
 
     def chat(self, batch: List[List[Dict[str, str]]], sampling_params=None, items=None) -> List[str]:
         self.last_response_info = []  # A failed call must not reuse an earlier call's metadata.
-        sp = self.sp if sampling_params is None else sampling_params
+        # Only the main call's first attempt thinks; retries pass their own parameters.
+        thinking = sampling_params is None and items is None and BASELINE_THINKING_BUDGET is not None
+        sp = (getattr(self, "thinking_sp", self.sp) if thinking
+              else self.sp if sampling_params is None else sampling_params)
         if items is not None:
             # v13 추가 호출만 facts 스키마를 쓴다. 나머지 추가 호출은 기본 두 칸 그대로다.
             sp = self.parameters_for_items(items, sme=items == SME_ITEMS)
         outs = self.llm.chat(batch, sampling_params=sp, use_tqdm=False,
-                             chat_template_kwargs={"enable_thinking": False})
+                             chat_template_kwargs={"enable_thinking": thinking})
         for output in outs:
             completion = output.outputs[0] if output.outputs else None
             info = {
@@ -1117,7 +1132,7 @@ class MockRunner:
     def __init__(self, schema: Dict[str, Any], **_):
         pass
 
-    def count_tokens(self, messages: List[Dict[str, str]]) -> int:
+    def count_tokens(self, messages: List[Dict[str, str]], thinking: bool = False) -> int:
         return sum(len(m["content"]) for m in messages) // 2     # Mock 실행용 간이 추정치
 
     def _one(self, _messages: List[Dict[str, str]]) -> str:
@@ -1135,11 +1150,12 @@ class MockRunner:
 
 
 def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: int,
-                  budget: int = PROMPT_BUDGET, products=()) -> Tuple[List[Dict[str, str]], int, int]:
+                  budget: int = PROMPT_BUDGET, products=(), thinking: bool = False
+                  ) -> Tuple[List[Dict[str, str]], int, int]:
     """설정된 토큰 예산에 맞게 문서 글자 수를 조정합니다."""
     while True:
         msgs = build_messages(rec, system_prompt, max_chars, products)
-        n = runner.count_tokens(msgs)
+        n = runner.count_tokens(msgs, thinking=thinking) if thinking else runner.count_tokens(msgs)
         if n <= budget:
             return msgs, n, max_chars
         if max_chars <= 128:
@@ -1311,7 +1327,18 @@ def extract_json(text: str) -> Optional[Any]:
         try:
             return json.loads(text[i:j + 1])
         except json.JSONDecodeError:
-            return None
+            pass
+    # With thinking on, a thought may precede the answer without channel markers (they are special
+    # tokens). Take the last object that runs to the end of the text; braces in the thought are skipped.
+    decoder = json.JSONDecoder()
+    end = len(text)
+    for start in (k for k in range(len(text) - 1, -1, -1) if text[k] == "{"):
+        try:
+            obj, stop = decoder.raw_decode(text, start)
+        except json.JSONDecodeError:
+            continue
+        if not text[stop:end].strip():
+            return obj
     return None
 
 
@@ -3078,7 +3105,9 @@ def run(input_path: str, out_path: str, runner_cls, limit: Optional[int], chunk:
                              "data_dir": record_path(data_dir),
                              "limit": limit, "chunk": chunk, "max_chars": max_chars,
                              "debug_responses": debug_responses, "max_model_len": MAX_MODEL_LEN,
-                             "temperature": 0, "thinking": False, "sme_items": SME_ITEMS,
+                             "temperature": 0, "thinking": BASELINE_THINKING_BUDGET is not None,
+                             "baseline_thinking_token_budget": BASELINE_THINKING_BUDGET,
+                             "sme_items": SME_ITEMS,
                              "logprobs": LOGPROBS_K, "item_thresholds": dict(ITEM_THRESHOLDS),
                              "sme_selection": "baseline_v13_positive",
                              "extra_call_items": extra_call_items(),
@@ -3147,8 +3176,10 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
 
     # 전건 메시지 구성(길이 예산 맞춤)
     msgs_all, shrunk, ntok = [], 0, []
+    thinking = BASELINE_THINKING_BUDGET is not None
     for rec in recs:
-        m, n, mc = fit_to_budget(rec, system_prompt, runner, max_chars, budget=budget)
+        m, n, mc = fit_to_budget(rec, system_prompt, runner, max_chars,
+                                 budget=budget - (BASELINE_THINKING_BUDGET or 0), thinking=thinking)
         msgs_all.append(m)
         ntok.append(n)
         shrunk += int(mc < max_chars)
@@ -3336,7 +3367,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
         "input_sha256": hashlib.sha256(Path(input_path).read_bytes()).hexdigest(),
         "records_sha256": records_sha256(recs),
         "reproduction": metadata,
-        "seed": runner_kw["seed"], "temperature": 0, "thinking": False,
+        "seed": runner_kw["seed"], "temperature": 0, "thinking": BASELINE_THINKING_BUDGET is not None,
         "prompt_budget": budget, "max_tokens": output_tokens, "max_chars": max_chars,
         "prompt_tokens_max": max(ntok), "token_count_kind": runner_cls.TOKEN_COUNT,
         "건수": len(recs), "모델로드_s": round(runner.load_seconds, 1), "추론_s": round(inf_seconds, 1),

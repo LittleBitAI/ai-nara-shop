@@ -211,6 +211,13 @@ class PackageTests(unittest.TestCase):
             # A1 scope owns v13 even when the selective SME call skipped this notice.
             # Check both shipping notebooks against the same changed CSV.
             for notebook in ("colab-baseline.ipynb", "exp-a3-source-role.ipynb"):
+                # The A3 notebook is pinned to 18f07e5, which runs with thinking off; present it the
+                # settings that code writes. colab-baseline checks the current code's settings.
+                settings = report["reproduction"]["settings"]
+                if notebook == "exp-a3-source-role.ipynb":
+                    settings["thinking"] = False
+                    settings.pop("baseline_thinking_token_budget", None)
+                    write()
                 nb = json.loads((ROOT / "notebooks" / notebook).read_text(encoding="utf-8"))
                 source = next("".join(c["source"]) for c in nb["cells"] if c["id"] == "sample")
                 check = next(n for n in ast.parse(source).body
