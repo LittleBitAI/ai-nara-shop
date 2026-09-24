@@ -55,8 +55,12 @@ class PinnedCode(unittest.TestCase):
         self.assertIn("BASE_REV", source)
 
     def test_the_pin_matches_the_report(self):
-        """보고서 §1 의 기준 commit 과 어긋나면 둘 중 하나가 낡은 것이다."""
-        found = re.search(r"기준 commit \| \*\*`([0-9a-f]{7,40})`\*\*",
+        """보고서 §1 의 기준 commit 과 어긋나면 둘 중 하나가 낡은 것이다.
+
+        `**` 를 선택으로 둔다 — 이 저장소에는 강조 표기를 걷어내는 정리 작업이 있고,
+        그것이 이 파일에 오면 `**` 를 요구하는 정규식은 "못 찾았다" 로 헛되이 죽는다.
+        """
+        found = re.search(r"기준 commit \| (?:\*\*)?`([0-9a-f]{7,40})`",
                           REPORT.read_text(encoding="utf-8"))
         self.assertIsNotNone(found, "README §1 에서 기준 commit 을 못 찾았다")
         self.assertTrue(paths.BASE_REV.startswith(found[1]) or found[1].startswith(paths.BASE_REV),
