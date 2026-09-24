@@ -1336,8 +1336,10 @@ V24_UNIT = {"억": 100_000_000, "천만": 10_000_000}
 V21_FLOOR_LOCAL = 5.0
 V21_FLOOR_NATIONAL = 10.0
 V21_PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
-V21_JOINT_BARRED = re.compile(
-    r"공동\s*(?:수급|계약|도급|참여|이행)[^.。]*?(?:불허|불가|허용하지\s*않|금지)")
+# A quote without a share used to be dropped only when it matched a joint-contracting-barred regex.
+# That regex missed "허용되지 않습니다" and friends: all 84 v21 positives in the 6,000-notice
+# unlabeled run quoted no share, and a facts labeler found none of them setting a below-floor
+# share (k 0/84, reports/team-b/b10-v21-quote-share). Now any quote without a share is dropped.
 # v9 는 인용이 성능 하한(`… 이상`)이면 모델명이 아니라서 내린다. 근거 곁의 "동등 이상" 문구로
 # 내리던 `V9_EQUIVALENT` 는 뺐다 — 운영진 S7-14 가 그 표현만으로 v9 를 정하지 말라고 했고, 무라벨
 # 5,500건에서 그 게이트가 내린 41건 중 29건이 모델 지정 꼴이었다(reports/team-b/b6-v9-equivalent).
@@ -1768,11 +1770,11 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
         # 요구했더라도 이 인용이 계약 시 의무만 말하면 그 인용은 근거가 아니다.
         return bool(V19_POST_AWARD.search(evidence)) and not V19_BID_STAGE.search(evidence)
     if item == "v21":
+        # B10: v21 stands only on a quoted share below the floor. A quote with no share
+        # (joint contracting barred, member counts) cannot establish it.
         shares = [float(x) for x in V21_PERCENT.findall(evidence)]
-        if shares:
-            floor = v21_minimum_share(rec)
-            return floor is None or all(share >= floor for share in shares)
-        return bool(V21_JOINT_BARRED.search(evidence))
+        floor = v21_minimum_share(rec)
+        return floor is None or all(share >= floor for share in shares)
     if item == "v17":
         return v17_quote_is_narrow(evidence)
     if item == "v9":

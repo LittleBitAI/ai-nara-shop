@@ -175,6 +175,9 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 #    the four FPs (056·064·068·144), raises the four FNs (24·131·132·134) and adds two
 #    new FPs (124·135). H2's model gave different v20 answers, so its list differs (133).
 #    dev v20 1/4/4 -> 5/2/0. No other item moves in any of the three lists.
+#  - Two cells, H2 list only: B10 drops a v21 positive whose quote holds no share. H2's model
+#    quoted a member-count clause at `PPS-DEV-143` (a FP); its v21·e21 clear. The H4 lists do
+#    not move — every H4 v21 positive quotes a share (reports/team-b/b10-v21-quote-share).
 #
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
@@ -240,6 +243,7 @@ DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-122", "v24"), ("PPS-DEV-123", "v24"), ("PPS-DEV-124", "v20"), ("PPS-DEV-127", "v21"),
     ("PPS-DEV-127", "v3"), ("PPS-DEV-130", "v9"), ("PPS-DEV-131", "v20"), ("PPS-DEV-132", "v20"),
     ("PPS-DEV-133", "v20"), ("PPS-DEV-134", "v20"), ("PPS-DEV-135", "v20"),
+    ("PPS-DEV-143", "e21"), ("PPS-DEV-143", "v21"),
     ("PPS-DEV-144", "v6"), ("PPS-DEV-148", "e13"),
     ("PPS-DEV-15", "e24"), ("PPS-DEV-15", "v24"), ("PPS-DEV-153", "e17"),
     ("PPS-DEV-153", "v17"), ("PPS-DEV-153", "v24"),
