@@ -121,6 +121,18 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         self.assertTrue(d2, "D2 줄이 없다")
         self.assertTrue(any("17~45" in line for line in d2))
 
+    def test_the_pair_comparison_focuses_on_v11_alone(self):
+        """`--items` 는 `v11` 하나여야 D1 이 v10·v12·v13 의 회귀까지 덮는다.
+
+        넷을 다 대상으로 잡으면 그 셋이 **대상 안**이 되어 `changed_cells_off_focus` 가
+        그 회귀를 못 본다. CPU 재생에서 두 옵션의 `대상 밖`은 둘 다 0 이고
+        `after.tp`(4·4·3)도 그대로 읽히므로, 좁히는 쪽이 손해 없이 더 엄격하다.
+        """
+        self.assertIn("--items v11 --output-dir", self.request)
+        self.assertNotIn("--items v11,v10,v12,v13", self.request,
+                         "쌍 비교가 넷을 대상으로 잡으면 D1 이 그 셋을 못 본다")
+        self.assertIn("23항목", self.request, "왜 좁히는지가 안 적혔다")
+
     def test_the_audit_keys_match_the_real_comparison_json(self):
         """요청서가 적은 `comparison.json` 표기가 실제 구조와 같은가.
 

@@ -186,7 +186,7 @@ diagnostics.jsonl` 에 `response_text` 가 남고, **그것이 있어야 다음 
 | **A** | v11 TP | **4 ≤ TP ≤ 6** | 후보 쪽 절대값 | 재생 5. 라벨 양성 6건이라 ±1 이 최소 눈금 |
 | **B** | v11 FP | **FP ≤ 6** | 후보 쪽 절대값 | 재생 6 |
 | **C** | v10·v12·v13 TP 손실 0 | 각각 **TP ≥ 4 · 4 · 3** | 같은 회차 기준↔후보 | 재생값 그대로 |
-| **D1** | **대상 밖 바뀐 셀** | **정확히 0** | **같은 회차 기준↔후보** | 재생 0셀. 후보는 v11 만 쓴다 |
+| **D1** | **대상 밖 바뀐 셀**(`--items v11` → 나머지 23항목) | **정확히 0** | **같은 회차 기준↔후보** | 재생 0셀. 후보는 `v11` 키 하나만 쓴다 |
 | **D2** | 회차 간 churn | 17~45셀 · Macro 0.000008~0.010088 | **회차1↔회차2** | `reports/runs/reproducibility.md` (과거 코드 13쌍) |
 | **E** | 발화 조건 참 건수 | 두 회차 기록. 3 미만·12 초과면 (a) 부정 | — | 재생 6건 |
 
@@ -311,22 +311,30 @@ py -X utf8 tools/replay_run.py --case <run1>/dev-debug --script <pin>/run.py \
 
 py -X utf8 tools/compare_runs.py --before <tmp>/r1-base/submission.csv \
   --after <tmp>/r1-cand/submission.csv --truth open/dev_labels.csv \
-  --items v11,v10,v12,v13 --output-dir <tmp>/r1-cmp
+  --items v11 --output-dir <tmp>/r1-cmp
 ```
 
 2회차도 같게 돌린다(`<run2>`, `r2-*`).
 
 **이 대조 하나가 Z·A·B·C·D1 을 다 답한다.** `comparison.json` 에서 이렇게 읽는다.
 
+**`--items` 는 `v11` 하나다.** 넷을 다 대상으로 잡으면 v10·v12·v13 이 **대상 안**이 되어
+`changed_cells_off_focus` 가 그 셋의 회귀를 **못 본다.** `v11` 만 대상으로 두면 나머지
+23항목이 전부 대상 밖이 되고, **D1 이 v10·v12·v13 의 회귀까지 직접 잡는다.**
+
+두 옵션을 CPU 재생에서 실제로 돌려 확인했다 — **바뀐 셀 6 · 대상 밖 0 으로 같고,
+`v10`·`v12`·`v13` 의 `after.tp`(4 · 4 · 3)는 대상 밖이어도 그대로 읽힌다.** 기준 C 를
+읽는 데 지장이 없고 D1 만 엄격해진다.
+
 `items` 는 **딕셔너리가 아니라 24개짜리 리스트**이고 각 원소가 `item`·`before`·`after`·
-`flipped` 를 든다. 아래 표기는 실제 파일에서 확인한 것이다.
+`flipped` 를 든다(대상 밖 항목도 다 들어 있다). 아래 표기는 실제 파일에서 확인한 것이다.
 
 | 기준 | 어디를 보나 |
 | --- | --- |
 | **Z** | `v11` 원소의 `before.fn > after.fn` **그리고** `changed_cells > 0` |
 | **A · B** | `v11` 원소의 `after.tp` · `after.fp` |
 | **C** | `v10`·`v12`·`v13` 원소의 `after.tp` 가 각각 4 · 4 · 3 이상 |
-| **D1** | `changed_cells_off_focus` 가 **정확히 0** |
+| **D1** | `changed_cells_off_focus` 가 **정확히 0** — `v11` 말고 **23항목 전부**를 덮는다 |
 | 바뀐 공고 | `v11` 원소의 `flipped` (재생에서는 `039`·`040`·`061`·`062`·`064`·`12`) |
 
 한 줄로 읽으려면 이렇게 한다.
