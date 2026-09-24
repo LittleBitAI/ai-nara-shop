@@ -2,6 +2,7 @@
 
 import copy
 import csv
+from datetime import date
 import importlib.util
 import json
 import os
@@ -824,6 +825,245 @@ class BaselineTests(unittest.TestCase):
         self.assertFalse(baseline._v6_evidence_supports_v6(""))
         # 내리는 게이트는 main 과 같은 판정을 유지한다.
         self.assertFalse(baseline._has_basic_unit(target))
+
+    def test_v23_counts_the_days_between_the_briefing_and_the_proposal_deadline(self):
+        """D11 — 낙찰자 결정기준 제7장 제3절 2-다.
+
+        설명은 제안서 제출마감일의 전일부터 기산해 추정가격별 40/20/10일 전에 해야 한다.
+        판정에 쓰는 세 값(필요기간·설명일·마감일)이 **전부 원문·메타에서 확인될 때만**
+        올린다. 하나라도 못 읽으면 기간을 셀 수 없으므로 올리지 않는다.
+        """
+        def judged(text, meta=None):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": 54_545_455,
+                                **(meta or {})})
+            return baseline.postprocess(valid(), rec)["v23"]
+
+        # `PPS-DEV-27` 의 꼴. 앵커와 날짜가 **다른 줄**에 있고 설명 3일 뒤가 마감이다.
+        short = ("마. 사업설명회 : 2026. 2. 3.(화) 14:00\n\n"
+                 "바. 제안서 및 가격입찰서 제출 [방문접수]\n\n❍ 일 시 : 2026. 2. 6.(금) 09:00")
+        raised = judged(short)
+        self.assertEqual(1, raised["위반여부"])
+        self.assertIn("사업설명회", raised["근거문구"], "근거는 설명 문장이어야 한다")
+        self.assertIn(raised["근거문구"], short, "근거가 원문의 연속 구간이 아니다")
+
+        # 같은 간격이라도 1억 미만이면 10일이 기준이라 위반이고, 열흘을 넘기면 아니다.
+        far = short.replace("2026. 2. 6.", "2026. 2. 20.")
+        self.assertEqual(0, judged(far)["위반여부"])
+        # 추정가격이 오르면 같은 간격이 다시 위반이 된다 — 1억 이상은 20일이다.
+        self.assertEqual(1, judged(far, {"입찰추정가격": 290_909_091})["위반여부"])
+
+        # 적용범위 밖(국가계약법·협상 아님)은 언제나 0 이다.
+        self.assertEqual(0, judged(short, {"적용계약법": "국가계약법"})["위반여부"])
+        self.assertEqual(0, judged(short, {"낙찰방법": "적격심사제"})["위반여부"])
+        # 금액을 모르면 필요기간을 못 정한다.
+        self.assertEqual(0, judged(short, {"입찰추정가격": None})["위반여부"])
+        # 마감일이 원문에 없으면 올리지 않는다. 개찰예정일자로 대신하지 않는다.
+        self.assertEqual(0, judged("마. 사업설명회 : 2026. 2. 3.(화) 14:00",
+                                   {"개찰예정일자": "20260206"})["위반여부"])
+
+    def test_v23_ignores_the_presentation_stage_and_the_undated_briefing(self):
+        """올리면 안 되는 두 꼴. 둘 다 dev 에서 정답이 0 이다.
+
+        ① 제안서 **평가** 단계의 설명(제3절 4-아)은 제출마감 뒤라 기간 규정의 대상이
+           아니다(`PPS-DEV-109`). ② 날짜가 공고에 없으면 기간을 셀 수 없다(`PPS-DEV-136`).
+        """
+        def judged(text):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": 54_545_455})
+            return baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        deadline = "\n\n바. 제안서 제출\n\n❍ 일 시 : 2026. 2. 6.(금) 09:00"
+        self.assertEqual(0, judged(
+            "3) 설명시간 : 업체당 40분 내외(제안설명 20분, 질의응답 20분) 2026. 2. 3." + deadline))
+        self.assertEqual(0, judged(
+            "4) 설명순서 : 제안서 발표 당일 추첨 2026. 2. 3." + deadline))
+        self.assertEqual(0, judged(
+            "사. 현장설명회를 개최하며(일시·장소는 개별 통보) 참석업체에 한한다." + deadline))
+        # 평가 단계 문구가 **뒤따르는 별개 항목**이면 앞의 설명은 살아 있어야 한다.
+        self.assertEqual(1, judged(
+            "6. 사업설명 : 과업설명회 개최 — 2026. 2. 3.(화) 15:00\n\n"
+            "7. 제안서 발표 및 평가 (세부사항 제안요청서 참조)" + deadline))
+
+    def test_v23_needs_the_briefing_to_come_before_the_proposal_deadline(self):
+        """B-1 — 제출이 끝난 뒤 열리는 설명회는 제3절 2-다의 설명이 아니다.
+
+        조문이 설명을 "제안서 제출마감일의 전일부터 기산하여 … 전에 실시"하라고 하므로
+        설명일은 제출마감보다 앞이어야 한다. 이름이 아니라 **순서**로 가른다 — 정답 양성
+        다섯이 사업설명회·과업설명회·현장설명회·제안요청 설명회·제안요청서 설명을 하나씩
+        써서 명칭은 판별력이 없다.
+
+        마감일을 설명일 기준으로 고르면 이 판정을 할 수 없다. 진짜 마감이 설명일보다
+        앞선 공고에서 그 날짜가 지워지고 같은 창의 **뒤쪽 날짜**(개찰·평가·발표)가 마감
+        행세를 하기 때문이다(무라벨 `PPS-D-002583`·`PPS-D-020771` 에서 실측).
+        """
+        def judged(text, meta=None):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": 54_545_455,
+                                **(meta or {})})
+            return baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        # 설명 문구의 창이 뒷줄 날짜를 삼키지 않도록 사이를 벌린다. 실제 공고도 두 항목이
+        # 떨어져 있다. 창이 남의 날짜를 줍는 문제는 이 검사의 대상이 아니다(별개 가설).
+        gap = "\n\n" + "공고 관련 안내 문구입니다. " * 10 + "\n\n"
+
+        def notice(briefing):
+            return (f"마. 사업설명회 : {briefing}" + gap
+                    + "바. 제안서 접수\n\n❍ 접수일시 : 2026. 2. 6.(금) 09:00" + gap
+                    + "사. 개찰일시 : 2026. 2. 11.(수) 10:00")
+
+        self.assertEqual(1, judged(notice("2026. 2. 3.(화) 14:00")),
+                         "설명일이 마감보다 앞이면 종전대로 판정한다")
+        # 설명일만 마감 뒤로 옮기면 대상에서 빠진다. 뒤따르는 개찰일을 마감으로 갈아끼워
+        # 억지로 간격을 만들지 않는다.
+        self.assertEqual(0, judged(notice("2026. 2. 10.(화) 14:00")))
+        self.assertEqual(0, judged(notice("2026. 2. 6.(금) 14:00")),
+                         "설명일과 마감일이 같은 날이어도 대상이 아니다")
+
+        # 개찰·평가 날짜밖에 없으면 마감일을 못 읽은 것이다. 그것을 마감으로 쓰지 않는다.
+        self.assertEqual(0, judged(
+            "마. 사업설명회 : 2026. 2. 3.(화) 14:00" + gap
+            + "사. 개찰일시 : 2026. 2. 20.(금) 10:00" + gap + "아. 제안서 평가 : 2026. 2. 25.(수)"))
+
+    def test_v23_does_not_borrow_another_schedule_row_as_the_briefing_day(self):
+        """설명 문구에 실시일이 없으면 옆 항목의 날짜를 빌려 오지 않는다.
+
+        조문의 기산점은 설명을 **실시한 날**이다. `과업설명: <제안요청서> 참조` 처럼 실시일이
+        안 적힌 문구 뒤의 제출·등록 일정 날짜를 설명일로 읽으면 없는 기산점을 지어내는 것이
+        된다(무라벨 `PPS-D-000870`).
+
+        다만 창을 좁히는 것으로는 못 고친다 — 표로 적은 공고는 설명회와 그 일시가 다른 줄에
+        있다(`PPS-DEV-28`). 그래서 **사이에 다른 일정 라벨이 끼었는지**로 가른다.
+        """
+        def judged(text, price=54_545_455):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": price})
+            return baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        # 설명 문구에 날짜가 없고 바로 뒤에 다른 일정 항목이 온다 → 설명일 없음 → 올리지 않는다.
+        self.assertEqual(0, judged(
+            "라. 과업설명: <제안요청서> 참조\n"
+            "마. 입찰참가자격 등록 마감일시: 2026. 1. 16. 18:00\n"
+            "바. 제안서 제출기간: 2026. 1. 15. 10:00 ~ 2026. 1. 19. 16:00"))
+
+        # 표 꼴 — 설명회와 그 일시가 다른 줄이어도 사이에 다른 라벨이 없으면 설명일로 읽는다.
+        self.assertEqual(1, judged(
+            "제안요청 설명회\n\n일시 : 2026.01.20.(화) 15:00\n\n"
+            "장소 : 발주기관 대회의실\n\n접수마감\n\n2026.01.23. 15:00 까지"))
+
+    def test_v23_does_not_mistake_a_registration_deadline_for_the_proposal_deadline(self):
+        """리뷰 P1 — 참가자격 등록 마감은 조문의 기산점이 아니다.
+
+        2-다의 기산점은 「제안서 제출마감일」이다. 참가자격 등록 마감은 시행령 제13조·
+        입찰참가자격 등록규정의 별개 기한이고, 대개 제안서 제출마감보다 **앞**이라 이것을
+        마감으로 읽으면 기간이 실제보다 짧게 나와 위반을 과탐한다.
+
+        마감 앵커가 고르는 날짜도 창 전체의 가장 이른 것이 아니라 **앵커 바로 뒤 첫 날짜**다.
+        전에는 `등록 마감일시: 3/23` 창이 다음 줄 `입찰서 제출기간: 3/20 ~` 의 **개시일**을
+        집었다(무라벨 `PPS-D-013261`).
+        """
+        gap = "\n\n" + "공고 관련 안내 문구입니다. " * 10 + "\n\n"
+
+        def judged(text):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": 54_545_455})
+            return baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        # 등록 마감(2/5)을 마감으로 읽으면 간격 2일 < 10일이라 위반이 된다. 진짜 제안서
+        # 제출마감은 2/25 이고 간격 22일이라 위반이 아니다.
+        self.assertEqual(0, judged(
+            "마. 사업설명회 : 2026. 2. 3.(화) 14:00" + gap
+            + "바. 입찰참가자격 등록 마감일시 : 2026. 2. 5.(목) 18:00" + gap
+            + "사. 제안서 제출기간 : 2026. 2. 20. 10:00 ~ 2026. 2. 25. 16:00"))
+
+        # 마감 앵커 뒤에 개시일이 이어져도 앵커의 날짜를 쓴다.
+        self.assertEqual(0, judged(
+            "마. 사업설명회 : 2026. 2. 3.(화) 14:00" + gap
+            + "바. 제안서 제출 마감일시 : 2026. 2. 25.(수) 16:00\n"
+            + "사. 입찰서 제출기간 : 2026. 2. 5. 10:00 ~ 2026. 2. 25. 16:00"))
+
+        # 진짜 제안서 제출마감이 가까우면 종전대로 위반이다 — 규칙이 둔해지지 않았다.
+        self.assertEqual(1, judged(
+            "마. 사업설명회 : 2026. 2. 3.(화) 14:00" + gap
+            + "바. 입찰참가자격 등록 마감일시 : 2026. 2. 5.(목) 18:00" + gap
+            + "사. 제안서 제출 마감일시 : 2026. 2. 6.(금) 16:00"))
+
+    def test_v23_keeps_the_proposal_deadline_when_an_entry_deadline_comes_first(self):
+        """리뷰 P1 재지적 — 참가신청서 제출 마감이 제안서 마감 자리를 뺏으면 안 된다.
+
+        `입찰참가신청서 제출 마감일시` 는 `등록 마감` 과 달리 `제출 마감` 꼴이라 이름 없는
+        마감 앵커에 걸린다. 그리고 참가 절차의 기한은 대개 제안서 제출마감보다 **앞**이라,
+        후보를 섞어 가장 이른 것을 고르면 그것이 제안서 마감을 밀어내고 간격이 실제보다
+        **길게** 나와 위반을 놓친다.
+
+        그래서 층을 나눈다 — 제출물 이름이 붙은 마감이 하나라도 있으면 그것이 제안서
+        제출마감이고, 이름 없는 마감은 목적어를 확인해 참가 절차의 기한이면 버린다.
+        """
+        gap = "\n\n" + "공고 관련 안내 문구입니다. " * 10 + "\n\n"
+
+        def judged(text, price=290_909_091):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": price})
+            return baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        # 설명 2/5 → 제안서 마감 2/12 = 7일 < 20일. 앞선 참가신청서 마감 2/1 을 쓰면 놓친다.
+        both = ("가. 입찰참가신청서 제출 마감일시 : 2026. 2. 1.(일) 18:00" + gap
+                + "나. 사업설명회 : 2026. 2. 5.(목) 14:00" + gap
+                + "다. 제안서 제출 마감일시 : 2026. 2. 12.(목) 16:00")
+        self.assertEqual(1, judged(both))
+        rec = record()
+        rec["docs"][0]["text"] = both
+        rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                            "공고게시일자": "20260114", "입찰추정가격": 290_909_091})
+        self.assertEqual(date(2026, 2, 12), baseline.v23_deadline_day(rec)[0],
+                         "제안서 마감이 아니라 참가 절차의 기한을 골랐다")
+
+        # 참가신청서 마감밖에 없으면 제안서 마감을 못 읽은 것이다 — 그것으로 재지 않는다.
+        self.assertEqual(0, judged(
+            "가. 입찰참가신청서 제출 마감일시 : 2026. 2. 1.(일) 18:00" + gap
+            + "나. 사업설명회 : 2026. 1. 20.(화) 14:00"))
+
+        # 이름이 안 붙은 `접수마감` 은 여전히 쓴다 — `PPS-DEV-28` 이 그 꼴이다.
+        self.assertEqual(1, judged(
+            "제안요청 설명회\n\n일시 : 2026.01.20.(화) 15:00" + gap
+            + "접수마감\n\n2026.01.23. 15:00 까지"))
+
+    def test_v23_reads_a_zero_estimate_as_an_unknown_amount(self):
+        """C — `입찰추정가격 == 0` 은 `1억원 미만`이 아니라 **미입력**이다.
+
+        조문이 기간을 추정가격 구간으로 정하므로 금액을 모르면 구간도 못 정한다.
+        저장소의 금액 계약도 같다 — `notice_price()` 가 `price > 0` 일 때만 금액으로
+        인정한다. 배정예산으로 물러서지 않는다. 조문의 기준은 추정가격이다.
+        """
+        text = ("마. 사업설명회 : 2026. 2. 3.(화) 14:00\n\n"
+                "바. 제안서 접수\n\n❍ 접수일시 : 2026. 2. 6.(금) 09:00")
+        def judged(price, **extra):
+            rec = record()
+            rec["docs"][0]["text"] = text
+            rec["meta"].update({"적용계약법": "지방계약법", "낙찰방법": "협상에의한계약",
+                                "공고게시일자": "20260114", "입찰추정가격": price, **extra})
+            return baseline.v23_required_days(rec), baseline.postprocess(valid(), rec)["v23"]["위반여부"]
+
+        self.assertEqual((10, 1), judged(54_545_455))
+        self.assertEqual((20, 1), judged(290_909_091))
+        self.assertEqual((40, 1), judged(3_272_727_273))
+        # 0 과 음수, 숫자가 아닌 값은 전부 미상이다. 배정예산이 있어도 물러서지 않는다.
+        self.assertEqual((None, 0), judged(0, 배정예산금액=25_000_000_000))
+        self.assertEqual((None, 0), judged(-1))
+        self.assertEqual((None, 0), judged(None))
+        self.assertEqual((None, 0), judged(""))
 
     def test_scope_gates_lower_only_the_out_of_scope_positives(self):
         """v3·v4·v5·v6 의 적용범위 게이트. 내리는 자리와 **안 내리는 자리**를 함께 고정한다."""

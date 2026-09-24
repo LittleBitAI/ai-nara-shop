@@ -47,6 +47,10 @@ RUN_SCRIPT = replay_run.run_script(CASE, _SCRATCH.name)
 # 2026-09-23 re-pinned (sha256 f2984077…): `v20_decision()` (#111) was ported into
 # `postprocess` and overrides the model's v20. Seven v20 cells moved (24·124·131·132·
 # 133·134·135), no evidence cell and nothing outside v20. Source: PR #111.
+# 2026-09-24 재고정(sha256 c6c27e1a…): D11 이 v23 을 조문의 기간(설명일 → 제안서
+# 제출마감일, 낙찰자 결정기준 제7장 제3절 2-다)으로 판정하고 모델을 덮는다.
+# 13셀이 움직였고 전부 v23·e23 이다 — `27`·`28`·`139`·`141` 이 서고 `035`·`109` 가
+# 내려가며 `140` 은 인용만 바뀐다. 근거는 reports/team-d/d11-v23-axis-a/README.md.
 HEAD_REPLAY =ROOT / "reports/team-b/b5-port-replay/submission.csv"
 
 CANDIDATE = '''"""검사용 후보. 모든 판정을 0으로 만든다."""

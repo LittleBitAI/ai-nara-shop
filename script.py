@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+from datetime import date
 import gzip
 import hashlib
 from importlib.metadata import PackageNotFoundError, version
@@ -2702,6 +2703,209 @@ def v20_decision(rec: Dict[str, Any]) -> Optional[int]:
     return 0
 
 
+# ===== v23 — 제안요청서 설명 시기 (낙찰자 결정기준 제7장 제3절 2-다) =====
+# 조문은 두 기간을 건다. ① 설명은 **제안서 제출마감일의 전일부터 기산해** 추정가격별
+# 40/20/10일 전에 실시해야 하고, ② 공고는 설명일 전일부터 기산해 7일 전에 해야 한다.
+# 여기서 보는 것은 ①뿐이다. dev 정답 양성 다섯(27·28·139·140·141)이 전부 ①에서만 나오고,
+# ②(공고→설명)는 다섯 건 모두 지키고 있다. 시행령 제35조⑤의 공고기간(10/20/40일)도
+# 다섯 건 모두 준수라 위반을 만들지 않는다.
+#
+# 마감일은 `meta.개찰예정일자`를 쓰지 않는다. PPS-DEV-27 은 개찰이 2/20 인데 실제 제안서
+# 제출마감은 2/6 이라 메타로 대체하면 열나흘을 잘못 센다. 원문에서 읽는다.
+V23_QUOTE_MAX = 300
+
+# 조문 용어는 「제안요청서 등에 대한 설명」이지만 공고는 현장설명회·사업설명회·과업설명회로도
+# 적는다. 정답 양성 다섯이 그 다섯 표기를 하나씩 쓴다. `제안요청서?` 의 `서`가 선택인 것은
+# PPS-DEV-28 의 `제안요청 설명회` 때문이다.
+V23_BRIEFING = re.compile(r"(?:현장|과업|제안요청서?|제안|사업)\s*설명(?:회)?")
+# 제안서 **평가** 단계의 설명(제3절 4-아)은 제출마감 뒤라 기간 규정의 대상이 아니다.
+# 창 120자가 아니라 **걸린 자리 주변 40자**만 본다 — 뒤따르는 별개 항목(`7. 제안서 발표 및
+# 평가`)까지 보면 정탐(PPS-DEV-140)이 같이 죽는다.
+V23_BRIEFING_EVALUATION = re.compile(
+    r"발표|질의\s*·?\s*응답|질의응답|평가위원|추첨|설명시간|설명순서|\d+\s*분")
+V23_BRIEFING_EVALUATION_REACH = 40
+V23_BRIEFING_WINDOW = 120
+V23_BRIEFING_SKIPPED = re.compile(r"생략|미실시|실시하지\s*(?:않|아니)|갈음|해당\s*없음|없음")
+# 설명 문구와 날짜 사이에 이것이 끼면 그 날짜는 그 항목의 것이지 설명의 것이 아니다.
+# 단독 `일시`는 넣지 않는다 — `제안요청 설명회` ⏎ `일시 : …` 처럼 설명 자신의 날짜를
+# 그렇게 적는 공고가 있다(`PPS-DEV-28`·`139`·`141`).
+V23_OTHER_SCHEDULE = re.compile(
+    r"제출\s*기간|접수\s*기간|제출\s*마감|접수\s*마감|등록\s*마감|마감\s*일시|개찰|평가|공고\s*기간")
+
+# 원문 날짜. 슬래시 표기(`2026/03/23`)까지 읽는다 — 마감일을 원문에서 뽑기 때문이다.
+V23_DATE = re.compile(r"(20\d{2})\s*[.년/\-]\s*(\d{1,2})\s*[.월/\-]\s*(\d{1,2})")
+
+# 1단 — 마감이라고 스스로 말하는 자리. **무엇의 마감인지가 적혀 있어야 인정한다.**
+# 조문의 기산점은 「제안서 제출마감일」이다. 참가자격 등록·입찰참가신청서 제출은 시행령
+# 제13조·입찰참가자격 등록규정의 별개 기한이고 기산점이 아니다. 둘 다 대개 제안서
+# 제출마감보다 **앞**이라 이것을 마감으로 읽으면 기간이 짧게 나와 위반을 과탐한다.
+#
+# 두 층으로 나눈다. 섞어서 가장 이른 것을 고르면 앞선 참가 기한이 제안서 마감을 밀어낸다.
+#  (a) 제출물 이름이 붙은 마감 — 가장 단단한 신호다. `참가신청서`는 여기 넣지 않는다.
+V23_DEADLINE_NAMED = re.compile(
+    r"(?:제안서|입찰서|가격입찰서|기술제안서|제안·?가격|가격제안서)\s*"
+    r"(?:제출|접수)?\s*마감\s*(?:일시|일자|일)?")
+#  (b) 이름 없는 제출·접수 마감. 목적어를 확인해 **참가 절차의 기한이면 버린다.**
+V23_DEADLINE_PLAIN = re.compile(r"(?:제출|접수)\s*마감\s*(?:일시|일자|일)?")
+V23_DEADLINE_NOT_PROPOSAL = re.compile(
+    r"참가\s*신청서?|참가\s*등록|자격\s*등록|이용자\s*등록|입찰\s*등록|등록\s*마감")
+V23_DEADLINE_SUBJECT_REACH = 20
+# 2단 — 기간·일시로만 적힌 자리. 창 안의 마지막 날짜를 끝으로 읽는다.
+# `제출/접수` 와 `기간/일시` 사이만 줄바꿈을 넘게 한다. 공고가 앵커와 날짜를 다른 줄에 적는
+# 꼴(`바. 제안서 및 가격입찰서 제출 [방문접수]` 다음 줄에 `❍ 일 시 : …`)을 읽기 위한 것이다.
+# 첫 간격(주어 → 제출)은 한 줄 안으로 유지한다.
+V23_DEADLINE_PERIOD = re.compile(
+    r"(?:제안서|입찰서|가격입찰서|기술제안서|제안 및 가격|가격 및 제안서|제안·가격)"
+    r"[^\n]{0,30}?(?:제출|접수)[\s\S]{0,30}?(?:기간|일시|일 시)"
+    r"|(?:제출|접수)\s*기간")
+V23_DEADLINE_WINDOW = 120
+
+# 제7장 제3절 2-다 각호. 시행령 제35조⑤의 공고기간 구간과 같은 금액 경계다.
+V23_THRESHOLDS = ((1_000_000_000, 40), (100_000_000, 20), (0, 10))
+
+
+def _v23_as_date(value) -> Optional[date]:
+    text = str(value or "")
+    if len(text) == 8 and text.isdigit():
+        try:
+            return date(int(text[:4]), int(text[4:6]), int(text[6:]))
+        except ValueError:
+            return None
+    return None
+
+
+def _v23_date_at(match) -> Optional[date]:
+    try:
+        return date(int(match.group(1)), int(match.group(2)), int(match.group(3)))
+    except ValueError:
+        return None
+
+
+def v23_required_days(rec: Dict[str, Any]) -> Optional[int]:
+    """추정가격이 정하는 필요 기간. 금액을 모르면 판정하지 않는다.
+
+    `0` 은 금액이 아니라 **미입력**으로 읽는다. 조문이 기간을 추정가격 구간으로 정하므로
+    금액을 모르면 구간도 못 정한다. 이 저장소의 금액 계약도 같다 — `notice_price()` 가
+    `price > 0` 일 때만 금액으로 인정하고 `region_restriction_allowed()` 도 `not price` 를
+    미상으로 다룬다. 배정예산으로 물러서지 않는다. 조문의 기준은 추정가격이다.
+    """
+    meta = rec.get("meta") or {}
+    price = meta.get("입찰추정가격")
+    if not isinstance(price, (int, float)) or price <= 0:
+        return None
+    for floor, days in V23_THRESHOLDS:
+        if price >= floor:
+            return days
+    return None
+
+
+def v23_applies(rec: Dict[str, Any]) -> bool:
+    """항목명 주석 그대로 — 낙찰방법 협상 + 계약법 지방인 공고에만 v23 이 성립한다."""
+    meta = rec.get("meta") or {}
+    return ("지방" in str(meta.get("적용계약법") or "")
+            and "협상" in str(meta.get("낙찰방법") or ""))
+
+
+def v23_briefing_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str, str]]:
+    """설명일. 공고게시일 이후의 가장 이른 날짜를 설명일로 읽는다.
+
+    창 안의 아무 날짜나 쓰지 않는다. 설명 문구와 그 날짜 **사이에 다른 일정 항목의 라벨**이
+    끼어 있으면 그 날짜는 그 항목의 것이지 설명의 것이 아니다. 조문의 기산점은 설명을
+    **실시한 날**이므로, 실시일이 안 적힌 문구(`과업설명: <제안요청서> 참조`) 뒤의 제출·등록
+    일정 날짜를 설명일로 읽으면 없는 기산점을 지어내는 것이 된다(무라벨 `PPS-D-000870`).
+    """
+    posted = _v23_as_date((rec.get("meta") or {}).get("공고게시일자"))
+    if posted is None:
+        return None
+    best = None
+    for doc in rec.get("docs") or []:
+        text = doc.get("text") or ""
+        for m in V23_BRIEFING.finditer(text):
+            window = text[m.start():min(len(text), m.end() + V23_BRIEFING_WINDOW)]
+            if V23_BRIEFING_SKIPPED.search(window):
+                continue
+            near = text[max(0, m.start() - V23_BRIEFING_EVALUATION_REACH):
+                        min(len(text), m.end() + V23_BRIEFING_EVALUATION_REACH)]
+            if V23_BRIEFING_EVALUATION.search(near):
+                continue
+            for d in V23_DATE.finditer(window):
+                held = _v23_date_at(d)
+                if held is None or held < posted:
+                    continue
+                if V23_OTHER_SCHEDULE.search(window[:d.start()]):
+                    continue
+                if best is None or held < best[0]:
+                    best = (held, window.strip()[:V23_QUOTE_MAX], text)
+    return best
+
+
+def v23_deadline_day(rec: Dict[str, Any]) -> Optional[Tuple[date, str]]:
+    """제안서 제출마감일. `meta.개찰예정일자`를 쓰지 않고 원문에서 읽는다.
+
+    **설명일을 기준선으로 쓰지 않는다.** 마감일은 공고의 성질이지 설명회의 성질이 아니다.
+    전에는 `설명일 이후`인 날짜만 후보로 받았는데, 그러면 진짜 제출마감이 설명일보다
+    앞선 공고에서 그 날짜가 지워지고 같은 창의 뒤쪽 날짜(`개찰 일시`·`가격평가 및
+    협상적격자발표`)가 마감 행세를 한다. 순서는 후보를 고르는 필터가 아니라
+    `v23_axis_a()` 가 거는 **전제 조건**이다.
+    """
+    posted = _v23_as_date((rec.get("meta") or {}).get("공고게시일자"))
+    if posted is None:
+        return None
+    named, plain, period = [], [], []
+    for doc in rec.get("docs") or []:
+        text = doc.get("text") or ""
+        for pattern, bucket, take_last in ((V23_DEADLINE_NAMED, named, False),
+                                           (V23_DEADLINE_PLAIN, plain, False),
+                                           (V23_DEADLINE_PERIOD, period, True)):
+            for m in pattern.finditer(text):
+                if bucket is plain and V23_DEADLINE_NOT_PROPOSAL.search(
+                        text[max(0, m.start() - V23_DEADLINE_SUBJECT_REACH):m.start()]):
+                    continue                # `입찰참가신청서 제출 마감일시` 따위
+                window = text[m.start():min(len(text), m.end() + V23_DEADLINE_WINDOW)]
+                found = [d for d in (_v23_date_at(x) for x in V23_DATE.finditer(window)) if d]
+                found = [d for d in found if d >= posted]
+                if not found:
+                    continue
+                # 마감 앵커는 **바로 뒤 첫 날짜**가 그 마감이다. 창 전체의 가장 이른 날짜를
+                # 고르면 뒤따르는 별개 항목의 **개시일**을 마감으로 집는다 — 무라벨
+                # `PPS-D-013261` 에서 `등록 마감일시: 3/23` 창이 다음 줄 `입찰서 제출기간:
+                # 3/20 ~` 의 개시일을 골랐다(리뷰 P1). 2단은 기간의 끝을 읽으므로 그대로 max 다.
+                bucket.append(((max(found) if take_last else found[0]),
+                               window.strip()[:V23_QUOTE_MAX]))
+    # 층을 섞지 않는다. 이름이 붙은 마감이 하나라도 있으면 그것이 제안서 제출마감이고,
+    # 앞선 참가 절차의 기한이 그 자리를 뺏지 못한다(리뷰 P1 재지적).
+    for bucket in (named, plain, period):
+        if bucket:
+            bucket.sort(key=lambda pair: pair[0])
+            return bucket[0]
+    return None
+
+
+def v23_axis_a(rec: Dict[str, Any]) -> Optional[str]:
+    """설명일과 제출마감일이 **둘 다 원문에서 확인될 때만** 판정한다.
+
+    날짜 하나라도 못 읽으면 올리지 않는다 — 기간을 셀 수 없으면 위반을 증명할 수 없다.
+
+    그리고 **설명일이 제출마감일보다 앞서야 한다.** 조문이 설명을 "제안서 제출마감일의
+    전일부터 기산하여 … 전에 실시"하라고 하므로, 제출이 끝난 뒤에 열리는 설명회는 이 항의
+    설명이 아니라 제3절 4-아(제안서 평가 시 설명·질의응답)다. 이름이 아니라 순서로 가른다 —
+    정답 양성 다섯이 사업설명회·과업설명회·현장설명회·제안요청 설명회·제안요청서 설명을
+    하나씩 쓰므로 명칭은 판별력이 없다.
+    """
+    need = v23_required_days(rec)
+    if need is None:
+        return None
+    held = v23_briefing_day(rec)
+    if held is None:
+        return None
+    due = v23_deadline_day(rec)
+    if due is None or held[0] >= due[0]:
+        return None
+    if (due[0] - held[0]).days >= need:
+        return None
+    return held[1]
+
+
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """후처리: ① 부재탐지 5항목 근거 빈칸 고정 ② 위반이 아니면 근거 빈칸 ③ 근거문구 원문 대조(NFC)
     ④ 근거가 위반 조건을 스스로 부정하면 양성을 내린다(evidence_refutes)
@@ -2747,6 +2951,18 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     decision = v20_decision(rec)
     if decision is not None:
         out["v20"] = {"위반여부": decision, "근거문구": ""}
+    # v23 은 코드가 정한다. 적용범위(지방 + 협상) 밖은 0, 안에서는 축 A 가 가른다.
+    if not v23_applies(rec):
+        out["v23"] = {"위반여부": 0, "근거문구": ""}
+    else:
+        quote = v23_axis_a(rec)
+        evidence = ""
+        for doc in (rec.get("docs") or ()) if quote else ():
+            evidence = clean_evidence(quote, doc.get("text") or "")
+            if evidence:
+                break
+        out["v23"] = ({"위반여부": 1, "근거문구": evidence} if evidence
+                      else {"위반여부": 0, "근거문구": ""})
     return out
 
 
