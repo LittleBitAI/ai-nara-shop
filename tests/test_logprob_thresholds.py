@@ -36,6 +36,17 @@ class ItemProbabilitiesTest(unittest.TestCase):
         steps = [('{"v3":{"위반여부', {}), ('":1', {'":1': lp(.6), '":0': lp(.4)}), ('}}', {})]
         self.assertAlmostEqual(script.item_probabilities(steps)["v3"], .6)
 
+    def test_pretty_printed_json_as_gemma_tokenizes_it(self):
+        """colab-1790246262386880643 recorded nothing: the model writes `"위반여부": 1` with a space."""
+        pieces = ['{', '\n', '  ', '"', 'v', '1', '":', ' {', '\n', '    ', '"', '위', '반', '여', '부',
+                  '":', ' ', '1', ',', '\n', '    ', '"', '근', '거', '문', '구', '":', ' null', '\n', '  ',
+                  '},', '\n', '  ', '"', 'v', '2', '":', ' {', '\n', '    ', '"', '위', '반', '여', '부',
+                  '":', ' ', '0', ',']
+        steps = [(p, {"1": lp(.7), "0": lp(.3)} if p in ("0", "1") else {p: 0.0}) for p in pieces]
+        got = script.item_probabilities(steps)
+        self.assertEqual(set(got), {"v1", "v2"})     # the `1` inside `"v1"` is not a verdict digit
+        self.assertAlmostEqual(got["v1"], .7)
+
     def test_each_item_gets_its_own_digit(self):
         steps = [('{"v1":{"위반여부":', {}), ("0", {"0": lp(.8), "1": lp(.2)}),
                  (',"근거문구":null},"v9":{"위반여부":', {}), ("1", {"1": lp(.55), "0": lp(.45)}), ("}}", {})]
