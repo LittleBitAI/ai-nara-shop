@@ -20,6 +20,8 @@
 
 1. 노트북 `notebooks/colab-baseline.ipynb` 를 Colab 에 올리고 A100 GPU 를 고른다.
 2. 첫 셀의 `REPO_REF` 를 **`feat/d-v23-axis-a`** 로 바꾼다(브랜치 이름 그대로 쓴다).
+   실행 코드는 그 브랜치의 `5b28715e8210256514fe39320311ee59b38a9539` 다. 40자리 SHA 를
+   그대로 넣어도 된다 — 약칭 SHA 는 노트북이 clone 전에 거부한다.
 3. `HF_TOKEN` 보안 비밀과 노트북 접근 권한을 켠다.
 4. 위에서부터 전부 실행한다. `RUN_DIAGNOSTIC = True` 를 유지한다(원응답 보관, 약 15분 추가).
 5. 마지막 셀에서 `colab-results-*.zip` 을 받는다. 중간 셀이 실패했어도 마지막 셀은 따로 실행한다.
