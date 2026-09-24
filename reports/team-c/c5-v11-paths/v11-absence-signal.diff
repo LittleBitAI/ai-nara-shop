@@ -1,0 +1,41 @@
+diff --git a/script.py b/script.py
+index 2e1b223..507b446 100644
+--- a/script.py
++++ b/script.py
+@@ -717,9 +717,36 @@ def verify_company_size(facts, rec, max_chars):
+     if reason != "unverified_scope":
+         out.update(company_size_products(facts, rec, visible))
+     out.update(verify_document_requirements(facts, rec, visible))
++    out.update(verify_absent_sme_limit(out, facts, rec, visible))
+     return out, reason
+ 
+ 
++def verify_absent_sme_limit(documents, facts, rec, visible):
++    """C5: v11 을 **직생 요구 문장이 아니라 부재 관측**으로 연다.
++
++    v11 은 부재탐지 항목("중기간 경쟁제품 입찰 중소 없음")인데, 후처리
++    `apply_competitive_rules()` 는 `DP_DEMAND` 정규식이 **직생 요구 문장을 찾아야만**
++    판정을 시작한다. 그래서 직생 조항이 **정말 없는** 공고에서 게이트가 아예 안 열렸다 —
++    dev FN 4건이 전부 그 자리다(`reports/team-c/c5-v11-paths/`).
++
++    같은 공고에서 v10 은 이미 열린다. `verify_document_requirements()` 가 모델의
++    `direct_production_quote == null`(부재 관측) + 완전관측 + 검증된 `scope` 로 1 을 쓰기
++    때문이다. **그 판단을 그대로 빌린다** — 조건을 다시 만들지 않는다.
++
++    중소 허용 조건은 후처리 게이트의 셋째 조건을 그대로 쓴다. 그것이 dev 에서 부재 신호가
++    켜진 12건 중 6건을 막고 **놓친 양성은 0** 이다.
++
++    실측(`788c7df` 재생): v11 2/3/4 → 5/6/1, F1 0.363636 → 0.588235.
++    v10·v12·v13 **0셀**, 대상 밖 **0셀**, 바뀐 셀 6. 무라벨 발화 배율 0.928
++    (dev 6/200 대 무라벨 167/5,999, 세 방법 다 미정).
++    """
++    if (documents.get("v10") or {}).get("위반여부") != 1:
++        return {}                          # 부재가 확인되지 않았다 — 아무 말도 하지 않는다
++    if SME_ALLOWED.search(build_context(rec, max_chars=PROMPT_BUDGET)):
++        return {}                          # 참가자격이 중소기업자를 허용한다 — 부재가 아니다
++    return {"v11": {"위반여부": 1, "근거문구": None}}   # 부재탐지 — 근거는 항상 빈칸
++
++
+ def verify_document_requirements(facts, rec, visible):
+     """A3 관측 사실의 소비자. 옛 원응답·unknown·불완전 문서는 기본 판정을 보존한다."""
+     def quoted(value):
