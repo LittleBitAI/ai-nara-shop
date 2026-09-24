@@ -780,6 +780,31 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(1, judged(limit, {"적용계약법": "국가계약법",
                                            "낙찰방법": "소액수의견적"})["위반여부"])
 
+    def test_v6_quote_follows_the_bound_token_on_a_long_line(self):
+        """PR #128 리뷰 P2 — 긴 참가자격 줄에서 앞선 광역 토큰이 창을 끌고 가면 안 된다.
+
+        `ANON_REGION` 은 `단위=광역` 도 물기 때문에, 도막 안의 아무 지역 토큰이나 중심으로
+        잡으면 480자 상한에서 정작 묶인 기초 토큰이 인용 밖으로 밀려 정탐을 놓친다.
+        """
+        wide = "[지역:r1|단위=광역|광역=경기도]"
+        basic = "[지역:r2|단위=기초|광역=경기도]"
+        for repeats in (20, 65):
+            with self.subTest(repeats=repeats):
+                line = (f"가. 입찰참가자격: 사업 대상 지역은 {wide} 이다. "
+                        + "공고 안내 문구입니다. " * repeats
+                        + f"본점소재지를 {basic}에 둔 업체")
+                rec = record()
+                rec["docs"][0]["text"] = line
+                rec["meta"].update({"적용계약법": "지방계약법", "업무구분": "일반용역",
+                                    "계약방법": "제한경쟁", "낙찰방법": "적격심사제",
+                                    "입찰추정가격": 50_000_000})
+                quote = baseline.v6_should_raise(rec)
+                self.assertIsNotNone(quote, "긴 줄에서 정탐을 놓쳤다")
+                self.assertLessEqual(len(quote), baseline.QUOTE_MAX)
+                self.assertIn("단위=기초", quote, "묶인 토큰이 인용 밖으로 밀렸다")
+                self.assertIn(quote, line, "근거가 원문의 연속 구간이 아니다")
+                self.assertEqual(1, baseline.postprocess(valid(), rec)["v6"]["위반여부"])
+
     def test_v6_reads_the_ordering_agency_token_only_on_the_raising_side(self):
         """`PPS-DEV-071` 의 `[수요기관(기초자치단체)]내에 소재`.
 

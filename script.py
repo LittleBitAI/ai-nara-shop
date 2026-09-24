@@ -2521,13 +2521,19 @@ def _v6_strip_parentheses(text: str) -> str:
     return re.sub(r"\([^)]*\)|（[^）]*）|【[^】]*】", " ", text)
 
 
-def _v6_binds(segment: str) -> bool:
-    """이 도막에서 제한 대상과 기초 토큰이 실제로 묶이는가."""
+def _v6_binds(segment: str):
+    """이 도막에서 제한 대상과 묶이는 기초 토큰. 없으면 None.
+
+    **위치를 돌려준다.** 근거 인용을 그 토큰에 맞춰 떼야 하기 때문이다. 참/거짓만 주면
+    인용을 만드는 쪽이 토큰을 다시 찾게 되고, 그때 `ANON_REGION` 이 `단위=광역` 도 물어서
+    앞선 광역 토큰이 창의 중심이 된다. 480자가 넘는 참가자격 줄에서 그러면 정작 묶인
+    기초 토큰이 인용 밖으로 밀려 정탐을 놓친다(PR #128 리뷰 P2).
+    """
     tokens = [(m.start(), m.end()) for m in ANON_REGION.finditer(segment)
               if "단위=기초" in m.group(0)]
     tokens += [(m.start(), m.end()) for m in BASIC_AGENCY_TARGET.finditer(segment)]
     if not tokens:
-        return False
+        return None
     subjects = [(m.start(), m.end()) for m in V6_PARTICIPANT_SUBJECT.finditer(segment)]
     fused = [(m.start(), m.end()) for m in V6_FUSED_LIMIT.finditer(segment)]
     roles = [(m.start(), m.end()) for m in V6_ROLE_SWITCH.finditer(segment)]
@@ -2543,7 +2549,7 @@ def _v6_binds(segment: str) -> bool:
                 after = _v6_strip_parentheses(
                     segment[token[0]:token[1] + V6_PREDICATE_REACH])
                 if V6_LOCATED.search(after):
-                    return True
+                    return token
         # 꼴 ② — 융합 제한과 이웃해 있다.
         for limit in fused:
             lo, hi = ((limit[1], token[0]) if limit[0] <= token[0]
@@ -2556,12 +2562,12 @@ def _v6_binds(segment: str) -> bool:
             role = max((r for r in roles if r[1] <= token[0]), default=None)
             if role and role[0] > limit[0]:
                 continue        # 토큰 앞에 다른 역할이 더 가까우면 그 역할의 것이다
-            return True
-    return False
+            return token
+    return None
 
 
 def v6_basic_region_limits(rec: Dict[str, Any]):
-    """참가자격에서 시·군·구로 제한한 자리. (문서, 도막) 목록을 돌려준다."""
+    """참가자격에서 시·군·구로 제한한 자리. (문서, 도막, 묶인 토큰 위치) 목록이다."""
     found = []
     for doc in rec.get("docs", []):
         text = doc.get("text") or ""
@@ -2573,9 +2579,12 @@ def v6_basic_region_limits(rec: Dict[str, Any]):
             if V6_NOT_A_LIMIT.search(line) or not _is_qualification_context(text, start):
                 continue
             for offset, segment in _v6_segments(line):
-                if V6_NOT_A_LIMIT.search(segment) or not _v6_binds(segment):
+                if V6_NOT_A_LIMIT.search(segment):
                     continue
-                found.append((text, segment))
+                token = _v6_binds(segment)
+                if token is None:
+                    continue
+                found.append((text, segment, token))
     return found
 
 
@@ -2593,14 +2602,17 @@ def v6_should_raise(rec: Dict[str, Any]) -> Optional[str]:
     price = estimated_price(rec)
     if limit is None or price is None or price >= limit:
         return None
-    for text, segment in v6_basic_region_limits(rec):
+    for text, segment, token in v6_basic_region_limits(rec):
         quote = segment.strip()
         if len(quote) > QUOTE_MAX:
-            anchors = [m.start() for m in ANON_REGION.finditer(segment)]
-            anchors += [m.start() for m in BASIC_AGENCY_TARGET.finditer(segment)]
-            if not anchors:
-                continue
-            low = max(0, min(anchors) - QUOTE_MAX // 3)
+            # 창은 **제한과 묶인 그 토큰**에 맞춘다. 도막 안의 아무 지역 토큰이나 잡으면
+            # 앞선 `단위=광역` 이 중심이 되어 정작 기초 토큰이 인용 밖으로 밀린다.
+            # 토큰이 길어 상한을 넘으면 뒤가 아니라 토큰 끝에 맞춰 잘라 토큰을 보존한다.
+            start, end = token
+            low = max(0, min(start - QUOTE_MAX // 3, len(segment) - QUOTE_MAX))
+            low = min(low, start)
+            if end - low > QUOTE_MAX:
+                low = max(0, end - QUOTE_MAX)
             quote = segment[low:low + QUOTE_MAX].strip()
         cleaned = clean_evidence(quote, text)
         if cleaned and _v6_evidence_supports_v6(cleaned):
