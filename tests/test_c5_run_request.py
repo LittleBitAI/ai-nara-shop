@@ -91,6 +91,45 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         self.assertIn("0.000008~0.010088", self.request)
         self.assertIn("reproducibility.md", self.request)
 
+    def test_the_criteria_are_read_as_a_difference_not_an_absolute(self):
+        """리뷰 [P2] — 후보가 아무것도 안 해도 통과하던 자리.
+
+        기준이 전부 절대값이면 무효과 후보가 B·C·D 를 통과한다(기준 v11 이 2/3/4 라
+        FP 3 ≤ 6). **움직였는가를 먼저 묻는 기준 Z** 가 있어야 한다.
+        """
+        self.assertIn("| **Z** |", self.request, "기준 Z 가 없다")
+        self.assertIn("FN **감소 ≥ 1**", self.request)
+        self.assertIn("가설 기각", self.request,
+                      "Z 실패 시 기각한다는 말이 없다")
+
+    def test_the_off_target_rule_is_exactly_zero_not_the_churn_range(self):
+        """리뷰 [P2] — 대상 밖 승인 규칙이 틀렸던 자리.
+
+        같은 원응답 위 `기준↔후보` 는 코드만 다르므로 **결정적**이고 대상 밖은 0 이어야
+        한다. churn 범위(17~45셀)는 **회차1↔회차2** 에만 쓴다. 한 칸에 섞으면 대상 밖
+        45셀까지 승인된다.
+        """
+        self.assertIn("| **D1** |", self.request)
+        self.assertIn("| **D2** |", self.request)
+        # D1 은 기준표와 감사표 양쪽에 나온다. **어느 줄에도** churn 범위가 섞이면 안 된다.
+        d1 = [line for line in self.request.splitlines() if line.startswith("| **D1** |")]
+        self.assertTrue(d1, "D1 줄이 없다")
+        for line in d1:
+            self.assertIn("정확히 0", line)
+            self.assertNotIn("17~45", line, "D1 에 churn 범위가 섞였다")
+        d2 = [line for line in self.request.splitlines() if line.startswith("| **D2** |")]
+        self.assertTrue(d2, "D2 줄이 없다")
+        self.assertTrue(any("17~45" in line for line in d2))
+
+    def test_the_audit_keys_match_the_real_comparison_json(self):
+        """요청서가 적은 `comparison.json` 표기가 실제 구조와 같은가.
+
+        `items` 는 딕셔너리가 아니라 리스트다. 틀리게 적으면 실행자가 막힌다.
+        """
+        self.assertIn("딕셔너리가 아니라", self.request)
+        self.assertIn("changed_cells_off_focus", self.request)
+        self.assertNotIn("items.v11", self.request, "리스트를 딕셔너리처럼 적었다")
+
     def test_the_run_commit_placeholder_is_visible_until_filled(self):
         """push 뒤 채우는 자리다. 안 채운 채 실행하면 `main` 으로 도는 사고가 난다."""
         if "<RUN_COMMIT>" in self.request:
