@@ -25,11 +25,34 @@ CPU 재생은 끝났다(`CANDIDATE.md`). 남은 것은 **재생으로는 못 재
 
 | 항목 | 값 |
 | --- | --- |
-| 브랜치 | `feat/c-v11` (PR #124) |
+| **회차 브랜치** | **`run/c5-v11-absence-signal`** ← Colab 이 받아 갈 곳 |
 | **회차용 커밋 SHA** | **`d8dd6076fecbc860a75b8621b0df7f2a63aaaad5`** |
-| 그 직전(기준) 커밋 | `36628dea722d4deb2529e466554473454081d11a` — §5-2 의 `36628dea722d4deb2529e466554473454081d11a` |
+| 기준 커밋 | `36628dea722d4deb2529e466554473454081d11a` (§5-2 가 이것을 기준 코드로 쓴다) |
 | 무엇이 들어 있나 | `script.py` 에 `verify_absent_sme_limit()` 를 더한 것 **하나** |
-| 운영 적용 | **이 PR 은 `main` 의 `script.py` 를 바꾸지 않는다.** 운영 통합 판단은 A 가 한다 |
+| 작업 브랜치 | `feat/c-v11` (PR #124) — **`script.py` 를 안 바꾼다** |
+| 운영 적용 | **`main` 의 `script.py` 를 바꾸지 않는다.** 운영 통합 판단은 A 가 한다 |
+
+### 1-0. 왜 회차 코드를 별도 브랜치에 두나
+
+**작업 브랜치에 두면 PR 이 빨간불이 된다.** 실제로 그렇게 만들어 보고 확인했다.
+
+저장소에는 **HEAD 재생 CSV 를 고정값으로 박아 둔 검사**가 여럿 있다
+(`tests/test_replay_run.py` 등). 그 검사의 docstring 이 이렇게 적는다.
+
+> HEAD 후단을 일부러 바꿨다면 재생 결과를 **새로 고정하고** 그 이유를 PR 에 적는다.
+
+`script.py` 의 후처리를 바꾸면 그 고정값이 당연히 어긋난다. 회차용 커밋을 `feat/c-v11`
+에 뒀을 때 **전체 검사에서 7건이 깨졌다** — 기준선에서는 `test_langfuse_tail` 하나만
+실패한다(§5-6). **그 7건을 "고치려고" 고정 CSV 를 다시 쓰면, 운영 `main` 의 재생이 아닌
+것을 `main` 의 재생이라고 박아 두는 것이 된다.**
+
+그래서 **B1 이 쓴 방식을 따른다** — 회차 코드는 `run/…` 브랜치에 두고 작업 브랜치는
+문서·후보·검사만 든다(`origin/run/b1-competitive-row` 가 선례다).
+
+| 브랜치 | 무엇 | 검사 |
+| --- | --- | --- |
+| **`run/c5-v11-absence-signal`** | `script.py` 에 후보 적용 | 고정 CSV 검사 7건이 깨진다 — **예정된 것이다** |
+| **`feat/c-v11`** (PR #124) | 문서 · 후보 모듈 · 검사 | **전부 통과** |
 
 **회차용 커밋과 운영 적용 diff 는 다른 것이다.**
 
@@ -81,7 +104,8 @@ CPU 재생은 끝났다(`CANDIDATE.md`). 남은 것은 **재생으로는 못 재
 
 ```python
 SOURCE_MODE = "clone"                  # 그대로 둔다
-REPO_REF = "d8dd6076fecbc860a75b8621b0df7f2a63aaaad5"              # ← "main" 이면 후보 코드가 아니다. 40자리 SHA
+REPO_REF = "d8dd6076fecbc860a75b8621b0df7f2a63aaaad5"   # run/c5-v11-absence-signal 의 커밋
+#                                                     "main" 이면 후보 코드가 아니다
 ```
 
 셀 `[18]` — **기본값이 이미 맞다. 확인만 한다.**
@@ -273,6 +297,34 @@ py -X utf8 tools/score.py --truth open/dev_labels.csv \
 | **3** | **노트북 검사가 옛 보호 검사에서 중단된다.** 과거에 옛 v13 보호 검사가 **dev 200건 정상 추론을 마친 뒤** 회차를 중단시킨 적이 있다 | 셀 `[16]` 근처에서 `quality_pass` 실패 | **회차를 버리지 않는다.** 추론은 이미 끝났으므로 **셀 `[20]` 을 따로 실행해 로그 ZIP 을 받는다**(`docs/colab.md` §8 — "중간 셀이 실패했어도 마지막 셀은 따로 실행한다"). `dev-debug` 가 남았으면 판정은 가능하다 |
 | 4 | `REPO_REF` 가 `main` 인 채로 돌았다 | `source.json.commit` 불일치 | 무효. 다시 돌린다 |
 | 5 | `RUN_DIAGNOSTIC = False` 로 돌았다 | `dev-debug/` 부재 | **(c)(d) 를 못 낸다.** 다시 돌린다 |
+
+### 5-6. CPU 검사 — 두 브랜치를 갈라 읽는다
+
+`pytest tests/` 전체를 두 상태에서 돌려 대조했다.
+
+| 상태 | 결과 |
+| --- | --- |
+| **기준 코드**(`script.py` 미변경) | `test_langfuse_tail` **1건 실패** · 605 passed · `test_setup_agents` 오류 2 |
+| **회차 코드 적용**(`d8dd607`) | **8건 실패** · 605 passed · 오류 2 |
+
+**늘어난 7건이 전부 "HEAD 재생 CSV 고정" 검사다.**
+
+```
+test_a5_scope_pilot · test_a5_v18_scope_review · test_a8_v20_annex
+test_qualification_candidate · test_replay_run · test_v24_meta_diff_candidate
+test_wiki_rag_pilot
+```
+
+**기준선에도 있는 실패는 손대지 않았다.**
+
+| 이름 | 원인 | 이 회차와 관계 |
+| --- | --- | --- |
+| `test_langfuse_tail::…sends_that_name…` | `ModuleNotFoundError: opentelemetry` | **없다** — 환경 문제 |
+| `test_setup_agents` 오류 2 | `fatal: repository 'None' does not exist` | **없다** — 원격 인자 미지정 |
+
+**`feat/c-v11`(PR #124)에서는 7건이 안 깨진다** — `script.py` 를 안 바꾸기 때문이다.
+그 브랜치에서 `test_replay_run` · `test_c5_run_request` · `test_c5_v11_candidates` 를
+돌려 **31 passed** 를 확인했다.
 
 ## 7. 증거 수준
 
