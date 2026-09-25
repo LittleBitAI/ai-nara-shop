@@ -2681,6 +2681,14 @@ V6_PARTICIPANT_SUBJECT = re.compile(
     r"(?:법인\s*등기(?:부|사항증명서)?\s*상\s*)?"
     r"(?:본점|본사|주된\s*영업소|주\s*사무소|주사무소|사업장|영업소)"
     r"\s*(?:의\s*)?(?:소재지|소재\s*지)?(?:가|는|를|을|은|에)?")
+# v5 올림은 참가 업체의 소재지가 광역 지자체에 제한된 관계만 읽는다. 단순 지역명,
+# 납품·수행 장소, 기관 주소는 이 주어-서술 관계를 만들지 못한다.
+V5_WIDE_REGION = re.compile(WIDE_REGION)
+V5_LOCATION_PREDICATE = re.compile(
+    r"(?:인\s*(?:업체|자)|(?:에|으로)\s*(?:기재되어\s*)?"
+    r"(?:있는|소재(?:한|하고|하는)?|둔|두고)\s*(?:업체|자))"
+)
+V5_SUBJECT_TO_REGION = 80
 # 주어와 서술이 한 낱말에 붙은 꼴. 토큰이 앞에 와도 된다.
 V6_FUSED_LIMIT = re.compile(r"지역\s*제한|지역제한|지역\s*업체|관내\s*업체|관할\s*구역")
 # ①의 서술. 토큰이 이 서술의 자리에 놓여야 제한이 성립한다.
@@ -2856,6 +2864,40 @@ def v6_should_raise(rec: Dict[str, Any]) -> Optional[str]:
         cleaned = clean_evidence(quote, text)
         if cleaned and _v6_evidence_supports_v6(cleaned):
             return cleaned
+    return None
+
+
+def v5_should_raise(rec: Dict[str, Any]) -> Optional[str]:
+    """v5를 0에서 1로 올릴 고시금액 이상 참가업체 소재지 제한 인용을 찾는다.
+
+    `region_price_limit()`의 기존 경계를 그대로 쓴다. 참가자격 문맥에서 업체의
+    본점·주된 영업소·주된 사무소·사업장 소재지가 광역 지자체에 묶인 경우만 양성으로
+    읽으므로, 납품지·수행장소·기관 주소나 단순 지역 언급은 올리지 않는다.
+    """
+    limit = region_price_limit(rec)
+    price = estimated_price(rec)
+    if limit is None or price is None or price < limit:
+        return None
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        offset = 0
+        for raw_line in text.splitlines(keepends=True):
+            line = raw_line.rstrip("\r\n")
+            normalized = _v6_strip_parentheses(line)
+            subjects = list(V6_PARTICIPANT_SUBJECT.finditer(normalized))
+            regions = list(V5_WIDE_REGION.finditer(normalized))
+            if subjects and regions and _is_qualification_context(text, offset):
+                for subject in subjects:
+                    for region in regions:
+                        if not 0 <= region.start() - subject.end() <= V5_SUBJECT_TO_REGION:
+                            continue
+                        if not V5_LOCATION_PREDICATE.search(
+                                normalized[region.end():region.end() + 50]):
+                            continue
+                        cleaned = clean_evidence(line.strip(), text)
+                        if cleaned:
+                            return cleaned
+            offset += len(raw_line)
     return None
 
 
@@ -3168,6 +3210,12 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 hit, ev = 0, ""
         if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
             hit, ev = 0, ""
+        if v == "v5" and hit == 0 and cell.get("위반여부") != 1:
+            # 고시금액 이상인데 모델이 놓친 참가업체 소재지 제한만 올린다. 모델 양성을
+            # 저가 구간에서 내린 기존 v5 게이트는 그대로 보존한다.
+            raised = v5_should_raise(rec)
+            if raised:
+                hit, ev = 1, raised
         if v == "v6" and hit == 0 and cell.get("위반여부") != 1:
             # D9 의 U — **모델이 v6=0 을 낸 자리에서만** 올린다. 게이트가 내린 셀
             # (모델은 1 이라 했다)까지 올리면 측정한 적 없는 다른 규칙이 된다 —

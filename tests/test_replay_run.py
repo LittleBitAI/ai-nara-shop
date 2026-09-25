@@ -190,7 +190,15 @@ class ReplayRunTests(unittest.TestCase):
         검사하지 않는다. HEAD 후단을 일부러 바꿨다면 재생 결과를 새로 고정하고 그 이유를 PR에 적는다."""
         result = replay_run.replay(SCRIPT, CASE, input_path=ROOT / "open/dev.jsonl",
                                    data_dir=ROOT / "open/data")
-        self.assertEqual(replay_run.to_csv_bytes(SCRIPT, result["rows"]), HEAD_REPLAY.read_bytes())
+        # v5 참가업체 소재지 올림은 이 보관 원응답에서 모델이 0으로 낸 양성 `045`·`049`의
+        # 값·근거만 바꾼다. 최신 기준 응답에서는 049가 이미 1이므로 dev 변경은 045뿐이다.
+        # 기준 CSV는 과거 HEAD의 재생본으로 보존하고, 이 의도적인 새 차이를 별도로 고정한다.
+        self.assertEqual(
+            replay_run.csv_cell_diff(replay_run.to_csv_bytes(SCRIPT, result["rows"]),
+                                     HEAD_REPLAY.read_bytes()),
+            [("PPS-DEV-045", "e5"), ("PPS-DEV-045", "v5"),
+             ("PPS-DEV-049", "e5"), ("PPS-DEV-049", "v5")],
+        )
         # H3의 null 조항 해석을 H2의 unknown/not_required 원응답에 소급하지 않는다.
         h2 = ROOT / "reports/runs/colab-1789894949866134428/dev-debug"
         replayed = replay_run.replay(SCRIPT, h2, input_path=ROOT / "open/dev.jsonl",

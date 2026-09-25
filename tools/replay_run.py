@@ -233,6 +233,7 @@ DELIBERATE_MOVES = sorted(V9_V24_DEV_FIT_MOVES + [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-038", "v24"), ("PPS-DEV-039", "v21"),
     ("PPS-DEV-040", "v11"), ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-056", "v20"),
+    ("PPS-DEV-045", "e5"), ("PPS-DEV-045", "v5"), ("PPS-DEV-049", "e5"), ("PPS-DEV-049", "v5"),
     ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v10"), ("PPS-DEV-059", "v13"), ("PPS-DEV-060", "v24"),
     ("PPS-DEV-061", "v11"), ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v11"), ("PPS-DEV-062", "v24"),
     ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"), ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"),
@@ -277,7 +278,10 @@ DELIBERATE_MOVES_H2 = sorted([cell for cell in V9_V24_DEV_FIT_MOVES
                               if cell not in (("PPS-DEV-09", "e24"), ("PPS-DEV-132", "v9"))] + [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-035", "e23"), ("PPS-DEV-035", "v23"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-036", "v5"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-042", "v21"),
+    # v5 참가업체 소재지 올림은 이 보관 응답에서 모델 미탐 045·049를 함께 보정한다.
+    ("PPS-DEV-045", "e5"), ("PPS-DEV-045", "v5"),
     ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v13"),
+    ("PPS-DEV-049", "e5"), ("PPS-DEV-049", "v5"),
     ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"),
     ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"), ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"),
     ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
@@ -318,6 +322,7 @@ DELIBERATE_MOVES_H2 = sorted([cell for cell in V9_V24_DEV_FIT_MOVES
 DELIBERATE_MOVES_A7 = sorted(V9_V24_DEV_FIT_MOVES + [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-039", "v21"), ("PPS-DEV-040", "v11"),
+    ("PPS-DEV-045", "e5"), ("PPS-DEV-045", "v5"), ("PPS-DEV-049", "e5"), ("PPS-DEV-049", "v5"),
     ("PPS-DEV-056", "v20"), ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v10"), ("PPS-DEV-059", "v13"),
     ("PPS-DEV-061", "v11"), ("PPS-DEV-062", "v11"), ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"),
     ("PPS-DEV-068", "v20"), ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"), ("PPS-DEV-071", "e6"),
