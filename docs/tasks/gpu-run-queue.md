@@ -93,24 +93,35 @@ python -X utf8 script.py --mock --input open/dev.jsonl
 https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/<커밋>/notebooks/colab-baseline.ipynb
 ```
 
-## 회차 N1 · N2 · N3 — 실험 노트북 셋 (여기도 안 고친다)
+## 회차 N1 · N2 · N3 — 실험 노트북은 쓰지 않는다 (2026-09-25)
 
-`notebooks/` 의 실험 노트북을 열고 위에서부터 전부 실행한다. 어느 단계를 켤지도,
-원응답 보관도 노트북 안에 이미 박혀 있다. 고칠 자리가 없다.
+`notebooks/exp-n1-absence-split.ipynb` · `exp-n2-amount-band.ipynb` · `exp-n3-competitive-product.ipynb` 는
+9/18 판이라 지금 코드와 맞지 않는다. 돌리지 않는다.
 
-세 실험은 전부 `main` 에 들어가 있고 항목 리스트 하나로 켜고 끈다. 노트북이 맨 위
-`EXP_ITEMS` 를 받아 clone 한 `script.py` 에 그 값을 넣는다 — 실험 브랜치는 없다.
+- 셋 다 `EXP_ITEMS` 로 `BAND_ITEMS` 를 덮는다. N1·N3 은 `[]` 로 기업규모 결정(v14~v18)을 통째로 끄고,
+  N2 는 v14·v15·v17 만 남겨 v16·v18 을 뺀다. 점수의 큰 몫을 끈 채로 재는 것이다.
+- 노트북의 `check_live` 가 v13 과 실험 항목만 바뀌어도 된다고 단언한다. 기업규모 단계가 켜진 지금 코드에서는
+  샘플 10건에서 멈춘다. `colab-baseline.ipynb` 의 `check_live` 는 `extra_call_items` 로 허용 항목을 읽어 이 문제가 없다.
 
-| 노트북 | 무엇을 가르나 | 대상 항목 |
-| --- | --- | --- |
-| `exp-n1-absence-split.ipynb` | 부재탐지를 따로 물으면 살아나나 | v16 · v18 |
-| `exp-n2-amount-band.ipynb` | 금액 구간을 코드가 정하면 나아지나 | v14 · v15 · v17 |
-| `exp-n3-competitive-product.ipynb` | 경쟁제품 목록을 주면 살아나나 | v10 · v11 · v12 |
+실험은 `run/` 브랜치에 커밋 둘로 만든다.
 
-셋은 서로 다른 항목을 본다. 아무 순서로, 서로 다른 사람이 동시에 돌려도 된다.
+1. 코드 커밋 — `script.py` 에서 한 줄(`SPLIT_ITEMS` 또는 `PRODUCT_ITEMS`)만 켠다.
+2. 링크 커밋 — `notebooks/colab-baseline.ipynb` 셀 1 의 `REPO_REF` 를 코드 커밋의 40자리 SHA 로 바꾼다.
 
-결과 ZIP 말고 `n1-verdict.json` 같은 판정 파일이 하나 더 나온다. 그 파일이
-채택 후보·보류·반려를 스스로 적는다 — 사람이 점수를 읽고 판단하지 않는다.
+노트북은 링크의 커밋과 무관하게 `REPO_REF` 를 clone 한다. 코드 커밋에서 연 노트북은 `REPO_REF = "main"` 그대로라
+실험이 꺼진 `main` 을 돈다. 링크는 반드시 링크 커밋(브랜치 끝)으로 연다. 링크 커밋이 없으면 셀 1 의 `REPO_REF` 를
+코드 커밋 SHA 로 손으로 바꾼 뒤 돌린다.
+판정은 같은 날 기준 회차와 `tools/compare_runs.py` 로, 규칙 효과는 원응답 재생으로 뗀다.
+
+| 실험 | 회차 브랜치 | 켜는 줄 | 코드 커밋 | 링크 커밋 | 추가 호출(dev 200건) |
+| --- | --- | --- | --- | --- | ---: |
+| N1 부재 분할 | `run/a-n1-split` | `SPLIT_ITEMS = ["v16", "v18"]` | `a29f680` | `684dbad` | 155 |
+| N3 경쟁제품 | `run/a-n3-product` | `PRODUCT_ITEMS = ["v10", "v11", "v12"]` | `2a5a38c` | `d808922` | 200 |
+
+링크 형식은 `https://colab.research.google.com/github/LittleBitAI/ai-nara-shop/blob/<링크 커밋 40자리>/notebooks/colab-baseline.ipynb` 다.
+
+기업규모 단계가 뒤에 돌아 그 항목을 정하면 실험 단계의 답을 덮는다. 그래서 두 실험은 기업규모가 못 정한
+자리에서만 효과가 난다. 추가 호출만큼 서버 시간이 늘어 지금(추정 6,472~6,675초)으로는 이겨도 그대로 싣지 못한다.
 
 ## 걸려 넘어지는 자리 둘
 

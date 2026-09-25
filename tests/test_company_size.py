@@ -31,7 +31,7 @@ def facts(qualification="small_only"):
               "sme_allowed": "중소기업자로서 확인서를 소지한 업체.",
               "unrestricted": "사업자등록 업체 누구나 참가 가능.", "unknown": None}
     return dict(script.empty_company_size(), scope="general", scope_quote="일반 의료기기 구매.",
-                qualification_role="none" if qualification == "unrestricted" else "eligibility",
+                qualification_role="checklist" if qualification == "unrestricted" else "eligibility",
                 qualification=qualification, qualification_quote=quotes[qualification],
                 qualification_complete="yes", priority_exception="no", priority_exception_quote=None,
                 size_exception="none", size_exception_quote=None)
@@ -245,6 +245,13 @@ class CompanySizeTests(unittest.TestCase):
         for price in (None, True, float("nan"), float("inf")):
             out, _ = script.verify_company_size(facts(), notice(price), 16000)
             self.assertEqual(out, {})
+
+    def test_an_undetermined_role_does_not_raise_v16(self):
+        """Ported #139 (C6-2), dev labels only: role `none` keeps v16 down; `checklist` raises it."""
+        rec, f = notice(), facts("unrestricted")
+        self.assertEqual(script.verify_company_size(f, rec, 16000)[0]["v16"]["위반여부"], 1)
+        f["qualification_role"] = "none"
+        self.assertEqual(script.verify_company_size(f, rec, 16000)[0]["v16"]["위반여부"], 0)
 
     def test_complete_notice_decides_even_with_a_dropped_attachment(self):
         """Bundle (C, #93/#97): 제한사항은 입찰공고에 명시해야 하므로 공고문이 온전하면 첨부가 빠져도 판정한다."""

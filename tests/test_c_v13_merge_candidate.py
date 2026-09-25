@@ -39,8 +39,9 @@ LABELS = ROOT / "open/dev_labels.csv"
 # `c9398ad` 에서 기준 자체가 3/8/3 으로 바뀌었다(16 이 TP 를, 198 이 FP 를 잃었다).
 # 후보가 닫는 셀은 그대로 PPS-DEV-03 하나다.
 # The facts dev-fit zeroes v13 on no-bid contracts (5 FPs on both sides).
-EXPECTED_HEAD = {"tp": 3, "fp": 3, "fn": 3}
-EXPECTED_CANDIDATE = {"tp": 3, "fp": 2, "fn": 3}
+# The v13 quote repair (feat/a-dev-fit-stack) raises 16·074 (TP) and 039 (FP) on both sides.
+EXPECTED_HEAD = {"tp": 5, "fp": 4, "fn": 1}
+EXPECTED_CANDIDATE = {"tp": 5, "fp": 3, "fn": 1}
 
 # **두 수를 구분한다.**
 # 적용 대상 = company 가 검증된 scope 를 general 로 확정하고 v13 을 쓰지 않은 공고.

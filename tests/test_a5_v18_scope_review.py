@@ -96,12 +96,12 @@ class ScopeReviewTests(unittest.TestCase):
             changed = pilot.changes(predictions['off'], predictions['on'])
             # `PPS-DEV-22` joined with the bundle's complete-notice rule (C, #93/#97): its 공고문 is
             # fully visible, so the A5 scope arm can now decide v18 there too. Still v18 only.
-            self.assertEqual([(c['id'], c['item']) for c in changed],
-                             [('PPS-DEV-22', 'v18'), ('PPS-DEV-040', 'v18'), ('PPS-DEV-041', 'v18')])
+            # `22` and `040` left with the ported #139 v18 rule (feat/a-dev-fit-stack): both arms raise them now.
+            self.assertEqual([(c['id'], c['item']) for c in changed], [('PPS-DEV-041', 'v18')])
             # 9 before the facts dev-fit zeroed v10 on two no-bid contracts.
             self.assertEqual(metrics['off']['items']['v10']['fp'], 7)
             self.assertEqual(metrics['on']['items']['v10']['fp'], 7)
-            self.assertEqual(metrics['on']['items']['v18']['tp'], 3)
+            self.assertEqual(metrics['on']['items']['v18']['tp'], 4)  # 3 before the #139 v18 port
 
     def test_two_mock_episodes_record_comparisons_and_failures(self):
         with tempfile.TemporaryDirectory() as directory:

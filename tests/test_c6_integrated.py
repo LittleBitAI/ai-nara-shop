@@ -441,13 +441,13 @@ class RunRequest(unittest.TestCase):
         """
         table = self.request_section("## 4.", "### 4-2.")
         rows = {line.split("|")[1].strip(): line
-                for line in table.splitlines() if line.startswith("| **")}
-        self.assertIn("**E**", rows, "금지선 E 가 없다")
-        self.assertIn("감소", rows["**E**"])
-        self.assertIn("정확히 0", rows["**E**"])
-        self.assertNotIn("44", rows["**E**"], "E 를 고정 숫자로 적었다")
+                for line in table.splitlines() if line.startswith("| ")}
+        self.assertIn("E", rows, "금지선 E 가 없다")
+        self.assertIn("감소", rows["E"])
+        self.assertIn("정확히 0", rows["E"])
+        self.assertNotIn("44", rows["E"], "E 를 고정 숫자로 적었다")
         self.assertIn("차이", table, "차이로 읽으라는 말이 없다")
-        for key in ("**A**", "**B**", "**C**", "**D**", "**F**"):
+        for key in ("A", "B", "C", "D", "F"):
             with self.subTest(key):
                 self.assertRegex(rows[key], r"감소|증가",
                                  f"{key} 가 절대값으로 적혔다")
@@ -461,14 +461,14 @@ class RunRequest(unittest.TestCase):
         """
         lines = self.request.splitlines()
         for key in ("Z1", "Z2", "Z3"):
-            self.assertIn(f"| **{key}** |", self.request, f"기준 {key} 가 없다")
+            self.assertIn(f"| {key} |", self.request, f"기준 {key} 가 없다")
         for key in ("Z1", "Z2"):
-            for line in [x for x in lines if x.startswith(f"| **{key}** |")]:
+            for line in [x for x in lines if x.startswith(f"| {key} |")]:
                 with self.subTest(key):
                     self.assertIn("판정 보류", line)
                     self.assertNotIn("가설 기각", line,
                                      f"{key} 의 0 을 기각으로 적었다")
-        for line in [x for x in lines if x.startswith("| **Z3** |")]:
+        for line in [x for x in lines if x.startswith("| Z3 |")]:
             self.assertIn("가설 기각", line)
         # 예상 실패표가 같은 구분을 쓰는가 — 옛 판은 여기서 "기각이 아니다" 라고만 했다.
         failures = self.request_section("## 6.", "## 7.")
@@ -483,7 +483,7 @@ class RunRequest(unittest.TestCase):
         보면, 기회가 0 인 회차를 "대상은 있는데 안 바뀌었다"로 읽어 **규칙이 아니라
         회차를 벌한다.**
         """
-        z1 = [x for x in self.request.splitlines() if x.startswith("| **Z1** |")]
+        z1 = [x for x in self.request.splitlines() if x.startswith("| Z1 |")]
         self.assertTrue(z1)
         for line in z1:
             self.assertIn("변경 기회", line)
@@ -503,7 +503,7 @@ class RunRequest(unittest.TestCase):
         없어 보인다. 그런데 금지선이 막으려는 것이 바로 그 v18 의 손실이다.
         **요청서와 보고서가 둘 다 항목별이라고 적어야 한다.**
         """
-        rows = [line for line in self.request.splitlines() if line.startswith("| **E** |")]
+        rows = [line for line in self.request.splitlines() if line.startswith("| E |")]
         self.assertTrue(rows, "금지선 E 가 없다")
         for line in rows:
             self.assertIn("각각", line, "E 가 항목별이 아니다")
@@ -526,14 +526,14 @@ class RunRequest(unittest.TestCase):
     def test_the_off_target_rule_is_exactly_zero_not_the_churn_range(self):
         """D1 은 **정확히 0**, churn 범위는 D2 에만. 섞으면 대상 밖 45셀이 승인된다."""
         lines = self.request.splitlines()
-        d1 = [line for line in lines if line.startswith("| **D1** |")]
+        d1 = [line for line in lines if line.startswith("| D1 |")]
         self.assertTrue(d1, "D1 줄이 없다")
         rules = [line for line in d1 if "off_focus" in line or "대상 밖" in line]
         self.assertTrue(rules, "D1 의 규칙을 적는 줄이 없다")
         for line in rules:
             self.assertIn("정확히 0", line)
             self.assertNotIn("17~45", line, "D1 에 churn 범위가 섞였다")
-        d2 = [line for line in lines if line.startswith("| **D2** |")]
+        d2 = [line for line in lines if line.startswith("| D2 |")]
         self.assertTrue(any("17~45" in line for line in d2), "D2 에 churn 범위가 없다")
         self.assertIn("reproducibility.md", self.request, "churn 범위의 출처가 없다")
 
