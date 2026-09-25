@@ -1,0 +1,129 @@
+{
+  "run_id": "colab-1790333285105861165",
+  "archive": "colab-results-1790333285105861165.zip",
+  "zip_sha256": {
+    "results": "11afac3659efa00882360307b10b6528ee68e510842016205199a1bd32b3c552",
+    "submit": "a87f9790975aa4097df04b46250c0136698a6efcf8693ec5ffff94807f12aab8"
+  },
+  "registered_at": "2026-09-25T10:49:00.838518+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "2c70f8c379069095384eac8a287b9d2815977836",
+    "commit": "2c70f8c379069095384eac8a287b9d2815977836",
+    "given_commit": "2c70f8c379069095384eac8a287b9d2815977836"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "dev-debug": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 187.2,
+        "baseline_inference": 367.1,
+        "extra_inference": 107.5,
+        "inference_total": 723.1,
+        "run_total": 918.119,
+        "wall_clock": 922.0556032657623
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 104,
+        "extra_selected": 104,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 30,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 104,
+        "evidence_dropped_not_verbatim": 97,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "dev": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 211.6,
+        "baseline_inference": 368.7,
+        "extra_inference": 108.6,
+        "inference_total": 726.1,
+        "run_total": 945.464,
+        "wall_clock": 950.368738412857
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 107,
+        "extra_selected": 107,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 28,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 107,
+        "evidence_dropped_not_verbatim": 104,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": 0.7760415782474607
+    },
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 471.9,
+        "baseline_inference": 35.8,
+        "extra_inference": 10.5,
+        "inference_total": 61.6,
+        "run_total": 534.093,
+        "wall_clock": 539.0778362751007
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 6,
+        "extra_selected": 6,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 5,
+        "evidence_dropped_not_verbatim": 7,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": 0.7760415782474607,
+    "baseline_macro_f1_same_run": 0.5871941666836032,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": true,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1790333285105861165.zip",
+    "submit": "artifacts/inbox/submit.zip"
+  }
+}
