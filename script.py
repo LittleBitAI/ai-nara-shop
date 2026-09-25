@@ -738,8 +738,30 @@ def verify_company_size(facts, rec, max_chars):
     out = dict(bands)
     if reason != "unverified_scope":
         out.update(company_size_products(facts, rec, visible))
+    # v18 only: with no direct-production demand anywhere in the notice, do not trust a
+    # `competitive` scope. Mirror of the table above, which closes `general` when the demand
+    # and the catalogue both say competitive. `scope` itself stays — v10·v12·v13 read it.
+    # Ported from #139 (C6-1).
+    if (reason != "unverified_scope" and facts.get("scope") == "competitive"
+            and direct_production_demand(rec)[0] is None):
+        assumed, _ = _company_size_bands(dict(facts, scope="general"), rec, max_chars)
+        cell = assumed.get("v18")
+        if cell and cell["위반여부"] == 1 and (out.get("v18") or {}).get("위반여부") != 1:
+            out["v18"] = dict(cell)
+    # v16: an undetermined qualification role (`none`) does not raise v16. Dev labels only
+    # (2 cells, user decision 7); revert this one first. Ported from #139 (C6-2).
+    if (facts.get("qualification_role") == "none"
+            and (out.get("v16") or {}).get("위반여부") == 1):
+        out["v16"] = {"위반여부": 0, "근거문구": None}
     out.update(verify_document_requirements(facts, rec, visible))
     if v11_absence_observed(raw_facts, rec, max_chars):
+        out["v11"] = {"위반여부": 1, "근거문구": None}
+    # v11: a confirmed v10 absence (no direct-production demand) with no SME-allowed wording in
+    # the text raises v11. Raises only. Ported from #139 (C6-3).
+    if (reason != "unverified_scope"
+            and (out.get("v11") or {}).get("위반여부") != 1
+            and (out.get("v10") or {}).get("위반여부") == 1
+            and not SME_ALLOWED.search(build_context(rec, max_chars=PROMPT_BUDGET))):
         out["v11"] = {"위반여부": 1, "근거문구": None}
     return out, reason
 
@@ -1382,6 +1404,31 @@ def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_le
     return out, []
 
 
+# Unbracketed law/regulation names that start with 중소기업 (spaces already removed). They name a
+# statute, not 중기업 as a participant, so they must not trip the medium-enterprise check.
+SME_LAW_NAMES = re.compile(r"중소기업(?:범위및확인에관한규정|기본법|제품구매촉진및판로지원에관한법률|창업지원법)")
+# PDF extraction can push digits, brackets and quote marks onto other lines
+# (`「중소기업기본법 제 조제 항 … 」 2 2 「`). Compare with those and all spacing removed.
+_SKELETON_DROP = re.compile(r"[\s\d「」『』｢｣‘’“”<>()\[\].,·ㆍ‧․･・]+")
+
+
+def skeleton_quoted(quote, rec, visible) -> Optional[str]:
+    """The source span whose text skeleton equals the quote's, if the model saw it. Else None.
+
+    Returns the document's own characters, so the evidence contract in `postprocess` still
+    finds the quote verbatim."""
+    flat = _SKELETON_DROP.sub("", quote or "")
+    if len(flat) < 20 or flat not in _SKELETON_DROP.sub("", visible):
+        return None
+    for doc in rec["docs"]:
+        text = doc["text"]
+        kept = [i for i, ch in enumerate(text) if not _SKELETON_DROP.fullmatch(ch)]
+        at = "".join(text[i] for i in kept).find(flat)
+        if at != -1:
+            return text[kept[at]:kept[at + len(flat) - 1] + 1]
+    return None
+
+
 def verify_sme(judgment, rec, products, max_chars):
     """모델이 낸 사실을 원문/고시와 대조한다. 근거 부족과 형식 실패를 구분한다."""
     visible = build_context(rec, max_chars)
@@ -1399,18 +1446,21 @@ def verify_sme(judgment, rec, products, max_chars):
         if facts["scope_matches"] != "yes" or facts["exception_applies"] != "no":
             rejected.append("unconfirmed_scope_or_exception")
         q = facts["qualification_quote"]
+        if not quoted(q):
+            q = skeleton_quoted(q, rec, visible) or q
         if facts["qualification"] != "small_only" or not quoted(q):
             rejected.append("unverified_small_only_clause")
         # A quoted 중·소기업/중기업 clause cannot prove exclusion of 중기업.
         without_titles = re.sub(r"[「｢『]([^」｣』]*)[」｣』]",
-                                lambda m: "" if m[1].endswith(("법", "시행령", "시행규칙", "규정", "요령"))
+                                lambda m: "" if m[1].endswith(("법", "법률", "시행령", "시행규칙", "규정", "요령"))
                                 else m[0], q or "")
         compact = re.sub(r"[\s·ㆍ‧․･・,]+", "", without_titles)
+        compact = SME_LAW_NAMES.sub("", compact)
         if "중소기업" in compact or "중기업" in compact:
             rejected.append("clause_includes_medium_enterprises")
         hit = int(cell["위반여부"] == 1 and not rejected)
         result[item] = {"위반여부": hit,
-                        "근거문구": facts["qualification_quote"] if hit else None}
+                        "근거문구": q if hit else None}
         reasons[item] = rejected
     return result, reasons
 

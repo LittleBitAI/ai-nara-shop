@@ -225,11 +225,22 @@ V9_V24_DEV_FIT_MOVES = [
     ("PPS-DEV-144", "v24"),
 ]
 
+# Cells moved by feat/a-dev-fit-stack against the archived CSVs of `DELIBERATE_MOVES` and
+# `DELIBERATE_MOVES_A7`: the #139 ports raise v18 (040·061) and v11 (039·064·12) and lower v16 (149);
+# the v13 quote repair raises v13 (039·074) with source-span evidence and rewrites 16's evidence.
+# `16`/v13 leaves the lists: the archives have it at 1 and the repair restores that.
+A_STACK_MOVES = [
+    ("PPS-DEV-039", "e13"), ("PPS-DEV-039", "v11"), ("PPS-DEV-039", "v13"), ("PPS-DEV-040", "v18"),
+    ("PPS-DEV-061", "v18"), ("PPS-DEV-064", "v11"), ("PPS-DEV-074", "e13"), ("PPS-DEV-074", "v13"),
+    ("PPS-DEV-12", "v11"), ("PPS-DEV-149", "v16"), ("PPS-DEV-16", "e13"),
+]
+A_STACK_RESTORED = {("PPS-DEV-16", "v13")}
+
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
 # `reports/team-c/a5-label-definition/head-replay/submission.csv` 와 대조할 때
 # (`absence-replay` 와의 대조도 같은 목록이다).
-DELIBERATE_MOVES = sorted(V9_V24_DEV_FIT_MOVES + [
+DELIBERATE_MOVES = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-038", "v24"), ("PPS-DEV-039", "v21"),
     ("PPS-DEV-040", "v11"), ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-056", "v20"),
@@ -263,7 +274,7 @@ DELIBERATE_MOVES = sorted(V9_V24_DEV_FIT_MOVES + [
     ("PPS-DEV-199", "v24"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-])
+]) - A_STACK_RESTORED)
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
 # 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
@@ -273,8 +284,12 @@ DELIBERATE_MOVES = sorted(V9_V24_DEV_FIT_MOVES + [
 #    이 회차의 원응답이 그 회차 CSV 와 달라 위 목록과 겹치지 않는 공고가 섞인다.
 #  - feat/b-v9-v24-dev-fit: `V9_V24_DEV_FIT_MOVES` less `09`/e24 and `132`/v9, which this run's
 #    responses already leave equal to its CSV.
-DELIBERATE_MOVES_H2 = sorted([cell for cell in V9_V24_DEV_FIT_MOVES
-                              if cell not in (("PPS-DEV-09", "e24"), ("PPS-DEV-132", "v9"))] + [
+#  - feat/a-dev-fit-stack: only the v13 quote repair and `039`/v11 of `A_STACK_MOVES` reach this run;
+#    its responses do not trip the v18·v16 ports or the other v11 cells.
+DELIBERATE_MOVES_H2 = sorted(set([cell for cell in V9_V24_DEV_FIT_MOVES
+                                  if cell not in (("PPS-DEV-09", "e24"), ("PPS-DEV-132", "v9"))]
+                                 + [cell for cell in A_STACK_MOVES
+                                    if cell[1] in ("v13", "e13") or cell == ("PPS-DEV-039", "v11")] + [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-035", "e23"), ("PPS-DEV-035", "v23"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-036", "v5"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-042", "v21"),
     ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v13"),
@@ -307,7 +322,7 @@ DELIBERATE_MOVES_H2 = sorted([cell for cell in V9_V24_DEV_FIT_MOVES
     ("PPS-DEV-25", "e3"), ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"),
     ("PPS-DEV-28", "e23"), ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"),
     ("PPS-DEV-29", "v24"),
-])
+]) - A_STACK_RESTORED)
 
 # `reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv` 와 대조할 때.
 # 그 보관본은 이미 A7 대조 축이 적용된 산출물이므로, 지금 `script.py` 와의 차이는
@@ -315,7 +330,7 @@ DELIBERATE_MOVES_H2 = sorted([cell for cell in V9_V24_DEV_FIT_MOVES
 # 없는 것이 그 증거다. 이 목록이 달라지면 두 규칙 중 하나의 배선이 끊긴 것이다.
 # The one v24 exception is the budget axis (B9, #119): `PPS-DEV-29` v24·e24, which A7 does not know.
 # D7 의 게이트 여덟 셀도 여기에 더해진다 — 그 보관본은 A7 만 적용된 산출물이다.
-DELIBERATE_MOVES_A7 = sorted(V9_V24_DEV_FIT_MOVES + [
+DELIBERATE_MOVES_A7 = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-039", "v21"), ("PPS-DEV-040", "v11"),
     ("PPS-DEV-056", "v20"), ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v10"), ("PPS-DEV-059", "v13"),
@@ -341,7 +356,7 @@ DELIBERATE_MOVES_A7 = sorted(V9_V24_DEV_FIT_MOVES + [
     ("PPS-DEV-198", "v13"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-])
+]) - A_STACK_RESTORED)
 
 
 def csv_cell_diff(left: bytes, right: bytes):
