@@ -523,19 +523,50 @@ class RunRequest(unittest.TestCase):
         self.assertTrue((FOLDER / "applicability.py").is_file())
         self.assertIn("applicability.py", self.request)
 
-    def test_the_off_target_rule_is_exactly_zero_not_the_churn_range(self):
-        """D1 은 **정확히 0**, churn 범위는 D2 에만. 섞으면 대상 밖 45셀이 승인된다."""
-        lines = self.request.splitlines()
-        d1 = [line for line in lines if line.startswith("| D1 |")]
+    def test_the_off_target_rule_is_exactly_zero(self):
+        """D1 은 정확히 0 이다. churn 범위를 섞으면 대상 밖 45셀이 승인된다."""
+        d1 = [line for line in self.request.splitlines() if line.startswith("| D1 |")]
         self.assertTrue(d1, "D1 줄이 없다")
         rules = [line for line in d1 if "off_focus" in line or "대상 밖" in line]
         self.assertTrue(rules, "D1 의 규칙을 적는 줄이 없다")
         for line in rules:
             self.assertIn("정확히 0", line)
             self.assertNotIn("17~45", line, "D1 에 churn 범위가 섞였다")
-        d2 = [line for line in lines if line.startswith("| D2 |")]
-        self.assertTrue(any("17~45" in line for line in d2), "D2 에 churn 범위가 없다")
-        self.assertIn("reproducibility.md", self.request, "churn 범위의 출처가 없다")
+
+    def test_churn_is_not_a_pass_condition_for_a_replay_candidate(self):
+        """리뷰 [P2] — 재생 후보에 회차 간 churn 을 통과 조건으로 걸던 자리.
+
+        이 후보는 후처리만 바꾼다. `docs/workflow.md` W5 가 그런 후보에 두 번째 회차를
+        요구하지 않고("재생 후보는 … churn이 없으므로 두 번째 회차가 없습니다"),
+        `reports/runs/reproducibility.md` 의 「재생 비교에는 이 값을 쓰지 않습니다」 가
+        같은 원응답 재생에는 그 범위를 대지 말라고 못박는다.
+
+        그래서 **기준표에 D2 행이 없어야** 하고, 회차 설계도 한 번이어야 한다.
+        """
+        lines = self.request.splitlines()
+        self.assertEqual([x for x in lines if x.startswith("| D2 |")], [],
+                         "재생 후보인데 기준표에 churn 통과 조건이 있다")
+        self.assertNotIn("| 회차 2 |", self.request,
+                         "재생 후보인데 두 번째 회차를 요구한다")
+        # 왜 안 재는지가 적혀 있어야 한다 — 근거 문서를 둘 다 가리킨다.
+        self.assertIn("재생 후보", self.request)
+        self.assertIn("reproducibility.md", self.request,
+                      "churn 범위를 안 쓰는 근거가 없다")
+
+    def test_the_verified_report_does_not_claim_churn_was_answered(self):
+        """리뷰 [P2] — 한 회차의 두 패스를 (c)·D2 의 답으로 적던 자리.
+
+        그 12셀은 같은 회차 안의 두 통과이고, 17~45셀 범위는 서로 다른 회차를 견준
+        값이다. 참고 관측으로 적는 것은 좋지만 수행 완료로 표시하면 안 된다.
+        """
+        report = (FOLDER / "VERIFIED.md").read_text(encoding="utf-8")
+        rows = [x for x in report.splitlines() if x.startswith("| (c)")]
+        self.assertEqual(rows, [], "(c) 를 답한 것처럼 표에 남겼다")
+        self.assertEqual([x for x in report.splitlines() if x.startswith("| D2 |")], [],
+                         "판정표에 D2 가 남았다")
+        self.assertIn("참고 관측", report, "두 패스를 참고 관측으로 안 적었다")
+        self.assertIn("해당하지 않는다", report, "왜 (c) 를 안 묻는지가 없다")
+        self.assertIn("12셀", report, "관측값 자체는 남겨야 한다")
 
     def test_the_pair_comparison_covers_exactly_the_three_keys(self):
         """`--items` 는 후보가 쓰는 셋이어야 나머지 21항목을 D1 이 본다."""
