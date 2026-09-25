@@ -28,7 +28,7 @@ CPU 재생은 끝났다(`README.md`). 남은 것은 **재생으로는 못 재는
 | 항목 | 값 |
 | --- | --- |
 | **회차 브랜치** | **`run/c6-dev-macro`** ← Colab 이 받아 갈 곳 |
-| **회차용 커밋 SHA** | **`<RUN_COMMIT>`** — **push 뒤 채운다** |
+| **회차용 커밋 SHA** | **`072cd2837390b6c98dff676dc53b5b4784d8c119`** |
 | 기준 커밋 | **`c68eb008cad9378bc4e71a763a1c576f8c4d6950`** (`origin/main`, PR #139 머지 뒤) |
 | 무엇이 들어 있나 | `c6-integrated.diff` **하나** — `verify_company_size()` 에 30줄 추가, 삭제 0 |
 | 작업 브랜치 | `feat/c-dev-macro-rebase` — **`script.py` 를 안 바꾼다** |
@@ -77,7 +77,7 @@ git diff --stat            # script.py 한 파일 · 30줄 추가 · 삭제 0 �
 git commit -am "run: C6 통합 후보를 회차용으로 script.py 에 얹는다"
 git switch -c run/c6-dev-macro
 git push -u origin run/c6-dev-macro
-git rev-parse HEAD         # ← 이 값을 위 표의 <RUN_COMMIT> 에 적는다
+git rev-parse HEAD         # → 072cd2837390b6c98dff676dc53b5b4784d8c119 (위 표에 적었다)
 git switch feat/c-dev-macro-rebase   # 작업 브랜치로. `git switch -` 는 여기서 안 된다
 ```
 
@@ -102,7 +102,8 @@ PR 이 머지된 뒤라면 작업 브랜치 대신 `origin/main` 을 써도 된�
 
 자세한 것은 `README.md` §9-3 이 소유한다.
 
-**`<RUN_COMMIT>` 을 안 채운 채 돌리면 `main` 으로 도는 사고가 난다.**
+**셀 `[1]` 의 `REPO_REF` 를 위 회차용 커밋 SHA 로 바꿔야 한다.** 안 바꾸면 `main` 으로
+도는 사고가 난다.
 
 ## 2. 노트북에서 고칠 것 — 두 곳
 
@@ -110,7 +111,7 @@ PR 이 머지된 뒤라면 작업 브랜치 대신 `origin/main` 을 써도 된�
 
 ### 2-1. 셀 `[1]` — 받아 갈 코드
 
-`SOURCE_MODE` 는 `"clone"` 그대로 두고, **`REPO_REF` 를 위 `<RUN_COMMIT>` 으로 바꾼다.**
+`SOURCE_MODE` 는 `"clone"` 그대로 두고, **`REPO_REF` 를 위 회차용 커밋 SHA 로 바꾼다.**
 `REPO_REF` 를 정의하는 셀은 `[1]` 하나뿐이다.
 
 ### 2-2. 셀 `[18]` — 진단 회차
@@ -128,8 +129,8 @@ run_case("dev-debug", WORK / "open/dev.jsonl", args=DIAGNOSTIC_ARGS)
 
 | 회차 | 코드 | 왜 |
 | --- | --- | --- |
-| **회차 1** | `<RUN_COMMIT>` | (a)·(b)·(d) 를 새 출력에서 본다 |
-| **회차 2** | `<RUN_COMMIT>` — **같은 커밋** | (c) churn. **같은 코드 두 회차**로만 잰다 |
+| **회차 1** | `072cd28` | (a)·(b)·(d) 를 새 출력에서 본다 |
+| **회차 2** | `072cd28` — **같은 커밋** | (c) churn. **같은 코드 두 회차**로만 잰다 |
 
 두 회차의 ZIP 을 각각 `reports/runs/<run-id>/` 로 등록한다.
 
