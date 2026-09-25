@@ -740,6 +740,18 @@ def verify_company_size(facts, rec, max_chars):
             ("unrestricted",) if role in ("checklist", "legal_reference", "none") else ())
         if facts.get("qualification") not in allowed:
             facts["qualification"] = "unknown"
+    # The provided 중기부고시 catalogue outranks the model's `competitive` when the notice names its
+    # products (registered 세부품명번호 or the direct-production demand) and none of them is a
+    # competitive product under its price cap. Mirror of `competitive_by_catalogue`, which closes
+    # `general` the other way. Services that name no product stay as the model said, and so does a
+    # notice whose own text calls the product designated/competitive — the snapshot catalogue lacks
+    # some designated codes (unlabeled PPS-D-001891 · 001907 cite 4111589901 as designated).
+    if facts.get("scope") == "competitive" and not any(
+            COMPETITIVE_WORDING.search(doc.get("text") or "") for doc in rec.get("docs") or ()):
+        codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
+        if competitive_product(rec, codes | direct_production_demand(rec)[1]) is False:
+            facts["scope"] = "general"
+            raw_facts = dict(raw_facts, scope="general")
     for key in ("scope_quote", "qualification_quote"):
         fixed = restore_spacing(facts.get(key), rec, visible)
         if fixed is not None:
@@ -2561,6 +2573,8 @@ _PRODUCTS: List[Dict[str, str]] = []        # load_sme_reference가 채운다. �
 
 PRODUCT_CAP = re.compile(r"추정가격\s*([\d,]+)\s*억원\s*미만")
 CODE10 = re.compile(r"(?<!\d)\d{10}(?!\d)")
+# A notice that itself calls its product a designated competitive product.
+COMPETITIVE_WORDING = re.compile(r"지정\s*[·ㆍ‧.]?\s*공고한\s*(?:물품|제품)|중소기업자\s*간\s*(?:경쟁\s*제품|제한\s*경쟁)")
 # 참가자격으로 직생 확인을 요구하는 문구. 사후 제재 문구는 요구가 아니다.
 DP_DEMAND = re.compile(r"직접\s*생산\s*확인\s*(?:증명서|서류)?[^.\n]{0,40}?"
                        r"(?:소지|보유|제출|갖춘|있는|발급)")

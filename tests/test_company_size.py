@@ -261,6 +261,19 @@ class CompanySizeTests(unittest.TestCase):
         self.assertEqual(out["v16"]["위반여부"], 1)
         self.assertEqual(reason, "decided")
 
+    def test_catalogue_turns_an_unlisted_competitive_scope_general(self):
+        """A model `competitive` whose named products the catalogue does not list is decided as general,
+        unless the notice itself calls the product designated or competitive."""
+        rec, f = notice(50_000_000), dict(facts("sme_allowed"), scope="competitive")
+        with patch.object(script, "competitive_product", return_value=False):
+            out, reason = script.verify_company_size(f, rec, 16000)
+            self.assertEqual((reason, out["v17"]["위반여부"]), ("decided", 1))
+            rec["docs"][0]["text"] += " 본 물품은 중소기업자간 경쟁제품이다."
+            self.assertEqual(script.verify_company_size(f, rec, 16000)[1], "outside_general_scope")
+        with patch.object(script, "competitive_product", return_value=None):
+            self.assertEqual(script.verify_company_size(f, notice(50_000_000), 16000)[1],
+                             "outside_general_scope")
+
     def test_missing_documents_do_not_prove_absence(self):
         for change in ("incomplete", "truncated", "unobserved"):
             rec, f = notice(), facts("unrestricted")
