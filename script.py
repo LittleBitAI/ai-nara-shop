@@ -78,7 +78,7 @@ SME_BAND_FLOOR_WON = 100_000_000
 # 부재 5항목에 인용을 요구하자 손대지 않은 여덟 항목이 TP 열하나를 잃었다.
 # 실측 colab-1789725593268014232: 회차 안 기준선 대비 +0.003788. v18만 벌었고(TP 0→2)
 # v16은 TP 0 그대로에 FP 13만 늘었다. 빈 리스트로 두면 이 단계 전체가 꺼진다.
-SPLIT_ITEMS: List[str] = []  # A1은 57761ff 기준선에 한 단계만 더한다. N1과 동시 실행하지 않는다.
+SPLIT_ITEMS: List[str] = ["v16", "v18"]  # run/a-n1-split: N1 on top of #142, band decision kept on
 SPLIT_BANDS = {"v16": (SME_BAND_FLOOR_WON, NOTICE_AMOUNT_WON),   # 1억 이상 ~ 고시금액 미만
                "v18": (None, SME_BAND_FLOOR_WON)}               # 1억 미만
 
