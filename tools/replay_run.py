@@ -197,9 +197,6 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 #    the four FPs (056·064·068·144), raises the four FNs (24·131·132·134) and adds two
 #    new FPs (124·135). H2's model gave different v20 answers, so its list differs (133).
 #    dev v20 1/4/4 -> 5/2/0. No other item moves in any of the three lists.
-#  - Two cells, H2 list only: B10 drops a v21 positive whose quote holds no share. H2's model
-#    quoted a member-count clause at `PPS-DEV-143` (a FP); its v21·e21 clear. The H4 lists do
-#    not move — every H4 v21 positive quotes a share (reports/team-b/b10-v21-quote-share).
 #
 #  - Bundle (feat/b-dev-gain-bundle): rules held back only for lack of outside-dev proof now run.
 #    All three lists gain cells and lose none, and every added cell is v3, v11, v16, v18, v19 or
