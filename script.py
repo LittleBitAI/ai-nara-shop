@@ -175,10 +175,13 @@ LOGPROBS_K = 5
 # pass of the same code crossed them (v1 066 0.29 -> 0.90, v9 176 0.9994 -> 0.9988). Each cut now
 # sits in the gap between the highest false positive and the lowest true positive over all four
 # passes (v9: 0.99974 | 0.99989, v1: 0.953 | 0.977, v22: 0.933 | 0.990). v4 went above its two
-# false positives (0.986 · 0.971); v6 moved inside its plateau with no dev cell moved.
-# Fresh-pass replay (colab-1790318892216968298) +0.0220, zero true positives lost.
+# false positives (0.986 · 0.971). Fresh-pass replay (colab-1790318892216968298) +0.0220, every
+# moved cell 1 -> 0 with label 0. Not removal-only by construction: a cell a cut lowers is 0 when
+# `apply_qualification_rules()` (v4) and `v6_should_raise()` run, so they may raise it with their
+# own quote. On the five saved sets no value rose; v6 stays at 0.6 because moving it only swapped
+# two e6 quotes that way (review pr146 round 1).
 ITEM_THRESHOLDS: Dict[str, float] = {
-    "v1": 0.97, "v4": 0.995, "v6": 0.8, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
+    "v1": 0.97, "v4": 0.995, "v6": 0.6, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
 }
 # v3's 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive
 # (re-tuned on the bundle: 0.715215 without it vs 0.715217 with it).
