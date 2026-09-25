@@ -12,9 +12,9 @@ spec.loader.exec_module(script)
 CLAUSE = "바. 최근 10년 이내 5천만원 이상 디자인 용역 수행 실적이 있는 자"
 
 
-def rec(price, law="국가계약법", method="제한경쟁", text=CLAUSE):
+def rec(price, law="국가계약법", method="제한경쟁", text=CLAUSE, doc_type="공고문"):
     return {"meta": {"입찰추정가격": price, "적용계약법": law, "계약방법": method},
-            "docs": [{"text": "3. 입찰참가자격\n" + text + "\n사. 기타"}]}
+            "docs": [{"type": doc_type, "text": "3. 입찰참가자격\n" + text + "\n사. 기타"}]}
 
 
 class V2Clause(unittest.TestCase):
@@ -29,15 +29,25 @@ class V2Clause(unittest.TestCase):
 
     def test_performance_outside_the_eligibility_section_is_not_a_clause(self):
         survey = {"meta": {"입찰추정가격": 90_000_000, "적용계약법": "국가계약법", "계약방법": "제한경쟁"},
-                  "docs": [{"text": "입찰참가자격: 별도 제한 없음"},
-                           {"text": "과업지시서\n시장조사 결과 실적이 있는 업체가 다수였다."}]}
+                  "docs": [{"type": "공고문", "text": "입찰참가자격: 별도 제한 없음"},
+                           {"type": "과업지시서", "text": "시장조사 결과 실적이 있는 업체가 다수였다."}]}
         self.assertIsNone(script.v2_performance_clause(survey))
 
     def test_a_sibling_section_closes_the_heading(self):
         text = "가. 입찰참가자격: 별도 제한 없음\n나. 과업 개요\n시장조사 결과 실적이 있는 업체가 다수였다."
         survey = {"meta": {"입찰추정가격": 90_000_000, "적용계약법": "국가계약법", "계약방법": "제한경쟁"},
-                  "docs": [{"text": text}]}
+                  "docs": [{"type": "공고문", "text": text}]}
         self.assertIsNone(script.v2_performance_clause(survey))
+
+    def test_a_requirement_outside_the_bid_notice_is_not_eligibility(self):
+        text = "※ 검증기관 자격요건 : 최근 3년 이내에 5건 이상 수행실적이 있는 업체"
+        self.assertIsNone(script.v2_performance_clause(rec(90_000_000, text=text, doc_type="과업지시서")))
+
+    def test_endings_로서_and_a_period_are_requirements(self):
+        for tail in ("로서, 붙임의 요건을 갖춘 자", "."):
+            text = "가. 3년 이내 용역 실적이 있는 업체" + tail
+            self.assertEqual(script.v2_performance_clause(rec(90_000_000, text=text)),
+                             "가. 3년 이내 용역 실적이 있는 업체")
 
     def test_a_description_is_not_a_requirement_even_under_the_heading(self):
         text = "가. 시장조사 결과 실적이 있는 업체가 다수였다."

@@ -3229,11 +3229,14 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
 
 
 NO_BID_ZERO_ITEMS = ("v9", "v10", "v13", "v18")
-# The eligibility phrase must close a requirement: end of line, `이어야`/`여야`/`만`, or a bracketed
-# proviso. A description (`실적이 있는 업체가 다수였다`) fails on its own wording wherever it sits —
-# three review rounds showed section structure cannot be read reliably from extracted text.
+# The eligibility phrase must close a requirement: end of line, `이어야`/`여야`/`만`/`로서`, a
+# bracketed proviso or punctuation. A description (`실적이 있는 업체가 다수였다`) fails on its own
+# wording wherever it sits — three review rounds showed section structure cannot be read reliably
+# from extracted text. Only the 공고문 is searched: restrictions must be stated in the bid notice
+# (국가 시행령 제21조② · 지방 시행령 제20조②), and a task description's requirement for an outside
+# verifier or research staff is not one.
 V2_ELIGIBILITY = re.compile(r"(?<!신용과 )실적(?:이|을)\s*(?:있는|보유한|갖춘)\s*(?:업체|자)"
-                            r"(?=[ \t]*(?:$|이어야|여야|만(?![가-힣])|\())", re.M)
+                            r"(?=[ \t]*(?:$|이어야|여야|만(?![가-힣])|로서|[(.,]))", re.M)
 
 
 def v2_performance_clause(rec: Dict[str, Any]) -> Optional[str]:
@@ -3247,6 +3250,8 @@ def v2_performance_clause(rec: Dict[str, Any]) -> Optional[str]:
             and price < 100_000_000):
         return None
     for doc in rec.get("docs") or ():
+        if doc.get("type") != "공고문":
+            continue
         text = doc.get("text") or ""
         for m in V2_ELIGIBILITY.finditer(text):
             if _is_qualification_context(text, m.start()):
