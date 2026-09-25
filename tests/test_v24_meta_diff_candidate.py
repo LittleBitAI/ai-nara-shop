@@ -105,8 +105,12 @@ class V24MetaDiffCandidate(unittest.TestCase):
         moved = replay_run.csv_cell_diff(adopted, AFTER.read_bytes())
         self.assertEqual(moved, replay_run.DELIBERATE_MOVES_A7,
                          "지금 출력이 보관된 candidate-replay/submission.csv 와 예상 밖으로 다르다")
-        self.assertEqual([cell for cell in moved if cell[1] in ("v24", "e24")], BUDGET_AXIS_CELLS,
-                         "A7 이 양쪽에 다 있으므로 v24 는 예산 축 셀 밖에서 한 칸도 남으면 안 된다")
+        # The flag-N cells (feat/b-v9-v24-dev-fit) are the other exception: the archive counts that
+        # direction as a mismatch and the current axes do not.
+        flag_n = [cell for cell in replay_run.V9_V24_DEV_FIT_MOVES if cell[1] in ("v24", "e24")]
+        self.assertEqual([cell for cell in moved if cell[1] in ("v24", "e24")],
+                         sorted(BUDGET_AXIS_CELLS + flag_n),
+                         "A7 이 양쪽에 다 있으므로 v24 는 예산 축·플래그 N 셀 밖에서 한 칸도 남으면 안 된다")
 
     def test_v24_counts_match_the_recorded_replay(self):
         self.assertEqual(_counts(self.before, self.truth, "v24"), EXPECTED["before"])

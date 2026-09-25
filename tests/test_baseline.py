@@ -642,12 +642,29 @@ class BaselineTests(unittest.TestCase):
             obj["v24"] = {"위반여부": 1, "근거문구": None}
             return baseline.postprocess(obj, rec)["v24"]["위반여부"]
 
-        # 본문은 업종을 거는데 등록은 제한 없음 — 대조로 설명되는 불일치다. 근거가 비어도 선다.
+        # 본문은 업종을 거는데 등록은 제한 없음(`N`) — dev 라벨이 0/6 으로 음성이라 불일치로 안 센다.
         self.assertEqual(judged_v24("입찰참가자격 업종코드 1169 보유 업체",
-                                    {"업종제한여부": "N"}), 1)
+                                    {"업종제한여부": "N"}), 0)
+        # 등록이 제한(`Y`)인데 본문이 요구하는 코드가 등록 목록에 없으면 불일치다. 근거가 비어도 선다.
+        self.assertEqual(judged_v24("입찰참가자격 업종코드 1169 보유 업체",
+                                    {"업종제한여부": "Y", "면허업종제한목록": "(4444)"}), 1)
         # 같은 본문이라도 등록이 그 코드를 제한으로 갖고 있으면 불일치가 아니다.
         self.assertEqual(judged_v24("입찰참가자격 업종코드 1169 보유 업체",
                                     {"업종제한여부": "Y", "면허업종제한목록": "(1169)"}), 0)
+
+    def test_v9_stands_only_on_goods(self):
+        def judged(kind):
+            rec = record()
+            rec["docs"][0]["text"] = "규격: 모델 ABC-100 제품"
+            if kind is not None:
+                rec["meta"]["업무구분"] = kind
+            obj = valid()
+            obj["v9"] = {"위반여부": 1, "근거문구": "모델 ABC-100"}
+            return baseline.postprocess(obj, rec)["v9"]["위반여부"]
+
+        self.assertEqual(judged("물품(내자)"), 1)
+        self.assertEqual(judged("일반용역"), 0)
+        self.assertEqual(judged(None), 1)       # unknown business type keeps the model's answer
 
     def test_evidence_that_refutes_the_item_lowers_only_that_item(self):
         def judged(item, quote, text=None, meta=None):
