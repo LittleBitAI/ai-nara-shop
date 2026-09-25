@@ -76,6 +76,9 @@ def v24(f, rec):
 
 
 VERDICTS = {"v9": v9, "v19": v19, "v24": v24}
+TEXT = (str, type(None))
+SCHEMA = {"v9_named": list, "v19_documents": list, "v24_method_text": TEXT, "v24_region_text": TEXT,
+          "v24_industry_texts": list, "v24_amounts": list, "정보부족": bool}
 
 if __name__ == "__main__":
-    raise SystemExit(v1.main(verdicts=VERDICTS))
+    raise SystemExit(v1.main(verdicts=VERDICTS, schema=SCHEMA))
