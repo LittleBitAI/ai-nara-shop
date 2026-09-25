@@ -1,0 +1,158 @@
+Item guide — how to decide each item from the statute excerpt above (cited by ID).
+
+Reading the statutes
+- Hierarchy: 법률 → 시행령 → 시행규칙 → 예규·집행기준·고시. A lower rule fills in what the higher one delegates.
+- Pick the law by meta `적용계약법`: 국가계약법 notices use the 국가 fragments, 지방계약법 notices the 지방 ones.
+  Where the two differ (region amount, 실적 scale, joint-contract share), apply only the matching side.
+- 단서 ("다만, …") carves an exception out of the sentence before it. 삭제 means the provision no longer exists.
+- "미만" excludes the boundary, "이상"/"이내" include it. 추정가격 is `입찰추정가격`; without it use `배정예산금액`.
+  The Computed facts section already compares the price with each boundary; use it.
+- A restriction is a participation requirement (입찰참가자격) that excludes bidders. Evaluation points, sanctions,
+  document checklists, delivery obligations and specifications of the goods are not participation restrictions.
+- 수의계약 (esp. 지방 소액수의 견적, L14) follows its own rules; several restrictions that are violations in
+  competitive bidding are allowed there. Check 계약방법 before calling a restriction a violation.
+
+v1 참가자격 특정기관 제한 (L01–L04, L05, L06, L13)
+- 1 when participation is limited to particular institutions or institution types (e.g. only universities,
+  only public bodies, only a named association's members), or to holders of facilities/personnel at a set
+  scale, without a legal basis. L02/L04 forbid qualifications beyond L01/L03 unless another law provides them.
+- 0 for licences, registrations or qualifications another law requires (L01 2호), and for lists that still
+  admit ordinary private firms (e.g. "대학, 연구기관 또는 업체"). A product/manufacturing specification is not v1.
+
+v2 고시금액 미만 실적제한 (L05 5호, L06 3·5호, L10②, L11②, L12①, L13)
+- 1 when 추정가격 < 고시금액 (L07; goods/services 2억3천만원) and participation requires past 실적
+  (performance amount, quantity or a count of similar contracts). L12① 단서: below 고시금액, 제조·용역 may not
+  be restricted by 실적. Exception: 지방 소액수의 견적 may use 실적 (L14 나.6)가)).
+- Only 실적 counts. Technical capability, licences, certifications or staff are not v2.
+- At or above 고시금액 a 실적 restriction is allowed; judge it under v3/v4, not v2.
+
+v3 실적제한 1배수 이상 (L10②, L11②, L12①)
+- 1 when a 실적 restriction demands performance of 1배 or more of this contract's 사업예산 (e.g. "사업예산의 100%
+  이상", or a 실적 amount ≥ the budget). Compare the required 실적 amount with the budget, not with other amounts
+  in the notice (bid bond, VAT, fees). 지방 quantity-based 실적 is capped at 1/3 (at most 1배) (L11②1가).
+
+v4 고시금액 이상 특정기관, 특정실적 (L12④2·3, L13)
+- 1 when a 실적 restriction accepts only performance ordered by specific institutions (국가·지자체·공기업·공공기관
+  only, excluding other public or private work) — L12④3, L13 1)5) — or only 실적 under a specific name that shuts out
+  substantially identical work — L12④2. This holds at any price: below 고시금액 the same clause is v2 as well as v4.
+
+v5 고시금액 이상 지역제한 (L05 6호, L06 6호, L07, L08, L09, rulings)
+- 1 when participation is restricted by the location of the head office (본점 소재지) and 추정가격 ≥ the region
+  ceiling for that notice. The ceiling is in Computed facts ("지역제한 상한"): 국가 goods/services 2억3천만원 (L08→L07);
+  지방 by ordering body (rulings: 시·도 3억5천만원, 세종·시·군·구 5억원; L09).
+
+v6 고시금액 미만 지역제한 시,군,구 (L10③, L11③, L12④6, L14)
+- 1 when, below the ceiling, the region restriction names a 시·군·구 (basic municipality) instead of the 시·도 of the
+  site or delivery place (L12④6). An anonymised `[지역:…|단위=기초|…]` token is a 시·군·구 name (rulings).
+- 0 for 지방 소액수의 견적, which may limit to the 시·군 (L14 나.3)).
+
+v7 고시금액 미만 지역제한 인접 확대 (L10③, L11③, L14)
+- 1 when, below the ceiling, the region restriction covers more than the site/delivery 시·도 — adjacent or other
+  시·도 added (e.g. "A도 또는 B도 또는 C도") — while the notice gives none of the 단서 conditions of L10③/L11③.
+- 0 when the restriction is the single 시·도, or the notice states a permitted reason, or it is 지방 소액수의 견적
+  using L14 나.3)라).
+
+v8 중복제한 (실적+지역) (L10⑤, L11⑦, L12④1, L14 나.7))
+- 1 when one notice restricts participation by both 실적 and region at once (e.g. "…에 소재하고 …실적이 있는 업체").
+  L10⑤/L11⑦ forbid combining restriction grounds; the only allowed combinations are region + 공사 기술 (2호) and
+  SME (8·10호 / 8·12호) with anything. Region + 실적 for goods/services is never allowed in competitive bidding.
+- 0 for 지방 소액수의 견적, where L14 나.7) allows the overlap. This is a restriction item, not a v24 mismatch.
+
+v9 과업지시서 특정 모델명 명시 (L12④5, L13)
+- 1 when the specification of the goods to be delivered names a specific model, brand or manufacturer (L12④5; see
+  rulings on "동등 이상" and on bidder model-entry blanks).
+- 0 when the name is not a requirement on what is delivered: software or instruments the contractor uses as a
+  method, existing equipment at the site, compatibility targets, or a model the bidder writes in.
+- An operating system, platform or file format the delivered item must run on or support (e.g. a Windows version)
+  is a compatibility condition, not a model designation.
+
+v10 중기간 경쟁제품 입찰 직생 없음 [absence] (L15 제7조①, L16①, L18, catalogue lookup)
+- 1 when the purchased goods/service is a 중소기업자간 경쟁제품 (catalogue match by 세부품명 name, 특이사항 amount
+  cap satisfied) and the qualifications do not require 직접생산확인증명서 (L16①: 중소기업자간 경쟁 requires it).
+  Services (SW development/maintenance, events, security guarding, cleaning …) are in the catalogue too.
+- 0 when not a 경쟁제품, when the 특이사항 cap is exceeded, or when the notice states a L17 exception.
+- 0 for a 경쟁제품 bought by 수의계약 with 추정가격 below 1천만원: L16①1·2호 require the check only above the amount
+  L29① sets (1천만원). 중소기업자간 경쟁 itself has no such floor.
+- Match the object that is actually purchased. A contest, meeting or programme the contractor runs is not a
+  catalogue event-planning service unless the task is that service itself.
+
+v11 중기간 경쟁제품 입찰 중소 없음 [absence] (L05 8호, L06 8호, L15 제7조①, L17)
+- 1 when the object is a 경쟁제품 (as in v10) but participation is not limited to 중소기업자 (large firms may bid).
+- 0 when a 중소기업자 limit exists, or the notice states the L17① reason (L17② requires it to be stated).
+  v10 and v11 are judged separately; one notice can be positive for both.
+
+v12 일반제품 직생 제한 (L02, L04, L16①, L18)
+- 1 when the notice requires 직접생산확인 for an object that is not a 경쟁제품 (not in the catalogue, or above its
+  특이사항 cap). 직접생산 확인 is a 경쟁제품 mechanism (L16①); elsewhere it is an extra qualification (L02/L04).
+- Needs positive evidence that the object is outside the catalogue: a code or 세부품명 the notice names that is not
+  in it, or a price above the matching row's cap. If the object may be a 경쟁제품, a 직생 requirement is normal —
+  L16①1·2호 also require it for 경쟁제품 bought by 수의계약, including small quotations.
+- A post-award sanction sentence about 직접생산 is not a requirement.
+
+v13 중기간 경쟁제품 소기업, 소상공인 제한 (L15 제7조의2, L05 8·8의2호, L06 8·11호)
+- 1 when a 경쟁제품 competitive bid limits participation to 소기업·소상공인 (excluding 중기업) without the 제7조의2
+  joint-project special case being stated. No price band is needed. 0 for 소액수의 견적.
+- "중소기업", "중·소기업", "중소기업·소상공인" include 중기업 — that is not a 소기업 limit.
+
+v14–v18 일반물품·용역의 기업규모 (L05 10호, L06 12호, L19, L20)
+Scope: goods AND services that are not 경쟁제품, excluding engineering/construction-engineering services and works.
+Read the actual 참가자격 (not the title or a law name) and classify it: none / 소기업·소상공인 only / 중소기업 (incl. 중기업).
+  추정가격 < 1억원:          none → v18 · small only → normal · 중소기업 → v17
+  1억원 ≤ 추정가격 < 고시금액: none → v16 · small only → v15 · 중소기업 → normal
+  추정가격 ≥ 고시금액:        none → normal · small only → v14 · 중소기업 → v14
+Exceptions (must be written in the notice, L19 제2조의3②): a 제2조의3① reason (e.g. academic research service where
+non-profits must bid) removes v16/v18. A notice sentence saying the 우선조달계약 exception of 제2조의3 applies is enough:
+v16 and v18 are then 0 even when the reason itself is not spelled out. 제2조의2①1 단서 (small firms ≤3 or failed tender) removes v17.
+제2조의2①3 (3+ manufacturing small firms with a cooperative) removes v15.
+
+v19 물품공급 확약서 입찰 시 제출 (L02, L04, L21)
+- 1 when bidders must submit a 물품공급·기술지원 확약서 at the bid stage (입찰·투찰 시, 입찰서 제출 마감까지, 개찰 전).
+  L21③: the 확약서 is issued to the winner after award, so demanding it at bid is an extra qualification.
+- 0 when required at contract signing or after award, when the document list gives no timing, or when the
+  document is not a supply/technical-support pledge (서약서, 이의제기 확약서, 제조자증명서 …).
+- v19 is about submitting the 확약서 document. A qualification phrase describing the bidder (e.g. "공급이 확약된 자")
+  and an evaluation-sheet line asking whether a 확약서 was submitted are not a bid-stage submission demand.
+
+v20 입찰참가자격 (SW) [absence] (L24, L25)
+- 1 when the notice is a 소프트웨어사업 (SW development, maintenance, system build) and it does not state whether the
+  large-company participation floor applies, with its basis (L25 제3조② duty). 사업금액 = 추정가격 + VAT (Computed
+  facts "SW 사업금액"); 별표 1 floors are 20억/40억/80억. Judge v20 on its own, apart from v10/v11 (rulings).
+- The statement must be in the documents present in the notice. "제안요청서 참조" for a 제안요청서 that is not in the
+  record does not supply it (rulings: a document only referred to is not input), so the statement is missing.
+
+v21 공동 5% (10%) (L22, L23)
+- 1 when the notice sets a joint-venture member minimum share below the legal floor: 국가 공동이행방식 10% (주계약자
+  관리방식 5%), 지방 5%. So 국가 "5% 이상" in 공동이행 is 1; 지방 "5%" is 0.
+- The 지방 adjustment to 4–6% (L23 2) 단서) is for 공사 only ("공사의 특성 및 규모를 고려하여"). A 지방 goods or
+  services notice with a floor below 5% (e.g. 4%) is 1.
+- 0 for 분담이행 or inter-trade joint ventures (no floor, L23 3)) and when no share is stated.
+
+v22 현장설명회 참석업체 (자격으로 제한 여부) — 협상에 의한 계약 only (L02, L04, L26)
+- 1 when a 협상에 의한 계약 notice makes attending the 현장설명회/제안요청서 설명회 a condition to bid or submit a
+  proposal. The item table cites L26 국가 ⑥ and 지방 ⑦, both 삭제; no clause in the excerpt lets attendance
+  limit who may bid, so such a condition is a qualification beyond L01/L03 (L02/L04).
+- 0 when attendance is optional or the notice is not 협상. A general sentence telling bidders to read the materials
+  or attend before bidding, with no consequence for not attending, is not a condition.
+
+v23 현장설명회 (공고기간) — 협상 + 지방계약 only (L27, L28 2.다)
+- 1 when a 지방 협상 notice holds a 제안요청서 설명 (현장·사업·과업·제안 설명회) later than allowed: it must be at least
+  40일 (추정가격 ≥10억), 20일 (1억–10억) or 10일 (<1억) before the proposal deadline, counted from the day before the
+  deadline. Read both dates in the notice. A presentation during proposal evaluation is not this briefing.
+- Not applicable to 국가 notices or non-협상 notices.
+
+v24 공고서와 나라장터 입력값 상이 (no statute; rulings)
+- 1 only when the notice text and the registered meta differ on one of four axes: 예산 (notice 사업예산 vs
+  `배정예산금액`/`입찰추정가격`), 계약방법 (`계약방법`), 지역제한 (`지역제한여부`, `제한지역코드목록`), 업종
+  (`면허업종제한목록`). Quote the notice side and name the meta field that differs.
+- A restriction written in the notice is not a mismatch when the meta records the same restriction. Do not
+  report v24 for a restriction that is itself a violation of another item.
+- 계약방법 axis: meta `계약방법` is the competition type (일반경쟁·제한경쟁·지명경쟁·수의계약). 협상에 의한 계약, 적격심사,
+  총액·전자입찰 and 견적 제출 are award or bidding methods (meta `낙찰방법`, `입찰방법`). Only a different competition
+  type is a mismatch on this axis.
+- 업종 axis: compare the 나라장터 업종 (name or 4-digit code) the notice requires for 입찰참가자격 등록 with meta
+  `면허업종제한목록`. An empty meta list only means no 업종 restriction was registered; a notice asking for general
+  나라장터 registration in a category is not by itself a mismatch. Descriptions of 사업자등록 business types and
+  licences under other laws are not 나라장터 업종 codes.
+- Amounts: compare like with like. 추정가격 excludes VAT (L25 제3조①3 adds VAT to it to get 사업금액); 사업예산,
+  기초금액 and 배정예산금액 are usually VAT-inclusive, so 추정가격 × 1.1 ≈ 배정예산금액 is consistent. A difference that
+  is only rounding (well under 0.1%) is not a mismatch.
