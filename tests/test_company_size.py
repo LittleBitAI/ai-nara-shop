@@ -268,11 +268,24 @@ class CompanySizeTests(unittest.TestCase):
         with patch.object(script, "competitive_product", return_value=False):
             out, reason = script.verify_company_size(f, rec, 16000)
             self.assertEqual((reason, out["v17"]["위반여부"]), ("decided", 1))
-            rec["docs"][0]["text"] += " 본 물품은 중소기업자간 경쟁제품이다."
+            # Wording about some other standard does not hold the override back; wording about this product does.
+            rec["docs"][0]["text"] += " 중소기업자간 경쟁제품 중 물품의 구매에 관한 계약이행능력심사 세부기준을 따른다."
+            self.assertEqual(script.verify_company_size(f, rec, 16000)[1], "decided")
+            rec["docs"][0]["text"] += " 본 물품은 중소기업자간 경쟁제품인 의료기기다."
             self.assertEqual(script.verify_company_size(f, rec, 16000)[1], "outside_general_scope")
         with patch.object(script, "competitive_product", return_value=None):
             self.assertEqual(script.verify_company_size(f, notice(50_000_000), 16000)[1],
                              "outside_general_scope")
+
+    def test_a_listed_product_named_in_the_text_keeps_the_competitive_scope(self):
+        """An unlisted registered code does not hide a catalogued 세부품명 the notice buys by name."""
+        script.load_sme_reference(str(Path(__file__).resolve().parents[1] / "open/data"))
+        rec, f = notice(200_000_000), dict(facts("sme_allowed"), scope="competitive")
+        rec["meta"]["세부품명번호목록"] = "9999999999"
+        rec["docs"][0]["text"] += " 구매 품명: 축제기획및대행서비스."
+        self.assertEqual(script.verify_company_size(f, rec, 16000)[1], "outside_general_scope")
+        rec["docs"][0]["text"] = rec["docs"][0]["text"].replace(" 구매 품명: 축제기획및대행서비스.", "")
+        self.assertEqual(script.verify_company_size(f, rec, 16000)[1], "decided")
 
     def test_missing_documents_do_not_prove_absence(self):
         for change in ("incomplete", "truncated", "unobserved"):

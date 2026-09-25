@@ -748,8 +748,13 @@ def verify_company_size(facts, rec, max_chars):
     # some designated codes (unlabeled PPS-D-001891 · 001907 cite 4111589901 as designated).
     if facts.get("scope") == "competitive" and not any(
             COMPETITIVE_WORDING.search(doc.get("text") or "") for doc in rec.get("docs") or ()):
+        # Codes as `sme_product_lookup()` finds them too — registered, in the documents, or a catalogue
+        # 세부품명 named in the text — so an unlisted registered code cannot hide a listed product
+        # bought by name (review pr148 round 1). A truncated candidate list is not decided.
+        lookup = sme_product_lookup(rec, visible, _PRODUCTS)
         codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
-        if competitive_product(rec, codes | direct_production_demand(rec)[1]) is False:
+        codes |= direct_production_demand(rec)[1] | {p["세부품명번호"] for p in lookup["일치후보"]}
+        if not lookup["조회생략행수"] and competitive_product(rec, codes) is False:
             facts["scope"] = "general"
             raw_facts = dict(raw_facts, scope="general")
     for key in ("scope_quote", "qualification_quote"):
@@ -2573,8 +2578,11 @@ _PRODUCTS: List[Dict[str, str]] = []        # load_sme_reference가 채운다. �
 
 PRODUCT_CAP = re.compile(r"추정가격\s*([\d,]+)\s*억원\s*미만")
 CODE10 = re.compile(r"(?<!\d)\d{10}(?!\d)")
-# A notice that itself calls its product a designated competitive product.
-COMPETITIVE_WORDING = re.compile(r"지정\s*[·ㆍ‧.]?\s*공고한\s*(?:물품|제품)|중소기업자\s*간\s*(?:경쟁\s*제품|제한\s*경쟁)")
+# A notice that itself calls the product it buys a designated competitive product. Only wording tied to
+# that product counts: the title of the 계약이행능력심사 standard in a list of applicable rules, or
+# "중소기업자간 제한경쟁" (also used for general products), does not (review pr148 round 1).
+COMPETITIVE_WORDING = re.compile(r"지정\s*[·ㆍ‧.]?\s*공고한\s*(?:물품|제품)|경쟁\s*제품\s*(?:으로|에)\s*지정"
+                                 r"|중소기업자\s*간\s*경쟁\s*제품\s*(?:인|중\s*당해)")
 # 참가자격으로 직생 확인을 요구하는 문구. 사후 제재 문구는 요구가 아니다.
 DP_DEMAND = re.compile(r"직접\s*생산\s*확인\s*(?:증명서|서류)?[^.\n]{0,40}?"
                        r"(?:소지|보유|제출|갖춘|있는|발급)")
