@@ -115,6 +115,14 @@ class CoverTest(unittest.TestCase):
             self.assertIn("--truth가 있어야 한다", str(caught.exception))
 
 
+class MalformedTest(unittest.TestCase):
+    def test_flags_a_string_where_a_list_belongs_and_a_bool_posing_as_a_number(self):
+        schema = {"docs": list, "share": (int, float, type(None)), "quote": (str, type(None))}
+        self.assertEqual(label_bundle.malformed({"docs": "invalid type", "share": True, "quote": None},
+                                                schema), ["docs", "share"])
+        self.assertEqual(label_bundle.malformed({"docs": [], "share": 5, "quote": "x"}, schema), [])
+
+
 class ParseTest(unittest.TestCase):
     def test_marks_a_quotation_that_is_not_in_the_notice(self):
         """틀린 인용으로 공고 전체를 버리지 않는다. 근거 정확성은 모델 비교 축이라 표시만 한다."""
@@ -208,6 +216,75 @@ class RunAndCollectTest(unittest.TestCase):
             self.assertEqual(summary["labelled"], 0)
             self.assertEqual(len(summary["failures"]), len(IDS))
             self.assertIn("3로 끝났다", summary["failures"][0]["error"])
+
+
+EXCERPT = ROOT / "reports/team-b/b10-v21-quote-share/law-excerpt-v21.txt"
+
+# One-item reply wrapped the way `claude -p --output-format json` wraps it.
+ENVELOPE_STUB = (
+    f"{sys.executable} -X utf8 -c \""
+    "import sys,json;sys.stdin.read();"
+    "r=json.dumps({'v21':{'위반여부':0,'근거문구':None,'정보부족':False}},ensure_ascii=False);"
+    "print(json.dumps({'type':'result','result':r,'num_turns':1,"
+    "'usage':{'input_tokens':7,'output_tokens':3}},ensure_ascii=False))\""
+)
+
+
+class SingleItemTest(unittest.TestCase):
+    def test_default_prompt_is_unchanged(self):
+        """Old bundles and labels are pinned to this hash (#98, #127)."""
+        prompt = label_bundle.build_prompt(SCRIPT.item_table(str(ROOT / "open/data")))
+        self.assertEqual(label_bundle.digest(prompt)[:8], "ba3f89c8")
+
+    def test_excerpt_bundle_asks_one_item_and_ships_no_statute_package(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            bundle = workspace / "v21"
+            manifest = label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl",
+                                           data_dir=ROOT / "open/data", bundle=bundle, ids=IDS,
+                                           items=["v21"], excerpt_path=EXCERPT)
+            prompt = (bundle / "prompt.md").read_text(encoding="utf-8")
+            self.assertFalse((bundle / "법령패키지").exists())
+            self.assertEqual((manifest["items"], manifest["law_file_count"]), (["v21"], 0))
+            self.assertIn("The keys are exactly v21.", prompt)
+            self.assertIn("구성원별 계약참여 최소지분율은 5% 이상", prompt)
+            self.assertNotIn("file tools", prompt)
+            self.assertNotIn("- v20:", prompt)
+
+            out = workspace / "labels.jsonl"
+            summary = label_bundle.label(SCRIPT, bundle=bundle, cmd=ENVELOPE_STUB, out=out,
+                                         model_label="stub")
+            self.assertEqual((summary["labelled"], summary["failures"]), (len(IDS), []))
+            record = json.loads(out.read_text(encoding="utf-8").splitlines()[0])
+            self.assertEqual(sorted(record["labels"]), ["v21"])
+            self.assertEqual(record["usage"]["num_turns"], 1)
+
+    def test_question_bundle_stores_facts_under_the_given_keys(self):
+        question = ROOT / "reports/team-b/b10-v21-quote-share/question-v21-facts.md"
+        facts_stub = (f"{sys.executable} -X utf8 -c \"import sys,json;sys.stdin.read();"
+                      "print(json.dumps({'a':1,'quote':None},ensure_ascii=False))\"")
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            bundle = workspace / "facts"
+            manifest = label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl",
+                                           data_dir=ROOT / "open/data", bundle=bundle, ids=IDS,
+                                           question_path=question, keys=["a", "quote"])
+            self.assertEqual((manifest["items"], manifest["keys"]), (None, ["a", "quote"]))
+            self.assertEqual((bundle / "prompt.md").read_text(encoding="utf-8"),
+                             question.read_text(encoding="utf-8"))
+            out = workspace / "facts.jsonl"
+            summary = label_bundle.label(SCRIPT, bundle=bundle, cmd=facts_stub, out=out, model_label="stub")
+            self.assertEqual(summary["failures"], [])
+            self.assertEqual(json.loads(out.read_text(encoding="utf-8").splitlines()[0])["facts"]["a"], 1)
+            with self.assertRaises(ValueError):
+                label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl", data_dir=ROOT / "open/data",
+                                    bundle=workspace / "x", ids=IDS, question_path=question)
+
+    def test_rejects_an_unknown_item(self):
+        with tempfile.TemporaryDirectory() as temporary, self.assertRaises(ValueError):
+            label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl",
+                                data_dir=ROOT / "open/data", bundle=Path(temporary) / "b",
+                                ids=IDS, items=["v25"])
 
 
 if __name__ == "__main__":
