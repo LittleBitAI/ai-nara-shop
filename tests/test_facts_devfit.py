@@ -39,6 +39,15 @@ class V2Clause(unittest.TestCase):
                   "docs": [{"text": text}]}
         self.assertIsNone(script.v2_performance_clause(survey))
 
+    def test_a_description_is_not_a_requirement_even_under_the_heading(self):
+        text = "가. 시장조사 결과 실적이 있는 업체가 다수였다."
+        self.assertIsNone(script.v2_performance_clause(rec(90_000_000, text=text)))
+
+    def test_a_requirement_ending_in_a_proviso_still_counts(self):
+        text = "④ 최근 3년 이내 1억 원 이상 실적이 있는 업체(하도급 제외)"
+        self.assertEqual(script.v2_performance_clause(rec(90_000_000, text=text)),
+                         "④ 최근 3년 이내 1억 원 이상 실적이 있는 업체")
+
     def test_a_scoring_table_between_heading_and_clause_blocks_it(self):
         text = "3. 입찰참가자격\n평가 항목 배점표\n" + CLAUSE
         self.assertIsNone(script.v2_performance_clause(rec(90_000_000, text=text)))

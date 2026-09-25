@@ -3229,7 +3229,11 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
 
 
 NO_BID_ZERO_ITEMS = ("v9", "v10", "v13", "v18")
-V2_ELIGIBILITY = re.compile(r"(?<!신용과 )실적(?:이|을)\s*(?:있는|보유한|갖춘)\s*(?:업체|자)(?!로\s*구성)")
+# The eligibility phrase must close a requirement: end of line, `이어야`/`여야`/`만`, or a bracketed
+# proviso. A description (`실적이 있는 업체가 다수였다`) fails on its own wording wherever it sits —
+# three review rounds showed section structure cannot be read reliably from extracted text.
+V2_ELIGIBILITY = re.compile(r"(?<!신용과 )실적(?:이|을)\s*(?:있는|보유한|갖춘)\s*(?:업체|자)"
+                            r"(?=[ \t]*(?:$|이어야|여야|만(?![가-힣])|\())", re.M)
 
 
 def v2_performance_clause(rec: Dict[str, Any]) -> Optional[str]:
@@ -3245,36 +3249,10 @@ def v2_performance_clause(rec: Dict[str, Any]) -> Optional[str]:
     for doc in rec.get("docs") or ():
         text = doc.get("text") or ""
         for m in V2_ELIGIBILITY.finditer(text):
-            start = text.rfind("\n", 0, m.start()) + 1
-            if _under_qualification_heading(text, start):
+            if _is_qualification_context(text, m.start()):
+                start = text.rfind("\n", 0, m.start()) + 1
                 return text[start:m.end()].strip()[-QUOTE_MAX:]
     return None
-
-
-def _under_qualification_heading(text, line_start):
-    """A 참가자격 heading on this line or above it, reached before any scoring or form header.
-
-    Stricter than `_is_qualification_context()`, which accepts a line with no heading at all:
-    a raising rule must see the eligibility section, or a task description's `실적이 있는 업체가
-    다수였다` would raise v2.
-    """
-    end = text.find("\n", line_start)
-    lines = text[:end if end >= 0 else len(text)].split("\n")
-    passed = set()   # marker kinds walked through so far, the clause's own line included
-    for line in reversed(lines[-HEADING_LOOKBACK:]):
-        marker = LIST_MARKER.match(line)
-        kind = marker.lastgroup if marker else None
-        # The heading sits a level above everything below it: its marker kind was not passed.
-        # A 참가자격 line of a passed kind is a sibling — an item naming 참가자격등록, or
-        # `가. 입찰참가자격` itself once `나. 과업 개요` closed it. An unmarked line has no level,
-        # so it counts only when nothing marked was passed.
-        if QUALIFICATION_HEADING.search(line) and (kind not in passed if kind else not passed):
-            return True
-        if NOT_QUALIFICATION.search(line):
-            return False
-        if kind:
-            passed.add(kind)
-    return False
 
 
 def to_row(rec_id: str, judgment: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
