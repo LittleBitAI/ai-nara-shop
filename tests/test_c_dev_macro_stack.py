@@ -172,9 +172,14 @@ class StackReplay(unittest.TestCase):
         self.assertEqual(self.rows["stack"], self.rows["reversed"])
 
     def test_no_candidate_loses_a_true_positive(self):
-        """방침과 무관한 금지선. C 항목 어디서도 TP 가 줄면 안 된다."""
+        """방침과 무관한 금지선. **어느 한 항목에서도** TP 가 줄면 안 된다.
+
+        **합계로 보면 손실이 숨는다** — 한 항목이 얻고 다른 항목이 잃으면
+        `C 합계 39 → 39` 로 아무 일도 없어 보인다. 항목마다 따로 보고,
+        C 항목 열 개가 아니라 **24개 전부**를 본다.
+        """
         for name in CANDIDATES:
-            for item in C_ITEMS:
+            for item in ITEMS:
                 with self.subTest(name=name, item=item):
                     self.assertGreaterEqual(self.metrics[name]["items"][item]["tp"],
                                             self.metrics["head"]["items"][item]["tp"])

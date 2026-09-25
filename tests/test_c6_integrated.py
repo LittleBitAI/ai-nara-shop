@@ -218,12 +218,30 @@ class IntegratedReplay(unittest.TestCase):
         self.assertEqual(self.rows["integrated"], self.rows["reversed"])
 
     def test_no_candidate_loses_a_true_positive(self):
-        """방침과 무관한 금지선. C 항목 어디서도 TP 가 줄면 안 된다."""
+        """방침과 무관한 금지선. **어느 한 항목에서도** TP 가 줄면 안 된다.
+
+        리뷰 [P1] — **합계로 보면 손실이 숨는다.** 한 항목이 TP 를 얻고 다른 항목이
+        잃으면 `C 합계 39 → 39` 로 아무 일도 없어 보이는데, 금지선이 막으려는 것이
+        바로 그 손실이다. 그래서 항목마다 따로 본다.
+
+        C 항목 열 개가 아니라 **24개 전부**를 본다 — 대상 밖 셀이 움직이는 사고가
+        D1(0셀)과 이 검사 양쪽에 걸리게 한다.
+        """
         for name in CANDIDATES:
-            for item in C_ITEMS:
+            for item in ITEMS:
                 with self.subTest(name=name, item=item):
                     self.assertGreaterEqual(self.metrics[name]["items"][item]["tp"],
                                             self.metrics["head"]["items"][item]["tp"])
+
+    def test_the_integration_keeps_every_item_tp(self):
+        """통합의 항목별 TP 가 보고서 §8 의 표와 같은가 — 줄어든 항목이 0개인가."""
+        head, done = self.metrics["head"]["items"], self.metrics["integrated"]["items"]
+        lost = [i for i in ITEMS if done[i]["tp"] < head[i]["tp"]]
+        self.assertEqual(lost, [], f"TP 를 잃은 항목이 있다: {lost}")
+        gained = {i: done[i]["tp"] - head[i]["tp"]
+                  for i in ITEMS if done[i]["tp"] != head[i]["tp"]}
+        self.assertEqual(gained, {"v11": 3, "v18": 2},
+                         "항목별 TP 변화가 보고서와 다르다")
 
     def test_no_candidate_touches_another_part(self):
         """C 항목 밖 14개는 **정확히 0셀**이어야 한다. B·D 의 항목이다."""
@@ -456,6 +474,28 @@ class RunRequest(unittest.TestCase):
         self.assertIn("판정에 쓰지 않는다", section,
                       "조건 충족을 판정에 안 쓴다는 말이 없다")
         self.assertIn("38", section, "38 과 3 이 갈리는 실측이 없다")
+
+    def test_the_forbidden_line_is_per_item_not_a_sum(self):
+        """리뷰 [P1] — 금지선 E 를 합계로 재면 손실이 숨던 자리.
+
+        v11 이 TP 를 하나 얻고 v18 이 하나 잃으면 `C 합계 39 → 39` 로 아무 일도
+        없어 보인다. 그런데 금지선이 막으려는 것이 바로 그 v18 의 손실이다.
+        **요청서와 보고서가 둘 다 항목별이라고 적어야 한다.**
+        """
+        rows = [line for line in self.request.splitlines() if line.startswith("| **E** |")]
+        self.assertTrue(rows, "금지선 E 가 없다")
+        for line in rows:
+            self.assertIn("각각", line, "E 가 항목별이 아니다")
+            self.assertNotRegex(line, r"합계 TP\s*\|",
+                                "E 를 합계로 적었다 — 상쇄되어 손실이 숨는다")
+        section = self.request_section("## 4.", "### 4-2.")
+        self.assertIn("상쇄", section, "왜 합계로 읽으면 안 되는지가 없다")
+        # 보고서의 합격선도 같은 말을 해야 한다.
+        verdict = self.report[self.report.index("## 8. 판정"):]
+        self.assertIn("항목별로 본다", verdict)
+        self.assertIn("상쇄", verdict)
+        self.assertNotIn("C 항목 합계 TP 감소 0", verdict,
+                         "보고서의 합격선이 아직 합계다")
 
     def test_the_applicability_counter_is_wired_into_the_audit(self):
         """Z1 을 사람이 눈대중하지 않게 — 세는 명령이 문서에 있고 실제로 있는가."""
