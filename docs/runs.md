@@ -95,6 +95,7 @@ python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커�
 | `colab-1790235508743452453` | `f6fd6fb` | 0.6845149288020974 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790235508743452453/](../reports/runs/colab-1790235508743452453/) |
 | `colab-1790246262386880643` | `a8f17ee` | 0.6429816346712968 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790246262386880643/](../reports/runs/colab-1790246262386880643/) |
 | `colab-1790250265636150570` | `c248bb1` | 0.6571081080369007 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790250265636150570/](../reports/runs/colab-1790250265636150570/) |
+| `colab-1790333285105861165` | `2c70f8c` | 0.7760415782474607 | NVIDIA A100-SXM4-40GB, vLLM 0.26.0, CUDA 13.0 | 포함 | [reports/runs/colab-1790333285105861165/](../reports/runs/colab-1790333285105861165/) |
 
 `d7-v3-firing-…`도 제출 파이프라인 회차가 아닙니다. 24항목 기본 호출만 돌려 v3 판정과
 인용을 받고 그 위에서 게이트 발화를 센 W5 측정이며, 제출 ZIP도 Macro F1도 없습니다.
