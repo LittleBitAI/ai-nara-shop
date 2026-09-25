@@ -351,8 +351,9 @@ class CompanySizeTests(unittest.TestCase):
             self.assertEqual(report["reproduction"]["settings"]["extra_call_items"], script.extra_call_items())
             # 이 단계가 덮어쓸 수 있는 열을 그대로 신고해야 노트북 보호 가드가 맞는 것을 지킨다.
             # 금액·등급 축(BAND_ITEMS)과 scope 축(SCOPE_ITEMS) 둘 다 이 한 호출에서 나온다.
+            # v11 joined with the bundle's absence rule, which reads the same company_size facts.
             self.assertEqual(script.extra_call_items()["company_size"],
-                             script.BAND_ITEMS + script.SCOPE_ITEMS + script.DOCUMENT_CHECK_ITEMS)
+                             script.BAND_ITEMS + script.SCOPE_ITEMS + script.DOCUMENT_CHECK_ITEMS + ["v11"])
             self.assertFalse(set(script.BAND_ITEMS) & set(script.SCOPE_ITEMS))
             self.assertEqual(report["company_size_selected_count"], 3)
             self.assertEqual(report["company_size_fallback_count"], 0)

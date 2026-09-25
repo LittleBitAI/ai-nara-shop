@@ -117,8 +117,10 @@ def extra_call_items() -> Dict[str, List[str]]:
     따로 들고 있었고, N1을 켜면서 한쪽이 빠져 노트북 `check_live`가 "v13만 바뀔 수 있다"는
     낡은 불변식으로 회차를 샘플 10건에서 죽였다.
     """
+    # v11: the bundle's absence rule (`v11_absence_observed`) sets it from the company_size facts.
+    # Without it here the Colab guard stopped the dev case (v11 changed in 3 notices).
     return {"split": SPLIT_ITEMS, "product": PRODUCT_ITEMS,
-            "company_size": BAND_ITEMS + SCOPE_ITEMS + DOCUMENT_CHECK_ITEMS}
+            "company_size": BAND_ITEMS + SCOPE_ITEMS + DOCUMENT_CHECK_ITEMS + ["v11"]}
 
 
 # 판정 스키마로 답하는 단계. `company_size`는 사실 스키마라 여기 없다 —
