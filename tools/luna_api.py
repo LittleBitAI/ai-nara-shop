@@ -65,11 +65,15 @@ def ask(context, notice, *, model="gpt-6-luna", effort="high", timeout=900):
     """Return a `claude -p --output-format json` style envelope string, so label_bundle records it unchanged."""
     began = time.perf_counter()
     data = post(body(context, notice, model, effort), timeout)
+    # A truncated or filtered answer can still hold parseable JSON; only a completed response is a label.
+    if data.get("status") != "completed":
+        raise ValueError(f"response status {data.get('status')!r}: {data.get('incomplete_details')}")
     text = "".join(part.get("text", "") for item in data.get("output", []) if item.get("type") == "message"
                    for part in item.get("content", []) if part.get("type") == "output_text")
     usage = data.get("usage") or {}
     return json.dumps({"type": "result", "result": text, "usage": usage, "num_turns": 1,
                        "total_cost_usd": round(cost(usage), 6), "model": data.get("model"),
+                       "status": data.get("status"),
                        "response_id": data.get("id"),
                        "duration_ms": int((time.perf_counter() - began) * 1000)}, ensure_ascii=False)
 
