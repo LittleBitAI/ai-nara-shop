@@ -3242,12 +3242,30 @@ def v2_performance_clause(rec: Dict[str, Any]) -> Optional[str]:
     if ("지방" in str(meta.get("적용계약법") or "") and meta.get("계약방법") == "수의계약"
             and price < 100_000_000):
         return None
-    for doc in rec["docs"]:
-        m = V2_ELIGIBILITY.search(doc["text"])
-        if m:
-            start = doc["text"].rfind("\n", 0, m.start()) + 1
-            return doc["text"][start:m.end()].strip()[-QUOTE_MAX:]
+    for doc in rec.get("docs") or ():
+        text = doc.get("text") or ""
+        for m in V2_ELIGIBILITY.finditer(text):
+            start = text.rfind("\n", 0, m.start()) + 1
+            if _under_qualification_heading(text, start):
+                return text[start:m.end()].strip()[-QUOTE_MAX:]
     return None
+
+
+def _under_qualification_heading(text, line_start):
+    """A 참가자격 heading on this line or above it, reached before any scoring or form header.
+
+    Stricter than `_is_qualification_context()`, which accepts a line with no heading at all:
+    a raising rule must see the eligibility section, or a task description's `실적이 있는 업체가
+    다수였다` would raise v2.
+    """
+    end = text.find("\n", line_start)
+    lines = text[:end if end >= 0 else len(text)].split("\n")
+    for line in reversed(lines[-HEADING_LOOKBACK:]):
+        if QUALIFICATION_HEADING.search(line):
+            return True
+        if NOT_QUALIFICATION.search(line):
+            return False
+    return False
 
 
 def to_row(rec_id: str, judgment: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:

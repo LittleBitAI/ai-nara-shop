@@ -27,6 +27,16 @@ class V2Clause(unittest.TestCase):
     def test_local_small_no_bid_is_the_exception(self):
         self.assertIsNone(script.v2_performance_clause(rec(50_000_000, "지방계약법", "수의계약")))
 
+    def test_performance_outside_the_eligibility_section_is_not_a_clause(self):
+        survey = {"meta": {"입찰추정가격": 90_000_000, "적용계약법": "국가계약법", "계약방법": "제한경쟁"},
+                  "docs": [{"text": "입찰참가자격: 별도 제한 없음"},
+                           {"text": "과업지시서\n시장조사 결과 실적이 있는 업체가 다수였다."}]}
+        self.assertIsNone(script.v2_performance_clause(survey))
+
+    def test_a_scoring_table_between_heading_and_clause_blocks_it(self):
+        text = "가. 입찰참가자격\n평가 항목 배점표\n" + CLAUSE
+        self.assertIsNone(script.v2_performance_clause(rec(90_000_000, text=text)))
+
     def test_credit_and_performance_boilerplate_is_not_a_clause(self):
         self.assertIsNone(script.v2_performance_clause(rec(90_000_000, text="1) 신용과 실적이 있는 자")))
 
