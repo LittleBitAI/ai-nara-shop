@@ -94,8 +94,10 @@ class ScopeReviewTests(unittest.TestCase):
             output.mkdir()
             metrics, predictions = pilot.hybrid_replay(surrogate, output, experiment='v18', review_fields=True)
             changed = pilot.changes(predictions['off'], predictions['on'])
+            # `PPS-DEV-22` joined with the bundle's complete-notice rule (C, #93/#97): its 공고문 is
+            # fully visible, so the A5 scope arm can now decide v18 there too. Still v18 only.
             self.assertEqual([(c['id'], c['item']) for c in changed],
-                             [('PPS-DEV-040', 'v18'), ('PPS-DEV-041', 'v18')])
+                             [('PPS-DEV-22', 'v18'), ('PPS-DEV-040', 'v18'), ('PPS-DEV-041', 'v18')])
             self.assertEqual(metrics['off']['items']['v10']['fp'], 9)
             self.assertEqual(metrics['on']['items']['v10']['fp'], 9)
             self.assertEqual(metrics['on']['items']['v18']['tp'], 3)

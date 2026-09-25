@@ -58,7 +58,12 @@ ABSENCE = ["v10", "v11", "v16", "v18", "v20"]          # 부재탐지 항목: �
 # 내리는 것이고 여기 적힌 것만 예외다. v24 는 공고서와 나라장터 등록값의 대조형이라 근거가
 # 한 구절로 안 잡히는 것이 정상이고, 조문 없는 항목에 조문형 계약을 씌우지 않는다.
 # 빼면 dev 에서 +0.001497 인데 churn 상한 0.004689 아래라 측정으로 정당화되지 않는다.
-EVIDENCE_EXEMPT = ["v24"]
+# v9 joined with the bundle (2026-09-25): its model positives without a verbatim quote are kept.
+# Dev +0.0023 on colab-1790250265636150570 (050 TP, one FP). Fitted to dev on purpose.
+EVIDENCE_EXEMPT = ["v24", "v9"]
+# Items whose quote gets its whitespace restored before the evidence check. v1 only: applied to
+# every item it also revived v6/v9 false positives; for v1 alone it recovers PPS-DEV-01 (+0.0053).
+QUOTE_RESTORE_ITEMS = ("v1",)
 
 # ----- 금액 경계: 제공 조문에서 온다 (experiments/sme_candidate.py와 같은 출처) -----
 # 고시금액: 재정경제부장관 고시 1.가 (물품 및 용역) — 국가계약법 시행령 제2조제3호.
@@ -112,8 +117,10 @@ def extra_call_items() -> Dict[str, List[str]]:
     따로 들고 있었고, N1을 켜면서 한쪽이 빠져 노트북 `check_live`가 "v13만 바뀔 수 있다"는
     낡은 불변식으로 회차를 샘플 10건에서 죽였다.
     """
+    # v11: the bundle's absence rule (`v11_absence_observed`) sets it from the company_size facts.
+    # Without it here the Colab guard stopped the dev case (v11 changed in 3 notices).
     return {"split": SPLIT_ITEMS, "product": PRODUCT_ITEMS,
-            "company_size": BAND_ITEMS + SCOPE_ITEMS + DOCUMENT_CHECK_ITEMS}
+            "company_size": BAND_ITEMS + SCOPE_ITEMS + DOCUMENT_CHECK_ITEMS + ["v11"]}
 
 
 # 판정 스키마로 답하는 단계. `company_size`는 사실 스키마라 여기 없다 —
@@ -164,8 +171,10 @@ LOGPROBS_K = 5
 # kept a gain both ways, +0.0056 and +0.0127. v4, v9 and v24 were picked in both halves; the
 # other five cuts each move one dev cell. Fitted to dev on purpose (user decision 2026-09-24).
 ITEM_THRESHOLDS: Dict[str, float] = {
-    "v1": 0.8, "v3": 0.8, "v4": 0.95, "v6": 0.6, "v9": 0.999, "v22": 0.9, "v23": 0.6, "v24": 0.01,
+    "v1": 0.8, "v4": 0.95, "v6": 0.6, "v9": 0.999, "v22": 0.9, "v23": 0.6, "v24": 0.01,
 }
+# v3's 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive
+# (re-tuned on the bundle: 0.715215 without it vs 0.715217 with it).
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
@@ -713,6 +722,7 @@ def verify_company_size(facts, rec, max_chars):
     # 12셀 · 대상 밖 0셀 · v17 F1 0.320→0.500(FP 15→9) · v14·v15·v17 TP 각 +1.
     # 무라벨 카나리는 조건 비율 dev 98.0% vs 무라벨 98.7%(1.007배)다.
     visible = build_context(rec, max_chars)
+    raw_facts = facts
     facts = dict(facts)
     if "qualification_role" in facts:
         role = facts["qualification_role"]
@@ -729,6 +739,8 @@ def verify_company_size(facts, rec, max_chars):
     if reason != "unverified_scope":
         out.update(company_size_products(facts, rec, visible))
     out.update(verify_document_requirements(facts, rec, visible))
+    if v11_absence_observed(raw_facts, rec, max_chars):
+        out["v11"] = {"위반여부": 1, "근거문구": None}
     return out, reason
 
 
@@ -769,6 +781,40 @@ def verify_document_requirements(facts, rec, visible):
         elif state == "absent" and quote is None and (software_complete if item == "v20" else complete):
             out[item] = {"위반여부": 1, "근거문구": None}
     return out
+
+
+def notice_complete(facts, rec, visible) -> bool:
+    """The 공고문 text is fully visible and the model says it saw the whole qualification section."""
+    notices = [d for d in rec.get("docs") or [] if d.get("type") == "공고문"]
+    return bool(rec.get("input_completeness", {}).get("완전관측") is True and notices
+                and all(d.get("text", "").strip() and d["text"] in visible for d in notices)
+                and facts.get("qualification_complete") == "yes")
+
+
+def v11_absence_observed(facts, rec, max_chars) -> bool:
+    """Bundle (A5 H2): a verified competitive-product scope with no enterprise-size restriction,
+    fully observed. 판로지원법 제7조① — the restriction is required whether or not a direct-production
+    certificate is asked. Held back only because its unlabeled rate was never measured. Dev +0.0090."""
+    if (facts.get("scope") != "competitive"
+            or facts.get("qualification") != "unrestricted"
+            or facts.get("qualification_role") not in ("none", "checklist", "legal_reference")
+            or facts.get("qualification_complete") != "yes"
+            or facts.get("requirements_complete") != "yes"
+            or facts.get("priority_exception") != "no"
+            or facts.get("size_exception") != "none"
+            or rec.get("input_completeness", {}).get("완전관측") is not True
+            or any((rec.get("dropped_doc_counts") or {}).values())):
+        return False
+    visible = build_context(rec, max_chars)
+    if "[Truncated documents; unseen remainder]" in visible or "[Missing documents]" in visible:
+        return False
+    for key in ("scope_quote", "qualification_quote"):
+        quote = facts.get(key)
+        quote = restore_spacing(quote, rec, visible) or quote
+        if not (quote and quote.strip() and quote in visible
+                and any(quote in doc["text"] for doc in rec["docs"])):
+            return False
+    return True
 
 
 def _company_size_bands(facts, rec, max_chars):
@@ -817,7 +863,12 @@ def _company_size_bands(facts, rec, max_chars):
                     and "[Truncated documents; unseen remainder]" not in visible
                     and "[Missing documents]" not in visible
                     and facts["qualification_complete"] == "yes")
-        if not complete:
+        # Bundle (C v18, #93/#97 candidate): when attachments are truncated but the notice itself is
+        # fully visible and the model says it read the whole qualification section, judge anyway.
+        # That candidate was rejected, not just unproven: `docs/data.md` D2 says a violation may sit
+        # only in an attachment, so the notice alone does not settle it. Adopted anyway by the user's
+        # dev-fit decision (2026-09-25), accepting that risk. Dev +0.0024.
+        if not (complete or notice_complete(facts, rec, visible)):
             return {}, "absence_not_observable"
         priority = facts["priority_exception"]
         if priority == "unknown" or (priority == "yes" and not quoted(facts["priority_exception_quote"])):
@@ -1408,8 +1459,6 @@ V24_UNIT = {"억": 100_000_000, "천만": 10_000_000}
 V21_FLOOR_LOCAL = 5.0
 V21_FLOOR_NATIONAL = 10.0
 V21_PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
-V21_JOINT_BARRED = re.compile(
-    r"공동\s*(?:수급|계약|도급|참여|이행)[^.。]*?(?:불허|불가|허용하지\s*않|금지)")
 # v9 는 인용이 성능 하한(`… 이상`)이면 모델명이 아니라서 내린다. 근거 곁의 "동등 이상" 문구로
 # 내리던 `V9_EQUIVALENT` 는 뺐다 — 운영진 S7-14 가 그 표현만으로 v9 를 정하지 말라고 했고, 무라벨
 # 5,500건에서 그 게이트가 내린 41건 중 29건이 모델 지정 꼴이었다(reports/team-b/b6-v9-equivalent).
@@ -1491,14 +1540,47 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
 
     공고 전체에 "입찰"이 없는 경우는 없으므로 낱말의 유무로는 못 가른다 —
     확약서를 말하는 자리에 그 시점이 붙어 있는지가 갈림이다.
+
+    Bundle (#112 → heading rule): the timing is read from the pledge's own line (clipped to the
+    ±200-char window, which alone caught a neighbour's deadline in `096`·`098`·`112`) or from the
+    heading of the list the pledge sits in (`가. 투찰 시 제출` above `⑨ 확약서 1부`). Dev +0.0077.
     """
     for doc in rec.get("docs") or []:
         text = doc.get("text") or ""
         for found in V19_PLEDGE.finditer(text):
-            window = text[max(0, found.start() - V19_WINDOW): found.end() + V19_WINDOW]
-            if V19_BID_DEADLINE.search(window):
+            start = max(text.rfind("\n", 0, found.start()) + 1, found.start() - V19_WINDOW)
+            end = text.find("\n", found.end())
+            end = min(end if end >= 0 else len(text), found.end() + V19_WINDOW)
+            if V19_BID_DEADLINE.search(text[start:end]):
                 return True
+        lines = text.split("\n")
+        for index, line in enumerate(lines):
+            if V19_PLEDGE.search(line):
+                heading = list_heading(lines, index)
+                if heading and V19_BID_DEADLINE.search(heading):
+                    return True
     return False
+
+
+# Line markers by kind. Extracted text loses indentation, so the marker kind is the only depth cue.
+LIST_MARKER = re.compile(r"^\s*(?:(?P<circled>[①-⑳])|(?P<hangul>[가-하]\s*[.)])|(?P<paren_num>\(?\d{1,2}\))"
+                         r"|(?P<num>\d{1,2}\s*\.)|(?P<bullet>[-·•○◦❍□■▪※*]))")
+HEADING_REACH = 40          # lines to walk up before giving up
+
+
+def list_heading(lines, index):
+    """The first line above whose marker kind differs from this list entry's. None if not a list entry."""
+    found = LIST_MARKER.match(lines[index])
+    if not found:
+        return None
+    kind = found.lastgroup
+    for up in range(index - 1, max(-1, index - 1 - HEADING_REACH), -1):
+        if not lines[up].strip():
+            continue
+        other = LIST_MARKER.match(lines[up])
+        if (other.lastgroup if other else None) != kind:
+            return lines[up]
+    return None
 
 
 # --- v24 대조 축 ---------------------------------------------------------------
@@ -1800,6 +1882,93 @@ def meta_discrepancies(rec: Dict[str, Any]) -> List[str]:
     return out
 
 
+# ----- Bundle (#98 quoted_deletion, v3 part): a v3 quote that does not establish a performance
+# requirement of 1x the budget or more. #98's unlabeled gate rejected it; dev +0.0025. Moved verbatim. -----
+PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*%")
+# 1배 이상을 비율로 적은 표기. 이것이 있으면 금액 규칙은 쉰다.
+RATIO = re.compile(r"(\d+(?:\.\d+)?)\s*(%|배)")
+# 요구가 예산·추정가격 자체를 기준으로 적혔다(`사업예산 이상`). 금액 비교의 대상이 아니다.
+BUDGET_FLOOR = re.compile(r"(?:사업\s*예산|예산\s*금액|배정\s*예산|추정\s*가격|기초\s*금액)\s*(?:의\s*)?이\s*상")
+# 요구실적 금액은 실적 문구에 문법적으로 붙은 금액만 센다. 같은 문장·같은 절에 있다는 것으로는
+# 부족했다(리뷰 라운드 3·4: 자본금이 `및`·`로서` 로 이어져 실적액으로 읽혔다).
+#  앞에 붙음: `실적이 3천만원`, `준공금액이 5억원`
+#  뒤에 붙음: `3억원(부가세 포함) 이상의 사업을 수행`, `1억원 이상 실적`
+BOUND_BEFORE = re.compile(r"(?:실\s*적|(?:준\s*공|계\s*약|납\s*품|수\s*행)\s*금\s*액)\s*[이가은는의]?\s*$")
+BOUND_AFTER = re.compile(r"\s*(?:\([^()]{0,20}\)\s*)?이\s*상\s*[의인]?\s*"
+                         r"(?:[가-힣]{1,6}[을를의]\s+)?(?:[가-힣]*실\s*적|[가-힣]*수\s*행|납\s*품)")
+# 배점표의 구간 칸: `<기준 문구> N% 이상`. 기준 문구는 한두 어절이다.
+BAND_CELL = re.compile(r"([가-힣]+(?:\s[가-힣]+)?)\s*(\d+(?:\.\d+)?)\s*%\s*이상")
+# 구간 칸과 다음 행 사이에 올 수 있는 것: 칸 구분선, 배점 숫자, `나.`·`2)` 같은 행 번호.
+ROW_GAP = r"[\s|│\d점]*(?:[가-힣\d]\s*[.)]\s*)?"
+CUE_REACH = 600      # 인용 앞에서 배점표 표지를 찾을 범위
+SCORING_CUE = re.compile(r"배\s*점|평\s*가|점\s*수|\d+\s*점")
+
+
+def _performance_amounts(quote):
+    """실적 문구에 앞이나 뒤로 붙은 금액. 붙은 것이 없으면 빈 목록이다."""
+    values = []
+    for match in MONEY.finditer(quote):
+        value = parse_money(match)
+        if value is None or not MONEY_MIN <= value <= MONEY_MAX:
+            continue
+        if (BOUND_BEFORE.search(quote[max(0, match.start() - 20):match.start()])
+                or BOUND_AFTER.match(quote, match.end())):
+            values.append(value)
+    return values
+
+
+def _below_budget(quote, rec):
+    meta = rec.get("meta") or {}
+    bases = [b for b in (meta.get("입찰추정가격"), meta.get("배정예산금액"))
+             if isinstance(b, (int, float)) and not isinstance(b, bool) and b > 0]
+    if any(float(n) >= (100 if unit == "%" else 1) for n, unit in RATIO.findall(quote)):
+        return False   # 1배 이상 비율을 적었다. 금액과 어느 쪽이 요구인지 가리지 않는다
+    if BUDGET_FLOOR.search(quote):
+        return False
+    amounts = _performance_amounts(quote)
+    if not bases or not amounts:
+        return False
+    return max(amounts) < min(bases)   # 두 기준 모두의 1배 미만일 때만
+
+
+def _scoring_band(quote, rec):
+    """인용이 배점표 구간 칸이고, 문서의 모든 등장 자리에서 바로 다음 행이 같은 기준의 낮은 구간인가.
+
+    참가자격을 적는 표기는 끝이 없어 그것이 없음을 보는 방식은 새 표기마다 뚫렸다(리뷰 라운드 1·2).
+    그래서 표 구조가 있음을 요구한다. 같은 문구가 한 곳에서라도 표의 칸이 아니면 — 참가자격
+    문장에도 나오면 — 모델이 어느 쪽을 근거로 댔는지 모르므로 내리지 않는다.
+    """
+    cell = BAND_CELL.search(quote)
+    if not cell:
+        return False
+    base, top = cell.group(1), float(cell.group(2))
+    next_row = re.compile(ROW_GAP + r"\s*".join(map(re.escape, base.replace(" ", "")))
+                          + r"\s*(\d+(?:\.\d+)?)\s*%")
+    seen = False
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        start = text.find(quote)
+        while start >= 0:
+            seen = True
+            row = next_row.match(text, start + len(quote))
+            if not (row and float(row.group(1)) < top
+                    and SCORING_CUE.search(text[max(0, start - CUE_REACH):start])):
+                return False
+            start = text.find(quote, start + 1)
+    return seen
+
+
+def v3_deletion(quote: str, rec: Dict[str, Any]) -> Optional[str]:
+    """v3 양성을 내릴 이유. 내리지 않으면 None."""
+    if not (quote or "").strip():
+        return None
+    if _below_budget(quote, rec):
+        return "below_budget"
+    if _scoring_band(quote, rec):
+        return "scoring_band"
+    return None
+
+
 def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
     """근거 원문이 해당 항목의 위반 조건을 스스로 부정하는가(v5·v9·v17·v19·v21·v24).
 
@@ -1839,12 +2008,14 @@ def evidence_refutes(item: str, evidence: str, rec: Dict[str, Any]) -> bool:
             return True                     # 공고가 입찰 단계에서 요구한 적이 없다
         # 요구했더라도 이 인용이 계약 시 의무만 말하면 그 인용은 근거가 아니다.
         return bool(V19_POST_AWARD.search(evidence)) and not V19_BID_STAGE.search(evidence)
+    if item == "v3" and v3_deletion(evidence, rec):
+        return True
     if item == "v21":
+        # Bundle (B10, #130): v21 stands only on a quoted share below the floor. The joint-barred
+        # regex missed "허용되지 않습니다"; all 84 unlabeled v21 positives quoted no share.
         shares = [float(x) for x in V21_PERCENT.findall(evidence)]
-        if shares:
-            floor = v21_minimum_share(rec)
-            return floor is None or all(share >= floor for share in shares)
-        return bool(V21_JOINT_BARRED.search(evidence))
+        floor = v21_minimum_share(rec)
+        return floor is None or all(share >= floor for share in shares)
     if item == "v17":
         return v17_quote_is_narrow(evidence)
     if item == "v9":
@@ -2990,6 +3161,9 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
         hit = 1 if cell.get("위반여부") == 1 else 0
         ev = ""
         if hit and v not in ABSENCE:
+            if v in QUOTE_RESTORE_ITEMS and isinstance(cell.get("근거문구"), str):
+                cell["근거문구"] = (restore_spacing(cell["근거문구"], rec, build_context(rec))
+                                   or cell["근거문구"])
             for doc in rec["docs"]:
                 ev = clean_evidence(cell.get("근거문구"), doc["text"])
                 if ev:

@@ -692,8 +692,10 @@ class BaselineTests(unittest.TestCase):
         # 같은 절 3): 분담이행방식은 최소지분율을 적용하지 않는다.
         self.assertEqual(judged("v21", "업체별 최소 지분율은 3% 이상",
                                 meta={**local, "공동도급구성방식": "분담이행"}), 0)
-        # "단독"만으로는 내리지 않는다(특수관계인 지분 조항 등).
-        self.assertEqual(judged("v21", "단독으로 또는 합산하여 발행주식 총수의 100분의 30 이상"), 1)
+        # B10: 지분율(%)이 없는 인용은 v21 을 세우지 못한다 — 불허 문구의 표현과 무관하다.
+        # 특수관계인 지분 조항은 구성원별 최소지분율이 아니다.
+        self.assertEqual(judged("v21", "공동수급이 허용되지 않습니다."), 0)
+        self.assertEqual(judged("v21", "단독으로 또는 합산하여 발행주식 총수의 100분의 30 이상"), 0)
         # v24 는 인용 검사와 대조 검사를 함께 받는다. 인용이 메타와 일치하면 내리고,
         # 일치하지 않더라도 **코드가 축에서 불일치를 하나도 못 찾으면** 내린다.
         # 그래서 `judged("v24", ...)` 의 1 은 "이 인용이 어긋난다" 가 아니라
@@ -724,14 +726,15 @@ class BaselineTests(unittest.TestCase):
         # test_violation_without_a_verified_quote_is_lowered 가 그 규칙을 소유한다.
         # 여기서는 evidence_refutes 가 못 본 자리도 같은 계약에 걸린다는 것만 본다.
         # v24 는 그 계약에서 빠지지만 대조 검사가 대신 받는다 — 이 기록에는 축이 찾을
-        # 불일치가 없으므로 결국 같이 내려간다. 네 자리 모두 0 인 이유가 서로 다르다.
+        # 불일치가 없으므로 결국 같이 내려간다. v9 는 번들(2026-09-25)에서 계약 면제가 됐다 —
+        # 원문 그대로의 인용이 없어도 모델 양성을 둔다(dev +0.0023). 그래서 v9 만 1 이다.
         rec = record()
         obj = valid()
         for item in ("v9", "v19", "v21", "v24"):
             obj[item] = {"위반여부": 1, "근거문구": None}
         obj["v21"]["근거문구"] = "원문에 없는 공동수급 불가"
         out = baseline.postprocess(obj, rec)
-        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [0, 0, 0, 0])
+        self.assertEqual([out[i]["위반여부"] for i in ("v9", "v19", "v21", "v24")], [1, 0, 0, 0])
 
     def test_v6_raises_a_basic_region_limit_the_model_missed(self):
         """D9 의 U — 참가자격의 시·군·구 제한을 모델이 0 으로 둔 자리에서 올린다.
