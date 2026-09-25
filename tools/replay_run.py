@@ -206,10 +206,9 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 #  - Then v1 quotes get whitespace restored before the evidence check and v9 is exempt from it.
 #    Only v1/v9 cells changed: `01` e1 now differs (restored quote) and `01` v1 plus four v9 cells
 #    (050·130·132·162) no longer differ — the archived CSVs already had those positives.
-#  - Facts dev-fit (feat/b-facts-devfit): v9·v10·v13·v18 are zeroed on a no-bid contract and v2
-#    is raised from a past-performance eligibility clause under 2.3억. Only those columns moved:
-#    v2 raises 053·078; the no-bid zeroing adds 059·097·104·108·12·122·130·148·184·192 (and
-#    102·090 against H2) and removes cells where the archive already had 0 (090·163·195).
+#  - Facts dev-fit (feat/b-facts-devfit): v9·v10·v13·v18 are zeroed on a no-bid contract. Only
+#    those columns moved: the zeroing adds 059·097·104·108·12·122·130·148·184·192 (and 102·090
+#    against H2) and removes cells where the archive already had 0 (090·163·195).
 #
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
@@ -218,14 +217,13 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
 DELIBERATE_MOVES = [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-038", "v24"), ("PPS-DEV-039", "v21"),
-    ("PPS-DEV-040", "v11"), ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-053", "e2"),
-    ("PPS-DEV-053", "v2"), ("PPS-DEV-056", "v20"), ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v10"),
-    ("PPS-DEV-059", "v13"), ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v11"), ("PPS-DEV-061", "v24"),
-    ("PPS-DEV-062", "v11"), ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"),
-    ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"), ("PPS-DEV-068", "e24"), ("PPS-DEV-068", "v20"),
-    ("PPS-DEV-068", "v24"), ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"), ("PPS-DEV-071", "e6"),
-    ("PPS-DEV-071", "v6"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"), ("PPS-DEV-078", "e2"),
-    ("PPS-DEV-078", "v2"), ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-091", "v24"),
+    ("PPS-DEV-040", "v11"), ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-056", "v20"),
+    ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v10"), ("PPS-DEV-059", "v13"), ("PPS-DEV-060", "v24"),
+    ("PPS-DEV-061", "v11"), ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v11"), ("PPS-DEV-062", "v24"),
+    ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"), ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"),
+    ("PPS-DEV-068", "e24"), ("PPS-DEV-068", "v20"), ("PPS-DEV-068", "v24"), ("PPS-DEV-070", "e6"),
+    ("PPS-DEV-070", "v6"), ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"), ("PPS-DEV-073", "e24"),
+    ("PPS-DEV-073", "v24"), ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-091", "v24"),
     ("PPS-DEV-092", "v6"), ("PPS-DEV-096", "e19"), ("PPS-DEV-096", "v19"), ("PPS-DEV-097", "v18"),
     ("PPS-DEV-098", "e19"), ("PPS-DEV-098", "v19"), ("PPS-DEV-099", "v24"), ("PPS-DEV-101", "v1"),
     ("PPS-DEV-102", "e17"), ("PPS-DEV-102", "e6"), ("PPS-DEV-102", "v17"), ("PPS-DEV-102", "v6"),
@@ -261,11 +259,10 @@ DELIBERATE_MOVES = [
 DELIBERATE_MOVES_H2 = [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-035", "e23"), ("PPS-DEV-035", "v23"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-036", "v5"), ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-042", "v21"),
-    ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-053", "e2"), ("PPS-DEV-053", "v2"),
-    ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v13"), ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v24"),
-    ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"), ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"),
-    ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"), ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"),
-    ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"), ("PPS-DEV-078", "e2"), ("PPS-DEV-078", "v2"),
+    ("PPS-DEV-046", "v24"), ("PPS-DEV-047", "v24"), ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v13"),
+    ("PPS-DEV-060", "v24"), ("PPS-DEV-061", "v24"), ("PPS-DEV-062", "v24"), ("PPS-DEV-063", "v12"),
+    ("PPS-DEV-066", "e24"), ("PPS-DEV-066", "v24"), ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"),
+    ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"), ("PPS-DEV-073", "e24"), ("PPS-DEV-073", "v24"),
     ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-09", "e6"), ("PPS-DEV-09", "v6"),
     ("PPS-DEV-090", "e9"), ("PPS-DEV-090", "v9"), ("PPS-DEV-091", "v24"), ("PPS-DEV-092", "v6"),
     ("PPS-DEV-096", "e19"), ("PPS-DEV-096", "v19"), ("PPS-DEV-097", "v18"), ("PPS-DEV-098", "e17"),
@@ -303,11 +300,10 @@ DELIBERATE_MOVES_H2 = [
 DELIBERATE_MOVES_A7 = [
     ("PPS-DEV-01", "e1"), ("PPS-DEV-03", "e3"), ("PPS-DEV-03", "v3"), ("PPS-DEV-036", "v19"),
     ("PPS-DEV-038", "e17"), ("PPS-DEV-038", "v17"), ("PPS-DEV-039", "v21"), ("PPS-DEV-040", "v11"),
-    ("PPS-DEV-053", "e2"), ("PPS-DEV-053", "v2"), ("PPS-DEV-056", "v20"), ("PPS-DEV-059", "e13"),
-    ("PPS-DEV-059", "v10"), ("PPS-DEV-059", "v13"), ("PPS-DEV-061", "v11"), ("PPS-DEV-062", "v11"),
-    ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"), ("PPS-DEV-068", "v20"), ("PPS-DEV-070", "e6"),
-    ("PPS-DEV-070", "v6"), ("PPS-DEV-071", "e6"), ("PPS-DEV-071", "v6"), ("PPS-DEV-078", "e2"),
-    ("PPS-DEV-078", "v2"), ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-092", "v6"),
+    ("PPS-DEV-056", "v20"), ("PPS-DEV-059", "e13"), ("PPS-DEV-059", "v10"), ("PPS-DEV-059", "v13"),
+    ("PPS-DEV-061", "v11"), ("PPS-DEV-062", "v11"), ("PPS-DEV-063", "v12"), ("PPS-DEV-064", "v20"),
+    ("PPS-DEV-068", "v20"), ("PPS-DEV-070", "e6"), ("PPS-DEV-070", "v6"), ("PPS-DEV-071", "e6"),
+    ("PPS-DEV-071", "v6"), ("PPS-DEV-088", "e9"), ("PPS-DEV-088", "v9"), ("PPS-DEV-092", "v6"),
     ("PPS-DEV-096", "e19"), ("PPS-DEV-096", "v19"), ("PPS-DEV-097", "v18"), ("PPS-DEV-098", "e19"),
     ("PPS-DEV-098", "v19"), ("PPS-DEV-101", "v1"), ("PPS-DEV-102", "e17"), ("PPS-DEV-102", "e6"),
     ("PPS-DEV-102", "v17"), ("PPS-DEV-102", "v6"), ("PPS-DEV-104", "e9"), ("PPS-DEV-104", "v9"),
