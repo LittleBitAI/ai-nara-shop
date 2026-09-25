@@ -111,12 +111,18 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         """
         self.assertIn("| **D1** |", self.request)
         self.assertIn("| **D2** |", self.request)
-        # D1 은 기준표와 감사표 양쪽에 나온다. **어느 줄에도** churn 범위가 섞이면 안 된다.
+        # D1 은 여러 표에 나온다 — 기준 정의 · 감사 지시 · 결과값.
+        # **규칙을 적는 줄**만 "정확히 0" 을 요구한다. 결과값 줄(`| **D1** | 0 | 0 | 0 |`)은
+        # 수를 적는 자리이므로 문구를 요구하지 않는다.
+        # **어느 줄에도** churn 범위가 섞여서는 안 된다 — 그것이 이 [P2] 의 핵심이다.
         d1 = [line for line in self.request.splitlines() if line.startswith("| **D1** |")]
         self.assertTrue(d1, "D1 줄이 없다")
         for line in d1:
-            self.assertIn("정확히 0", line)
             self.assertNotIn("17~45", line, "D1 에 churn 범위가 섞였다")
+        rules = [line for line in d1 if "대상 밖" in line or "changed_cells_off_focus" in line]
+        self.assertTrue(rules, "D1 의 규칙을 적는 줄이 없다")
+        for line in rules:
+            self.assertIn("정확히 0", line)
         d2 = [line for line in self.request.splitlines() if line.startswith("| **D2** |")]
         self.assertTrue(d2, "D2 줄이 없다")
         self.assertTrue(any("17~45" in line for line in d2))
