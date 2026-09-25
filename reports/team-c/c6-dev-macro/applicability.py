@@ -44,7 +44,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 # 이 폴더의 수를 낸 판정 코드. 보고서 §1 의 기준 commit 과 같아야 한다.
-BASE_REV = "9038380"
+BASE_REV = "c68eb00"
 
 
 def load(name, path):

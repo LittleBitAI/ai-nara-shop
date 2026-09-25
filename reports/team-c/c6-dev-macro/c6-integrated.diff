@@ -1,8 +1,8 @@
 diff --git a/script.py b/script.py
-index a09b02a..da0ca6b 100644
+index 25a6c15..de79f19 100644
 --- a/script.py
 +++ b/script.py
-@@ -715,9 +715,39 @@ def verify_company_size(facts, rec, max_chars):
+@@ -736,11 +736,41 @@ def verify_company_size(facts, rec, max_chars):
              facts[key] = fixed
      bands, reason = _company_size_bands(facts, rec, max_chars)
      out = dict(bands)
@@ -11,7 +11,7 @@ index a09b02a..da0ca6b 100644
 +    # 경쟁제품이면 닫는다. dev에서 scope=competitive로 확정된 79건 중 카탈로그가 True/False를
 +    # 낸 것은 0건이라 그 축으로는 반박할 수 없고, 남는 관측이 직생 요구 문장의 부재다.
 +    # scope 자체는 안 건드린다 — v10·v12·v13이 competitive를 소비하므로 뒤집으면 셋이 죽는다.
-+    # 실측(재생, colab-1790235508743452453): v18 1/2/6 → 3/3/4, 3셀, 대상 밖 0셀, TP 손실 0.
++    # 실측(재생, colab-1790235508743452453, 기준 c68eb00): v18 2/1/5 → 4/2/3, 3셀, TP 손실 0.
 +    if (reason != "unverified_scope" and facts.get("scope") == "competitive"
 +            and direct_production_demand(rec)[0] is None):
 +        assumed, _assumed_reason = _company_size_bands(
@@ -30,10 +30,12 @@ index a09b02a..da0ca6b 100644
      if reason != "unverified_scope":
          out.update(company_size_products(facts, rec, visible))
      out.update(verify_document_requirements(facts, rec, visible))
+     if v11_absence_observed(raw_facts, rec, max_chars):
+         out["v11"] = {"위반여부": 1, "근거문구": None}
 +    # C6-3. v10 부재(직생 요구 없음)가 확인됐고 중소 허용 문구가 원문에 없으면 v11을 올린다.
-+    # v11의 FN 4건은 전부 후처리 경쟁제품 게이트의 첫 조건(직생 요구 문장 존재)에서 막혔다 —
-+    # 부재탐지 항목을 존재 게이트로 판정하던 자리다. 여기서는 위 A3 관측을 그대로 읽는다.
-+    # 올리기만 한다. 실측: v11 2/2/4 → 5/6/1, 7셀 전부 0→1, 대상 밖 0셀.
++    # 위 `v11_absence_observed()`(번들 A5 H2)와 **축이 다르다** — 그쪽은 자격 제한의 부재를
++    # 보고, 이쪽은 직생 요구의 부재를 본다. 그래서 겹치고도 남는 자리가 있다.
++    # 겹친 뒤 남은 dev 이득은 +0.000700이다(단독 기준 c68eb00). 올리기만 한다.
 +    if (reason != "unverified_scope"
 +            and (out.get("v11") or {}).get("위반여부") != 1
 +            and (out.get("v10") or {}).get("위반여부") == 1

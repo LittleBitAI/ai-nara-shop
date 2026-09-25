@@ -1,7 +1,7 @@
 """C6 통합 후보의 계약 — **셋을 합쳐도 TP 를 안 지우고, 순서에 안 흔들리고, diff 와 같다.**
 
 보고서(`reports/team-c/c6-dev-macro/README.md`)가 낸 수를 여기에 고정한다.
-재생은 기준 커밋 `9038380` 의 `script.py` 로만 한다 — 작업 트리 판을 쓰면 `main` 이 움직일 때
+재생은 기준 커밋 `c68eb00` 의 `script.py` 로만 한다 — 작업 트리 판을 쓰면 `main` 이 움직일 때
 같은 보관 응답에서 다른 수가 나오고 보고서만 낡는다(#124 의 [P2] 가 그 자리였다).
 
 이 검사가 고정하는 것 여섯.
@@ -34,7 +34,7 @@ CASE = ROOT / "reports/runs/colab-1790235508743452453/dev-debug"
 FOLDER = ROOT / "reports/team-c/c6-dev-macro"
 REPORT = FOLDER / "README.md"
 DIFF = FOLDER / "c6-integrated.diff"
-BASE_REV = "9038380"
+BASE_REV = "c68eb00"
 
 ITEMS = [f"v{i}" for i in range(1, 25)]
 C_ITEMS = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v20")
@@ -47,16 +47,16 @@ CANDIDATES = {
     "v11": "experiments/c5_v11_absence_signal_candidate.py",
     "integrated": "experiments/c6_integrated_candidate.py",
 }
-BASE_MACRO = "0.685506108460"
-BASE_C_TOTALS = (39, 31, 24)          # TP · FP · FN
+BASE_MACRO = "0.735764126941"
+BASE_C_TOTALS = (42, 25, 21)          # TP · FP · FN
 EXPECTED_MACRO = {
-    "narrow": "0.696403544358",
-    "wide": "0.683762590540",          # 기각 — 기준선보다 낮다
-    "v16": "0.690168113122",
-    "v11": "0.693349245715",
-    "integrated": "0.708908686274",
+    "narrow": "0.744738485915",
+    "wide": "0.732341732342",          # 기각 — 기준선보다 낮다
+    "v16": "0.739732380909",
+    "v11": "0.736464407053",
+    "integrated": "0.749407019995",
 }
-EXPECTED_CHANGED = {"narrow": 3, "wide": 13, "v16": 2, "v11": 7, "integrated": 12}
+EXPECTED_CHANGED = {"narrow": 3, "wide": 13, "v16": 2, "v11": 3, "integrated": 8}
 # 통합이 실제로 벌어야 하는 것. 세 후보의 단독 이득을 더한 값이다.
 ADDENDS = ("narrow", "v16", "v11")
 
@@ -240,7 +240,7 @@ class IntegratedReplay(unittest.TestCase):
         self.assertEqual(lost, [], f"TP 를 잃은 항목이 있다: {lost}")
         gained = {i: done[i]["tp"] - head[i]["tp"]
                   for i in ITEMS if done[i]["tp"] != head[i]["tp"]}
-        self.assertEqual(gained, {"v11": 3, "v18": 2},
+        self.assertEqual(gained, {"v11": 1, "v18": 2},
                          "항목별 TP 변화가 보고서와 다르다")
 
     def test_no_candidate_touches_another_part(self):
@@ -359,7 +359,7 @@ class RunRequest(unittest.TestCase):
 
     def test_the_pass_marks_match_the_measured_numbers(self):
         """합격 기준의 수치가 보고서의 실측과 같은가."""
-        for number in ("0.708908686274", "5/6/1", "4/1/2", "3/3/4", "9038380"):
+        for number in ("0.749407019995", "5/6/1", "4/2/2", "4/2/3", "c68eb00"):
             with self.subTest(number):
                 self.assertIn(number, self.request)
                 self.assertIn(number, self.report)
@@ -373,7 +373,7 @@ class RunRequest(unittest.TestCase):
         읽어야 한다.
         """
         base = self.request_section("### 1-2.", "## 2.")
-        self.assertIn("git show feat/c-dev-macro:"
+        self.assertIn("git show feat/c-dev-macro-rebase:"
                       "reports/team-c/c6-dev-macro/c6-integrated.diff | patch", base)
         self.assertNotRegex(
             base, r"patch\s+-p1\s+--binary\s+-i\s+reports/",
@@ -392,25 +392,46 @@ class RunRequest(unittest.TestCase):
         self.assertTrue(commands, "브랜치 명령이 없다")
         self.assertNotIn("git switch -", [c.split("#")[0].strip() for c in commands],
                          "`git switch -` 는 분리된 HEAD 에서 돌아오지 못한다")
-        self.assertTrue(any(c.startswith("git switch feat/c-dev-macro") for c in commands),
+        self.assertTrue(any(c.startswith("git switch feat/c-dev-macro-rebase") for c in commands),
                         "돌아갈 브랜치를 이름으로 안 적었다")
         self.assertIn("a branch is expected", block,
                       "왜 `-` 를 못 쓰는지 실제 메시지가 없다")
 
-    def test_the_diff_really_is_absent_from_the_base_commit(self):
-        """위 검사의 전제가 아직 참인가 — 기준 커밋에 그 파일이 없는가.
+    def test_the_base_commit_holds_a_stale_diff_that_must_not_be_used(self):
+        """위 검사의 전제 — **기준 커밋의 작업 트리 판을 쓰면 안 된다.**
 
-        언젠가 diff 가 `main` 에 들어가면 전제가 바뀐다. 그때는 이 검사가 먼저 울어서
-        §1-2 의 설명을 다시 보게 한다.
+        전제가 한 번 뒤집혔다. 처음에는 기준 커밋(`9038380`)에 diff 가 **없어서**
+        작업 트리 경로로 못 썼다. PR #139 가 머지되면서 기준이 `c68eb00` 이 됐고
+        이제 그 커밋에 diff 가 **있다** — 그런데 있는 것은 `9038380` 기준의 **옛
+        판이라 그 커밋의 `script.py` 에 안 붙는다**(B 가 같은 함수에
+        `v11_absence_observed()` 를 넣었다).
+
+        없을 때도 낡았을 때도 답은 같다 — `git show <작업 브랜치>:<경로>` 로 읽는다.
+        여기서는 **있으면서 안 붙는다**는 것을 확인한다. 언젠가 새 diff 가 `main` 에
+        들어가 붙게 되면 이 검사가 울고, §1-2 의 설명을 다시 보게 된다.
         """
-        if shutil.which("git") is None:
-            raise unittest.SkipTest("git 이 없다")
-        found = subprocess.run(
-            ["git", "-C", str(ROOT), "cat-file", "-e",
-             f"{BASE_REV}:reports/team-c/c6-dev-macro/c6-integrated.diff"],
-            capture_output=True)
-        self.assertNotEqual(found.returncode, 0,
-                            "기준 커밋에 diff 가 생겼다 — §1-2 의 설명을 다시 보라")
+        if shutil.which("git") is None or shutil.which("patch") is None:
+            raise unittest.SkipTest("git 또는 patch 가 없다")
+        work = Path(tempfile.mkdtemp(prefix="stale-diff-"))
+        try:
+            for name, path in (("script.py", "script.py"),
+                               ("old.diff",
+                                "reports/team-c/c6-dev-macro/c6-integrated.diff")):
+                found = subprocess.run(
+                    ["git", "-C", str(ROOT), "show", f"{BASE_REV}:{path}"],
+                    capture_output=True)
+                if found.returncode != 0:
+                    raise unittest.SkipTest(f"{BASE_REV} 에 {path} 가 없다")
+                (work / name).write_bytes(found.stdout)
+            applied = subprocess.run(
+                ["patch", "-p1", "--binary", "-i", str(work / "old.diff")],
+                capture_output=True, text=True, encoding="utf-8",
+                errors="replace", cwd=work)
+            self.assertNotEqual(
+                applied.returncode, 0,
+                "기준 커밋의 diff 가 이제 붙는다 — §1-2 의 설명을 다시 보라")
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
 
     def test_every_pass_mark_is_a_difference_not_a_fixed_number(self):
         """리뷰 [P1] — 새 회차의 TP 손실을 고정 숫자로 재던 자리.
@@ -548,7 +569,7 @@ class RunRequest(unittest.TestCase):
         counted = {m[1]: (int(m[2]), int(m[3]), int(m[4])) for m in
                    re.finditer(r"^(v\d+)\s+(\d+)\s+(\d+)\s+(\d+)", done.stdout, re.MULTILINE)}
         self.assertEqual(counted,
-                         {"v18": (38, 3, 3), "v16": (2, 2, 2), "v11": (7, 7, 7)},
+                         {"v18": (38, 3, 3), "v16": (2, 2, 2), "v11": (3, 3, 3)},
                          f"집계기가 문서와 다른 수를 낸다\n{done.stdout}")
         for item, layers in counted.items():
             with self.subTest(item):
