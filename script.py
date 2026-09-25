@@ -865,7 +865,9 @@ def _company_size_bands(facts, rec, max_chars):
                     and facts["qualification_complete"] == "yes")
         # Bundle (C v18, #93/#97 candidate): when attachments are truncated but the notice itself is
         # fully visible and the model says it read the whole qualification section, judge anyway.
-        # 제한사항은 입찰공고에 명시해야 한다(국가 제21조② · 지방 제20조②). Dev +0.0024.
+        # That candidate was rejected, not just unproven: `docs/data.md` D2 says a violation may sit
+        # only in an attachment, so the notice alone does not settle it. Adopted anyway by the user's
+        # dev-fit decision (2026-09-25), accepting that risk. Dev +0.0024.
         if not (complete or notice_complete(facts, rec, visible)):
             return {}, "absence_not_observable"
         priority = facts["priority_exception"]
