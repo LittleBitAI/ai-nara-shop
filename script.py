@@ -1420,12 +1420,18 @@ def skeleton_quoted(quote, rec, visible) -> Optional[str]:
     flat = _SKELETON_DROP.sub("", quote or "")
     if len(flat) < 20 or flat not in _SKELETON_DROP.sub("", visible):
         return None
+    # Every match in every document: a hidden document listed first may hold the same skeleton
+    # with other spacing, and only a span the model actually saw counts.
     for doc in rec["docs"]:
         text = doc["text"]
         kept = [i for i, ch in enumerate(text) if not _SKELETON_DROP.fullmatch(ch)]
-        at = "".join(text[i] for i in kept).find(flat)
-        if at != -1:
-            return text[kept[at]:kept[at + len(flat) - 1] + 1]
+        skeleton = "".join(text[i] for i in kept)
+        at = skeleton.find(flat)
+        while at != -1:
+            span = text[kept[at]:kept[at + len(flat) - 1] + 1]
+            if span in visible:
+                return span
+            at = skeleton.find(flat, at + 1)
     return None
 
 

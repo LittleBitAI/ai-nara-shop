@@ -135,6 +135,14 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual((result["v13"]["위반여부"], reasons["v13"]), (1, []))
         self.assertIn(result["v13"]["근거문구"], rec["docs"][0]["text"])
         self.assertEqual(baseline.postprocess(result, rec)["v13"]["위반여부"], 1)
+        # A document the model did not see, listed first, holds the same skeleton with other
+        # spacing (review pr142 round 1). The visible span still wins, in either order.
+        clause = "중소기업기본법 제2조에 따른 소기업 또는 소상공인으로서 확인서를 소지한 자"
+        hidden = {"text": clause.replace(" ", "  ")}
+        shown = {"text": "입찰참가자격. " + clause + "."}
+        for docs in ([hidden, shown], [shown, hidden]):
+            self.assertEqual(baseline.skeleton_quoted(clause.replace(" ", ""), {"docs": docs}, shown["text"]),
+                             clause)
         for bad_value in [True, "maybe", None]:
             bad = copy.deepcopy(obj)
             bad["v13"]["facts"]["scope_matches"] = bad_value
