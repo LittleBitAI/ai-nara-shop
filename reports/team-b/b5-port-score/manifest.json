@@ -4,7 +4,7 @@
   "status": "draft",
   "run_id": "b5-port-score",
   "baseline_run": null,
-  "created_at": "2026-09-18T06:32:46.389133+00:00",
+  "created_at": "2026-09-25T03:59:30.370347+00:00",
   "sources": [
     {
       "role": "truth",
@@ -14,7 +14,7 @@
     {
       "role": "pred",
       "path": "reports/team-b/b5-port-replay/submission.csv",
-      "sha256": "4e331643e46df41a8a9eceef1db6d9ae9656e77b691adcc8acdfc3a697692032"
+      "sha256": "cf1363e40372ff16cc45d287e5dae9b187fa4db44a8bcab3802a41d6c99e8f30"
     }
   ],
   "generator": {
@@ -58,5 +58,5 @@
     "evidence_substring": false,
     "evidence_quality": false
   },
-  "elapsed_seconds_before_publish": 0.0779995999764651
+  "elapsed_seconds_before_publish": 0.09684389999893028
 }

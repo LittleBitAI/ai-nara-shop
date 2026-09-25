@@ -1639,7 +1639,7 @@ def _region_key(names) -> set:
 
 
 def region_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optional[str]:
-    """공고가 지역을 거는데 등록이 제한 없음이거나, 걸린 지역 집합이 등록과 다른가.
+    """등록이 지역제한(`Y`)인데 공고에 걸린 지역 집합이 등록과 다른가. 등록 `N` 이면 보지 않는다.
 
     **비교할 수 없는 것을 불일치로 읽지 않는다.** 등록 목록이 익명화 토큰이면 대조할
     근거가 없는 것이지 어긋난 것이 아니다. `industry_diff` 의 `if not registered: return None`
@@ -1655,10 +1655,13 @@ def region_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optiona
     """
     listed = meta.get("제한지역코드목록")
     restricted = meta.get("지역제한여부") == "Y"
+    if not restricted:
+        # Flag-N direction (dev-fit, 2026-09-25): a notice that restricts while the registration
+        # says N is labelled v24=0 in 11 of 12 dev notices; S7-14 left the direction open. #109
+        # measured it and was closed on "dev labels only"; user decision 7 now accepts that.
+        return None
     tagged = V24_REGION.search(body)
     if tagged:
-        if not restricted:
-            return tagged.group(0)                  # 본문은 거는데 등록은 제한 없음
         if not listed or "[" in str(listed):
             return None                             # 익명화 토큰 — 비교 불가지 불일치가 아니다
         tagged_names = _region_names(tagged.group(1))
@@ -1667,10 +1670,7 @@ def region_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optiona
         if _region_key(tagged_names) != _region_key(_region_names(str(listed))):
             return tagged.group(0)
         return None                                 # 표기가 등록과 같다 — 이 축은 일치
-    found = REGION.search(body)
-    if found and not restricted:
-        return found.group(0)                       # 본문은 거는데 등록은 제한 없음
-    if not restricted or not listed or "[" in str(listed):
+    if not listed or "[" in str(listed):
         return None
     # 등록이 제한인 경우에도 **어느 지역인지**를 대조한다. 기존 `v24_consistent_with_meta` 가
     # 모델 근거에 대해 하는 그 집합 비교를, 근거가 없을 때를 위해 원문에 대해 한다.
@@ -1841,20 +1841,15 @@ def budget_mismatch(rec: Dict[str, Any]) -> Optional[str]:
 
 
 def industry_diff(rec: Dict[str, Any], body: str, meta: Dict[str, Any]) -> Optional[str]:
-    """공고가 업종을 거는데 등록이 제한 없음이거나, 요구 코드가 등록 목록에 없는가.
+    """등록이 업종제한(`Y`)인데 공고가 요구하는 코드가 등록 목록에 없는가. 등록 `N` 이면 보지 않는다.
 
-    **제한 플래그를 코드 집합보다 먼저 본다.** `region_diff` 가 하는 순서와 같다.
-    본문이 `업종코드 1169` 를 참가자격으로 걸고 메타가 `업종제한여부=N` 인데
-    `면허업종제한목록` 에 1169 가 남아 있으면 집합 차이가 비어 침묵했다 —
-    공고의 제한과 등록 플래그가 **정면으로 다른** v24 사례를 음성으로 내리는 경로다.
+    예전에는 본문이 업종을 걸고 등록이 `N` 인 방향도 불일치로 셌다. dev 에서 그 방향의
+    v24 정답은 0/6 이라 `region_diff` 와 함께 껐다(dev 라벨만, 2026-09-25).
     """
     demanded = {m.group(1) for m in DOC_INDUSTRY.finditer(body)}
-    if not demanded:
-        return None
-    restricted = meta.get("업종제한여부") == "Y"
+    if not demanded or meta.get("업종제한여부") != "Y":
+        return None                                 # flag-N direction: same dev-fit as region_diff
     registered = set(META_INDUSTRY.findall(str(meta.get("면허업종제한목록") or "")))
-    if not restricted:
-        return next(DOC_INDUSTRY.finditer(body)).group(0)    # 본문은 거는데 등록은 제한 없음
     if not registered:
         return None                                 # 등록은 제한이라는데 코드를 못 읽었다 — 단정하지 않는다
     missing = demanded - registered
@@ -3215,6 +3210,11 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     if (rec.get("meta") or {}).get("계약방법") == "수의계약":
         for item in NO_BID_ZERO_ITEMS:
             out[item] = {"위반여부": 0, "근거문구": ""}
+    # v9 is goods only. 정부 입찰·계약 집행기준 제5조 names "물품의 제조ㆍ구매입찰"; dev has
+    # v9=1 in 6 of 78 goods notices and 0 of 122 services. The article does not settle mixed
+    # services that deliver goods, so this is also fitted to dev (2026-09-25).
+    if not str((rec.get("meta") or {}).get("업무구분") or "물품").startswith("물품"):
+        out["v9"] = {"위반여부": 0, "근거문구": ""}
     return out
 
 
