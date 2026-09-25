@@ -1,5 +1,8 @@
 # Canonical checkout-local slots. Shared tools read this file directly.
 agents = ["claude", "codex"]
+# Ping an idle Claude session in its Orca cell at 55 minutes, at most this many
+# times per utterance, so the prompt cache survives a return after an hour.
+keep_alive = 2
 
 [slots]
 review_dir = "artifacts/review"
