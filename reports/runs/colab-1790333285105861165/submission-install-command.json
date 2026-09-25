@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/content/t1-colab-ln07dsd6/venv/bin/python",
+    "-m",
+    "pip",
+    "install",
+    "-r",
+    "/content/t1-colab-ln07dsd6/submission/requirements.txt"
+  ],
+  "cwd": "/content/t1-colab-ln07dsd6",
+  "started": 1790330258.1349978,
+  "returncode": 0,
+  "elapsed_seconds": 0.6145100593566895
+}

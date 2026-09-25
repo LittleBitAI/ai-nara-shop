@@ -2747,6 +2747,15 @@ V6_PARTICIPANT_SUBJECT = re.compile(
     r"(?:법인\s*등기(?:부|사항증명서)?\s*상\s*)?"
     r"(?:본점|본사|주된\s*영업소|주\s*사무소|주사무소|사업장|영업소)"
     r"\s*(?:의\s*)?(?:소재지|소재\s*지)?(?:가|는|를|을|은|에)?")
+# v5 올림은 참가 업체의 소재지가 광역 지자체에 제한된 관계만 읽는다. 단순 지역명,
+# 납품·수행 장소, 기관 주소는 이 주어-서술 관계를 만들지 못한다.
+V5_WIDE_REGION = re.compile(WIDE_REGION)
+V5_LOCATION_PREDICATE = re.compile(
+    r"(?:인\s*(?:업체|자)|(?:에|으로)\s*(?:기재되어\s*)?"
+    r"(?:있는|소재(?:한|하고|하는)?|둔|두고)\s*(?:업체|자))"
+)
+V5_SUBJECT_TO_REGION = 80
+V5_CLAUSE_BREAK = V6_CLAUSE_BREAK + ".。"
 # 주어와 서술이 한 낱말에 붙은 꼴. 토큰이 앞에 와도 된다.
 V6_FUSED_LIMIT = re.compile(r"지역\s*제한|지역제한|지역\s*업체|관내\s*업체|관할\s*구역")
 # ①의 서술. 토큰이 이 서술의 자리에 놓여야 제한이 성립한다.
@@ -2923,6 +2932,81 @@ def v6_should_raise(rec: Dict[str, Any]) -> Optional[str]:
         if cleaned and _v6_evidence_supports_v6(cleaned):
             return cleaned
     return None
+
+
+def v5_should_raise(rec: Dict[str, Any]) -> Optional[str]:
+    """v5를 0에서 1로 올릴 고시금액 이상 참가업체 소재지 제한 인용을 찾는다.
+
+    `region_price_limit()`의 기존 경계를 그대로 쓴다. 참가자격 문맥에서 업체의
+    본점·주된 영업소·주된 사무소·사업장 소재지가 광역 지자체에 묶인 경우만 양성으로
+    읽으므로, 납품지·수행장소·기관 주소나 단순 지역 언급은 올리지 않는다.
+    """
+    limit = region_price_limit(rec)
+    price = estimated_price(rec)
+    if limit is None or price is None or price < limit:
+        return None
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        offset = 0
+        for raw_line in text.splitlines(keepends=True):
+            line = raw_line.rstrip("\r\n")
+            if _is_qualification_context(text, offset):
+                # 쉼표·세미콜론·접속어미로 갈린 독립 절은 결합하지 않는다. 한 줄에
+                # `본점 … 서울특별시인 업체, 납품장소는 …`가 있어도 같은 제한이 아니다.
+                for clause_start, clause in _v5_segments(line):
+                    # 괄호 안은 참가자격 제한의 역할 관계를 만들지 않지만, 원문 좌표는
+                    # 바꾸지 않는다. 축약한 문자열의 위치를 원문 인용에 쓰면 긴 괄호 뒤
+                    # 제한이 e5 밖으로 밀린다.
+                    normalized = _v5_mask_parentheses(clause)
+                    subjects = list(V6_PARTICIPANT_SUBJECT.finditer(normalized))
+                    regions = list(V5_WIDE_REGION.finditer(normalized))
+                    for subject in subjects:
+                        for region in regions:
+                            if not 0 <= region.start() - subject.end() <= V5_SUBJECT_TO_REGION:
+                                continue
+                            predicate = V5_LOCATION_PREDICATE.search(
+                                normalized[region.end():region.end() + 50])
+                            if not predicate:
+                                continue
+                            # 줄 첫머리를 자르면 긴 참가자격 줄의 실제 제한이 e5 밖으로
+                            # 밀린다. 일치한 주어부터 서술까지를 중심으로 자른다.
+                            start = clause_start + subject.start()
+                            end = clause_start + region.end() + predicate.end()
+                            cleaned = clean_evidence(_span_quote(line, start, end), text)
+                            if cleaned:
+                                return cleaned
+            offset += len(raw_line)
+    return None
+
+
+def _v5_mask_parentheses(text: str) -> str:
+    """괄호 안을 공백으로 가리되 원문과 같은 좌표를 유지한다."""
+    return re.sub(r"\([^)]*\)|（[^）]*）|【[^】]*】",
+                  lambda match: " " * len(match.group(0)), text)
+
+
+def _v5_segments(line: str):
+    """v5 관계를 같은 절로 제한한다. 문장 종결도 절 경계다."""
+    depth = start = 0
+    for index, char in enumerate(line):
+        if char in V6_BRACKET_OPEN:
+            depth += 1
+        elif char in V6_BRACKET_CLOSE:
+            depth = max(0, depth - 1)
+        elif depth == 0 and char in V5_CLAUSE_BREAK:
+            yield from _v5_split_connectives(start, line[start:index])
+            start = index + 1
+    yield from _v5_split_connectives(start, line[start:])
+
+
+def _v5_split_connectives(start: int, clause: str):
+    cut = 0
+    for match in V6_CONNECTIVE.finditer(clause):
+        if _v6_bracket_depth(clause, match.start()):
+            continue
+        yield start + cut, clause[cut:match.end()]
+        cut = match.end()
+    yield start + cut, clause[cut:]
 
 
 def _v6_evidence_supports_v6(quote: str) -> bool:
@@ -3234,6 +3318,12 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 hit, ev = 0, ""
         if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
             hit, ev = 0, ""
+        if v == "v5" and hit == 0 and cell.get("위반여부") != 1:
+            # 고시금액 이상인데 모델이 놓친 참가업체 소재지 제한만 올린다. 모델 양성을
+            # 저가 구간에서 내린 기존 v5 게이트는 그대로 보존한다.
+            raised = v5_should_raise(rec)
+            if raised:
+                hit, ev = 1, raised
         if v == "v6" and hit == 0 and cell.get("위반여부") != 1:
             # D9 의 U — **모델이 v6=0 을 낸 자리에서만** 올린다. 게이트가 내린 셀
             # (모델은 1 이라 했다)까지 올리면 측정한 적 없는 다른 규칙이 된다 —
