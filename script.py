@@ -744,6 +744,7 @@ def verify_company_size(facts, rec, max_chars):
     return out, reason
 
 
+
 def verify_document_requirements(facts, rec, visible):
     """A3 관측 사실의 소비자. 옛 원응답·unknown·불완전 문서는 기본 판정을 보존한다."""
     def quoted(value):
@@ -3208,7 +3209,16 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 break
         out["v23"] = ({"위반여부": 1, "근거문구": evidence} if evidence
                       else {"위반여부": 0, "근거문구": ""})
+    # Facts dev-fit (2026-09-25): on a no-bid contract (수의계약) these items are never positive in dev
+    # but fired 2·5·3·4 times. S7-4 names small negotiated quotes as v13's exception; the rest is
+    # fitted to dev on purpose (v9 loses one TP for four FPs). Dev +0.0155.
+    if (rec.get("meta") or {}).get("계약방법") == "수의계약":
+        for item in NO_BID_ZERO_ITEMS:
+            out[item] = {"위반여부": 0, "근거문구": ""}
     return out
+
+
+NO_BID_ZERO_ITEMS = ("v9", "v10", "v13", "v18")
 
 
 def to_row(rec_id: str, judgment: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:

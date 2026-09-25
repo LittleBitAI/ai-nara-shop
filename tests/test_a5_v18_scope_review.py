@@ -98,8 +98,9 @@ class ScopeReviewTests(unittest.TestCase):
             # fully visible, so the A5 scope arm can now decide v18 there too. Still v18 only.
             self.assertEqual([(c['id'], c['item']) for c in changed],
                              [('PPS-DEV-22', 'v18'), ('PPS-DEV-040', 'v18'), ('PPS-DEV-041', 'v18')])
-            self.assertEqual(metrics['off']['items']['v10']['fp'], 9)
-            self.assertEqual(metrics['on']['items']['v10']['fp'], 9)
+            # 9 before the facts dev-fit zeroed v10 on two no-bid contracts.
+            self.assertEqual(metrics['off']['items']['v10']['fp'], 7)
+            self.assertEqual(metrics['on']['items']['v10']['fp'], 7)
             self.assertEqual(metrics['on']['items']['v18']['tp'], 3)
 
     def test_two_mock_episodes_record_comparisons_and_failures(self):
