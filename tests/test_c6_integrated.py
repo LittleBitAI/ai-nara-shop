@@ -361,6 +361,24 @@ class RunRequest(unittest.TestCase):
             base, r"patch\s+-p1\s+--binary\s+-i\s+reports/",
             "작업 트리 경로를 patch 의 입력으로 쓰면 detach 뒤에 그 파일이 없다")
 
+    def test_the_return_step_names_the_branch(self):
+        """리뷰 [P2] — `git switch -` 가 작업 브랜치로 못 돌아가던 자리.
+
+        `-` 는 *직전에 있던 곳*으로 가는데 `switch -c` 앞의 직전은 **분리된 HEAD** 다.
+        실제로 `fatal: a branch is expected, got commit …` 로 죽고, 그대로 회차
+        브랜치에 남는다. 모르고 이어가면 회차 브랜치 위에 작업 커밋이 쌓인다.
+        """
+        block = self.request_section("### 1-2.", "## 2.")
+        commands = [line.strip() for line in block.splitlines()
+                    if line.strip().startswith("git switch")]
+        self.assertTrue(commands, "브랜치 명령이 없다")
+        self.assertNotIn("git switch -", [c.split("#")[0].strip() for c in commands],
+                         "`git switch -` 는 분리된 HEAD 에서 돌아오지 못한다")
+        self.assertTrue(any(c.startswith("git switch feat/c-dev-macro") for c in commands),
+                        "돌아갈 브랜치를 이름으로 안 적었다")
+        self.assertIn("a branch is expected", block,
+                      "왜 `-` 를 못 쓰는지 실제 메시지가 없다")
+
     def test_the_diff_really_is_absent_from_the_base_commit(self):
         """위 검사의 전제가 아직 참인가 — 기준 커밋에 그 파일이 없는가.
 
@@ -396,24 +414,48 @@ class RunRequest(unittest.TestCase):
                                  f"{key} 가 절대값으로 적혔다")
 
     def test_no_movement_has_one_verdict_across_the_document(self):
-        """리뷰 [P2] — "발동 없음"의 판정이 문서 안에서 충돌하던 자리.
+        """리뷰 [P2]·[P1] — "발동 없음"의 판정이 문서 안에서 충돌하던 자리.
 
-        적용 대상 0 은 **판정 보류**(그 회차가 규칙을 안 잰 것)이고, 대상이 있는데
-        0셀이면 **가설 기각**이다. 기준표·감사 절차·예상 실패가 같은 말을 해야 한다.
+        세 층으로 갈린다. **변경 기회 0 도, 실제 변경 0 도 판정 보류**이고,
+        **기각은 Z3 에서만** 나온다 — 셀이 실제로 바뀌었는데 F1 이 안 오를 때.
+        기준표·감사 절차·예상 실패가 같은 말을 해야 한다.
         """
-        self.assertIn("| **Z1** |", self.request, "적용 대상을 보는 기준이 없다")
-        self.assertIn("| **Z2** |", self.request, "효과를 보는 기준이 없다")
-        z1 = [line for line in self.request.splitlines() if line.startswith("| **Z1** |")]
-        for line in z1:
-            self.assertIn("판정 보류", line)
-            self.assertNotIn("가설 기각", line, "대상 0 을 기각으로 적었다")
-        z2 = [line for line in self.request.splitlines() if line.startswith("| **Z2** |")]
-        for line in z2:
+        lines = self.request.splitlines()
+        for key in ("Z1", "Z2", "Z3"):
+            self.assertIn(f"| **{key}** |", self.request, f"기준 {key} 가 없다")
+        for key in ("Z1", "Z2"):
+            for line in [x for x in lines if x.startswith(f"| **{key}** |")]:
+                with self.subTest(key):
+                    self.assertIn("판정 보류", line)
+                    self.assertNotIn("가설 기각", line,
+                                     f"{key} 의 0 을 기각으로 적었다")
+        for line in [x for x in lines if x.startswith("| **Z3** |")]:
             self.assertIn("가설 기각", line)
         # 예상 실패표가 같은 구분을 쓰는가 — 옛 판은 여기서 "기각이 아니다" 라고만 했다.
         failures = self.request_section("## 6.", "## 7.")
         self.assertIn("판정 보류", failures)
         self.assertIn("§4-2", failures, "예상 실패표가 판정 규칙을 안 가리킨다")
+
+    def test_the_trigger_criterion_reads_opportunity_not_gate_count(self):
+        """리뷰 [P1] — 조건 충족 수를 변경 기회로 읽어 Z2 가 잘못 기각하던 자리.
+
+        v18 규칙은 게이트를 **38건** 통과하지만 결정표가 v18 을 세우는 것은 **3건**뿐이다.
+        나머지 35건은 `general` 로 다시 밟아도 금액·자격·관측에서 막힌다. Z1 이 38 을
+        보면, 기회가 0 인 회차를 "대상은 있는데 안 바뀌었다"로 읽어 **규칙이 아니라
+        회차를 벌한다.**
+        """
+        z1 = [x for x in self.request.splitlines() if x.startswith("| **Z1** |")]
+        self.assertTrue(z1)
+        for line in z1:
+            self.assertIn("변경 기회", line)
+            self.assertNotIn("적용 대상", line, "Z1 이 게이트 수를 본다")
+        section = self.request_section("### 4-2.", "### 4-3.")
+        self.assertIn("조건 충족", section)
+        self.assertIn("변경 기회", section)
+        self.assertIn("실제 변경", section)
+        self.assertIn("판정에 쓰지 않는다", section,
+                      "조건 충족을 판정에 안 쓴다는 말이 없다")
+        self.assertIn("38", section, "38 과 3 이 갈리는 실측이 없다")
 
     def test_the_applicability_counter_is_wired_into_the_audit(self):
         """Z1 을 사람이 눈대중하지 않게 — 세는 명령이 문서에 있고 실제로 있는가."""
@@ -446,10 +488,13 @@ class RunRequest(unittest.TestCase):
         self.assertNotIn("items.v11", self.request)
 
     def test_the_counter_reports_the_documented_numbers(self):
-        """§5-3 이 옮겨 적은 적용 대상·바뀐 셀을 집계기가 실제로 내는가.
+        """§5-3 이 옮겨 적은 세 층을 집계기가 실제로 내는가.
 
-        **바뀐 셀의 합이 §5-1 쌍 비교의 `changed_cells` 와 같아야 한다.** 둘이 갈리면
+        **실제 변경의 합이 §5-1 쌍 비교의 `changed_cells` 와 같아야 한다.** 둘이 갈리면
         Z2 가 재는 것과 D1 이 재는 것이 다른 대상이라는 뜻이다.
+
+        그리고 **v18 은 조건 충족과 변경 기회가 달라야 한다** — 둘이 같아지면 리뷰가
+        잡은 [P1] 이 되돌아온 것이다.
         """
         if shutil.which("git") is None:
             raise unittest.SkipTest("git 이 없다")
@@ -460,26 +505,47 @@ class RunRequest(unittest.TestCase):
              "--case", str(CASE)],
             capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=ROOT)
         self.assertEqual(done.returncode, 0, done.stderr)
-        counted = {m[1]: (int(m[2]), int(m[3])) for m in
-                   re.finditer(r"^(v\d+)\s+(\d+)\s+(\d+)", done.stdout, re.MULTILINE)}
-        self.assertEqual(counted, {"v18": (38, 3), "v16": (2, 2), "v11": (7, 7)},
+        counted = {m[1]: (int(m[2]), int(m[3]), int(m[4])) for m in
+                   re.finditer(r"^(v\d+)\s+(\d+)\s+(\d+)\s+(\d+)", done.stdout, re.MULTILINE)}
+        self.assertEqual(counted,
+                         {"v18": (38, 3, 3), "v16": (2, 2, 2), "v11": (7, 7, 7)},
                          f"집계기가 문서와 다른 수를 낸다\n{done.stdout}")
-        for item, (applicable, flipped) in counted.items():
+        for item, layers in counted.items():
             with self.subTest(item):
-                self.assertRegex(self.request, rf"(?m)^{item}\s+{applicable}\s+{flipped}\s",
+                self.assertRegex(self.request,
+                                 rf"(?m)^{item}\s+{layers[0]}\s+{layers[1]}\s+{layers[2]}\s",
                                  "§5-3 이 옮겨 적은 수가 집계기와 다르다")
-        self.assertEqual(sum(flipped for _a, flipped in counted.values()),
+        self.assertNotEqual(counted["v18"][0], counted["v18"][1],
+                            "조건 충족과 변경 기회가 같아졌다 — [P1] 이 되돌아왔는지 보라")
+        self.assertEqual(sum(layers[2] for layers in counted.values()),
                          EXPECTED_CHANGED["integrated"],
-                         "바뀐 셀의 합이 통합 후보의 changed_cells 와 다르다")
+                         "실제 변경의 합이 통합 후보의 changed_cells 와 다르다")
 
-    def test_the_counter_separates_the_two_verdicts(self):
-        """대상 0 과 "대상은 있는데 0셀"에 **서로 다른 말**을 찍는가."""
+    def test_the_counter_never_calls_a_quiet_run_a_rejection(self):
+        """**어느 층의 0 도 기각으로 찍지 않는가.** [P1] 의 핵심.
+
+        옛 판은 "대상이 있는데 안 바뀌었다 — 가설 기각" 을 찍었다. 그 "대상"이
+        게이트 통과 수였기 때문에, 변경 기회가 애초에 없던 회차를 기각으로 적었다.
+        """
         source = (FOLDER / "applicability.py").read_text(encoding="utf-8")
-        self.assertIn("판정 보류", source)
-        self.assertIn("가설 기각", source)
+        verdicts = re.findall(r'verdict = "(.+?)"', source)
+        self.assertTrue(verdicts, "판정 문구가 없다")
+        for verdict in verdicts:
+            with self.subTest(verdict):
+                self.assertNotIn("가설 기각", verdict,
+                                 "집계기가 스스로 기각을 찍는다 — 기각은 채점(Z3)이 본다")
+        self.assertTrue(any("판정 보류" in v for v in verdicts))
+        self.assertIn("Z1", source)
+        self.assertIn("Z2", source)
         self.assertIn("BASE_REV", source, "판정 코드를 커밋으로 고정하지 않았다")
         self.assertNotIn('load("submission", ROOT / "script.py")', source,
                          "작업 트리의 script.py 를 부르면 main 이 움직일 때 수가 바뀐다")
+
+    def test_the_counter_explains_why_a_gate_hit_is_not_an_opportunity(self):
+        """38 과 3 이 갈리는 이유를 스크립트가 같이 찍는가 — 안 찍으면 사람이 헤맨다."""
+        source = (FOLDER / "applicability.py").read_text(encoding="utf-8")
+        self.assertIn("blocked", source, "막힌 곳을 안 센다")
+        self.assertIn("기회가 아닌 것들이 막힌 곳", source)
 
     def test_the_run_commit_placeholder_is_visible_until_filled(self):
         """안 채운 채 돌리면 `main` 으로 도는 사고가 난다."""
