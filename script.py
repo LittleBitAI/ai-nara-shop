@@ -3260,11 +3260,20 @@ def _under_qualification_heading(text, line_start):
     """
     end = text.find("\n", line_start)
     lines = text[:end if end >= 0 else len(text)].split("\n")
+    passed = set()   # marker kinds walked through so far, the clause's own line included
     for line in reversed(lines[-HEADING_LOOKBACK:]):
-        if QUALIFICATION_HEADING.search(line):
+        marker = LIST_MARKER.match(line)
+        kind = marker.lastgroup if marker else None
+        # The heading sits a level above everything below it: its marker kind was not passed.
+        # A 참가자격 line of a passed kind is a sibling — an item naming 참가자격등록, or
+        # `가. 입찰참가자격` itself once `나. 과업 개요` closed it. An unmarked line has no level,
+        # so it counts only when nothing marked was passed.
+        if QUALIFICATION_HEADING.search(line) and (kind not in passed if kind else not passed):
             return True
         if NOT_QUALIFICATION.search(line):
             return False
+        if kind:
+            passed.add(kind)
     return False
 
 
