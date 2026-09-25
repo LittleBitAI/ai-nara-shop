@@ -170,8 +170,18 @@ LOGPROBS_K = 5
 # dev replay Macro 0.662425 -> 0.693747. Split-half check (tune on one half, score the other)
 # kept a gain both ways, +0.0056 and +0.0127. v4, v9 and v24 were picked in both halves; the
 # other five cuts each move one dev cell. Fitted to dev on purpose (user decision 2026-09-24).
+# Re-centred 2026-09-25 on four passes (colab-1790250265636150570 and colab-1790318892216968298,
+# dev and dev-debug each): 0.8, 0.95, 0.9 and 0.999 sat on the edge of their plateau, and a second
+# pass of the same code crossed them (v1 066 0.29 -> 0.90, v9 176 0.9994 -> 0.9988). Each cut now
+# sits in the gap between the highest false positive and the lowest true positive over all four
+# passes (v9: 0.99974 | 0.99989, v1: 0.953 | 0.977, v22: 0.933 | 0.990). v4 went above its two
+# false positives (0.986 · 0.971). Fresh-pass replay (colab-1790318892216968298) +0.0220, every
+# moved cell 1 -> 0 with label 0. Not removal-only by construction: a cell a cut lowers is 0 when
+# `apply_qualification_rules()` (v4) and `v6_should_raise()` run, so they may raise it with their
+# own quote. On the five saved sets no value rose; v6 stays at 0.6 because moving it only swapped
+# two e6 quotes that way (review pr146 round 1).
 ITEM_THRESHOLDS: Dict[str, float] = {
-    "v1": 0.8, "v4": 0.95, "v6": 0.6, "v9": 0.999, "v22": 0.9, "v23": 0.6, "v24": 0.01,
+    "v1": 0.97, "v4": 0.995, "v6": 0.6, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
 }
 # v3's 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive
 # (re-tuned on the bundle: 0.715215 without it vs 0.715217 with it).
@@ -738,8 +748,30 @@ def verify_company_size(facts, rec, max_chars):
     out = dict(bands)
     if reason != "unverified_scope":
         out.update(company_size_products(facts, rec, visible))
+    # v18 only: with no direct-production demand anywhere in the notice, do not trust a
+    # `competitive` scope. Mirror of the table above, which closes `general` when the demand
+    # and the catalogue both say competitive. `scope` itself stays — v10·v12·v13 read it.
+    # Ported from #139 (C6-1).
+    if (reason != "unverified_scope" and facts.get("scope") == "competitive"
+            and direct_production_demand(rec)[0] is None):
+        assumed, _ = _company_size_bands(dict(facts, scope="general"), rec, max_chars)
+        cell = assumed.get("v18")
+        if cell and cell["위반여부"] == 1 and (out.get("v18") or {}).get("위반여부") != 1:
+            out["v18"] = dict(cell)
+    # v16: an undetermined qualification role (`none`) does not raise v16. Dev labels only
+    # (2 cells, user decision 7); revert this one first. Ported from #139 (C6-2).
+    if (facts.get("qualification_role") == "none"
+            and (out.get("v16") or {}).get("위반여부") == 1):
+        out["v16"] = {"위반여부": 0, "근거문구": None}
     out.update(verify_document_requirements(facts, rec, visible))
     if v11_absence_observed(raw_facts, rec, max_chars):
+        out["v11"] = {"위반여부": 1, "근거문구": None}
+    # v11: a confirmed v10 absence (no direct-production demand) with no SME-allowed wording in
+    # the text raises v11. Raises only. Ported from #139 (C6-3).
+    if (reason != "unverified_scope"
+            and (out.get("v11") or {}).get("위반여부") != 1
+            and (out.get("v10") or {}).get("위반여부") == 1
+            and not SME_ALLOWED.search(build_context(rec, max_chars=PROMPT_BUDGET))):
         out["v11"] = {"위반여부": 1, "근거문구": None}
     return out, reason
 
@@ -1382,6 +1414,37 @@ def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_le
     return out, []
 
 
+# Unbracketed law/regulation names that start with 중소기업 (spaces already removed). They name a
+# statute, not 중기업 as a participant, so they must not trip the medium-enterprise check.
+SME_LAW_NAMES = re.compile(r"중소기업(?:범위및확인에관한규정|기본법|제품구매촉진및판로지원에관한법률|창업지원법)")
+# PDF extraction can push digits, brackets and quote marks onto other lines
+# (`「중소기업기본법 제 조제 항 … 」 2 2 「`). Compare with those and all spacing removed.
+_SKELETON_DROP = re.compile(r"[\s\d「」『』｢｣‘’“”<>()\[\].,·ㆍ‧․･・]+")
+
+
+def skeleton_quoted(quote, rec, visible) -> Optional[str]:
+    """The source span whose text skeleton equals the quote's, if the model saw it. Else None.
+
+    Returns the document's own characters, so the evidence contract in `postprocess` still
+    finds the quote verbatim."""
+    flat = _SKELETON_DROP.sub("", quote or "")
+    if len(flat) < 20 or flat not in _SKELETON_DROP.sub("", visible):
+        return None
+    # Every match in every document: a hidden document listed first may hold the same skeleton
+    # with other spacing, and only a span the model actually saw counts.
+    for doc in rec["docs"]:
+        text = doc["text"]
+        kept = [i for i, ch in enumerate(text) if not _SKELETON_DROP.fullmatch(ch)]
+        skeleton = "".join(text[i] for i in kept)
+        at = skeleton.find(flat)
+        while at != -1:
+            span = text[kept[at]:kept[at + len(flat) - 1] + 1]
+            if span in visible:
+                return span
+            at = skeleton.find(flat, at + 1)
+    return None
+
+
 def verify_sme(judgment, rec, products, max_chars):
     """모델이 낸 사실을 원문/고시와 대조한다. 근거 부족과 형식 실패를 구분한다."""
     visible = build_context(rec, max_chars)
@@ -1399,18 +1462,21 @@ def verify_sme(judgment, rec, products, max_chars):
         if facts["scope_matches"] != "yes" or facts["exception_applies"] != "no":
             rejected.append("unconfirmed_scope_or_exception")
         q = facts["qualification_quote"]
+        if not quoted(q):
+            q = skeleton_quoted(q, rec, visible) or q
         if facts["qualification"] != "small_only" or not quoted(q):
             rejected.append("unverified_small_only_clause")
         # A quoted 중·소기업/중기업 clause cannot prove exclusion of 중기업.
         without_titles = re.sub(r"[「｢『]([^」｣』]*)[」｣』]",
-                                lambda m: "" if m[1].endswith(("법", "시행령", "시행규칙", "규정", "요령"))
+                                lambda m: "" if m[1].endswith(("법", "법률", "시행령", "시행규칙", "규정", "요령"))
                                 else m[0], q or "")
         compact = re.sub(r"[\s·ㆍ‧․･・,]+", "", without_titles)
+        compact = SME_LAW_NAMES.sub("", compact)
         if "중소기업" in compact or "중기업" in compact:
             rejected.append("clause_includes_medium_enterprises")
         hit = int(cell["위반여부"] == 1 and not rejected)
         result[item] = {"위반여부": hit,
-                        "근거문구": facts["qualification_quote"] if hit else None}
+                        "근거문구": q if hit else None}
         reasons[item] = rejected
     return result, reasons
 
