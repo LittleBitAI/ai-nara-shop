@@ -30,9 +30,26 @@
 | **(c)** | 이 코드 기준의 **회차 간 churn** | `d73cfa1` 등록문 | **같은 코드 두 패스 12셀** (Macro 0.7742 vs 0.7398) |
 | **(d)** | **대상 밖 항목의 회귀**가 0 인가 | §3 | **C 항목 밖 0셀** |
 
-(c)의 두 패스는 회차 `colab-1790318892216968298` 의 `dev` 와 `dev-debug` 이고, 둘의
-`run_report.json` 이 같은 `code_sha256`(`7a27edd0…`)을 적는다 — **같은 코드 두 번**이라
-churn 의 정의를 만족한다.
+(c)의 두 패스는 회차 `colab-1790318892216968298` 의 `dev` 와 `dev-debug` 다. 둘의
+`run_report.json` 을 대조하면 **코드·입력·레코드·시드·온도가 전부 같고 `debug_responses`
+하나만 다르다.**
+
+| | `dev` | `dev-debug` |
+| --- | --- | --- |
+| `code_sha256` | `7a27edd0…` | `7a27edd0…` |
+| `input_sha256` | `614f9740…` | `614f9740…` |
+| `records_sha256` | `6b2886a8…` | `6b2886a8…` |
+| `seed` · `temperature` | 20260826 · 0 | 20260826 · 0 |
+| `debug_responses` | `False` | **`True`** |
+
+그래서 **같은 코드·같은 입력 두 번**이고 churn 의 정의를 만족한다. 그 스위치는 원응답을
+저장할 뿐 판정 경로를 안 바꾼다.
+
+> **§5 의 "`dev` 와 `dev-debug` 를 같은 저울로 읽지 않는다" 와 헷갈리지 않는다.**
+> 그 문장은 **한쪽의 점수를 다른 쪽의 점수로 갈음하지 말라**는 뜻이다(§3~§4 의 수는 전부
+> `dev-debug` 재생이고, `dev` 회차의 0.7742 와 나란히 놓지 않는다). 여기서 쓰는 것은
+> **두 값의 차이**이고, 그것이 바로 "같은 코드가 얼마나 흔들리나" 다. 점수를 섞는 것과
+> 흔들림을 재는 것은 다른 일이다.
 
 ## 3. 새 모델 출력 위에서 이 후보만 분리해 쟀다
 
@@ -40,23 +57,35 @@ churn 의 정의를 만족한다.
 기준 코드와 회차 코드를 각각 재생했다. 같은 원응답 위에서는 코드 효과가 **결정적**이다.
 
 ```bash
+TMP=<tmp>                      # 아무 빈 디렉터리
+mkdir -p "$TMP/dev-debug"      # ← 없으면 아래 리다이렉션이 전부 실패한다
+
 # 원응답을 꺼낸다 (Git Bash 에서는 MSYS_NO_PATHCONV=1 을 붙인다)
 for f in diagnostics.jsonl run_report.json submission.csv \
          baseline_submission.csv company_size_baseline_submission.csv; do
   MSYS_NO_PATHCONV=1 git show \
-    "origin/main:reports/runs/colab-1790318892216968298/dev-debug/$f" > <tmp>/dev-debug/$f
+    "origin/main:reports/runs/colab-1790318892216968298/dev-debug/$f" \
+    > "$TMP/dev-debug/$f" || { echo "실패: $f"; break; }
 done
 
-git show c68eb00:script.py          > <tmp>/base.py
-git show run/c6-dev-macro:script.py > <tmp>/run072.py
+git show c68eb00:script.py                 > "$TMP/base.py"
+git show origin/run/c6-dev-macro:script.py > "$TMP/run072.py"
 
-py -X utf8 tools/replay_run.py --case <tmp>/dev-debug --script <tmp>/base.py    --output-dir <tmp>/nb-base
-py -X utf8 tools/replay_run.py --case <tmp>/dev-debug --script <tmp>/run072.py  --output-dir <tmp>/nb-run
-py -X utf8 tools/score.py --truth open/dev_labels.csv --pred <tmp>/nb-base/submission.csv --output-dir <tmp>/nb-base-sc
-py -X utf8 tools/score.py --truth open/dev_labels.csv --pred <tmp>/nb-run/submission.csv  --output-dir <tmp>/nb-run-sc
+py -X utf8 tools/replay_run.py --case "$TMP/dev-debug" --script "$TMP/base.py"   --output-dir "$TMP/nb-base"
+py -X utf8 tools/replay_run.py --case "$TMP/dev-debug" --script "$TMP/run072.py" --output-dir "$TMP/nb-run"
+py -X utf8 tools/score.py --truth open/dev_labels.csv --pred "$TMP/nb-base/submission.csv" --output-dir "$TMP/nb-base-sc"
+py -X utf8 tools/score.py --truth open/dev_labels.csv --pred "$TMP/nb-run/submission.csv"  --output-dir "$TMP/nb-run-sc"
 ```
 
+**`mkdir -p` 와 `|| break` 가 둘 다 필요하다.** 디렉터리가 없으면 `git show` 자체는 성공하고
+**리다이렉션만 조용히 실패한다** — 셸의 종료코드가 `0` 이라 루프가 끝까지 돌고, 빈
+디렉터리로 다음 단계에 들어가 **"재현했다"고 믿은 채 틀린 수를 얻는다.** 첫 판이 그랬다.
+
+**브랜치는 `origin/run/c6-dev-macro` 로 적는다.** `run/c6-dev-macro` 는 이 문서를 쓴
+작업 폴더에만 있는 로컬 브랜치라, 받아 간 사람은 그 이름으로 못 꺼낸다.
+
 **모든 재생에 `--script` 로 코드를 박았다.** 작업 트리 판을 쓰지 않았다.
+위 명령을 그대로 돌려 아래 표의 두 Macro 가 **자릿수까지 그대로** 나오는 것을 확인했다.
 
 | | 기준 `c68eb00` | 회차코드 `072cd28` | 차이 |
 | --- | ---: | ---: | ---: |
@@ -113,7 +142,10 @@ py -X utf8 tools/score.py --truth open/dev_labels.csv --pred <tmp>/nb-run/submis
   **다른 코드로 돈 회차의 원응답 위에서 이 코드를 재생한 것**이다. 원응답을 만든 코드와
   판정에 쓴 코드가 다르다는 한계 안에서 읽는다 — 다만 후처리만 바꾸는 후보라 그 재생이
   결정적이라는 점은 `RUN-REQUEST.md` §3 이 이미 적었다.
-- **dev 와 dev-debug 를 같은 저울로 읽지 않는다.** 위 수는 전부 `dev-debug` 재생이다.
+- **`dev` 와 `dev-debug` 를 같은 저울로 읽지 않는다.** §3~§4 의 수는 **전부 `dev-debug`
+  재생**이고, `dev` 회차가 낸 0.7742 와 나란히 놓지 않는다. §2 의 churn 12셀은 그 둘의
+  **차이**를 쓴 것이며(같은 코드·같은 입력이 얼마나 흔들리나), 한쪽 점수를 다른 쪽 점수로
+  갈음한 것이 아니다.
 
 ## 6. 회차 브랜치는 그대로 둔다
 
