@@ -37,14 +37,14 @@ def filtered(path):
     return [r["id"] for r in script.iter_records(str(path), None) if FILTER.search(script._body(r))]
 
 
-SCHEMA = {"v19_documents": list, "정보부족": bool}
+SCHEMA = {"v19_documents": [v2.V19_DOCUMENT], "정보부족": bool}
 
 
 def load(path):
     """Facts by id. A reply whose values are not the question's shapes is dropped and named."""
     facts = {json.loads(l)["id"]: json.loads(l)["facts"]
              for l in Path(path).read_text(encoding="utf-8").splitlines() if l.strip()}
-    failed = sorted(i for i, f in facts.items() if v2.v1.malformed(f, SCHEMA))
+    failed = sorted(i for i, f in facts.items() if v2.v1.shape_errors(f, SCHEMA))
     if failed:
         print(f"형식 실패 {len(failed)} {failed}", file=sys.stderr)
     return {i: f for i, f in facts.items() if i not in failed}

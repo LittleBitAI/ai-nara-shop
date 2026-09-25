@@ -24,11 +24,26 @@ from label_bundle import malformed  # noqa: E402
 
 ROUND_WON = 1_000           # display rounding; B9 measured 2~1,000 won gaps as the same money
 NUMBER = (int, float, type(None))
-# The shapes question-b-facts.md asks for, for the keys the verdicts read.
+# The shapes question-b-facts.md asks for, for the keys the verdicts read. `[spec]` is a list whose
+# every element matches spec — a type, or a dict schema for an object.
 SCHEMA = {"v9_role": str, "v19_pledge": str, "v19_timing": str, "v21_joint_contract": str,
           "v21_method": str, "v21_min_share_percent": NUMBER, "v24_contract_method": str,
-          "v24_region_restricted": str, "v24_regions": list, "v24_industry_codes": list,
-          "v24_amounts": list, "정보부족": bool}
+          "v24_region_restricted": str, "v24_regions": [str], "v24_industry_codes": [str],
+          "v24_amounts": [{"label": str, "won": int}], "정보부족": bool}
+
+
+def shape_errors(facts, schema):
+    """Keys whose value, or any element of a list value, is not the question's shape."""
+    bad = malformed(facts, {k: list if isinstance(v, list) else v for k, v in schema.items()})
+    for key, spec in schema.items():
+        if not isinstance(spec, list) or key in bad:
+            continue
+        element = spec[0]
+        if any(malformed(e, element) if isinstance(element, dict) and isinstance(e, dict)
+               else isinstance(element, dict) or malformed({"e": e}, {"e": element})
+               for e in facts[key]):
+            bad.append(key)
+    return bad
 
 
 def v9(f, rec):
@@ -112,7 +127,7 @@ def main(argv=None, verdicts=None, schema=None):
         with open(args.model_csv, encoding="utf-8") as stream:
             model = {r["id"]: r for r in csv.DictReader(stream)}
     # A reply whose values are not the question's shapes is a failed call, not a negative label.
-    failed = sorted(i for i, f in facts.items() if malformed(f, schema))
+    failed = sorted(i for i, f in facts.items() if shape_errors(f, schema))
     facts = {i: f for i, f in facts.items() if i not in failed}
     print(f"notices {len(facts)} · 형식 실패 {len(failed)} {failed} · "
           f"정보부족 {sum(f.get('정보부족') is True for f in facts.values())} (판정 0)")
