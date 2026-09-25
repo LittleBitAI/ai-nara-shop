@@ -73,6 +73,17 @@ def saved_responses(case_dir):
     return texts
 
 
+def saved_probabilities(case_dir):
+    """P(위반여부=1) per item recorded with each valid baseline response. Older runs have none."""
+    out = {}
+    for line in (Path(case_dir) / "diagnostics.jsonl").read_text(encoding="utf-8").splitlines():
+        event = json.loads(line)
+        if (event.get("event") == "response" and event.get("status") == "valid"
+                and event.get("phase") == "baseline" and event.get("item_p1")):
+            out[event["id"]] = event["item_p1"]
+    return out
+
+
 def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_sme=None,
            verify_company_size=None):
     """저장된 응답으로 행을 다시 만든다. 바꿀 단계만 인자로 갈아 끼운다."""
@@ -90,6 +101,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
     verify_company_size = verify_company_size or getattr(script, "verify_company_size", None)
 
     texts = saved_responses(case_dir)
+    probabilities = saved_probabilities(case_dir)
+    thresholded = getattr(script, "apply_thresholds", None)   # older submission code has none
     # 이 제출 코드가 모르는 단계의 원응답이 있으면 조용히 건너뛰지 않는다. 건너뛰면
     # 그 단계가 바꾼 판정이 빠진 CSV를 근거로 쓰게 된다 — 실제로 한 번 그렇게 어긋났다.
     known = {"baseline", "sme", *getattr(script, "VERDICT_PHASES", ()), "company_size"}
@@ -112,6 +125,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
         if text is None:
             raise ValueError(f"{rec['id']}: 저장된 기본 응답이 없다")
         parsed, _ = script.parse_judgment(text)
+        if thresholded is not None:
+            parsed = thresholded(parsed, probabilities.get(rec["id"]))
         baseline_rows.append(script.to_row(rec["id"], script.postprocess(parsed, rec)))
         # 판정 스키마 단계(split·product)를 회차와 같은 코드로 얹는다. 전에는 이 줄이 없어
         # N1이 켜진 회차의 재생이 회차 CSV를 재현하지 못했다(v16 13건·v18 37건).

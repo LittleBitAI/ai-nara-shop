@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-pf102bao/repo",
+    "rev-parse",
+    "HEAD"
+  ],
+  "cwd": "/content/t1-colab-pf102bao",
+  "started": 1790247406.159431,
+  "returncode": 0,
+  "elapsed_seconds": 0.001950979232788086
+}
