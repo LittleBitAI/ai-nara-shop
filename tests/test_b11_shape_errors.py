@@ -21,6 +21,11 @@ class ShapeErrors(unittest.TestCase):
         self.assertEqual(v2.v1.shape_errors({"v19_documents": ["x"], "정보부족": False}, SCHEMA),
                          ["v19_documents"])
 
+    def test_a_missing_nullable_key_is_not_null(self):
+        doc = {"name": "기술지원확약서", "timing_from": "same_sentence"}
+        self.assertEqual(v2.v1.shape_errors({"v19_documents": [doc], "정보부족": False}, SCHEMA),
+                         ["v19_documents"])
+
     def test_extra_element_keys_are_allowed(self):
         doc = {"name": "확약서", "timing": None, "timing_from": "list_heading", "list_heading": "가."}
         self.assertEqual(v2.v1.shape_errors({"v19_documents": [doc], "정보부족": False}, SCHEMA), [])

@@ -39,7 +39,10 @@ def shape_errors(facts, schema):
         if not isinstance(spec, list) or key in bad:
             continue
         element = spec[0]
-        if any(malformed(e, element) if isinstance(element, dict) and isinstance(e, dict)
+        # An object must carry every asked key: `malformed()` reads `.get()`, so a missing key
+        # whose value may be null (`timing`) would otherwise pass as null.
+        if any(element.keys() - e.keys() or malformed(e, element)
+               if isinstance(element, dict) and isinstance(e, dict)
                else isinstance(element, dict) or malformed({"e": e}, {"e": element})
                for e in facts[key]):
             bad.append(key)
