@@ -1,0 +1,135 @@
+{
+  "purpose": "external_label_comparison",
+  "note": "정답 라벨은 들어 있지 않다. 저장소 밖에 두어 dev 정답·과거 오답 분석과 분리한다.",
+  "created_at": "2026-09-24T04:44:41.136251+00:00",
+  "input": "open/dev.jsonl",
+  "input_sha256": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
+  "item_table_sha256": "368cb41f376d8ad7edbbdf181542e6e959de356f7f70d86e72943325ecad61d9",
+  "prompt_sha256": "df31a48d1fb216c2d1e84e94e0b60fca41a02fccd5d9330490de74d5bbb86fcd",
+  "items": null,
+  "question": "reports/team-b/b12-v19-expand/question-v19.md",
+  "keys": [
+    "v19_documents",
+    "정보부족",
+    "정보부족_사유"
+  ],
+  "law_excerpt": null,
+  "law_excerpt_sha256": null,
+  "law_file_count": 0,
+  "selection": {
+    "method": "ids"
+  },
+  "notice_count": 22,
+  "notices": [
+    {
+      "id": "PPS-DEV-23",
+      "sha256": "15775a95c94093df633b2637deca0d6694126b4139270d5ec85673827cff83f0",
+      "chars": 15099
+    },
+    {
+      "id": "PPS-DEV-033",
+      "sha256": "2907ef447e564bc75f817f63322736b2954601c6aa399ac39c609c5857c53fe6",
+      "chars": 8020
+    },
+    {
+      "id": "PPS-DEV-034",
+      "sha256": "47042bad74d7217da647549f5c19ab0beeaba3242421e3bd5bee49c98b377f03",
+      "chars": 23075
+    },
+    {
+      "id": "PPS-DEV-035",
+      "sha256": "81ba5aecb58e3e6162b7c39fee634a0fc3aaee462527a3eb47e56710eb43594f",
+      "chars": 4408
+    },
+    {
+      "id": "PPS-DEV-036",
+      "sha256": "378b7de1ae505ca64bfc04d0191d676968914bf2d8ba1a122553044dbff791e2",
+      "chars": 6505
+    },
+    {
+      "id": "PPS-DEV-037",
+      "sha256": "5eababda5825c1401c34fbec730a970345e937b722d930cf078fddcd2133f098",
+      "chars": 12521
+    },
+    {
+      "id": "PPS-DEV-050",
+      "sha256": "22bf2572f936e2545332b8ad7ed6e1bd702264acf642753f598549296682de78",
+      "chars": 12609
+    },
+    {
+      "id": "PPS-DEV-051",
+      "sha256": "680bf30d4d19a76adc7ff3d98653f093c44b0ce787a19e502fdcd4ecc3206bc2",
+      "chars": 10214
+    },
+    {
+      "id": "PPS-DEV-057",
+      "sha256": "f7e985e0412e504908cbd917cdf3595f9eec53b2e4218a1e24b56e7ee9597074",
+      "chars": 5149
+    },
+    {
+      "id": "PPS-DEV-086",
+      "sha256": "2a60c4b4070c8a9c07126bf82fcf630957b048748700709cf602e531e235b2cb",
+      "chars": 19944
+    },
+    {
+      "id": "PPS-DEV-088",
+      "sha256": "68d6e81ee7e3c139fc28f3e4c69e04f6652c7e67548285edf15ae7bce8795f3d",
+      "chars": 24093
+    },
+    {
+      "id": "PPS-DEV-095",
+      "sha256": "bda01cc7535409714d557c4ccba680f893402a6375bb2f0d75ddede8baa7e4f6",
+      "chars": 13186
+    },
+    {
+      "id": "PPS-DEV-096",
+      "sha256": "272dec3f62416261b0b658551610fdf25085741429f46ed34110db3e3a9389d1",
+      "chars": 30533
+    },
+    {
+      "id": "PPS-DEV-098",
+      "sha256": "c88f5a51145365e708842316f8693299570b8e4cda6b636bc0c95f7fbe6521ef",
+      "chars": 10050
+    },
+    {
+      "id": "PPS-DEV-110",
+      "sha256": "8c8fb4d18689d5e654ff37ebb7c2b475d95f0d73186969adc75dea278a8b9f8a",
+      "chars": 10383
+    },
+    {
+      "id": "PPS-DEV-112",
+      "sha256": "833467672f031e6f0ea4497f7f5e6e964b1771da43f1ce9d92ab90185c482f3c",
+      "chars": 18188
+    },
+    {
+      "id": "PPS-DEV-132",
+      "sha256": "691329a2bbfb3eef5d3e023629553ccfc8f75dabee3cb08ae2d12adadf2ed1d7",
+      "chars": 20800
+    },
+    {
+      "id": "PPS-DEV-160",
+      "sha256": "7fa8e4fbfc266a00b086a6b18272ae75f5a10144f264f201f9c70e3a6492462f",
+      "chars": 8988
+    },
+    {
+      "id": "PPS-DEV-162",
+      "sha256": "8e50ed6d0cf8eb1d65e83094460eacaa22f89e82a661f8af6544b63083ed2e2e",
+      "chars": 25944
+    },
+    {
+      "id": "PPS-DEV-178",
+      "sha256": "97b8039aebfb9150b455b7fd89d84379163fb9f8072ddcfe7b4bba3263cf637c",
+      "chars": 27889
+    },
+    {
+      "id": "PPS-DEV-180",
+      "sha256": "6820778b2fadb1fc68dea776fcf90b08b6e9b939162b6c17ac65e4619032af0e",
+      "chars": 17358
+    },
+    {
+      "id": "PPS-DEV-190",
+      "sha256": "3915d2baf771d6324ce208c1056aba34af51e749b77bc8d32045fd27cf7a2aac",
+      "chars": 12925
+    }
+  ]
+}
