@@ -2689,6 +2689,7 @@ V5_LOCATION_PREDICATE = re.compile(
     r"(?:있는|소재(?:한|하고|하는)?|둔|두고)\s*(?:업체|자))"
 )
 V5_SUBJECT_TO_REGION = 80
+V5_CLAUSE_BREAK = V6_CLAUSE_BREAK + ".。"
 # 주어와 서술이 한 낱말에 붙은 꼴. 토큰이 앞에 와도 된다.
 V6_FUSED_LIMIT = re.compile(r"지역\s*제한|지역제한|지역\s*업체|관내\s*업체|관할\s*구역")
 # ①의 서술. 토큰이 이 서술의 자리에 놓여야 제한이 성립한다.
@@ -2886,8 +2887,11 @@ def v5_should_raise(rec: Dict[str, Any]) -> Optional[str]:
             if _is_qualification_context(text, offset):
                 # 쉼표·세미콜론·접속어미로 갈린 독립 절은 결합하지 않는다. 한 줄에
                 # `본점 … 서울특별시인 업체, 납품장소는 …`가 있어도 같은 제한이 아니다.
-                for clause_start, clause in _v6_segments(line):
-                    normalized = _v6_strip_parentheses(clause)
+                for clause_start, clause in _v5_segments(line):
+                    # 괄호 안은 참가자격 제한의 역할 관계를 만들지 않지만, 원문 좌표는
+                    # 바꾸지 않는다. 축약한 문자열의 위치를 원문 인용에 쓰면 긴 괄호 뒤
+                    # 제한이 e5 밖으로 밀린다.
+                    normalized = _v5_mask_parentheses(clause)
                     subjects = list(V6_PARTICIPANT_SUBJECT.finditer(normalized))
                     regions = list(V5_WIDE_REGION.finditer(normalized))
                     for subject in subjects:
@@ -2907,6 +2911,36 @@ def v5_should_raise(rec: Dict[str, Any]) -> Optional[str]:
                                 return cleaned
             offset += len(raw_line)
     return None
+
+
+def _v5_mask_parentheses(text: str) -> str:
+    """괄호 안을 공백으로 가리되 원문과 같은 좌표를 유지한다."""
+    return re.sub(r"\([^)]*\)|（[^）]*）|【[^】]*】",
+                  lambda match: " " * len(match.group(0)), text)
+
+
+def _v5_segments(line: str):
+    """v5 관계를 같은 절로 제한한다. 문장 종결도 절 경계다."""
+    depth = start = 0
+    for index, char in enumerate(line):
+        if char in V6_BRACKET_OPEN:
+            depth += 1
+        elif char in V6_BRACKET_CLOSE:
+            depth = max(0, depth - 1)
+        elif depth == 0 and char in V5_CLAUSE_BREAK:
+            yield from _v5_split_connectives(start, line[start:index])
+            start = index + 1
+    yield from _v5_split_connectives(start, line[start:])
+
+
+def _v5_split_connectives(start: int, clause: str):
+    cut = 0
+    for match in V6_CONNECTIVE.finditer(clause):
+        if _v6_bracket_depth(clause, match.start()):
+            continue
+        yield start + cut, clause[cut:match.end()]
+        cut = match.end()
+    yield start + cut, clause[cut:]
 
 
 def _v6_evidence_supports_v6(quote: str) -> bool:

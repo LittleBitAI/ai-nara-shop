@@ -57,6 +57,12 @@ class V5ParticipantLocationTests(unittest.TestCase):
 
         self.assertIsNone(script.v5_should_raise(rec))
 
+    def test_period_separates_bidder_and_delivery_locations(self):
+        rec = notice("입찰참가자격\n본점 소재지는 제한하지 않음. 납품 장소는 경기도에 소재한 업체의 창고", 230_000_000)
+
+        self.assertIsNone(script.v5_should_raise(rec))
+        self.assertEqual(script.postprocess(zero_judgment(), rec)["v5"]["위반여부"], 0)
+
     def test_long_line_evidence_is_centered_on_the_matched_restriction(self):
         line = "앞문장" * 130 + " 주된 영업소의 소재지가 경기도인 업체"
         rec = notice("입찰참가자격\n" + line, 230_000_000)
@@ -65,6 +71,13 @@ class V5ParticipantLocationTests(unittest.TestCase):
         self.assertIsNotNone(quote)
         self.assertIn("주된 영업소의 소재지가 경기도인 업체", quote)
         self.assertLessEqual(len(quote), script.QUOTE_MAX)
+
+    def test_parenthesized_prefix_preserves_evidence_offsets(self):
+        line = "(" + "가" * 120 + ") 주된 영업소의 소재지가 경기도인 업체"
+        rec = notice("입찰참가자격\n" + line, 230_000_000)
+
+        quote = script.v5_should_raise(rec)
+        self.assertIn("주된 영업소의 소재지가 경기도인 업체", quote)
 
 
 if __name__ == "__main__":
