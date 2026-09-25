@@ -151,14 +151,21 @@ class DocumentedRerunReproducesTheBaseline(unittest.TestCase):
             cls.tmp.cleanup()
 
     def test_the_pinned_replay_gives_the_documented_macro(self):
-        found = re.search(r"Macro \*\*([0-9.]+)\*\*|Macro F1=([0-9.]+)", self.report)
+        """`**` 를 선택으로 둔다 — 위 `test_the_pin_matches_the_report` 와 같은 이유다."""
+        found = re.search(r"Macro (?:\*\*)?([0-9.]+)(?:\*\*)?|Macro F1=([0-9.]+)", self.report)
         self.assertIsNotNone(found, "README §1 에서 Macro 를 못 찾았다")
         documented = found[1] or found[2]
         self.assertEqual(f"{self.metrics['macro_f1']:.12f}", documented,
                          "고정 커밋 재생이 보고서의 Macro 를 못 낸다 — 둘 중 하나가 낡았다")
 
     def test_the_pinned_replay_gives_the_documented_v11(self):
-        found = re.search(r"기준 v11 \| \*\*(\d+) / (\d+) / (\d+)\*\*", self.report)
+        """`**` 를 선택으로 둔다.
+
+        강조 표기를 걷어내는 정리(PR #144)가 이 보고서에 왔고, `**` 를 요구하던 이
+        정규식이 "기준 v11 을 못 찾았다" 며 죽었다. 검사가 보는 것은 강조가 아니라
+        표에 적힌 수다.
+        """
+        found = re.search(r"기준 v11 \| (?:\*\*)?(\d+) / (\d+) / (\d+)", self.report)
         self.assertIsNotNone(found, "README §1 에서 기준 v11 을 못 찾았다")
         item = self.metrics["items"]["v11"]
         self.assertEqual((item["tp"], item["fp"], item["fn"]),
