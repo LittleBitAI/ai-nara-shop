@@ -312,6 +312,12 @@ class RunRequest(unittest.TestCase):
         cls.request = cls.REQUEST.read_text(encoding="utf-8")
         cls.report = REPORT.read_text(encoding="utf-8")
 
+    def request_section(self, start, end):
+        """요청서의 한 절만 잘라 낸다. 규칙을 적는 줄과 옆 절의 문장을 안 섞으려고."""
+        head = self.request.index(start)
+        tail = self.request.index(end, head + len(start))
+        return self.request[head:tail]
+
     def test_the_named_cells_hold_the_named_switches(self):
         for index, names in self.CELLS.items():
             self.assertLess(index, len(self.cells), f"셀 [{index}] 가 없다")
@@ -340,6 +346,80 @@ class RunRequest(unittest.TestCase):
                 self.assertIn(number, self.request)
                 self.assertIn(number, self.report)
 
+    def test_the_patch_command_reads_the_diff_from_a_ref_not_the_work_tree(self):
+        """리뷰 [P1] — 회차 브랜치 명령이 패치 파일을 잃던 자리.
+
+        `c6-integrated.diff` 는 기준 커밋에 **없다.** `git switch --detach <기준>` 하면
+        `reports/team-c/c6-dev-macro/` 가 작업 트리에서 통째로 사라지고, 그 경로를
+        `patch -i` 로 가리키면 입력 파일이 없어 죽는다. 그래서 `git show <ref>:<path>` 로
+        읽어야 한다.
+        """
+        base = self.request_section("### 1-2.", "## 2.")
+        self.assertIn("git show feat/c-dev-macro:"
+                      "reports/team-c/c6-dev-macro/c6-integrated.diff | patch", base)
+        self.assertNotRegex(
+            base, r"patch\s+-p1\s+--binary\s+-i\s+reports/",
+            "작업 트리 경로를 patch 의 입력으로 쓰면 detach 뒤에 그 파일이 없다")
+
+    def test_the_diff_really_is_absent_from_the_base_commit(self):
+        """위 검사의 전제가 아직 참인가 — 기준 커밋에 그 파일이 없는가.
+
+        언젠가 diff 가 `main` 에 들어가면 전제가 바뀐다. 그때는 이 검사가 먼저 울어서
+        §1-2 의 설명을 다시 보게 한다.
+        """
+        if shutil.which("git") is None:
+            raise unittest.SkipTest("git 이 없다")
+        found = subprocess.run(
+            ["git", "-C", str(ROOT), "cat-file", "-e",
+             f"{BASE_REV}:reports/team-c/c6-dev-macro/c6-integrated.diff"],
+            capture_output=True)
+        self.assertNotEqual(found.returncode, 0,
+                            "기준 커밋에 diff 가 생겼다 — §1-2 의 설명을 다시 보라")
+
+    def test_every_pass_mark_is_a_difference_not_a_fixed_number(self):
+        """리뷰 [P1] — 새 회차의 TP 손실을 고정 숫자로 재던 자리.
+
+        새 회차는 다른 모델 출력이라 **기준선의 TP 자체가 다르다.** 금지선 E 를
+        `≥ 44` 같은 절대값으로 적으면 기준선이 높은 회차에서 TP 손실을 통과시킨다.
+        """
+        table = self.request_section("## 4.", "### 4-2.")
+        rows = {line.split("|")[1].strip(): line
+                for line in table.splitlines() if line.startswith("| **")}
+        self.assertIn("**E**", rows, "금지선 E 가 없다")
+        self.assertIn("감소", rows["**E**"])
+        self.assertIn("정확히 0", rows["**E**"])
+        self.assertNotIn("44", rows["**E**"], "E 를 고정 숫자로 적었다")
+        self.assertIn("차이", table, "차이로 읽으라는 말이 없다")
+        for key in ("**A**", "**B**", "**C**", "**D**", "**F**"):
+            with self.subTest(key):
+                self.assertRegex(rows[key], r"감소|증가",
+                                 f"{key} 가 절대값으로 적혔다")
+
+    def test_no_movement_has_one_verdict_across_the_document(self):
+        """리뷰 [P2] — "발동 없음"의 판정이 문서 안에서 충돌하던 자리.
+
+        적용 대상 0 은 **판정 보류**(그 회차가 규칙을 안 잰 것)이고, 대상이 있는데
+        0셀이면 **가설 기각**이다. 기준표·감사 절차·예상 실패가 같은 말을 해야 한다.
+        """
+        self.assertIn("| **Z1** |", self.request, "적용 대상을 보는 기준이 없다")
+        self.assertIn("| **Z2** |", self.request, "효과를 보는 기준이 없다")
+        z1 = [line for line in self.request.splitlines() if line.startswith("| **Z1** |")]
+        for line in z1:
+            self.assertIn("판정 보류", line)
+            self.assertNotIn("가설 기각", line, "대상 0 을 기각으로 적었다")
+        z2 = [line for line in self.request.splitlines() if line.startswith("| **Z2** |")]
+        for line in z2:
+            self.assertIn("가설 기각", line)
+        # 예상 실패표가 같은 구분을 쓰는가 — 옛 판은 여기서 "기각이 아니다" 라고만 했다.
+        failures = self.request_section("## 6.", "## 7.")
+        self.assertIn("판정 보류", failures)
+        self.assertIn("§4-2", failures, "예상 실패표가 판정 규칙을 안 가리킨다")
+
+    def test_the_applicability_counter_is_wired_into_the_audit(self):
+        """Z1 을 사람이 눈대중하지 않게 — 세는 명령이 문서에 있고 실제로 있는가."""
+        self.assertTrue((FOLDER / "applicability.py").is_file())
+        self.assertIn("applicability.py", self.request)
+
     def test_the_off_target_rule_is_exactly_zero_not_the_churn_range(self):
         """D1 은 **정확히 0**, churn 범위는 D2 에만. 섞으면 대상 밖 45셀이 승인된다."""
         lines = self.request.splitlines()
@@ -354,11 +434,6 @@ class RunRequest(unittest.TestCase):
         self.assertTrue(any("17~45" in line for line in d2), "D2 에 churn 범위가 없다")
         self.assertIn("reproducibility.md", self.request, "churn 범위의 출처가 없다")
 
-    def test_the_criteria_ask_whether_it_moved_at_all(self):
-        """무효과 후보가 절대값 기준만으로 통과하던 자리 — 기준 Z 가 막는다."""
-        self.assertIn("| **Z** |", self.request, "기준 Z 가 없다")
-        self.assertIn("가설 기각", self.request)
-
     def test_the_pair_comparison_covers_exactly_the_three_keys(self):
         """`--items` 는 후보가 쓰는 셋이어야 나머지 21항목을 D1 이 본다."""
         self.assertIn("--items v11,v16,v18", self.request)
@@ -369,6 +444,42 @@ class RunRequest(unittest.TestCase):
         self.assertIn("딕셔너리가 아니라", self.request)
         self.assertIn("changed_cells_off_focus", self.request)
         self.assertNotIn("items.v11", self.request)
+
+    def test_the_counter_reports_the_documented_numbers(self):
+        """§5-3 이 옮겨 적은 적용 대상·바뀐 셀을 집계기가 실제로 내는가.
+
+        **바뀐 셀의 합이 §5-1 쌍 비교의 `changed_cells` 와 같아야 한다.** 둘이 갈리면
+        Z2 가 재는 것과 D1 이 재는 것이 다른 대상이라는 뜻이다.
+        """
+        if shutil.which("git") is None:
+            raise unittest.SkipTest("git 이 없다")
+        if not (CASE / "diagnostics.jsonl").is_file():
+            raise unittest.SkipTest(f"{CASE} 가 없다")
+        done = subprocess.run(
+            [sys.executable, "-X", "utf8", str(FOLDER / "applicability.py"),
+             "--case", str(CASE)],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=ROOT)
+        self.assertEqual(done.returncode, 0, done.stderr)
+        counted = {m[1]: (int(m[2]), int(m[3])) for m in
+                   re.finditer(r"^(v\d+)\s+(\d+)\s+(\d+)", done.stdout, re.MULTILINE)}
+        self.assertEqual(counted, {"v18": (38, 3), "v16": (2, 2), "v11": (7, 7)},
+                         f"집계기가 문서와 다른 수를 낸다\n{done.stdout}")
+        for item, (applicable, flipped) in counted.items():
+            with self.subTest(item):
+                self.assertRegex(self.request, rf"(?m)^{item}\s+{applicable}\s+{flipped}\s",
+                                 "§5-3 이 옮겨 적은 수가 집계기와 다르다")
+        self.assertEqual(sum(flipped for _a, flipped in counted.values()),
+                         EXPECTED_CHANGED["integrated"],
+                         "바뀐 셀의 합이 통합 후보의 changed_cells 와 다르다")
+
+    def test_the_counter_separates_the_two_verdicts(self):
+        """대상 0 과 "대상은 있는데 0셀"에 **서로 다른 말**을 찍는가."""
+        source = (FOLDER / "applicability.py").read_text(encoding="utf-8")
+        self.assertIn("판정 보류", source)
+        self.assertIn("가설 기각", source)
+        self.assertIn("BASE_REV", source, "판정 코드를 커밋으로 고정하지 않았다")
+        self.assertNotIn('load("submission", ROOT / "script.py")', source,
+                         "작업 트리의 script.py 를 부르면 main 이 움직일 때 수가 바뀐다")
 
     def test_the_run_commit_placeholder_is_visible_until_filled(self):
         """안 채운 채 돌리면 `main` 으로 도는 사고가 난다."""
