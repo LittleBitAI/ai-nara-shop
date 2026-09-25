@@ -107,7 +107,7 @@ COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 �
 # v10·v11은 TP 0 그대로에 FP 38만 늘었다. 전건 호출이라 서버에서 약 +1,618초다.
 # **N1(+1,025초)과 같이 켜면 한도의 96%를 쓴다.** 기본은 꺼 둔다 — 시간이 막는 것이지
 # 효과가 없는 것이 아니다. 켜려면 아래를 ["v10", "v11", "v12"]로 되돌린다.
-PRODUCT_ITEMS: List[str] = []
+PRODUCT_ITEMS: List[str] = ["v10", "v11", "v12"]  # run/a-n3-product: N3 on top of #142
 
 
 def extra_call_items() -> Dict[str, List[str]]:
