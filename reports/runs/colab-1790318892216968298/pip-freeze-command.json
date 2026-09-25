@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/content/t1-colab-phcerzcr/venv/bin/python",
+    "-m",
+    "pip",
+    "freeze"
+  ],
+  "cwd": "/content/t1-colab-phcerzcr",
+  "started": 1790316350.571084,
+  "returncode": 0,
+  "elapsed_seconds": 0.3743433952331543
+}

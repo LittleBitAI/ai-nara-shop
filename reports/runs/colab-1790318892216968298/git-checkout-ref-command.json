@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-phcerzcr/repo",
+    "checkout",
+    "--detach",
+    "FETCH_HEAD"
+  ],
+  "cwd": "/content/t1-colab-phcerzcr",
+  "started": 1790316061.9809585,
+  "returncode": 0,
+  "elapsed_seconds": 0.14496207237243652
+}

@@ -47,8 +47,10 @@ ITEMS = ["v14", "v15", "v16", "v17", "v18"]
 # 재생으로 실측한 값. 기준은 HEAD 재생이며 보관 회차의 submission.csv 가 아니다.
 # 기준 commit 37fe53e. c9398ad·1b34786 에서도 같은 값이었다 — 베이스 세 지점에서 불변이다.
 # v17 은 운영 v17 인용 게이트(`v17_quote_is_narrow`)가 FP 넷(038·102·120·172)을 내려 6 → 2 다.
-EXPECTED_CANDIDATE = {"v14": (7, 2, 1), "v15": (4, 1, 2), "v16": (4, 3, 2),
-                      "v17": (5, 2, 1), "v18": (2, 1, 5)}  # v18: the facts dev-fit zeroes 3 no-bid FPs
+EXPECTED_CANDIDATE = {"v14": (7, 2, 1), "v15": (4, 1, 2), "v16": (4, 2, 2),
+                      "v17": (5, 2, 1), "v18": (3, 2, 4)}  # v18: the facts dev-fit zeroes 3 no-bid FPs
+# feat/a-dev-fit-stack ports #139: v16 (4, 3, 2) -> (4, 2, 2) (149 lowered) and
+# v18 (2, 1, 5) -> (3, 2, 4) (040·061 raised).
 # The rule is ported into script.py (feat/b-dev-gain-bundle), so HEAD now equals the candidate.
 # Measured before the port: HEAD v16 (4, 2, 2) · v18 (1, 2, 6), and the candidate moved exactly
 # ("PPS-DEV-22", "v18") TP · ("PPS-DEV-132", "v16") · ("PPS-DEV-163", "v18") · ("PPS-DEV-195", "v18").

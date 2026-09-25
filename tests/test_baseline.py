@@ -121,6 +121,28 @@ class BaselineTests(unittest.TestCase):
         parsed["v13"]["facts"]["qualification_quote"] = "「중소기업확인서」를 소지한 업체."
         result, _ = baseline.verify_sme(parsed, rec, products, 16000)
         self.assertEqual(result["v13"]["위반여부"], 0)
+        # PDF extraction pushed the article numbers and brackets away (PPS-DEV-074 shape). The
+        # repaired clause verifies, and the evidence is the document's own span so it survives
+        # the evidence contract. A 중소기업-named statute is not a 중기업 participant.
+        scrambled = ("다. 「중소기업기본법 제 조제 항에 따른 소기업 또는 소상공인 보호 및 지원에 관한\n」 2 2 「\n\n"
+                     "법률 제 조에 따른 소상공인으로서 「중소기업 범위 및 확인에 관한규정」에 따라\n」 2\n\n"
+                     "발급된 소기업‧소상공인 확인서 를 소지한 자이어야 합니다")
+        rec["docs"][0]["text"] += " " + scrambled
+        parsed["v13"]["facts"]["qualification_quote"] = (
+            "「중소기업기본법 제2조제2항에 따른 소기업 또는 소상공인 보호 및 지원에 관한 법률 제2조에 따른 "
+            "소상공인으로서 「중소기업 범위 및 확인에 관한규정」에 따라 발급된 소기업‧소상공인 확인서를 소지한 자이어야 합니다")
+        result, reasons = baseline.verify_sme(parsed, rec, products, 16000)
+        self.assertEqual((result["v13"]["위반여부"], reasons["v13"]), (1, []))
+        self.assertIn(result["v13"]["근거문구"], rec["docs"][0]["text"])
+        self.assertEqual(baseline.postprocess(result, rec)["v13"]["위반여부"], 1)
+        # A document the model did not see, listed first, holds the same skeleton with other
+        # spacing (review pr142 round 1). The visible span still wins, in either order.
+        clause = "중소기업기본법 제2조에 따른 소기업 또는 소상공인으로서 확인서를 소지한 자"
+        hidden = {"text": clause.replace(" ", "  ")}
+        shown = {"text": "입찰참가자격. " + clause + "."}
+        for docs in ([hidden, shown], [shown, hidden]):
+            self.assertEqual(baseline.skeleton_quoted(clause.replace(" ", ""), {"docs": docs}, shown["text"]),
+                             clause)
         for bad_value in [True, "maybe", None]:
             bad = copy.deepcopy(obj)
             bad["v13"]["facts"]["scope_matches"] = bad_value
