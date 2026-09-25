@@ -27,6 +27,16 @@
 
 ## 첫 작업 큐
 
+`b-logprob-thresholds`: done / [작업서](tasks/b-logprob-thresholds.md). S7-12 — 같은 호출의 0/1 토큰 logprob 에
+항목별 고정 임계를 건다(v1·v4·v6·v9·v22·v23·v24). #134 머지, 서버 `21253f3` 0.5571175451(직전 대비 +0.0256).
+
+`b-v21-quote-share`: done / [작업서](tasks/b-v21-quote-share.md). B10 — v21 양성은 법정 하한 미만 지분율을 인용할 때만 선다.
+#130 머지. dev 오탐 `PPS-DEV-143` 제거·정탐 손실 0, 무라벨 삭제 84셀 중 하한 미만 0
+([보고서](../reports/team-b/b10-v21-quote-share/README.md)).
+
+`b-facts-labeler`: done / [작업서](tasks/b-facts-labeler.md). B11·B12 — B 항목 사실 라벨러를 dev 200건 전부로 보정하고
+v19 정답 셋을 dev 밖으로 늘린다. #131 머지. 신뢰는 v21, v19 는 v2 판본(낙관)만. v9·v24 제외.
+
 `b-port-v20-v24`: review / [작업서](tasks/b-port-v20-v24.md). 채택된 v20 공고 사실 판정(#111)과 v24 예산 축(#119)을
 운영 `script.py` 로 옮긴다. 두 커밋 각각 전체 테스트 초록. dev 재생 0.622918 → 0.625695(v24) → 0.652084(v20).
 A 결정(9/23): 둘을 함께 제출한다. 독립 리뷰 1라운드 `새 발견 없음 · 머지 허용`(#125).
