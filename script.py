@@ -2883,20 +2883,28 @@ def v5_should_raise(rec: Dict[str, Any]) -> Optional[str]:
         offset = 0
         for raw_line in text.splitlines(keepends=True):
             line = raw_line.rstrip("\r\n")
-            normalized = _v6_strip_parentheses(line)
-            subjects = list(V6_PARTICIPANT_SUBJECT.finditer(normalized))
-            regions = list(V5_WIDE_REGION.finditer(normalized))
-            if subjects and regions and _is_qualification_context(text, offset):
-                for subject in subjects:
-                    for region in regions:
-                        if not 0 <= region.start() - subject.end() <= V5_SUBJECT_TO_REGION:
-                            continue
-                        if not V5_LOCATION_PREDICATE.search(
-                                normalized[region.end():region.end() + 50]):
-                            continue
-                        cleaned = clean_evidence(line.strip(), text)
-                        if cleaned:
-                            return cleaned
+            if _is_qualification_context(text, offset):
+                # 쉼표·세미콜론·접속어미로 갈린 독립 절은 결합하지 않는다. 한 줄에
+                # `본점 … 서울특별시인 업체, 납품장소는 …`가 있어도 같은 제한이 아니다.
+                for clause_start, clause in _v6_segments(line):
+                    normalized = _v6_strip_parentheses(clause)
+                    subjects = list(V6_PARTICIPANT_SUBJECT.finditer(normalized))
+                    regions = list(V5_WIDE_REGION.finditer(normalized))
+                    for subject in subjects:
+                        for region in regions:
+                            if not 0 <= region.start() - subject.end() <= V5_SUBJECT_TO_REGION:
+                                continue
+                            predicate = V5_LOCATION_PREDICATE.search(
+                                normalized[region.end():region.end() + 50])
+                            if not predicate:
+                                continue
+                            # 줄 첫머리를 자르면 긴 참가자격 줄의 실제 제한이 e5 밖으로
+                            # 밀린다. 일치한 주어부터 서술까지를 중심으로 자른다.
+                            start = clause_start + subject.start()
+                            end = clause_start + region.end() + predicate.end()
+                            cleaned = clean_evidence(_span_quote(line, start, end), text)
+                            if cleaned:
+                                return cleaned
             offset += len(raw_line)
     return None
 

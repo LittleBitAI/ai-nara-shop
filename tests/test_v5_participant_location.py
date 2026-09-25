@@ -52,6 +52,20 @@ class V5ParticipantLocationTests(unittest.TestCase):
                 self.assertIsNone(script.v5_should_raise(rec))
                 self.assertEqual(script.postprocess(zero_judgment(), rec)["v5"]["위반여부"], 0)
 
+    def test_does_not_join_subject_and_region_from_different_clauses(self):
+        rec = notice("입찰참가자격\n본점 소재지 조건을 충족하고, 경기도인 업체", 230_000_000)
+
+        self.assertIsNone(script.v5_should_raise(rec))
+
+    def test_long_line_evidence_is_centered_on_the_matched_restriction(self):
+        line = "앞문장" * 130 + " 주된 영업소의 소재지가 경기도인 업체"
+        rec = notice("입찰참가자격\n" + line, 230_000_000)
+
+        quote = script.v5_should_raise(rec)
+        self.assertIsNotNone(quote)
+        self.assertIn("주된 영업소의 소재지가 경기도인 업체", quote)
+        self.assertLessEqual(len(quote), script.QUOTE_MAX)
+
 
 if __name__ == "__main__":
     unittest.main()
