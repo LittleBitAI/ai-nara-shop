@@ -20,10 +20,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "tools"))
 import script  # noqa: E402
+from label_bundle import malformed  # noqa: E402
 
 TP_CELLS = ("PPS-DEV-25", "PPS-DEV-049", "PPS-DEV-055", "PPS-DEV-058", "PPS-DEV-059")
 F1 = 10 / 11                      # dev v21 5/0/1 on main c77a305
+NUMBER = (int, float, type(None))
+SCHEMA = {"joint_contract": str, "method": str, "min_share_percent": NUMBER,
+          "quote": (str, type(None)), "정보부족": bool}
 
 
 def wilson(k: int, n: int, z: float):
@@ -33,8 +38,9 @@ def wilson(k: int, n: int, z: float):
 
 
 def verdict(facts: dict, rec: dict) -> int:
-    """1 when the notice sets a per-member minimum below the floor. Unobservable counts as 1."""
-    if facts.get("정보부족") is True:
+    """1 when the notice sets a per-member minimum below the floor. Unobservable counts as 1,
+    and so does a reply whose values are not the question's shapes."""
+    if facts.get("정보부족") is True or malformed(facts, SCHEMA):
         return 1
     share = facts.get("min_share_percent")
     if facts.get("joint_contract") == "barred" or facts.get("method") == "분담이행" \

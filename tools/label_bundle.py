@@ -259,6 +259,22 @@ def unwrap(reply):
     return reply, None
 
 
+def malformed(facts, schema):
+    """Keys of `schema` whose value is not one of its allowed types. A bool never passes as a number.
+
+    `parse_facts()` keeps values as given, so a verdict script checks its own question's shapes
+    before deciding: a string where a list belongs would otherwise iterate as characters and turn
+    into a quiet negative label.
+    """
+    bad = []
+    for key, allowed in schema.items():
+        allowed = allowed if isinstance(allowed, tuple) else (allowed,)
+        value = facts.get(key)
+        if not isinstance(value, allowed) or (isinstance(value, bool) and bool not in allowed):
+            bad.append(key)
+    return bad
+
+
 def parse_facts(module, text, identifier, notice_text, keys):
     """A --question reply: one JSON object with exactly `keys`. Values are kept as given."""
     if "�" in text:

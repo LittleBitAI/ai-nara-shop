@@ -115,6 +115,14 @@ class CoverTest(unittest.TestCase):
             self.assertIn("--truth가 있어야 한다", str(caught.exception))
 
 
+class MalformedTest(unittest.TestCase):
+    def test_flags_a_string_where_a_list_belongs_and_a_bool_posing_as_a_number(self):
+        schema = {"docs": list, "share": (int, float, type(None)), "quote": (str, type(None))}
+        self.assertEqual(label_bundle.malformed({"docs": "invalid type", "share": True, "quote": None},
+                                                schema), ["docs", "share"])
+        self.assertEqual(label_bundle.malformed({"docs": [], "share": 5, "quote": "x"}, schema), [])
+
+
 class ParseTest(unittest.TestCase):
     def test_marks_a_quotation_that_is_not_in_the_notice(self):
         """틀린 인용으로 공고 전체를 버리지 않는다. 근거 정확성은 모델 비교 축이라 표시만 한다."""
