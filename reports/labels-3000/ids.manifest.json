@@ -1,0 +1,35 @@
+{
+  "seed": 20260927,
+  "size": 3000,
+  "pilot": 100,
+  "chunks": [
+    "u00",
+    "u01",
+    "u02",
+    "u03",
+    "u04",
+    "u05",
+    "u06",
+    "u07",
+    "u08",
+    "u09",
+    "u10"
+  ],
+  "pool": 5500,
+  "excluded_in_pool": 546,
+  "eligible": 4954,
+  "excluded_sources": [
+    "reports/label-compare/opus5-unlabeled40.jsonl",
+    "reports/label-compare/unlabeled-d/labels-opus55.jsonl",
+    "reports/label-compare/unlabeled-v20/facts-w48.jsonl",
+    "reports/label-compare/unlabeled-v20/layers.jsonl",
+    "reports/team-b/b10-v21-quote-share/b10-facts-unlabeled.jsonl",
+    "reports/team-b/b12-v19-expand/line-deletion-43.jsonl",
+    "reports/team-b/b12-v19-expand/unlabeled-300.jsonl",
+    "reports/labels-600/diag-ids.txt",
+    "reports/labels-600/sealed-ids.txt"
+  ],
+  "half_salt": "labels-3000-half",
+  "half_A_in_sample": 1515,
+  "ids_sha256": "7d509cd26b42112db6423684fa2de1402decaa19b375c22c92f1764d2f9ec646"
+}
