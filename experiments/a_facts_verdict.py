@@ -90,6 +90,18 @@ def excepted(f, rec) -> bool:
     return quoted(f.get("priority_exception_quote"), rec) or bool(EXCEPTION_TEXT.search(script._body(rec)))
 
 
+# L17 판로지원법 시행령 제7조 is the exception to 중소기업자간 경쟁; 제2조의3 (L19) excepts general products from
+# 우선조달 and does not lift a 경쟁제품's duties. `국가계약법 시행령 제7조의2` is a different clause.
+COMPETITION_EXCEPTION = re.compile(r"판로\s*지원[^\n]{0,40}?시행령[」』｣\s]*제\s*7\s*조(?!\s*의)"
+                                   r"|중소기업자\s*간\s*경쟁\s*(?:입찰)?\s*의?\s*예외")
+
+
+def competition_excepted(f, rec) -> bool:
+    quote = str(f.get("priority_exception_quote") or "")
+    return (quoted(quote, rec) and bool(COMPETITION_EXCEPTION.search(quote))) \
+        or bool(COMPETITION_EXCEPTION.search(script._body(rec)))
+
+
 def mostly_quoted(text, rec, width=8, share=0.8) -> bool:
     """Most of the copy's 8-character fragments occur in the notice — a copy broken by line wraps and dropped
     digits (`제 조제 항` / `2 2`) is still the notice's sentence."""
@@ -148,7 +160,7 @@ def v4(f, rec):
 
 def v10(f, rec):
     """L15 제7조① · L16①: a 경쟁제품 in 중소기업자간 경쟁 needs 직접생산 확인; a 수의계약 below 1천만원 does not (L29)."""
-    if not competitive(f, rec) or excepted(f, rec) or quoted(f.get("dp_required_quote"), rec):
+    if not competitive(f, rec) or competition_excepted(f, rec) or quoted(f.get("dp_required_quote"), rec):
         return 0
     # L16①: 중소기업자간 경쟁 always; a 수의계약 only in the decree's cases (L29②) and from 1천만원 (L29①).
     # The notice rarely says which 수의계약 ground it uses, so a 수의계약 is not read as v10.
@@ -157,7 +169,7 @@ def v10(f, rec):
 
 def v11(f, rec):
     """L15 제7조①: a 경쟁제품 is bought from 중소기업자 only, unless an exception is stated (L17②)."""
-    return int(competitive(f, rec) and not excepted(f, rec) and size_class(f, rec) is None)
+    return int(competitive(f, rec) and not competition_excepted(f, rec) and size_class(f, rec) is None)
 
 
 def general_band(f, rec):
