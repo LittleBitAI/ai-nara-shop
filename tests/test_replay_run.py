@@ -193,11 +193,16 @@ class ReplayRunTests(unittest.TestCase):
         # v5 참가업체 소재지 올림은 이 보관 원응답에서 모델이 0으로 낸 양성 `045`·`049`의
         # 값·근거만 바꾼다. 최신 기준 응답에서는 049가 이미 1이므로 dev 변경은 045뿐이다.
         # 기준 CSV는 과거 HEAD의 재생본으로 보존하고, 이 의도적인 새 차이를 별도로 고정한다.
+        # `apply_clause_rules` (feat/a-offdev-stack) moves eleven more cells, all in its own columns:
+        # v2 053·078, v21 049·056, v22 135 (values and quotes) and v11 155.
         self.assertEqual(
             replay_run.csv_cell_diff(replay_run.to_csv_bytes(SCRIPT, result["rows"]),
                                      HEAD_REPLAY.read_bytes()),
             [("PPS-DEV-045", "e5"), ("PPS-DEV-045", "v5"),
-             ("PPS-DEV-049", "e5"), ("PPS-DEV-049", "v5")],
+             ("PPS-DEV-049", "e21"), ("PPS-DEV-049", "e5"), ("PPS-DEV-049", "v21"), ("PPS-DEV-049", "v5"),
+             ("PPS-DEV-053", "e2"), ("PPS-DEV-053", "v2"), ("PPS-DEV-056", "e21"), ("PPS-DEV-056", "v21"),
+             ("PPS-DEV-078", "e2"), ("PPS-DEV-078", "v2"), ("PPS-DEV-135", "e22"), ("PPS-DEV-135", "v22"),
+             ("PPS-DEV-155", "v11")],
         )
         # H3의 null 조항 해석을 H2의 unknown/not_required 원응답에 소급하지 않는다.
         h2 = ROOT / "reports/runs/colab-1789894949866134428/dev-debug"
