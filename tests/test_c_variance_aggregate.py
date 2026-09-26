@@ -46,6 +46,21 @@ class SettingsGate(unittest.TestCase):
         self.assertEqual(aggregate.main(["--runs", *self.runs, "--output", str(self.output)]), 2)
         self.assertFalse(self.output.exists())
 
+    def test_a_field_missing_from_every_run_is_not_identical(self):
+        """모든 통과에 없으면 같은 게 아니라 확인 못 한 것이다 — 최상위와 중첩 둘 다."""
+        for path in (("seed",), ("environment", "vllm")):
+            with self.subTest(path):
+                for name in ("var-01", "var-02"):
+                    target = self.tmp / name / "run_report.json"
+                    shutil.copy(RUN / name / "run_report.json", target)
+                    report = json.loads(target.read_text(encoding="utf-8"))
+                    node = report
+                    for key in path[:-1]:
+                        node = node[key]
+                    del node[path[-1]]
+                    target.write_text(json.dumps(report), encoding="utf-8")
+                self.assertEqual(aggregate.main(["--runs", *self.runs]), 2)
+
     def test_allow_mismatch_still_fails(self):
         self.change_revision()
         code = aggregate.main(["--runs", *self.runs, "--output", str(self.output), "--allow-mismatch"])

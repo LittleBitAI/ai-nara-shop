@@ -32,28 +32,36 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 ITEMS = [f"v{n}" for n in range(1, 25)]
-# 설정이 같아야 변동폭이라 부를 수 있다. 하나라도 갈리면 그것은 설정 차이다.
-PINNED = ("code_sha256", "input_sha256", "records_sha256", "seed", "temperature",
-          "thinking", "prompt_budget", "max_tokens", "max_chars")
-# 위 키는 `run_report` 최상위의 스칼라다. 모델과 실행 환경은 중첩돼 있어 따로 본다 —
-# 이것이 빠져 있으면 **모델 개정판이나 vLLM 이 바뀌어도 "설정 같다"고 보고한다.**
-# 변동폭은 같은 모델·같은 엔진에서만 변동폭이다.
-NESTED = {
+# 설정이 같아야 변동폭이라 부를 수 있다. 하나라도 갈리거나 **빠져 있으면** 설정을 확인하지
+# 못한 것이다. 모델과 실행 환경도 넣는다 — 빠지면 모델 개정판이나 vLLM 이 바뀌어도
+# "설정 같다"고 보고한다. 변동폭은 같은 모델·같은 엔진에서만 변동폭이다.
+SETTINGS = {
+    "code_sha256": ("code_sha256",),
+    "input_sha256": ("input_sha256",),
+    "records_sha256": ("records_sha256",),
+    "seed": ("seed",),
+    "temperature": ("temperature",),
+    "thinking": ("thinking",),
+    "prompt_budget": ("prompt_budget",),
+    "max_tokens": ("max_tokens",),
+    "max_chars": ("max_chars",),
     "model": ("model",),                                   # id 와 expected_revision
     "vllm": ("environment", "vllm"),
     "cuda": ("environment", "cuda"),
     "chat_template_sha256": ("environment", "chat_template_sha256"),
     "sampling_params": ("environment", "sampling_params"),
     "model_dir": ("reproduction", "settings", "model_dir"),  # 받은 리비전 경로
+    "debug_responses": ("reproduction", "settings", "debug_responses"),
 }
+MISSING = object()
 
 
 def dig(report, path):
-    """중첩 키를 따라간다. 없으면 표식을 돌려준다 — 비교에서 '없음'도 값이다."""
+    """중첩 키를 따라간다. 없으면 `MISSING` — 모든 통과에 없어도 같다고 치지 않는다."""
     node = report
     for key in path:
         if not isinstance(node, dict) or key not in node:
-            return "(없음)"
+            return MISSING
         node = node[key]
     return json.dumps(node, ensure_ascii=False, sort_keys=True) if isinstance(node, (dict, list)) else node
 
@@ -104,25 +112,20 @@ def main(argv=None):
     # 4. 설정 대조가 먼저다. 갈리면 나머지 수를 변동폭이라 부를 수 없다.
     print("=== 설정 대조 — 이것이 같아야 변동폭이다 ===")
     settings_ok = True
-    for key in PINNED:
-        values = {r["report"].get(key) for r in runs}
-        if len(values) != 1:
-            settings_ok = False
-        shown = str(next(iter(values)))[:34] if len(values) == 1 else f"{len(values)}가지로 갈림"
-        print(f"  {key:<18}{shown:<38}{'같다' if len(values) == 1 else '**다르다**'}")
-    for label, path in NESTED.items():
-        values = {dig(r["report"], path) for r in runs}
-        if len(values) != 1:
-            settings_ok = False
-        shown = str(next(iter(values)))[:34] if len(values) == 1 else f"{len(values)}가지로 갈림"
-        print(f"  {label:<18}{shown:<38}{'같다' if len(values) == 1 else '**다르다**'}")
-    debug = {r["report"]["reproduction"]["settings"].get("debug_responses") for r in runs}
-    if len(debug) != 1:
-        settings_ok = False
-    print(f"  {'debug_responses':<18}{str(next(iter(debug))) if len(debug) == 1 else '갈림':<38}"
-          f"{'같다' if len(debug) == 1 else '**다르다**'}")
+    for label, path in SETTINGS.items():
+        values = [dig(r["report"], path) for r in runs]
+        missing = sum(value is MISSING for value in values)
+        distinct = {json.dumps(value, sort_keys=True) for value in values if value is not MISSING}
+        if missing:
+            shown, verdict = f"{missing}개 통과에 없음", "**없다**"
+        elif len(distinct) != 1:
+            shown, verdict = f"{len(distinct)}가지로 갈림", "**다르다**"
+        else:
+            shown, verdict = str(values[0])[:34], "같다"
+        settings_ok = settings_ok and verdict == "같다"
+        print(f"  {label:<22}{shown:<38}{verdict}")
     if not settings_ok:
-        print("\n설정이 갈렸다. 이 수를 변동폭으로 쓰지 않는다 — 설정 차이다.")
+        print("\n설정이 갈렸거나 확인할 수 없다. 이 수를 변동폭으로 쓰지 않는다.")
         if not args.allow_mismatch:
             print("범위를 내지 않고 멈춘다. 설정 차이를 일부러 보려면 --allow-mismatch.")
             return 2

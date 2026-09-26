@@ -193,6 +193,9 @@ class Shape(unittest.TestCase):
         cases = {
             f"{cite}의 예외에 해당하지 않아 중소기업자간 경쟁입찰로 진행합니다.": False,
             f"{cite}을 적용하지 아니한다.": False,
+            f"{cite}의 예외는 적용하지 못합니다. 중소기업자간 경쟁입찰로 진행합니다.": False,
+            f"{cite}의 예외 적용 불가.": False,
+            f"{cite}의 예외 적용을 배제한다.": False,
             f"{cite} 제4호는 이 입찰과 무관하다.": False,
             f"{cite}제4호에 따라 중소기업자간 경쟁입찰의 예외에 해당합니다.": True,
             f"{cite}제4호를 적용합니다.": True,
