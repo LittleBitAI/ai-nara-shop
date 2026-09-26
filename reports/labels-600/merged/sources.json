@@ -1,0 +1,98 @@
+{
+  "v1": {
+    "labeler": null,
+    "verdict": "exclude"
+  },
+  "v2": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v3": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v4": {
+    "labeler": "facts",
+    "verdict": "conditional"
+  },
+  "v5": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v6": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v7": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v8": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v9": {
+    "labeler": null,
+    "verdict": "exclude"
+  },
+  "v10": {
+    "labeler": null,
+    "verdict": "exclude"
+  },
+  "v11": {
+    "labeler": "facts",
+    "verdict": "conditional"
+  },
+  "v12": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v13": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v14": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v15": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v16": {
+    "labeler": "facts",
+    "verdict": "conditional"
+  },
+  "v17": {
+    "labeler": "24-item",
+    "verdict": "conditional"
+  },
+  "v18": {
+    "labeler": "facts",
+    "verdict": "conditional"
+  },
+  "v19": {
+    "labeler": "facts",
+    "verdict": "trust"
+  },
+  "v20": {
+    "labeler": null,
+    "verdict": "exclude"
+  },
+  "v21": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v22": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v23": {
+    "labeler": "24-item",
+    "verdict": "trust"
+  },
+  "v24": {
+    "labeler": null,
+    "verdict": "exclude"
+  }
+}
