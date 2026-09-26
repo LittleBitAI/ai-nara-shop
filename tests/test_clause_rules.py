@@ -46,6 +46,10 @@ class ReviewRoundOneTests(unittest.TestCase):
     def test_the_size_clause_does_not_reach_the_next_list_item(self):
         text = "입찰참가자격\n가. 소기업 확인서는 제출 선택 사항입니다.\n나. 입찰은 대기업으로 제한합니다."
         self.assertFalse(script.size_limited(notice(text)))
+        # Round 2: flattened text keeps its list markers inline.
+        self.assertFalse(script.size_limited(notice("입찰참가자격 가. 소기업 확인서는 선택사항, 나. 입찰은 대기업으로 제한합니다.")))
+        # A limit that wraps within its own clause still counts.
+        self.assertTrue(script.size_limited(notice("입찰참가자격\n가. 「중소기업기본법」 제2조에 따른 소기업 또는\n소상공인으로서 확인서를 소지한 업체")))
 
     def test_a_body_mention_of_negotiation_is_not_the_contract_method(self):
         text = "협상 관련 안내는 별첨을 참고하세요. 제안설명회에 참석하지 않은 업체는 입찰에 참가할 수 없습니다."

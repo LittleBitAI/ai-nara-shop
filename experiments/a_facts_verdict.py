@@ -65,17 +65,38 @@ def products():
     return script._PRODUCTS
 
 
+# Korean compounds are head-final: "매트리스 동적 롤링시스템" is a system, not a 매트리스. A catalogue name names the
+# purchased object only as the whole name or its last element, once procurement words and notes are cut off.
+PROCUREMENT_TAIL = re.compile(r"(?:\([^)]*\)|\[[^\]]*\]|구매|구입|납품|제작|설치|교체|임차|조달|보급|및|등|\d+(?:식|대|개|EA))+$")
+META_ITEM = re.compile(r"([^\[\],]+)\[\d{10}\]")
+
+
+def object_heads(object_name, registered) -> list:
+    heads = []
+    for raw in [object_name, *META_ITEM.findall(str(registered or ""))]:
+        name = squash(raw)
+        while True:
+            cut = PROCUREMENT_TAIL.sub("", name)
+            if cut == name:
+                break
+            name = cut
+        if name:
+            heads.append(name)
+    return heads
+
+
 def competitive(f, rec) -> bool:
     """판로지원법 제7조 (L15): the object is a designated item — by registered or quoted code, or by name —
     and the item's 특이사항 price cap, if any, is not exceeded."""
     meta_codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
     quote_codes = set(CODE10.findall(str(f.get("dp_required_quote") or "")))
     quote_codes |= set(CODE10.findall(str(f.get("catalogue_service") or "")))
-    name = squash(f.get("object_name")) + squash((rec.get("meta") or {}).get("세부품명번호목록"))
+    names = object_heads(f.get("object_name"), (rec.get("meta") or {}).get("세부품명번호목록"))
     value = price(rec)
     for row in products():
         by_code = row["세부품명번호"] in meta_codes | quote_codes
-        by_name = len(squash(row["세부품명"])) >= 4 and squash(row["세부품명"]) in name
+        item = squash(row["세부품명"])
+        by_name = len(item) >= 4 and any(name.endswith(item) for name in names)
         if not (by_code or by_name):
             continue
         cap = script.product_cap_won(row)

@@ -5,6 +5,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "experiments"))
 import a_facts_verdict as fv  # noqa: E402
 
 
+def test_a_catalogue_name_counts_only_as_the_head_of_the_object_name():
+    # PR #153 round 2: "매트리스 동적 롤링시스템" is a test system, not the catalogue item 매트리스.
+    assert fv.object_heads("매트리스 동적 롤링시스템", None) == ["매트리스동적롤링시스템"]
+    assert not any(h.endswith("매트리스") for h in fv.object_heads("매트리스 동적 롤링시스템", None))
+    assert any(h.endswith("책상") for h in fv.object_heads("사무용 책상 구매", None))
+    assert fv.object_heads(None, "피로시험기[4111460801]") == ["피로시험기"]
+
+
 def test_competition_exception_is_the_sales_support_decree_article_7_only():
     match = fv.COMPETITION_EXCEPTION.search
     assert match("「중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령」 제7조제1항제4호에 따라")
