@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["기억", "memory", "회상", "mem0", "저장소.{0,4}기억"]
-domain: memory
+triggers: []
+domain: ''
 title: "v17 deletion gate — Labeler recall·6,000 unlabeled audits·operational reflection (v3 rejected)"
 pr: 98
 merged: 2026-09-23

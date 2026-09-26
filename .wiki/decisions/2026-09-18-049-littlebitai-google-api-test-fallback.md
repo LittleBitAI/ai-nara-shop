@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["지연", "latency", "텔레메트리", "턴 조립", "api 조립"]
-domain: api
+triggers: []
+domain: ''
 title: "feat: Call the actual Gemma 4 via API instead of mock — Accumulate samples without Colab round-trips"
 pr: 49
 merged: 2026-09-18

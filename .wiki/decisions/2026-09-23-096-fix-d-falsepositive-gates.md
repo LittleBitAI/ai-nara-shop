@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["대화\\s*(모델|프롬프트|응답|생성)", "응답\\s*(정책|수리|스키마)", "페르소나", "말투", "gemini", "openai"]
-domain: dialogue
+triggers: []
+domain: ''
 title: "fix: Remove 6 false positives with v3·v5·v6 scope gate (v4 withdrawal · v2 prompt axis refutation record)"
 pr: 96
 merged: 2026-09-23

@@ -9,9 +9,9 @@ sources: [reports/labels-600/citation-audit.md, reports/team-c/law-index/README.
 # How to read the provided legal package — Do not trust the item table citations as they are
 
 Rule. Legal knowledge combined with judgments, labels, and prompts comes only from the distribution snapshot (`open/data/법령패키지/`). Explanations or revision histories obtained through web searches are not to be moved to any pipeline, wiki, or prompt — they are subject to reproducibility evaluation (R15).
-Citations of articles in `항목표.json` are only a starting point. Since citations for each item may be excessive, insufficient, deleted clauses, or orphans, confirm the judgment of [citation audit](../reports/labels-600/citation-audit.md)] and narrow it down to the paragraph or item level before using the fragment.
+Citations of articles in `항목표.json` are only a starting point. Since citations for each item may be excessive, insufficient, deleted clauses, or orphans, confirm the judgment of [citation audit](../reports/labels-600/citation-audit.md) and narrow it down to the paragraph or item level before using the fragment.
 
-Why. The first labeler excerpt version cut out the core of v23 (Criteria for Determining Successful Bidders, Chapter 7, Section 3, 2.c), v20 lacked the mandatory clause (Guidelines Article 3②) in the citation, and v22 had only `삭제` as the cited clause. If you move the item table as is, all of this will be missing.
+Why. The first labeler excerpt version cut out the core of v23 (낙찰자 결정기준 제7장 제3절 2.다), v20 lacked the mandatory clause (지침 제3조②) in the citation, and v22 had only `삭제` as the cited clause. If you move the item table as is, all of this will be missing.
 
 ## System — What fills what
 
@@ -49,7 +49,7 @@ Select with meta `적용계약법`. Even for the same topic, the numbers are dif
 | Performance scale criteria | Within 1x (limited to public notice amount or more) | Within 1/3, 1x if necessary |
 | Minimum joint implementation share | 10% or more | 5% or more (20% range adjustment) |
 | Regional/performance restrictions for small-sum private contracts | No corresponding clause | Chapter 5 Private contract Guidelines allow city/county restrictions, performance, and duplication |
-| Timing of explanation for negotiation request for proposals | No corresponding clause (v23 is local only) | Criteria for Determining Successful Bidders Chapter 7 Section 3 2.c |
+| Timing of explanation for negotiation request for proposals | No corresponding clause (v23 is local only) | 낙찰자 결정기준 제7장 제3절 2.다 |
 
 ## Four axes that divide items
 
@@ -60,5 +60,5 @@ Select with meta `적용계약법`. Even for the same topic, the numbers are dif
 
 ## What is not here
 
-Judgment rules by item are in [item-guide.txt](../reports/labels-600/item-guide.txt)], management interpretations are in [qna](../docs/qna.md)],
-and the fragment list and sizes are owned by [build_excerpt.py](../reports/labels-600/build_excerpt.py)]. This page only contains how to read.
+Judgment rules by item are in [item-guide.txt](../reports/labels-600/item-guide.txt), management interpretations are in [qna](../docs/qna.md),
+and the fragment list and sizes are owned by [build_excerpt.py](../reports/labels-600/build_excerpt.py). This page only contains how to read.

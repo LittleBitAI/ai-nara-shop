@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["대화\\s*(모델|프롬프트|응답|생성)", "응답\\s*(정책|수리|스키마)", "페르소나", "말투", "gemini", "openai"]
-domain: dialogue
+triggers: []
+domain: ''
 title: "docs: record the 33-notice result and open the prompt experiment as its own ticket"
 pr: 32
 merged: 2026-09-18

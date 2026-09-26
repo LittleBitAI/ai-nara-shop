@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["런처", "게이트", "postgres", "마이그레이션", "ci"]
-domain: infra
+triggers: []
+domain: ''
 title: "run: A4 gate server result — dev gain changed sign (0.50578, rejected)"
 pr: 86
 merged: 2026-09-21

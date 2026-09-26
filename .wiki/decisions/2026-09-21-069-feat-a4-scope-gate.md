@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["런처", "게이트", "postgres", "마이그레이션", "ci"]
-domain: infra
+triggers: []
+domain: ''
 title: "feat: Re-evaluate five coverage gates as a bundle and pass A5"
 pr: 69
 merged: 2026-09-21

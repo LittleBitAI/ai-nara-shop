@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["런처", "게이트", "postgres", "마이그레이션", "ci"]
-domain: infra
+triggers: []
+domain: ''
 title: "C: B1 cleanup — 33 out of 34 cells are outside the gate, and row condition comparison cannot distinguish between range and TP"
 pr: 105
 merged: 2026-09-23

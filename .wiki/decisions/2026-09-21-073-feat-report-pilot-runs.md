@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["화면", "vision", "프레임", "스크린", "캡처", "공유"]
-domain: vision
+triggers: []
+domain: ''
 title: "feat: Diagnostic screen now includes pilot episodes"
 pr: 73
 merged: 2026-09-21

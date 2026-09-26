@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["기억", "memory", "회상", "mem0", "저장소.{0,4}기억"]
-domain: memory
+triggers: []
+domain: ''
 title: "feat: show the absence items are suppressed by the joint prompt, not unknown to the model"
 pr: 23
 merged: 2026-09-17

@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["기억", "memory", "회상", "mem0", "저장소.{0,4}기억"]
-domain: memory
+triggers: []
+domain: ''
 title: "feat: show the absence recall swings 4x with how the verdict is asked"
 pr: 31
 merged: 2026-09-18

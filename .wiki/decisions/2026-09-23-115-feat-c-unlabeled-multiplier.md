@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["tts", "qwen", "음성", "목소리", "합성", "재생"]
-domain: tts
+triggers: []
+domain: ''
 title: "docs: C unlabeled utterance ratio (6,000 cases) — Only v14 is agreed upon by the three methods"
 pr: 115
 merged: 2026-09-23

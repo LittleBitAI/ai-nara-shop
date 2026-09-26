@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["화면", "vision", "프레임", "스크린", "캡처", "공유"]
-domain: vision
+triggers: []
+domain: ''
 title: "feat: Diagnostic screen to view 200 dev items by category"
 pr: 67
 merged: 2026-09-20

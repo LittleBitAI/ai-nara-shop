@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["화면", "vision", "프레임", "스크린", "캡처", "공유"]
-domain: vision
+triggers: []
+domain: ''
 title: "feat: Screen to view where the evidence clause of an item is in the statutes"
 pr: 94
 merged: 2026-09-22

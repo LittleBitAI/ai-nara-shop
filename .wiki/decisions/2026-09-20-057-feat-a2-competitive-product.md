@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["런처", "게이트", "postgres", "마이그레이션", "ci"]
-domain: infra
+triggers: []
+domain: ''
 title: "feat: Establish the first TP for v11·v12 with the competitor product gate"
 pr: 57
 merged: 2026-09-20

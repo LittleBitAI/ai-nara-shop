@@ -1,8 +1,8 @@
 ---
 scope: project
 severity: contract
-triggers: ["tts", "qwen", "음성", "목소리", "합성", "재생"]
-domain: tts
+triggers: []
+domain: ''
 title: "feat: v3 unlabeled utterance rate collector and Colab notebook (run results already reflected in #96)"
 pr: 101
 merged: 2026-09-23
