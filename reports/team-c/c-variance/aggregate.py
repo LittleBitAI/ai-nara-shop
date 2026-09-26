@@ -31,6 +31,27 @@ ITEMS = [f"v{n}" for n in range(1, 25)]
 # 설정이 같아야 변동폭이라 부를 수 있다. 하나라도 갈리면 그것은 설정 차이다.
 PINNED = ("code_sha256", "input_sha256", "records_sha256", "seed", "temperature",
           "thinking", "prompt_budget", "max_tokens", "max_chars")
+# 위 키는 `run_report` 최상위의 스칼라다. 모델과 실행 환경은 중첩돼 있어 따로 본다 —
+# 이것이 빠져 있으면 **모델 개정판이나 vLLM 이 바뀌어도 "설정 같다"고 보고한다.**
+# 변동폭은 같은 모델·같은 엔진에서만 변동폭이다.
+NESTED = {
+    "model": ("model",),                                   # id 와 expected_revision
+    "vllm": ("environment", "vllm"),
+    "cuda": ("environment", "cuda"),
+    "chat_template_sha256": ("environment", "chat_template_sha256"),
+    "sampling_params": ("environment", "sampling_params"),
+    "model_dir": ("reproduction", "settings", "model_dir"),  # 받은 리비전 경로
+}
+
+
+def dig(report, path):
+    """중첩 키를 따라간다. 없으면 표식을 돌려준다 — 비교에서 '없음'도 값이다."""
+    node = report
+    for key in path:
+        if not isinstance(node, dict) or key not in node:
+            return "(없음)"
+        node = node[key]
+    return json.dumps(node, ensure_ascii=False, sort_keys=True) if isinstance(node, (dict, list)) else node
 
 
 def read_rows(path):
@@ -83,6 +104,12 @@ def main(argv=None):
             settings_ok = False
         shown = str(next(iter(values)))[:34] if len(values) == 1 else f"{len(values)}가지로 갈림"
         print(f"  {key:<18}{shown:<38}{'같다' if len(values) == 1 else '**다르다**'}")
+    for label, path in NESTED.items():
+        values = {dig(r["report"], path) for r in runs}
+        if len(values) != 1:
+            settings_ok = False
+        shown = str(next(iter(values)))[:34] if len(values) == 1 else f"{len(values)}가지로 갈림"
+        print(f"  {label:<18}{shown:<38}{'같다' if len(values) == 1 else '**다르다**'}")
     debug = {r["report"]["reproduction"]["settings"].get("debug_responses") for r in runs}
     if len(debug) != 1:
         settings_ok = False
