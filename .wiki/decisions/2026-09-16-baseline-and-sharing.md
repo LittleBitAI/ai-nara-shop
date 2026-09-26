@@ -3,23 +3,21 @@ scope: project
 severity: preference
 triggers: []
 domain: baseline
-title: "베이스라인 결함 보완·채점기·공개 공유 기준"
+title: "Baseline defect supplementation, grader, and public sharing standards"
 ---
 
-# 베이스라인과 팀 공유 기준
+# Baseline and Team Sharing Standards
 
-무엇. T2 채점기를 구현·검증했고, 제공 베이스라인의 실패 응답 0 대체·문서 손실·토큰 예산·
-CSV 검증을 보완해 제출 ZIP을 만들었다. 고정 Gemma 4의 공식 문서·논문 조사도 추가했다.
-실제 모델 성공·대회 제출 성공은 아직 확인하지 않았다.
+What. Implemented and verified the T2 grader, and created the submission ZIP by supplementing the provided baseline's failure response 0 replacement, document loss, token budget, and CSV verification. Added research on official documentation and papers for fixed Gemma 4.
+Actual model success and competition submission success have not yet been confirmed.
 
-왜. 팀원이 합류하기 전 제출 가능한 기준 코드를 확보하고 같은 dev 채점법으로 개선해야 하기 때문이다.
-첫 제출 전에 전체 파이프라인을 분리하거나 RAG를 추가하는 일은 뒤로 미뤘다.
-T2 독립 리뷰는 사용자가 생략하도록 지시했다. 자체 검사를 독립 리뷰나 사람 승인으로 기록하지 않는다.
+Why. Because we need to secure baseline code that can be submitted before team members join and improve it using the same dev grading method.
+Postponed separating the entire pipeline or adding RAG until after the first submission.
+T2 independent review was instructed to be omitted by the user. Do not record self-checks as independent reviews or human approvals.
 
-공유. 프로젝트는 공개 main, 공통 위키는 `ai-coding-agent-wiki-public`에 연결한다.
-프로젝트 이력은 이 저장소에, 공통 규칙은 공개 위키에 둔다. 대용량 로컬 이력과 개인 대화는
-공개 저장소에 합치지 않는다. 팀원 온보딩은 지금 가능하며 코드 분담은 첫 유효 제출과 T6 이후 시작한다.
+Sharing. The project is in the public main, and the common wiki is connected to `ai-coding-agent-wiki-public`.
+Project history is kept in this repository, and common rules are kept in the public wiki. Large-scale local history and personal conversations are not merged into the public repository. Team member onboarding is possible now, and code distribution begins after the first valid submission and T6.
 
-출처. [T2 실행 기록](../../docs/tasks/t2-score.md), [T1 기록](../../docs/tasks/t1-baseline.md),
-[모델 조사](../../docs/gemma4.md), [공개 작업](../../docs/tasks/public-push.md),
-[위키 검진](../../docs/tasks/wiki-maintenance.md).
+Source. [T2 execution record](../../docs/tasks/t2-score.md), [T1 record](../../docs/tasks/t1-baseline.md),
+[Model research](../../docs/gemma4.md), [Public task](../../docs/tasks/public-push.md),
+[Wiki inspection](../../docs/tasks/wiki-maintenance.md).

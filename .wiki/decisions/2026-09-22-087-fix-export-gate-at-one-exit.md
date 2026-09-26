@@ -3,102 +3,78 @@ scope: project
 severity: landmine
 triggers: ["langfuse", "사이드카", "수출", "위생", "span", "관측", "리뷰 라운드"]
 domain: observability
-title: "fix: 수출 경계를 출구 하나로 모아 다섯 라운드 반복을 끊는다"
+title: "fix: Consolidate export boundaries into a single exit to break the five-round repetition"
 pr: 87
 branch: "feat/a8-observation-capture"
 ---
 
-# fix: 수출 경계를 출구 하나로 모아 다섯 라운드 반복을 끊는다
+# fix: Consolidate export boundaries into a single exit to break the five-round repetition
 
-## 무엇이 일어났나
+## What happened
 
-`tools/langfuse_tail.py` 의 프롬프트 수출 경계로 다섯 라운드 연속 P0 를 받았다.
-P0 12 건 중 12 건이 같은 질문의 다른 면이었다 — 값이 span 으로 나가는 경로가 어디까지인가.
+Received P0 for five consecutive rounds due to the prompt export boundary of `tools/langfuse_tail.py`.
+12 out of 12 P0 cases were different sides of the same question — how far does the path where values go out as span reach?
 
-| 라운드 | 리뷰가 지목한 출구 | 그때 한 수리 | 다음 라운드에 나온 것 |
+| Round | Exit pointed out by review | Fix made at that time | What appeared in the next round |
 | --- | --- | --- | --- |
-| 1 | 본문이 조건 없이 실린다 | `input`/`output` 두 슬롯에 게이트 | 검증이 id 만 보고 본문 출처를 안 본다 |
-| 2 | 본문 출처·redirect·실패 필드 | 출처 대조 + 전송 고정 + 실패 필드 목록 | 프롬프트 형태가 느슨하다 |
-| 3 | 메시지 형태·환경 프록시·세션 기본값 | 형태 고정 + 프록시 차단 + 경로 제거 | 응답만 위조하면 검증을 건너뛴다 |
-| 4 | 응답 결속·구조화 필드 | 짝 검사 + 이름별 값 위생 | span 이름·`usage_details`·중첩 키 |
-| 5 | 이름·usage·중첩 키, 위생이 진짜 값을 지움 | 출구를 하나로 모았다 | 통로 밖에서 직접 쓰는 자리 |
-| 6 | 전송 루프의 직접 set, 요약 안 한 토큰 | 직접 쓰는 자리도 통로로, 기본을 요약으로 | 평문 예외를 패턴으로 둔 자리 |
-| 7 | map 키, `phase`·`error_type`·버전의 패턴 | 생산자 집합 대조 | 남은 모양 예외 네 자리 |
-| 8 | 자산 키·자기 선언 `dev_ids`·버전·span 이름 | 전부 집합 대조 | hash 모양 |
-| 9 | `HEX` 모양, 생산자 오류형 누락 | 재계산 대조, 소스에서 읽기 | 요약이 trace 이름을 합침 |
-| 10 | 요약된 hash 의 앞 일곱 자 | 접두사 뒤 digest 사용 | — |
+| 1 | Body is included without conditions | gate at two slots `input`/`output` | Validation only looks at id, not body source |
+| 2 | Body source·redirect·failure fields | Source comparison + transmission fix + failure field list | Prompt format is loose |
+| 3 | Message format·environment proxy·session default | Format fix + proxy block + path removal | Validation is skipped if only the response is forged |
+| 4 | Response binding·structured fields | Pair check + value sanitization by name | span name·`usage_details`·nested keys |
+| 5 | Name·usage·nested keys, sanitization erases real values | Consolidated exits into one | Places writing directly outside the passage |
+| 6 | Direct set in transmission loop, unsummarized tokens | Direct write places also into passage, default to summary | Places where plaintext exceptions were left as patterns |
+| 7 | map keys, pattern of `phase`·`error_type`·version | Producer set comparison | Four remaining shape exceptions |
+| 8 | Asset keys·self-declaration `dev_ids`·version·span name | Full set comparison | hash shape |
+| 9 | `HEX` shape, missing producer error type | Recalculation comparison, read from source | Summary merges trace names |
+| 10 | First seven digits of summarized hash | Use digest after prefix | — |
 
-## 왜 안 수렴했나
+## Why it did not converge
 
-하나 고치면 둘 생긴 것이 아니다. 처음부터 면이 N 개였고 매 라운드 두세 개만 닫았다.
-원인은 둘이다.
+It is not that two appeared when one was fixed. There were N sides from the beginning, and only two or three were closed each round.
+The causes are two.
 
-1. 출구마다 막았다. 값이 나가는 경로가 여럿인데 지적된 자리에 게이트를 하나씩 달았다.
-   그러면 막을 목록을 손으로 세게 되고 그 목록은 언제나 모자란다. 모자란 만큼이 다음
-   라운드의 발견이 됐다.
-2. 기준을 추측하고 검사를 합성으로 했다. 이름별 허용 목록이 생산자의 실제 값을
-   다수 지웠고(`settings.max_model_len`·`expected_model.id`·`environment` 전체·dict 인
-   `packages`), 목록이라고 가정한 `groups` 가 실제로는 dict 목록이어서 실제 로그로
-   돌리면 크래시했다. 손으로 쓴 이벤트로 짠 "진짜 값 유지" 검사는 셋을 하나도 못 잡았다.
-   enum 집합도 추측이어서 mock 회차의 `mode="mock"` 을 빠뜨렸다.
+1. Blocked at every exit. There are multiple paths where values go out, and a gate was attached to each pointed-out spot.
+   Then, the list to block is counted by hand, and that list is always insufficient. The insufficient amount became the discovery of the next round.
+2. Guessed the criteria and performed checks via synthesis. The allowlist by name erased many of the producer's actual values (entire `settings.max_model_len`·`expected_model.id`·`environment` and `packages` which is a dict), and `groups`, assumed to be a list, was actually a list of dicts, causing a crash when run with actual logs. The "keep real value" check written with hand-written events caught none of the three. The enum set was also a guess, missing `mode="mock"` of the mock round.
 
-## 무엇을 바꿨나
+## What was changed
 
-출구를 하나로 모았다. `plan()` 이 `[guard(op) for op in _plan(...)]` 를 돌려주고,
-`guard()` 가 직렬화 직전에 `name`·`status`·`key`·`usage_details`·`trace.name` 을 본다.
-새 필드가 생겨도 자동으로 그 통로를 지난다 — 열거할 목록이 없다.
+Consolidated exits into one. `plan()` returns `[guard(op) for op in _plan(...)]`, and `guard()` looks at `name`·`status`·`key`·`usage_details`·`trace.name` right before serialization.
+Even if a new field is created, it automatically passes through that passage — there is no list to enumerate.
 
-key 도 출구다. `run()` 이 이름이 없으면 key 로 span 을 만들고 orphan 경로는 key 를
-metadata 에 적는다. 조립에 쓰는 `arm`·`sample`·`id`·`phase` 를 위생하고, 그래도 모양이
-아니면 `guard()` 가 결정적 hash 로 바꾼다(같은 입력 → 같은 key, 짝 유지).
+key is also an exit. If `run()` has no name, it creates a span with key, and the orphan path writes key to metadata. Sanitizes `arm`·`sample`·`id`·`phase` used for assembly, and if it still does not match the shape, `guard()` changes it to a deterministic hash (same input → same key, pair maintained).
 
-기준을 실측으로 바꿨다. `_producer_enums()` 가 `mode`·`token_count_kind` 를 실행기
-클래스에서, `phase`·`status`·`error_type` 을 소스에서 읽는다. `_DICT_KEYS` 는 H4 실제
-회차 로그에서 읽은 키다.
+Changed criteria to actual measurements. `_producer_enums()` reads `mode`·`token_count_kind` from the executor class, and `phase`·`status`·`error_type` from the source. `_DICT_KEYS` is a key read from the actual H4 round log.
 
-검사를 실제 로그로 바꿨다. H4 회차 로그(1,020 이벤트)를 투영해 크래시 없음, 진짜 값
-보존, 오염 차단 셋을 한 번에 본다.
+Changed checks to actual logs. Projects the H4 round log (1,020 events) to check for no crashes, real value preservation, and contamination blocking all at once.
 
-## 라운드 6~10 에서 배운 것 넷
+## Four things learned from rounds 6~10
 
-통로를 만든 것과 모두가 그 통로를 쓰는 것은 다르다. 라운드 5 에서 통로를 만들었는데
-전송 루프가 그것을 안 지나고 span 에 네 속성을 직접 적고 있었다.
+Creating a passage and everyone using that passage are different. A passage was created in round 5, but the transmission loop was not passing through it and was writing four attributes directly to the span.
 
-구분할 수 없으면 평문을 안 보낸다. 짧은 영문 토큰 자리의 비밀은 값만 보고 버전과
-구분할 수 없다. 나는 그 구분 불가능을 평문 허용의 근거로 썼는데 그것이 P0 였다 —
-방향이 거꾸로다. 기본을 요약(`sha256:앞16`)으로 두고 평문은 근거가 있을 때만 준다.
+If you cannot distinguish, do not send plaintext. The secret of the short English token spot cannot be distinguished from the version by looking only at the value. I used that indistinguishability as evidence for allowing plaintext, but that was P0 — the direction is reversed. Set the default to summary (`sha256:앞16`) and provide plaintext only when there is evidence.
 
-모양은 값의 출처를 증명하지 못한다. hash 까지 그렇다 —
-`code_sha256="deadbeef"*8` 이 통과했다. 지금은 평문이 전부 집합 대조를 지난다:
-생산자 enum, 생산자 상수, 재계산한 digest, 계약의 고정 버전, 입력 파일의 공고 id,
-닫힌 자산 키.
+Shape cannot prove the source of a value. Even hash is like that — `code_sha256="deadbeef"*8` passed. Now, plaintext passes the full set comparison:
+Producer enum, producer constant, recalculated digest, contract's fixed version, input file's announcement id, closed asset keys.
 
-검사를 좁힌 판단 하나가 P0 셋을 만들었다. 라운드 6 에서 "짧은 토큰은 1층이 막는다" 며
-오염 스윕을 본문·경로로 좁혔다. 1층이 안 도는 모드가 있으니 그 판단이 틀렸고,
-라운드 6·7·8 의 P0 셋이 그 자리에서 나왔다. 스윕을 토큰까지 넓히자마자 다음 결함이 잡혔다.
+One judgment that narrowed the check created the P0 set. In round 6, it narrowed the contamination sweep to body/path, saying "short tokens are blocked by the first floor." Since there is a mode where the first floor does not run, that judgment was wrong, and the P0 set of rounds 6, 7, and 8 came from that spot. As soon as the sweep was expanded to tokens, the next defect was caught.
 
-## 위협 모델을 두 층으로 갈랐다
+## Divided the threat model into two layers
 
-| 층 | 무엇을 막나 |
+| Layer | What it blocks |
 | --- | --- |
-| `validate_dev_export()` | 이 로그가 고정 공개 dev 회차인가. 프롬프트·문서 hash 를 실제 dev 로 재구성해 대조하고, 어긋나면 수출 자체를 거부 |
-| `_clean()`·`guard()` | 통과한 로그에서도 본문·경로·알려지지 않은 문자열은 평문으로 안 내보낸다 |
+| `validate_dev_export()` | Is this log a fixed public dev round? Reconstructs prompt/document hash into actual dev and compares; if they differ, refuses the export itself |
+| `_clean()`·`guard()` | Even in logs that passed, body/path/unknown strings are not exported as plaintext |
 
-아래 층이 못 하는 일을 위층에 미루지 않는다. metadata 전용 모드에서는 위층이 아예 돌지
-않으므로, "이 값은 위층이 막는다" 고 적으려면 위층이 실제로 그 값을 보는지 확인해야 한다.
+Do not defer to the upper layer what the lower layer cannot do. In metadata-only mode, the upper layer does not run at all, so to write "this value is blocked by the upper layer," you must verify that the upper layer actually sees that value.
 
-## 요약은 유실이 아니다
+## Summary is not a loss
 
-hash 의 용도는 "같은가 다른가" 이고 같은 hash 는 같은 요약이므로 그 용도가 유지된다.
-다만 소비 경로까지 봐야 한다 — 라운드 10 에서 요약된 값의 앞 일곱 자가 모두 `sha256:`
-이라 서로 다른 회차가 같은 trace 이름이 됐다. `_clean()` 반환값만 비교한 검사가 그것을
-놓쳤다.
+The purpose of hash is "is it the same or different," and since the same hash is the same summary, that purpose is maintained. However, you must also look at the consumption path — in round 10, the first seven digits of the summarized value were all `sha256:`, so different rounds became the same trace name. A check that only compared `_clean()` return values missed that.
 
-## 규칙은 어디에 있나
+## Where are the rules
 
-일반 규칙은 허브 위키 [[gate-the-exit-not-the-callers]] 가 소유한다.
-같은 파일·같은 주제로 P0 가 두 라운드 연속 나오면 세 번째를 기다리지 말고 막는 자리를
-바꾼다 — 리뷰가 다음 면을 찾아 주기를 기대하는 것은 설계를 리뷰어에게 위임하는 것이다.
+General rules are owned by the hub wiki [[gate-the-exit-not-the-callers]].
+If P0 appears for two consecutive rounds on the same file/topic, do not wait for the third and change the blocking spot — expecting the review to find the next side is delegating the design to the reviewer.
 
-프로젝트 쪽 계약은 `docs/langfuse.md` 와
-`reports/team-c/a8-v20-annex/observation-contract.json` 이 소유한다.
+Project-side contracts are owned by `docs/langfuse.md` and `reports/team-c/a8-v20-annex/observation-contract.json`.

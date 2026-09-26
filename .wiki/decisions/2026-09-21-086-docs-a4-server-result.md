@@ -3,16 +3,16 @@ scope: project
 severity: contract
 triggers: ["런처", "게이트", "postgres", "마이그레이션", "ci"]
 domain: infra
-title: "run: A4 게이트 서버 결과 — dev 이득이 부호를 바꿨다 (0.50578, 미채택)"
+title: "run: A4 gate server result — dev gain changed sign (0.50578, rejected)"
 pr: 86
 merged: 2026-09-21
 branch: "docs/a4-server-result"
 ---
 
-# run: A4 게이트 서버 결과 — dev 이득이 부호를 바꿨다 (0.50578, 미채택)
+# run: A4 gate server result — dev gain changed sign (0.50578, rejected)
 
-무엇. 2026-09-21 제출 `3a30167`의 서버 결과를 장부와 문서에 기록한다. 코드 변경은 없다. 서버 0.5057795952 / 6,300초(105분). 직전 `18f07e5`의 0.5084137874 대비 −0.0026341922로 처음 내려갔다. | | dev 재생 | 서버 | | --- | ---: | ---: | | `18f07e5` | 0.593846165415 | 0.5084137874 | | `3a30167` | 0. …
+What. Record the server results of `3a30167` submitted on 2026-09-21 in the ledger and documentation. There are no code changes. Server 0.5057795952 / 6,300 seconds (105 minutes). Compared to the previous `18f07e5` of 0.5084137874, it decreased by −0.0026341922 for the first time. | | dev replay | server | | --- | ---: | ---: | | `18f07e5` | 0.593846165415 | 0.5084137874 | | `3a30167` | 0. …
 
-왜. A4 적용범위 게이트는 서버에서 이득을 주지 않았다. 미채택이다. `main`의 운영 `script.py`에는 들어가 있지 않으므로 되돌릴 것이 없고, 서버 최고는 0.5084137874(`18f07e5`) 로 유지된다. 채택본은 `feat/adopt-a4-scope-gate`(`3a30167`)에 남겨 두고 머지하지 않는다. 이번 비교는 프롬프트·스키마·호출 수가 모두 같고 후처리만 달라, dev 쪽이 **같은 원응답 재생↔재생**이다. churn이 없어 +0.017878은 순수한 코드 효과였는데도 서버로 가지 않았다. A4 보고서 §5가 미리 적어 둔 v23 무라벨 발화 배율 0.05 경고가 실측으로 확인됐다. 다만 v23의 dev 기여 0.0089를 전부 잃어도 손실 0. …
+Why. The A4 coverage gate did not provide a gain on the server. It is rejected. Since it is not included in the operation `script.py` of `main`, there is nothing to revert, and the server high remains at 0.5084137874 (`18f07e5`). The adopted version is left in `feat/adopt-a4-scope-gate` (`3a30167`) and is not merged. In this comparison, the prompt, schema, and number of calls are all the same, and only the post-processing is different, so the dev side is **same original response replay↔replay**. Even though +0.017878 was a pure code effect with no churn, it did not go to the server. The v23 unlabeled utterance ratio 0.05 warning, noted in advance in A4 report §5, was confirmed by actual measurement. However, even if the entire dev contribution of 0.0089 of v23 is lost, the loss is 0. …
 
-출처. PR #86 · `docs/a4-server-result`
+Source. PR #86 · `docs/a4-server-result`

@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "fix: PR #34 리뷰 6건 — 복합 금액, v8 배점표 가드, 절 경계, 낡은 해시"
+title: "fix: PR #34 6 reviews — complex amount, v8 scoring table guard, clause boundary, stale hash"
 pr: 39
 merged: 2026-09-18
 branch: "HyeongyeongKim/d-review-fixes"
 ---
 
-# fix: PR #34 리뷰 6건 — 복합 금액, v8 배점표 가드, 절 경계, 낡은 해시
+# fix: PR #34 6 reviews — complex amount, v8 scoring table guard, clause boundary, stale hash
 
-무엇. [PR #34](https://github.com/LittleBitAI/ai-nara-shop/pull/34) 리뷰가 낸 6건을 고친다. #34는 그 사이 머지돼서 후속 PR로 올린다.
+What. Fixes 6 items raised by the PR #34](https://github.com/LittleBitAI/ai-nara-shop/pull/34) review. #34 was merged in the meantime, so this is submitted as a follow-up PR.
 
-왜. 1. 복합 금액을 33% 낮게 읽었다. `MONEY`가 `억`과 `천만`을 따로 잡고 `max`를 취해 `1억 5천만원`이 1억으로 읽혔다. 그 값이 1배 경계를 넘나들면 v3 규칙이 정답 양성을 내려 버린다 — 이 규칙이 막으려던 바로 그 실패다. 한 번의 일치로 억·천만·만·원 자리를 모두 먹고 더한다. 자리 표시 없는 맨 숫자는 `원`이 붙었을 때만 금액으로 본다. 그러지 않으면 세부품명번호 10자리와 날짜를 금액으로 읽는다. 이 수정으로 `PPS-DEV-078`의 금액을 읽게 되어 v3 FP가 6에서 5로 더 줄었다. 2. v8 `detect`에 배점표 가드가 없었다. 리뷰가 낸 문장을 그대로 재현했다. …
+Why. 1. Complex amounts were read 33% lower. `MONEY` captured `억` and `천만` separately and took `max`, causing `1억 5천만원` to be read as 100 million. If that value crosses the 1x boundary, the v3 rule drops the correct answer generation — this is the exact failure the rule was intended to prevent. It now consumes and adds the 100 million, 10 million, 10 thousand, and 1 won positions in a single match. Bare numbers without position markers are only treated as amounts when `원` is attached. Otherwise, it reads 10-digit detailed product codes and dates as amounts. With this fix, the amount of `PPS-DEV-078` is read, further reducing the v3 FP from 6 to 5. 2. There was no scoring table guard in the v8 `detect`. The sentence raised by the review was reproduced as is. …
 
-출처. PR #39 · `HyeongyeongKim/d-review-fixes`
+Source. PR #39 · `HyeongyeongKim/d-review-fixes`

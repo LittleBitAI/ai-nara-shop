@@ -11,8 +11,8 @@ branch: "feat/run-registrar"
 
 # feat: register a Colab result ZIP pair with one command
 
-무엇. `artifacts/inbox/`에 놓인 결과 ZIP 한 쌍을 한 명령으로 등록한다. 손으로 하던 언팩·대조·파일 작성을 없애되, 검증 실패는 반드시 실패로 끝낸다.
+What. Register a pair of result ZIPs placed in `artifacts/inbox/` with one command. Eliminate manual unpacking, comparison, and file creation, but ensure that validation failure results in a failure.
 
-왜. ```powershell python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커밋> ``` `reports/runs/<run-id>/`와 `manifest.json`, [색인](docs/runs.md) 한 행, `.wiki/decisions/<날짜>-NNN-run-<run-id>.md` 초안까지 쓴다. 커밋은 하지 않는다. - 수치는 실행이 남긴 파일에서 그대로 옮기고 재계산하지 않는다. 로그에 없으면 `null`, 점수가 없으면 색인 칸은 빈칸. - 색인은 같은 run-id 행이 이미 있으면 그 행을 채운다. `미보관` 행 5개가 중복되지 않게 하기 위함이다. …
+Why. It writes ```powershell python -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <커밋> ``` `reports/runs/<run-id>/`, `manifest.json`, one row of [index ](docs/runs.md)], and a `.wiki/decisions/<날짜>-NNN-run-<run-id>.md` draft. It does not commit. - Values are copied directly from the files left by the execution and are not recalculated. If it is not in the log, it is a `null`; if there is no score, the index cell is left blank. - For the index, if a row with the same run-id already exists, it fills that row. This is to prevent `미보관` 5 rows from being duplicated. …
 
-출처. PR #17 · `feat/run-registrar`
+Source. PR #17 · `feat/run-registrar`
