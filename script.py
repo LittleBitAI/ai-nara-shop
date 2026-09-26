@@ -3390,7 +3390,9 @@ def catalogue_miss(rec: Dict[str, Any]) -> bool:
         return False
     if codes & {p["세부품명번호"] for p in _PRODUCTS}:
         return False
-    return not sme_product_lookup(rec, build_context(rec), _PRODUCTS)["일치후보"]
+    # S7-15 names meta `조항호내용` beside the notice as a source for identifying the object.
+    context = build_context(rec) + "\n" + str((rec.get("meta") or {}).get("조항호내용") or "")
+    return not sme_product_lookup(rec, context, _PRODUCTS)["일치후보"]
 
 
 # v11 is a 경쟁제품 bid NOT limited to 중소기업자 (판로지원법 제7조①). `SME_ALLOWED` wants "중소기업" within
@@ -3398,8 +3400,10 @@ def catalogue_miss(rec: Dict[str, Any]) -> bool:
 # outside dev the product and company-size stages raised 31 v11 false positives that way.
 SIZE_CLASS = r"(?:중\s*[·ㆍ・‧]?\s*소\s*기업자?|소\s*기업자?|소\s*상\s*공\s*인)"
 # The close must make the size class a condition on the bidder — not a bare 확인서 mention, a document list
-# line or "확인 가능하여야" about a website.
-SIZE_LIMIT = re.compile(SIZE_CLASS + r"[^。]{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
+# line or "확인 가능하여야" about a website. It must sit in the same clause: a limit may wrap over lines, but
+# the span stops at a sentence end ("다.") or the next list item ("나.", "2)", "②", "-").
+CLAUSE_CHAR = (r"(?:(?!\n\s*(?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)]|[①-⑳]|[-•※○□◦❍▶]))(?!다\s*[.。])[^。])")
+SIZE_LIMIT = re.compile(SIZE_CLASS + CLAUSE_CHAR + r"{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
                         r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)"
                         r"|확인서를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
                         r"|제한\s*경쟁\s*(?:입찰)?\s*\(\s*" + SIZE_CLASS, re.S)
@@ -3473,8 +3477,10 @@ def v21_share_clause(rec: Dict[str, Any]) -> Optional[str]:
 
 
 def v22_briefing_clause(rec: Dict[str, Any]) -> Optional[str]:
+    # The item is 협상에 의한 계약 only; the registered award method says which (all dev notices carry it).
+    # A body mention of 협상 is not the contract method.
     meta = rec.get("meta") or {}
-    if "협상" not in str(meta.get("낙찰방법") or "") + str(meta.get("계약방법") or "") + _body(rec)[:3000]:
+    if "협상" not in str(meta.get("낙찰방법") or "") + str(meta.get("계약방법") or ""):
         return None
     for doc in rec.get("docs") or ():
         text = doc.get("text") or ""
@@ -3500,11 +3506,15 @@ def apply_clause_rules(out: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> D
             if cleaned:
                 out["v2"] = {"위반여부": 1, "근거문구": cleaned}
                 break
+    # Every raised quote passes the evidence contract (formula prefix, length, verbatim) before it is written.
     for item, find in (("v21", v21_share_clause), ("v22", v22_briefing_clause)):
         if (out.get(item) or {}).get("위반여부") != 1:
             quote = find(rec)
-            if quote:
-                out[item] = {"위반여부": 1, "근거문구": quote[:EVIDENCE_MAX]}
+            for doc in rec["docs"] if quote else ():
+                cleaned = clean_evidence(quote, doc.get("text") or "")
+                if cleaned:
+                    out[item] = {"위반여부": 1, "근거문구": cleaned}
+                    break
     return out
 
 

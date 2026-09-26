@@ -33,6 +33,31 @@ class SizeLimitTests(unittest.TestCase):
                 self.assertFalse(script.size_limited(notice(text)))
 
 
+class ReviewRoundOneTests(unittest.TestCase):
+    """PR #153 round 1 findings, each on the reviewer's own input."""
+
+    def test_a_raised_quote_with_a_formula_prefix_is_not_written(self):
+        plain = notice("공동수급 안내: 구성원별 최소 지분율은 3% 이상입니다.", 공동도급구성방식="공동이행")
+        self.assertEqual(script.apply_clause_rules(cells(), plain)["v21"]["위반여부"], 1)   # the rule fires
+        rec = notice("= 공동수급 안내: 구성원별 최소 지분율은 3% 이상입니다.", 공동도급구성방식="공동이행")
+        out = script.apply_clause_rules(cells(), rec)
+        self.assertFalse(out["v21"]["근거문구"].startswith(("=", "+", "@")))
+
+    def test_the_size_clause_does_not_reach_the_next_list_item(self):
+        text = "입찰참가자격\n가. 소기업 확인서는 제출 선택 사항입니다.\n나. 입찰은 대기업으로 제한합니다."
+        self.assertFalse(script.size_limited(notice(text)))
+
+    def test_a_body_mention_of_negotiation_is_not_the_contract_method(self):
+        text = "협상 관련 안내는 별첨을 참고하세요. 제안설명회에 참석하지 않은 업체는 입찰에 참가할 수 없습니다."
+        self.assertEqual(script.apply_clause_rules(cells(), notice(text, 낙찰방법="적격심사제"))["v22"]["위반여부"], 0)
+
+    def test_a_catalogue_name_in_the_registered_clause_keeps_the_product(self):
+        script.load_sme_reference(str(ROOT / "open/data"))
+        name = script._PRODUCTS[0]["세부품명"]
+        rec = notice("품명: 기타 물품", 세부품명번호목록="[9999999999]", 조항호내용=name)
+        self.assertFalse(script.catalogue_miss(rec))
+
+
 class RaiseTests(unittest.TestCase):
     def test_v2_rises_below_the_notice_amount_but_not_for_a_local_small_quote(self):
         text = "1. 입찰참가자격\n가. 최근 3년 이내 유사 용역 실적이 있는 업체이어야 합니다."
