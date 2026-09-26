@@ -114,6 +114,12 @@ class Pr154RoundOneTests(unittest.TestCase):
         # Without a contract-stage time the sentence's bid time still governs the list.
         self.assertTrue(script.v19_demanded_at_bid_stage(notice("입찰 시 사업자등록증, 물품공급 확약서 1부 제출")))
 
+    def test_round_five_post_award_phrases_bind_the_bid_time_too(self):
+        for text in ("낙찰 후 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨",
+                     "계약 후 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨"):
+            with self.subTest(text=text):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
     def test_a_flattened_list_item_is_its_own_sentence(self):
         text = "① 입찰 시 제안서 6부 제출 ② 증빙서류 각 1부 ㉰ “확약서” 1부 [별지 7]"
         self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))

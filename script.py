@@ -1620,6 +1620,10 @@ def pledge_sentence(text: str, start: int, end: int) -> str:
 
 
 CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
+# Post-award times for binding a bid-time phrase to its clause. Wider than `V19_POST_AWARD`, which the evidence check
+# also uses and is left as it is.
+V19_AFTER_AWARD = re.compile(V19_POST_AWARD.pattern + r"|낙찰\s*(?:후|이후|통보\s*후)|계약\s*(?:후|이후|체결\s*후)"
+                             r"|착수\s*(?:시|전|후)|납품\s*(?:시|후)|선정\s*후")
 
 
 def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
@@ -1628,14 +1632,14 @@ def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
     sentence = pledge_sentence(text, start, end)
     if not V19_BID_HEADING.search(sentence):
         return False
-    if not V19_POST_AWARD.search(sentence):
+    if not V19_AFTER_AWARD.search(sentence):
         return True
     offset = text.find(sentence, max(0, start - len(sentence)))
     at = start - offset if offset >= 0 else 0
     left = max((m.end() for m in CLAUSE_SEPARATOR.finditer(sentence, 0, at)), default=0)
     right = CLAUSE_SEPARATOR.search(sentence, at)
     clause = sentence[left: right.start() if right else len(sentence)]
-    return bool(V19_BID_HEADING.search(clause)) and not V19_POST_AWARD.search(clause)
+    return bool(V19_BID_HEADING.search(clause)) and not V19_AFTER_AWARD.search(clause)
 
 
 def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
