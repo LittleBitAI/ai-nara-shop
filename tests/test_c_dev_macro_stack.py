@@ -1,7 +1,7 @@
 """C6 스택 후보의 계약 — **올리기만 하고, 순서에 안 흔들리고, 남의 항목을 안 건드린다.**
 
 보고서(`reports/team-c/c6-dev-macro/README.md`)가 낸 수를 여기에 고정한다.
-재생은 기준 커밋 `9038380` 의 `script.py` 로만 한다 — 작업 트리 판을 쓰면 `main` 이 움직일 때
+재생은 기준 커밋 `c68eb00` 의 `script.py` 로만 한다 — 작업 트리 판을 쓰면 `main` 이 움직일 때
 같은 보관 응답에서 다른 수가 나오고 보고서만 낡는다(#124 의 [P2] 가 그 자리였다).
 
 이 검사가 고정하는 것 넷.
@@ -28,7 +28,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CASE = ROOT / "reports/runs/colab-1790235508743452453/dev-debug"
-BASE_REV = "9038380"
+BASE_REV = "c68eb00"
 
 ITEMS = [f"v{i}" for i in range(1, 25)]
 C_ITEMS = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v20")
@@ -40,12 +40,12 @@ CANDIDATES = {
     "stack": "experiments/c_dev_macro_stack_candidate.py",
 }
 # 보고서 §1·§2·§3 의 실측. 하나라도 어긋나면 문서와 코드 중 하나가 낡은 것이다.
-BASE_MACRO = "0.685506108460"
-BASE_C_TOTALS = (39, 31, 24)          # TP · FP · FN
-EXPECTED_MACRO = {"v13": "0.685506108460", "v11": "0.693349245715",
-                  "stack": "0.693349245715"}
-EXPECTED_CHANGED = {"v13": 0, "v11": 7, "stack": 7}
-EXPECTED_V11 = {"v13": (2, 2, 4), "v11": (5, 6, 1), "stack": (5, 6, 1)}
+BASE_MACRO = "0.735764126941"
+BASE_C_TOTALS = (42, 25, 21)          # TP · FP · FN
+EXPECTED_MACRO = {"v13": "0.735764126941", "v11": "0.736464407053",
+                  "stack": "0.736464407053"}
+EXPECTED_CHANGED = {"v13": 0, "v11": 3, "stack": 3}
+EXPECTED_V11 = {"v13": (4, 4, 2), "v11": (5, 6, 1), "stack": (5, 6, 1)}
 
 # §3 의 역순 판. 저장소에 남기지 않는다 — 이 검사만 쓰는 대조용이다.
 REVERSED_SOURCE = '''
