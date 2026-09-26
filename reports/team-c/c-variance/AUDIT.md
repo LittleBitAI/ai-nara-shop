@@ -16,6 +16,11 @@
 py -X utf8 tools/register_run.py --inbox <inbox> --code-commit 772ca1284c8918c1fa4ca5729cc15dfe4dedb2d4
 ```
 
+> 2026-09-27 덧. 2차 시도는 전용 노트북(`run/c-variance-n6` @ `1928c35`)으로 돈다.
+> 그 브랜치의 `script.py` 는 `772ca12` 와 바이트가 같고 노트북의 `REPO_REF` 도
+> `772ca12` 라, 회차가 적는 `source.json` 의 `commit` 은 `772ca12` 다.
+> **`--code-commit` 은 위 그대로 `772ca12…` 를 쓴다.** 절차는 안 바뀐다.
+
 등록 규약은 `docs/runs.md` 가 소유한다. 이 회차는 `submit.zip` 이 없는 진단 회차이므로
 그 문서의 "부분 GPU/혼합 재생 등록" 항목을 따른다 — `register_run.py` 가 한 쌍을 요구하면
 보관 규약대로 손으로 등록하고 그 사실을 적는다.
