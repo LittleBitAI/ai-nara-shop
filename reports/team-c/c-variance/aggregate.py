@@ -27,43 +27,68 @@ import argparse
 import csv
 import itertools
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 ITEMS = [f"v{n}" for n in range(1, 25)]
-# 설정이 같아야 변동폭이라 부를 수 있다. 하나라도 갈리거나 **빠져 있으면** 설정을 확인하지
-# 못한 것이다. 모델과 실행 환경도 넣는다 — 빠지면 모델 개정판이나 vLLM 이 바뀌어도
-# "설정 같다"고 보고한다. 변동폭은 같은 모델·같은 엔진에서만 변동폭이다.
+
+
+def _hex(n):
+    return lambda v: isinstance(v, str) and re.fullmatch(f"[0-9a-f]{{{n}}}", v) is not None
+
+
+def _int(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _bool(v):
+    return isinstance(v, bool)
+
+
+def _text(v):
+    return isinstance(v, str) and v.strip() != ""
+
+
+# 설정이 같아야 변동폭이라 부를 수 있다. 각 설정은 **잎 값 하나**이고 형식이 맞아야 한다.
+# 없거나 null 이거나 형식이 틀리면 확인하지 못한 것이다 — 모든 통과가 똑같이 비어 있어도
+# 같은 게 아니다. 객체를 통째로 비교하지 않는다. 빠진 하위 키끼리 같아 보이기 때문이다.
+# 모델과 실행 환경도 넣는다. 변동폭은 같은 모델·같은 엔진에서만 변동폭이다.
 SETTINGS = {
-    "code_sha256": ("code_sha256",),
-    "input_sha256": ("input_sha256",),
-    "records_sha256": ("records_sha256",),
-    "seed": ("seed",),
-    "temperature": ("temperature",),
-    "thinking": ("thinking",),
-    "prompt_budget": ("prompt_budget",),
-    "max_tokens": ("max_tokens",),
-    "max_chars": ("max_chars",),
-    "model": ("model",),                                   # id 와 expected_revision
-    "vllm": ("environment", "vllm"),
-    "cuda": ("environment", "cuda"),
-    "chat_template_sha256": ("environment", "chat_template_sha256"),
-    "sampling_params": ("environment", "sampling_params"),
-    "model_dir": ("reproduction", "settings", "model_dir"),  # 받은 리비전 경로
-    "debug_responses": ("reproduction", "settings", "debug_responses"),
+    "code_sha256": (("code_sha256",), _hex(64)),
+    "input_sha256": (("input_sha256",), _hex(64)),
+    "records_sha256": (("records_sha256",), _hex(64)),
+    "seed": (("seed",), _int),
+    "temperature": (("temperature",), _number),
+    "thinking": (("thinking",), _bool),
+    "prompt_budget": (("prompt_budget",), _int),
+    "max_tokens": (("max_tokens",), _int),
+    "max_chars": (("max_chars",), _int),
+    "model.id": (("model", "id"), _text),
+    "model.revision": (("model", "expected_revision"), _hex(40)),
+    "vllm": (("environment", "vllm"), _text),
+    "cuda": (("environment", "cuda"), _text),
+    "chat_template_sha256": (("environment", "chat_template_sha256"), _hex(64)),
+    "sampling_params": (("environment", "sampling_params"), _text),
+    "model_dir": (("reproduction", "settings", "model_dir"), _text),  # 받은 리비전 경로
+    "debug_responses": (("reproduction", "settings", "debug_responses"), _bool),
 }
 MISSING = object()
 
 
 def dig(report, path):
-    """중첩 키를 따라간다. 없으면 `MISSING` — 모든 통과에 없어도 같다고 치지 않는다."""
+    """중첩 키를 따라간다. 없으면 `MISSING`."""
     node = report
     for key in path:
         if not isinstance(node, dict) or key not in node:
             return MISSING
         node = node[key]
-    return json.dumps(node, ensure_ascii=False, sort_keys=True) if isinstance(node, (dict, list)) else node
+    return node
 
 
 def read_rows(path):
@@ -112,12 +137,12 @@ def main(argv=None):
     # 4. 설정 대조가 먼저다. 갈리면 나머지 수를 변동폭이라 부를 수 없다.
     print("=== 설정 대조 — 이것이 같아야 변동폭이다 ===")
     settings_ok = True
-    for label, path in SETTINGS.items():
+    for label, (path, valid) in SETTINGS.items():
         values = [dig(r["report"], path) for r in runs]
-        missing = sum(value is MISSING for value in values)
-        distinct = {json.dumps(value, sort_keys=True) for value in values if value is not MISSING}
-        if missing:
-            shown, verdict = f"{missing}개 통과에 없음", "**없다**"
+        invalid = sum(value is MISSING or not valid(value) for value in values)
+        distinct = {json.dumps(value) for value in values if value is not MISSING}
+        if invalid:
+            shown, verdict = f"{invalid}개 통과에 없거나 형식 틀림", "**확인 불가**"
         elif len(distinct) != 1:
             shown, verdict = f"{len(distinct)}가지로 갈림", "**다르다**"
         else:
