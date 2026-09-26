@@ -30,11 +30,11 @@ SMALL_SIZE = re.compile(r"소기업|소상공인")
 # 확인에 관한 규정, 중소기업제품 구매촉진 … 법률. They are cut before the size class is read.
 TITLES = re.compile(r"[「｢『《\"“‘'][^」｣』》\"”’']{0,60}[」｣』》\"”’']"
                     r"|중소기업\s*기본법|중소기업\s*범위\s*및\s*확인에\s*관한\s*규정|중소기업청|중소벤처기업부"
+                    r"|\(\s*중소기업자의\s*범위\s*\)"
                     r"|중소기업제품[^,，.。]{0,30}?(?:법률|시행령|운영요령|종합정보망|구매정보망)")
 EXCEPTION_TEXT = re.compile(r"우선\s*조달\s*계약?\s*(?:에\s*대한|의)?\s*예외|제\s*2\s*조\s*의\s*3|중소기업자\s*간\s*경쟁\s*(?:입찰)?\s*의?\s*예외")
 FACILITY_SCALE = re.compile(r"\d+\s*(?:명|인|대|개소|곳|㎡|평|톤)|모든|전국|각\s*(?:광역|시[·ㆍ]?도)")
 LAW_CITED = re.compile(r"법률|법\s*제|법」|법｣|시행령|시행규칙|허가\s*기준|허가를|면허|등록")
-SMALL_QUOTE_FLOOR = 10_000_000          # L29①: 수의계약 직생 확인은 추정가격 1천만원 이상
 
 
 def squash(text) -> str:
@@ -90,10 +90,21 @@ def excepted(f, rec) -> bool:
     return quoted(f.get("priority_exception_quote"), rec) or bool(EXCEPTION_TEXT.search(script._body(rec)))
 
 
+def mostly_quoted(text, rec, width=8, share=0.8) -> bool:
+    """Most of the copy's 8-character fragments occur in the notice — a copy broken by line wraps and dropped
+    digits (`제 조제 항` / `2 2`) is still the notice's sentence."""
+    flat = PUNCT.sub("", str(text or ""))
+    if len(flat) < 20:
+        return False
+    body = PUNCT.sub("", script._body(rec))
+    pieces = [flat[i:i + width] for i in range(0, len(flat) - width + 1, width)]
+    return sum(piece in body for piece in pieces) >= share * len(pieces)
+
+
 def size_class(f, rec):
     """What the size requirement admits: 'sme' (중기업 included), 'small', or None when there is none."""
     quote = f.get("sme_limit_quote")
-    if not quoted(quote, rec):
+    if not (quoted(quote, rec) or mostly_quoted(quote, rec)):
         return None
     flat = squash(TITLES.sub(" ", str(quote)))
     if MID_SIZE.search(flat):
@@ -139,11 +150,9 @@ def v10(f, rec):
     """L15 제7조① · L16①: a 경쟁제품 in 중소기업자간 경쟁 needs 직접생산 확인; a 수의계약 below 1천만원 does not (L29)."""
     if not competitive(f, rec) or excepted(f, rec) or quoted(f.get("dp_required_quote"), rec):
         return 0
-    value = price(rec)
-    meta = rec.get("meta") or {}
-    if str(meta.get("계약방법") or "").startswith("수의") and value is not None and value < SMALL_QUOTE_FLOOR:
-        return 0
-    return 1
+    # L16①: 중소기업자간 경쟁 always; a 수의계약 only in the decree's cases (L29②) and from 1천만원 (L29①).
+    # The notice rarely says which 수의계약 ground it uses, so a 수의계약 is not read as v10.
+    return int(not str((rec.get("meta") or {}).get("계약방법") or "").startswith("수의"))
 
 
 def v11(f, rec):
@@ -165,7 +174,9 @@ def v16(f, rec):
 
 def v17(f, rec):
     general, value = general_band(f, rec)
-    return int(general and value is not None and value < 100_000_000 and size_class(f, rec) == "sme")
+    # A stated 제2조의3 exception takes the notice out of 우선조달 altogether, so the bands do not bind (L19).
+    return int(general and value is not None and value < 100_000_000 and size_class(f, rec) == "sme"
+               and not excepted(f, rec))
 
 
 def v18(f, rec):
