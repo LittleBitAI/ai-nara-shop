@@ -128,7 +128,9 @@ class Pr154RoundOneTests(unittest.TestCase):
         self.assertFalse(script.v19_demanded_at_bid_stage(notice("물품공급 확약서는 낙찰자가 제출하며 입찰 시 가격평가를 진행합니다.")))
         # Round 9: a negated demand is no demand.
         for text in ("물품공급 확약서는 입찰 시 제출하지 않습니다.", "입찰 시 물품공급 확약서 제출은 요구하지 않습니다.",
-                     "물품공급 확약서는 입찰 시 제출 대상이 아닙니다.", "입찰 시 물품공급 확약서 제출은 필수가 아닙니다."):
+                     "물품공급 확약서는 입찰 시 제출 대상이 아닙니다.", "입찰 시 물품공급 확약서 제출은 필수가 아닙니다.",
+                     "입찰 시 물품공급 확약서 제출 의무 없음", "입찰 시 물품공급 확약서 제출 불요",
+                     "입찰 시 물품공급 확약서 제출은 선택사항"):
             with self.subTest(text=text):
                 self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
         # Round 8: "입찰 시 제출한 가격표" is another item's bid-stage submission.
