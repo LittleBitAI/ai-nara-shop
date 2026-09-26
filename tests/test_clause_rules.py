@@ -77,14 +77,16 @@ class OffDevBatchTwoTests(unittest.TestCase):
         self.assertFalse(script.local_small_quote(notice("x", 적용계약법="지방계약법", 계약방법="수의계약",
                                                          입찰추정가격=300_000_000)))
 
-    def test_limits_written_with_a_quote_mark_or_a_copula(self):
-        for text in ("가. 소기업 또는 소상공인으로‘소기업, 소상공인 확인서’를 소지한 업체",
-                     "가. 「소상공인 보호 및 지원에 관한 법률」 제2조에 따른 소기업자 및 소상공인인 업체"):
-            with self.subTest(text=text):
-                self.assertTrue(script.size_limited(notice(text)))
+    def test_a_limit_written_with_a_quote_mark(self):
+        self.assertTrue(script.size_limited(notice("가. 소기업 또는 소상공인으로‘소기업, 소상공인 확인서’를 소지한 업체")))
 
-    def test_the_copula_close_attaches_to_the_size_word(self):
-        self.assertFalse(script.size_limited(notice("입찰참가자격\n가. 소기업 확인서는 필요 없으며 참여 가능한 법인 업체")))
+    def test_a_copula_naming_a_size_class_is_not_a_limit(self):
+        # PR #154 rounds 1 and 20: "…인 업체" also names classes that are excluded or allowed alongside large firms.
+        for text in ("입찰참가자격\n가. 소기업 확인서는 필요 없으며 참여 가능한 법인 업체",
+                     "입찰참가자격\n가. 소기업인 업체(자)는 참가할 수 없으며, 대기업은 참가할 수 있습니다.",
+                     "입찰참가자격\n가. 소상공인인 업체, 대기업인 업체 모두 참가할 수 있습니다."):
+            with self.subTest(text=text):
+                self.assertFalse(script.size_limited(notice(text)))
 
 
 class RaiseTests(unittest.TestCase):
