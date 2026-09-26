@@ -158,7 +158,9 @@ class DocumentedRerunReproducesTheBaseline(unittest.TestCase):
                          "고정 커밋 재생이 보고서의 Macro 를 못 낸다 — 둘 중 하나가 낡았다")
 
     def test_the_pinned_replay_gives_the_documented_v11(self):
-        found = re.search(r"기준 v11 \| \*\*(\d+) / (\d+) / (\d+)\*\*", self.report)
+        # 강조는 안 본다. 위키 lint 가 표 칸의 `**` 를 지운다(`6c263c9`) — 고정할 것은
+        # 세 수가 실측과 같은가이지 그 수가 굵은가가 아니다.
+        found = re.search(r"기준 v11 \| (?:\*\*)?(\d+) / (\d+) / (\d+)", self.report)
         self.assertIsNotNone(found, "README §1 에서 기준 v11 을 못 찾았다")
         item = self.metrics["items"]["v11"]
         self.assertEqual((item["tp"], item["fp"], item["fn"]),
