@@ -1509,14 +1509,8 @@ def clean_evidence(ev: Optional[str], src: str) -> str:
 V19_POST_AWARD = re.compile(r"계약\s*시|계약체결|낙찰자\s*결정")   # 낙찰 후·계약 시 의무
 V19_BID_STAGE = re.compile(r"입찰|투찰")                        # 입찰 단계 표현이 있으면 유지
 V19_PLEDGE = re.compile(r"확약서")
-# The bid stage is also written "입찰 시 제출서류", "입찰참가 등록 시" and "전자입찰서 제출기간 내" (off-dev audit,
-# reports/offdev-0926: four v19 positives lowered for want of these). v19 is a demand at the bid or tender stage.
 V19_BID_DEADLINE = re.compile(r"입찰서?\s*제출\s*마감|입찰\s*전|입찰전|투찰\s*마감"
-                              r"|개찰\s*전|입찰\s*참가\s*시"
-                              r"|입찰\s*참가\s*(?:자격\s*)?등록\s*시|입찰서?\s*제출\s*기간")
-# A bare "입찰 시" names a stage only as a list heading ("다. 입찰 시 제출서류"); on the pledge's own line it can
-# belong to another requirement ("계약 시 제출서류: 확약서 1부. 입찰 시 평가표는 별첨").
-V19_BID_HEADING = re.compile(V19_BID_DEADLINE.pattern + r"|(?<![가-힣])(?:입찰|투찰)\s*시(?![가-힣])")
+                              r"|개찰\s*전|입찰\s*참가\s*시")
 V19_WINDOW = 200                                               # 확약서 언급 앞뒤로 볼 글자 수
 V24_AMOUNT = re.compile(r"(\d{1,3}(?:,\d{3})+|\d{5,})\s*원")
 V24_REGION = re.compile(r"지역제한\s*\(([^)]*)\)")
@@ -1626,15 +1620,12 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
             end = min(end if end >= 0 else len(text), found.end() + V19_WINDOW)
             if V19_BID_DEADLINE.search(text[start:end]):
                 return True
-            # A bare "입찰 시" is read only in list headings (below). On the pledge's own line it was tried and
-            # withdrawn (PR #154 rounds 2-14): binding it to the pledge's demand took clause parsing that each review
-            # round broke again, and it moved no dev, diagnostic or unlabeled cell.
         lines = text.split("\n")
         for index, line in enumerate(lines):
             if V19_PLEDGE.search(line):
-                for heading in (list_heading(lines, index), enumerated_heading(lines, index)):
-                    if heading and V19_BID_HEADING.search(heading):
-                        return True
+                heading = list_heading(lines, index)
+                if heading and V19_BID_DEADLINE.search(heading):
+                    return True
     return False
 
 
@@ -1656,39 +1647,6 @@ def list_heading(lines, index):
         other = LIST_MARKER.match(lines[up])
         if (other.lastgroup if other else None) != kind:
             return lines[up]
-    return None
-
-
-ENUMERATING = ("circled", "hangul", "paren_num", "num")
-STAGE_AFTER_BID = re.compile(r"계약|낙찰|착수|납품|준공|이행")
-
-
-def enumerated_heading(lines, index):
-    """For a numbered entry, the nearest line above with a different numbering kind, skipping only notes (※) and
-    sub-bullets (-) inside the list — `list_heading` stops at those, so a list like "다. 입찰 시 제출서류 / ③ … /
-    - 증빙자료 … / ⑦ 확약서" lost its heading (off-dev audit, 4 v19 misses). Any unmarked line — a heading of its own
-    ("낙찰 후 이행사항") or an introductory sentence ("낙찰자는 계약 체결 후 다음 서류를 제출하여야 합니다.") — ends the
-    walk and is returned, as `list_heading` does (PR #154 rounds 15-16)."""
-    found = LIST_MARKER.match(lines[index])
-    if not found or found.lastgroup not in ENUMERATING:
-        return None
-    for up in range(index - 1, max(-1, index - 1 - HEADING_REACH), -1):
-        if not lines[up].strip():
-            continue
-        other = LIST_MARKER.match(lines[up])
-        if not other:
-            return lines[up]
-        if other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
-            return lines[up]
-        # A note or sub-bullet is skipped only when it is plainly a detail of the entry above — a "label : value"
-        # line ("- 증빙자료 : 카탈로그 …") or a long explanatory "※" note — and names no later stage. Any other marked
-        # line may head a section of its own ("※ 우선협상대상자 제출서류", "- 개찰 후 제출자료") and ends the walk
-        # (PR #154 rounds 17-18: no keyword list of later stages is complete).
-        if other.lastgroup == "bullet":
-            stripped = lines[up].strip()
-            detail = bool(re.search(r"[:：]", stripped)) or (stripped.startswith("※") and len(stripped) > 40)
-            if not detail or STAGE_AFTER_BID.search(stripped):
-                return lines[up]
     return None
 
 
