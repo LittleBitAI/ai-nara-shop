@@ -1608,6 +1608,17 @@ def v21_minimum_share(rec: Dict[str, Any]) -> Optional[float]:
             else V21_FLOOR_NATIONAL)
 
 
+# List items are sentences too: a flattened list ("① … ③ … ㉮ … ㉰ 확약서") has no other boundary.
+SENTENCE_END = re.compile(r"[.。!?]|다\s*[.。]|\n|[①-⑳㉠-㉻※]")
+
+
+def pledge_sentence(text: str, start: int, end: int) -> str:
+    """The sentence holding text[start:end]: from the previous sentence end (., 다., newline) to the next."""
+    left = max((m.end() for m in SENTENCE_END.finditer(text, max(0, start - 300), start)), default=max(0, start - 300))
+    right = SENTENCE_END.search(text, end)
+    return text[left: right.start() if right else min(len(text), end + 300)]
+
+
 def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
     """공고가 입찰·투찰 단계에서 확약서를 요구했는가. 확약서 언급 주변만 본다.
 
@@ -1625,6 +1636,10 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
             end = text.find("\n", found.end())
             end = min(end if end >= 0 else len(text), found.end() + V19_WINDOW)
             if V19_BID_DEADLINE.search(text[start:end]):
+                return True
+            # A bare "입찰 시" governs the pledge only inside the pledge's own sentence ("확약서는 입찰 시 제출");
+            # in the next sentence it belongs to another requirement ("… 확약서 1부. 입찰 시 평가표는 별첨").
+            if V19_BID_HEADING.search(pledge_sentence(text, found.start(), found.end())):
                 return True
         lines = text.split("\n")
         for index, line in enumerate(lines):
@@ -1657,7 +1672,8 @@ def list_heading(lines, index):
 
 
 ENUMERATING = ("circled", "hangul", "paren_num", "num")
-SECTION_HEADING = re.compile(r"제출\s*서류|구비\s*서류|제출\s*(?:할|하여야\s*할)\s*서류|서류\s*제출")
+SECTION_HEADING = re.compile(r"제출|서류|자료")
+PREDICATE_END = re.compile(r"(?:다|요|함|음|것)\s*[.。]?\s*$")
 
 
 def enumerated_heading(lines, index):
@@ -1671,11 +1687,18 @@ def enumerated_heading(lines, index):
         other = LIST_MARKER.match(lines[up])
         if other and other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
             return lines[up]
-        # An unmarked line naming documents is a section heading of its own ("계약 체결 후 제출서류"); the walk
-        # stops there rather than borrow an earlier list's timing.
-        if not other and SECTION_HEADING.search(lines[up]):
+        # An unmarked heading of its own ("계약 체결 후 제출자료") ends the walk rather than borrow an earlier
+        # list's timing. A heading is a short noun phrase naming documents; prose ends in a predicate
+        # ("제출서류는 다음과 같습니다.") and is skipped.
+        if not other and is_section_heading(lines[up]):
             return lines[up]
     return None
+
+
+def is_section_heading(line: str) -> bool:
+    stripped = line.strip()
+    return (0 < len(stripped) <= 40 and SECTION_HEADING.search(stripped) is not None
+            and not PREDICATE_END.search(stripped))
 
 
 # --- v24 대조 축 ---------------------------------------------------------------

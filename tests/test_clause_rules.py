@@ -102,6 +102,22 @@ class Pr154RoundOneTests(unittest.TestCase):
         text = "계약 시 제출서류: 물품공급 확약서 1부. 입찰 시 평가표는 별첨."
         self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
 
+    def test_round_two_bid_time_in_the_pledge_sentence_counts(self):
+        # PR #154 round 2: the timing on the pledge's own sentence governs it.
+        for text in ("① 입찰 시 물품공급 확약서 1부 제출", "물품공급 확약서는 입찰 시 제출하여야 합니다."):
+            with self.subTest(text=text):
+                self.assertTrue(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_a_flattened_list_item_is_its_own_sentence(self):
+        text = "① 입찰 시 제안서 6부 제출 ② 증빙서류 각 1부 ㉰ “확약서” 1부 [별지 7]"
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_round_two_prose_is_not_a_heading_but_a_named_section_is(self):
+        prose = ["다. 입찰 시 제출서류", "제출서류는 다음과 같습니다.", "① 물품공급 확약서 1부"]
+        self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(prose))))
+        after = ["다. 입찰 시 제출서류", "③ 사업자등록증", "계약 체결 후 제출자료", "① 물품공급 확약서 1부"]
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(after))))
+
     def test_the_copula_close_attaches_to_the_size_word(self):
         self.assertFalse(script.size_limited(notice("입찰참가자격\n가. 소기업 확인서는 필요 없으며 참여 가능한 법인 업체")))
 
