@@ -18,13 +18,16 @@ HERE = Path(__file__).parent
 sys.path.insert(0, str(ROOT / "experiments"))
 import a_facts_verdict as facts_verdict  # noqa: E402
 import a_focus_verdict as focus_verdict  # noqa: E402
+import a_v1_verdict as v1_verdict  # noqa: E402
 
 ITEMS = [f"v{i}" for i in range(1, 25)]
 FACTS_ITEMS = {"v19": "trust", "v11": "conditional", "v18": "conditional", "v16": "conditional", "v4": "conditional",
                "v10": "conditional (dev-fitted)"}
 # v20 from the focused question; its dev 200 score was reached by revising on those 200.
 FOCUS_ITEMS = {"v20": "conditional (dev-fitted)"}
-EXCLUDED = {"v1", "v9", "v24"}
+# v1 from its own question, majority of three runs (a_v1_verdict.py).
+V1_ITEMS = {"v1": "trust (dev-fitted)"}
+EXCLUDED = {"v9", "v24"}
 
 
 def main():
@@ -37,6 +40,8 @@ def main():
             source[item] = {"labeler": "facts", "verdict": FACTS_ITEMS[item]}
         elif item in FOCUS_ITEMS:
             source[item] = {"labeler": "focus", "verdict": FOCUS_ITEMS[item]}
+        elif item in V1_ITEMS:
+            source[item] = {"labeler": "v1 majority of 3", "verdict": V1_ITEMS[item]}
         else:
             source[item] = {"labeler": "24-item", "verdict": wide[item]}
     wanted = set()
@@ -46,6 +51,12 @@ def main():
                if r["id"] in wanted}
     for sample in ("sealed", "diag"):
         wide_labels, fact_rows, focus_rows = {}, {}, {}
+        v1_runs = []
+        for run in sorted(glob.glob(str(HERE / "facts" / "v1b-600" / "run*"))):
+            rows = {}
+            for part in sorted(glob.glob(str(Path(run) / "luna-*.jsonl"))):
+                rows.update(v1_verdict.load(part))
+            v1_runs.append(rows)
         for path in sorted(glob.glob(str(HERE / "facts" / "focus3-600" / "luna-*.jsonl"))):
             for line in Path(path).read_text(encoding="utf-8").splitlines():
                 row = json.loads(line)
@@ -75,6 +86,8 @@ def main():
                                    else facts_verdict.VERDICTS[item](f, records[identifier]))
                     elif labeler == "focus":
                         row.append(focus_verdict.label(item, focus_rows[identifier], records[identifier]))
+                    elif item in V1_ITEMS:
+                        row.append(v1_verdict.majority(v1_runs, identifier, records[identifier]))
                     else:
                         row.append(wide_labels[identifier][item]["위반여부"])
                 writer.writerow(row)

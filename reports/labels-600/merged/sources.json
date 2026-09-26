@@ -1,7 +1,7 @@
 {
   "v1": {
-    "labeler": null,
-    "verdict": "exclude"
+    "labeler": "v1 majority of 3",
+    "verdict": "trust (dev-fitted)"
   },
   "v2": {
     "labeler": "24-item",
