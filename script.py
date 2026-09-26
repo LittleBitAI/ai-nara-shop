@@ -1694,8 +1694,12 @@ def enumerated_heading(lines, index):
         if other.lastgroup == "bullet":
             stripped = lines[up].strip()
             label = re.split(r"[:：]", stripped, maxsplit=1)[0]
-            detail = (label != stripped and "제출" not in label) or (stripped.startswith("※") and len(stripped) > 40)
-            if not detail or STAGE_AFTER_BID.search(stripped):
+            if label != stripped:
+                # A "label : value" line: only the label can name a stage — the value is content ("선정기준표").
+                detail = "제출" not in label and not STAGE_AFTER_BID.search(label)
+            else:
+                detail = stripped.startswith("※") and len(stripped) > 40 and not STAGE_AFTER_BID.search(stripped)
+            if not detail:
                 return lines[up]
     return None
 
