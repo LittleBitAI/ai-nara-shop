@@ -1623,7 +1623,8 @@ CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
 # A clause that says the submission is not required establishes no demand ("입찰 시 제출하지 않습니다").
 # Negation morphemes, not phrases: in a clause as short as a pledge's, any of them means the submission is not
 # demanded ("…하지 않습니다", "대상이 아닙니다", "의무 없음", "불요", "면제", "선택사항").
-NEGATED_DEMAND = re.compile(r"없|않|아니|아닙|아님|불요|불필요|면제|제외|생략|선택\s*사항|임의|대상\s*외")
+NEGATED_DEMAND = re.compile(r"없|않|아니|아닙|아님|불요|불필요|면제|제외|생략|선택\s*사항|임의|대상\s*외"
+                            r"|말\s*것|말아|마십|금지|불가|못\s*[하함]")     # a prohibition is no demand either
 BID_TIME_PLEDGE = re.compile(r"\s*(?:에\s*)?(?:[^\s,;.]{0,12}\s*){0,2}?확약서")
 # A predicative submission verb; "입찰 시 제출한 가격표" modifies another noun.
 BID_TIME_VERB = re.compile(r"\s*(?:에\s*)?(?:제출|첨부|구비|징구)(?!\s*(?:한|된|하는|할|되는)(?![가-힣]*[다요]))")
