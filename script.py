@@ -1608,66 +1608,6 @@ def v21_minimum_share(rec: Dict[str, Any]) -> Optional[float]:
             else V21_FLOOR_NATIONAL)
 
 
-# List items are sentences too: a flattened list ("① … ③ … ㉮ … ㉰ 확약서") has no other boundary.
-SENTENCE_END = re.compile(r"[.。!?]|다\s*[.。]|\n|[①-⑳㉠-㉻※]")
-
-
-def pledge_sentence(text: str, start: int, end: int) -> str:
-    """The sentence holding text[start:end]: from the previous sentence end (., 다., newline) to the next."""
-    left = max((m.end() for m in SENTENCE_END.finditer(text, max(0, start - 300), start)), default=max(0, start - 300))
-    right = SENTENCE_END.search(text, end)
-    return text[left: right.start() if right else min(len(text), end + 300)]
-
-
-CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
-# A clause that says the submission is not required establishes no demand ("입찰 시 제출하지 않습니다").
-# Negation morphemes, not phrases: in a clause as short as a pledge's, any of them means the submission is not
-# demanded ("…하지 않습니다", "대상이 아닙니다", "의무 없음", "불요", "면제", "선택사항").
-NEGATED_DEMAND = re.compile(r"없|않|아니|아닙|아님|불요|불필요|면제|제외|생략|선택\s*사항|임의|대상\s*외"
-                            r"|말\s*것|말아|마십|금지|불가|못\s*[하함]")     # a prohibition is no demand either
-MANDATORY = re.compile(r"하여야|해야|할\s*것|하십시오|하시기\s*바랍|바랍니다|필수|반드시|요망|\d+\s*부(?![가-힣])")
-BID_TIME_PLEDGE = re.compile(r"\s*(?:에\s*)?(?:[^\s,;.]{0,12}\s*){0,2}?확약서")
-# A predicative submission verb; "입찰 시 제출한 가격표" modifies another noun.
-BID_TIME_VERB = re.compile(r"\s*(?:에\s*)?(?:제출|첨부|구비|징구)(?!\s*(?:한|된|하는|할|되는)(?![가-힣]*[다요]))")
-# A predicate ending between the pledge and the bid time closes the pledge's requirement first.
-PREDICATE_BETWEEN = re.compile(r"하며|하고|하여|하나|이며|되며|되고|[가-힣]며\s|[가-힣]고\s")
-# Post-award times for binding a bid-time phrase to its clause. Wider than `V19_POST_AWARD`, which the evidence check
-# also uses and is left as it is.
-V19_AFTER_AWARD = re.compile(V19_POST_AWARD.pattern + r"|낙찰\s*(?:후|이후|통보\s*후)|계약\s*(?:후|이후|체결\s*후)"
-                             r"|착수\s*(?:시|전|후)|납품\s*(?:시|후)|선정\s*후")
-
-
-def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
-    """A bare bid-time phrase governs the pledge only inside the pledge's own clause (its sentence split at commas and
-    semicolons): "① 입찰 시 확약서 1부 제출", "확약서는 입찰 시 제출". In another clause it belongs to another item,
-    whatever names the pledge's own section ("계약 시 …", "낙찰 후 …", "낙찰자 제출서류: 확약서 1부, 입찰 시 평가표는 별첨").
-    A list heading's timing is read by `v19_demanded_at_bid_stage` separately."""
-    sentence = pledge_sentence(text, start, end)
-    if not V19_BID_HEADING.search(sentence):
-        return False
-    offset = text.find(sentence, max(0, start - len(sentence)))
-    at = start - offset if offset >= 0 else 0
-    left = max((m.end() for m in CLAUSE_SEPARATOR.finditer(sentence, 0, at)), default=0)
-    right = CLAUSE_SEPARATOR.search(sentence, at)
-    clause = sentence[left: right.start() if right else len(sentence)]
-    # A demand must be stated, not inferred from a missing negation: optional, voluntary, deferred or incentive
-    # wording ("선택", "자율", "제출 가능", "추후 안내", "가점") names no demand. Require an obligation marker or a
-    # document count of a required-documents list ("1부").
-    if V19_AFTER_AWARD.search(clause) or NEGATED_DEMAND.search(clause) or not MANDATORY.search(clause):
-        return False
-    # The time must modify the pledge's submission: followed by the pledge itself ("입찰 시 물품공급 확약서"), or — after
-    # the pledge with no predicate ending in between — by a predicative submission verb ("확약서는 입찰 시 제출").
-    # "…제출하며 입찰 시 가격평가" and "…제출하며 입찰 시 제출한 가격표" time another requirement.
-    pledge_end = at - left + (end - start)          # in clause coordinates
-    for m in V19_BID_HEADING.finditer(clause):
-        if BID_TIME_PLEDGE.match(clause, m.end()):
-            return True
-        if (m.start() >= pledge_end and BID_TIME_VERB.match(clause, m.end())
-                and not PREDICATE_BETWEEN.search(clause, pledge_end, m.start())):
-            return True
-    return False
-
-
 def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
     """공고가 입찰·투찰 단계에서 확약서를 요구했는가. 확약서 언급 주변만 본다.
 
@@ -1686,10 +1626,9 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
             end = min(end if end >= 0 else len(text), found.end() + V19_WINDOW)
             if V19_BID_DEADLINE.search(text[start:end]):
                 return True
-            # A bare "입찰 시" governs the pledge only inside the pledge's own sentence ("확약서는 입찰 시 제출");
-            # in the next sentence it belongs to another requirement ("… 확약서 1부. 입찰 시 평가표는 별첨").
-            if bid_time_governs_pledge(text, found.start(), found.end()):
-                return True
+            # A bare "입찰 시" is read only in list headings (below). On the pledge's own line it was tried and
+            # withdrawn (PR #154 rounds 2-14): binding it to the pledge's demand took clause parsing that each review
+            # round broke again, and it moved no dev, diagnostic or unlabeled cell.
         lines = text.split("\n")
         for index, line in enumerate(lines):
             if V19_PLEDGE.search(line):

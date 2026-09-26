@@ -102,11 +102,12 @@ class Pr154RoundOneTests(unittest.TestCase):
         text = "계약 시 제출서류: 물품공급 확약서 1부. 입찰 시 평가표는 별첨."
         self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
 
-    def test_round_two_bid_time_in_the_pledge_sentence_counts(self):
-        # PR #154 round 2: the timing on the pledge's own sentence governs it.
+    def test_a_bare_bid_time_on_the_pledge_line_is_read_as_on_main(self):
+        # PR #154 rounds 2-14: the pledge-line rule for a bare "입찰 시" was withdrawn — it moved no measured cell and
+        # every round found a new false-positive shape. The line is read as on main (a recall follow-up).
         for text in ("① 입찰 시 물품공급 확약서 1부 제출", "물품공급 확약서는 입찰 시 제출하여야 합니다."):
             with self.subTest(text=text):
-                self.assertTrue(script.v19_demanded_at_bid_stage(notice(text)))
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
 
     def test_round_three_a_contract_time_in_the_sentence_binds_to_the_comma_clause(self):
         # PR #154 round 3: "… 확약서 1부, 입찰 시 평가표는 별첨" — the pledge is due at contract time.
