@@ -3485,12 +3485,14 @@ def v22_briefing_clause(rec: Dict[str, Any]) -> Optional[str]:
 
 
 def apply_clause_rules(out: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    # A lowered cell's quote is "", never None: write_csv writes None as the text "None", and the CSV check
+    # then fails on an absence item or a 0 with a quote.
     if catalogue_miss(rec):
         for item in ("v10", "v11"):
             if (out.get(item) or {}).get("위반여부") == 1:
-                out[item] = {**out[item], "위반여부": 0, "근거문구": None}
+                out[item] = {"위반여부": 0, "근거문구": ""}
     if (out.get("v11") or {}).get("위반여부") == 1 and size_limited(rec):
-        out["v11"] = {"위반여부": 0, "근거문구": None}
+        out["v11"] = {"위반여부": 0, "근거문구": ""}
     if (out.get("v2") or {}).get("위반여부") == 0:
         quote = v2_performance_clause(rec)
         for doc in rec["docs"] if quote else ():

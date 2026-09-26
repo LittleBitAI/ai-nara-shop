@@ -23,7 +23,8 @@ def cells(**values):
 class SizeLimitTests(unittest.TestCase):
     def test_a_size_limit_on_the_bidder_lowers_v11(self):
         rec = notice("1. 입찰참가자격\n가. 「중소기업기본법」 제2조에 따른 소기업 또는 소상공인으로서 확인서를 소지한 업체")
-        self.assertEqual(script.apply_clause_rules(cells(v11=1), rec)["v11"]["위반여부"], 0)
+        # The quote is "", not None: write_csv writes None as the text "None" and the CSV check rejects it.
+        self.assertEqual(script.apply_clause_rules(cells(v11=1), rec)["v11"], {"위반여부": 0, "근거문구": ""})
 
     def test_a_website_name_or_a_document_line_is_not_a_limit(self):
         for text in ("중소기업공공구매 종합정보망에서 확인되지 않을 경우, 입찰 참가 자격이 없습니다.",
