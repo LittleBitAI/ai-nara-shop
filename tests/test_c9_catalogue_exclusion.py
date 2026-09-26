@@ -28,7 +28,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 CASE = ROOT / "reports/runs/colab-1790396310565903096/dev-debug"
-BASE_REV = "de5b873"
+BASE_REV = "772ca12"
 ITEMS = [f"v{i}" for i in range(1, 25)]
 C_ITEMS = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v20")
 OFF_TARGET = [i for i in ITEMS if i not in C_ITEMS]
@@ -38,15 +38,15 @@ CANDIDATES = {
     "c9": "experiments/c9_catalogue_exclusion_candidate.py",
     "integrated": "experiments/c9_integrated_candidate.py",
 }
-BASE_MACRO = "0.793712449043"
+BASE_MACRO = "0.825021628698"
 EXPECTED_MACRO = {
-    "c7": "0.798520141351",
-    "c9": "0.799650240827",
-    "integrated": "0.804457933134",
+    "c7": "0.829829321006",
+    "c9": "0.826608930285",
+    "integrated": "0.831416622593",
 }
-EXPECTED_CHANGED = {"c7": 1, "c9": 4, "integrated": 5}
+EXPECTED_CHANGED = {"c7": 1, "c9": 1, "integrated": 2}
 # 통합에서 움직이는 항목과 그 TP/FP/FN.
-EXPECTED_ITEMS = {"v10": (4, 3, 3), "v11": (5, 4, 1), "v18": (4, 2, 3)}
+EXPECTED_ITEMS = {"v10": (4, 3, 3), "v18": (4, 2, 3)}
 
 
 class Replay(unittest.TestCase):
