@@ -92,7 +92,10 @@ def competitive(f, rec) -> bool:
     meta_codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
     quote_codes = set(CODE10.findall(str(f.get("dp_required_quote") or "")))
     quote_codes |= set(CODE10.findall(str(f.get("catalogue_service") or "")))
-    names = object_heads(f.get("object_name"), (rec.get("meta") or {}).get("세부품명번호목록"))
+    # A registered 세부품명 with its code is the notice's own classification: when codes are registered they decide,
+    # and a registered name that merely ends like a catalogue name (대용량냉장원심분리기 vs 원심분리기) is a different
+    # item. Names are matched only when no code is registered (S7-15: designation by name, a code not required).
+    names = [] if meta_codes else object_heads(f.get("object_name"), None)
     value = price(rec)
     for row in products():
         by_code = row["세부품명번호"] in meta_codes | quote_codes

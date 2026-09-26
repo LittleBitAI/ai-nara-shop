@@ -25,6 +25,18 @@ def test_every_catalogue_name_matches_itself_as_an_object_name():
         assert any(head.endswith(item) for head in fv.object_heads(row["세부품명"], None)), row["세부품명"]
 
 
+def test_a_registered_code_decides_over_a_name_that_ends_like_a_catalogue_item():
+    # Round 4 (PPS-D-011456): 대용량냉장원심분리기[4110390601] is registered; the catalogue lists 원심분리기[4016170101].
+    rec = {"docs": [{"text": "대용량 냉장 원심분리기 구매"}],
+           "meta": {"세부품명번호목록": "대용량냉장원심분리기[4110390601]", "입찰추정가격": 50_000_000}}
+    assert not fv.competitive({"object_name": "대용량 냉장 원심분리기"}, rec)
+    # Without a registered code the name is still read (S7-15: a code is not required).
+    rec["meta"]["세부품명번호목록"] = None
+    fv.products()
+    item = next(r["세부품명"] for r in fv.script._PRODUCTS if r["세부품명"] == "원심분리기")
+    assert fv.competitive({"object_name": item}, rec)
+
+
 def test_competition_exception_is_the_sales_support_decree_article_7_only():
     match = fv.COMPETITION_EXCEPTION.search
     assert match("「중소기업제품 구매촉진 및 판로지원에 관한 법률 시행령」 제7조제1항제4호에 따라")
