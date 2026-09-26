@@ -1625,6 +1625,7 @@ CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
 # demanded ("…하지 않습니다", "대상이 아닙니다", "의무 없음", "불요", "면제", "선택사항").
 NEGATED_DEMAND = re.compile(r"없|않|아니|아닙|아님|불요|불필요|면제|제외|생략|선택\s*사항|임의|대상\s*외"
                             r"|말\s*것|말아|마십|금지|불가|못\s*[하함]")     # a prohibition is no demand either
+MANDATORY = re.compile(r"하여야|해야|할\s*것|하십시오|하시기\s*바랍|바랍니다|필수|반드시|요망|\d+\s*부(?![가-힣])")
 BID_TIME_PLEDGE = re.compile(r"\s*(?:에\s*)?(?:[^\s,;.]{0,12}\s*){0,2}?확약서")
 # A predicative submission verb; "입찰 시 제출한 가격표" modifies another noun.
 BID_TIME_VERB = re.compile(r"\s*(?:에\s*)?(?:제출|첨부|구비|징구)(?!\s*(?:한|된|하는|할|되는)(?![가-힣]*[다요]))")
@@ -1649,7 +1650,10 @@ def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
     left = max((m.end() for m in CLAUSE_SEPARATOR.finditer(sentence, 0, at)), default=0)
     right = CLAUSE_SEPARATOR.search(sentence, at)
     clause = sentence[left: right.start() if right else len(sentence)]
-    if V19_AFTER_AWARD.search(clause) or NEGATED_DEMAND.search(clause):
+    # A demand must be stated, not inferred from a missing negation: optional, voluntary, deferred or incentive
+    # wording ("선택", "자율", "제출 가능", "추후 안내", "가점") names no demand. Require an obligation marker or a
+    # document count of a required-documents list ("1부").
+    if V19_AFTER_AWARD.search(clause) or NEGATED_DEMAND.search(clause) or not MANDATORY.search(clause):
         return False
     # The time must modify the pledge's submission: followed by the pledge itself ("입찰 시 물품공급 확약서"), or — after
     # the pledge with no predicate ending in between — by a predicative submission verb ("확약서는 입찰 시 제출").
