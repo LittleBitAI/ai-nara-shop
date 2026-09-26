@@ -64,6 +64,31 @@ class ReviewRoundOneTests(unittest.TestCase):
         self.assertFalse(script.catalogue_miss(rec))
 
 
+class OffDevBatchTwoTests(unittest.TestCase):
+    """PR #154: the v8 local small-quote exemption and two more v11 limit forms (v19 moved to its own PR)."""
+
+    def test_v8_is_not_raised_on_a_local_small_quote(self):
+        text = "1. 견적제출 자격\n가. 경상북도에 소재하고 최근 3년간 유사 용역 실적이 있는 업체"
+        local = notice(text, 적용계약법="지방계약법", 계약방법="수의계약")
+        self.assertTrue(script.local_small_quote(local))
+        self.assertEqual(script.apply_qualification_rules(cells(), local)["v8"]["위반여부"], 0)
+
+    def test_a_large_local_negotiated_contract_is_not_a_small_quote(self):
+        self.assertFalse(script.local_small_quote(notice("x", 적용계약법="지방계약법", 계약방법="수의계약",
+                                                         입찰추정가격=300_000_000)))
+
+    def test_a_limit_written_with_a_quote_mark(self):
+        self.assertTrue(script.size_limited(notice("가. 소기업 또는 소상공인으로‘소기업, 소상공인 확인서’를 소지한 업체")))
+
+    def test_a_copula_naming_a_size_class_is_not_a_limit(self):
+        # PR #154 rounds 1 and 20: "…인 업체" also names classes that are excluded or allowed alongside large firms.
+        for text in ("입찰참가자격\n가. 소기업 확인서는 필요 없으며 참여 가능한 법인 업체",
+                     "입찰참가자격\n가. 소기업인 업체(자)는 참가할 수 없으며, 대기업은 참가할 수 있습니다.",
+                     "입찰참가자격\n가. 소상공인인 업체, 대기업인 업체 모두 참가할 수 있습니다."):
+            with self.subTest(text=text):
+                self.assertFalse(script.size_limited(notice(text)))
+
+
 class RaiseTests(unittest.TestCase):
     def test_v2_rises_below_the_notice_amount_but_not_for_a_local_small_quote(self):
         text = "1. 입찰참가자격\n가. 최근 3년 이내 유사 용역 실적이 있는 업체이어야 합니다."

@@ -2639,6 +2639,15 @@ def apply_product_rules(judgment, rec):
     return out
 
 
+def local_small_quote(rec) -> bool:
+    """A 지방 small-value quote contract (집행기준 제5장 제3절 1.), which may combine limits. Its general ceiling is
+    1억 — the same band S7-3 names for the 지방 소액수의 견적 exception."""
+    meta = rec.get("meta") or {}
+    price = estimated_price(rec)
+    return ("지방" in str(meta.get("적용계약법") or "") and str(meta.get("계약방법") or "").startswith("수의")
+            and price is not None and price < 100_000_000)
+
+
 def apply_qualification_rules(judgment, rec):
     """모델 판정에 v8·v7·v4를 올리고 v3만 내린다. 다른 20항목은 그대로 돌려준다.
 
@@ -2653,6 +2662,10 @@ def apply_qualification_rules(judgment, rec):
         # `[수요기관(기초자치단체)|지역=r1]` 처럼 익명화된 기관 토큰에서 검출기가 None 을
         # 내므로 정답 양성까지 함께 지운다. 되돌렸다 — 여기서는 0 을 1 로만 올린다.
         if cell.get("위반여부") == 1:
+            continue
+        # v8 비고 "지방 + 소액수의 가능": a local 2-quote negotiated contract may combine region and 실적
+        # (집행기준 제5장 제3절 1. 6)·7)). The off-dev audit found all four rule-raised v8 FPs there.
+        if item == "v8" and local_small_quote(rec):
             continue
         hit = RULES[item](rec)
         if hit:
@@ -3408,7 +3421,7 @@ CLAUSE_CHAR = (r"(?:(?!\n\s*(?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)]|[①-⑳]|[-�
                r"(?![\s,;·](?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)](?!\d))|\s*[①-⑳])(?!다\s*[.。])[^。])")
 SIZE_LIMIT = re.compile(SIZE_CLASS + CLAUSE_CHAR + r"{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
                         r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)"
-                        r"|확인서를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
+                        r"|확인서[’'\"」』]?\s*를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
                         r"|제한\s*경쟁\s*(?:입찰)?\s*\(\s*" + SIZE_CLASS, re.S)
 SIZE_TITLES = re.compile(r"[「｢『《][^」｣』》]{0,60}[」｣』》]|중소기업\s*기본법|중소기업\s*범위\s*및\s*확인에\s*관한\s*규정"
                          r"|중소기업제품[^,.\n]{0,30}?(?:법률|시행령)|중소벤처기업부|중소기업자\s*간\s*경쟁\s*제품"
