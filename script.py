@@ -1619,6 +1619,25 @@ def pledge_sentence(text: str, start: int, end: int) -> str:
     return text[left: right.start() if right else min(len(text), end + 300)]
 
 
+CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
+
+
+def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
+    """A bid-time phrase in the pledge's sentence governs it — unless the sentence also names a contract-stage time
+    ("계약 시 제출서류: 확약서 1부, 입찰 시 평가표는 별첨"); then only the pledge's own comma clause counts."""
+    sentence = pledge_sentence(text, start, end)
+    if not V19_BID_HEADING.search(sentence):
+        return False
+    if not V19_POST_AWARD.search(sentence):
+        return True
+    offset = text.find(sentence, max(0, start - len(sentence)))
+    at = start - offset if offset >= 0 else 0
+    left = max((m.end() for m in CLAUSE_SEPARATOR.finditer(sentence, 0, at)), default=0)
+    right = CLAUSE_SEPARATOR.search(sentence, at)
+    clause = sentence[left: right.start() if right else len(sentence)]
+    return bool(V19_BID_HEADING.search(clause)) and not V19_POST_AWARD.search(clause)
+
+
 def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
     """공고가 입찰·투찰 단계에서 확약서를 요구했는가. 확약서 언급 주변만 본다.
 
@@ -1639,7 +1658,7 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
                 return True
             # A bare "입찰 시" governs the pledge only inside the pledge's own sentence ("확약서는 입찰 시 제출");
             # in the next sentence it belongs to another requirement ("… 확약서 1부. 입찰 시 평가표는 별첨").
-            if V19_BID_HEADING.search(pledge_sentence(text, found.start(), found.end())):
+            if bid_time_governs_pledge(text, found.start(), found.end()):
                 return True
         lines = text.split("\n")
         for index, line in enumerate(lines):
