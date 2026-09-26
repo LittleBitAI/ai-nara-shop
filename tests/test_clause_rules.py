@@ -126,6 +126,8 @@ class Pr154RoundOneTests(unittest.TestCase):
 
     def test_round_seven_the_bid_time_must_modify_the_pledge_submission(self):
         self.assertFalse(script.v19_demanded_at_bid_stage(notice("물품공급 확약서는 낙찰자가 제출하며 입찰 시 가격평가를 진행합니다.")))
+        # Round 8: "입찰 시 제출한 가격표" is another item's bid-stage submission.
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("물품공급 확약서는 낙찰자가 제출하며 입찰 시 제출한 가격표를 평가합니다.")))
 
     def test_a_flattened_list_item_is_its_own_sentence(self):
         text = "① 입찰 시 제안서 6부 제출 ② 증빙서류 각 1부 ㉰ “확약서” 1부 [별지 7]"

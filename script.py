@@ -1620,7 +1620,11 @@ def pledge_sentence(text: str, start: int, end: int) -> str:
 
 
 CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
-BID_TIME_OBJECT = re.compile(r"\s*(?:에\s*)?(?:[^\s,;.]{0,12}\s*){0,2}?확약서|\s*(?:에\s*)?(?:제출|첨부|구비|징구)")
+BID_TIME_PLEDGE = re.compile(r"\s*(?:에\s*)?(?:[^\s,;.]{0,12}\s*){0,2}?확약서")
+# A predicative submission verb; "입찰 시 제출한 가격표" modifies another noun.
+BID_TIME_VERB = re.compile(r"\s*(?:에\s*)?(?:제출|첨부|구비|징구)(?!\s*(?:한|된|하는|할|되는)(?![가-힣]*[다요]))")
+# A predicate ending between the pledge and the bid time closes the pledge's requirement first.
+PREDICATE_BETWEEN = re.compile(r"하며|하고|하여|하나|이며|되며|되고|[가-힣]며\s|[가-힣]고\s")
 # Post-award times for binding a bid-time phrase to its clause. Wider than `V19_POST_AWARD`, which the evidence check
 # also uses and is left as it is.
 V19_AFTER_AWARD = re.compile(V19_POST_AWARD.pattern + r"|낙찰\s*(?:후|이후|통보\s*후)|계약\s*(?:후|이후|체결\s*후)"
@@ -1642,9 +1646,17 @@ def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
     clause = sentence[left: right.start() if right else len(sentence)]
     if V19_AFTER_AWARD.search(clause):
         return False
-    # The time must modify the pledge's submission: followed by the pledge itself ("입찰 시 물품공급 확약서") or by a
-    # submission verb ("입찰 시 제출"). "…제출하며 입찰 시 가격평가를 진행" times another requirement.
-    return any(BID_TIME_OBJECT.match(clause, m.end()) for m in V19_BID_HEADING.finditer(clause))
+    # The time must modify the pledge's submission: followed by the pledge itself ("입찰 시 물품공급 확약서"), or — after
+    # the pledge with no predicate ending in between — by a predicative submission verb ("확약서는 입찰 시 제출").
+    # "…제출하며 입찰 시 가격평가" and "…제출하며 입찰 시 제출한 가격표" time another requirement.
+    pledge_end = at - left + (end - start)          # in clause coordinates
+    for m in V19_BID_HEADING.finditer(clause):
+        if BID_TIME_PLEDGE.match(clause, m.end()):
+            return True
+        if (m.start() >= pledge_end and BID_TIME_VERB.match(clause, m.end())
+                and not PREDICATE_BETWEEN.search(clause, pledge_end, m.start())):
+            return True
+    return False
 
 
 def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:

@@ -1,5 +1,5 @@
 {
-  "head": "77eb3c5",
+  "head": "313db7b",
   "paths": {
     "candidate": "experiments/qualification_candidate.py",
     "script": "script.py",
@@ -12,7 +12,7 @@
   },
   "sha256": {
     "candidate": "9ba61d2aa048d839bc3f930adcf29da1c36df59186dee52f36a870bb012d9235",
-    "script": "1fb2eaca4f77329e5a46dcd37cb542ed73e128c65ff5931e5125b83620b22d2d",
+    "script": "ef23552df53611d9fa73ab0b7b74e630dd0f948572d660d36ce1b2931e387daf",
     "dev_input": "5507f5ab0ba53b708f87211ed050dbe531b48a626ace6084c3ccaefb53147534",
     "dev_labels": "84c79302ac190b45b2487ec8e02aab73e59071ee745828e813a7db96d3a97a35",
     "test_sample": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
