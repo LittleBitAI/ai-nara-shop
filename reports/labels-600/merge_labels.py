@@ -30,7 +30,7 @@ V1_ITEMS = {"v1": "trust (dev-fitted)"}
 EXCLUDED = {"v9", "v24"}
 
 
-def main():
+def sources():
     wide = {r["item"]: r["verdict"] for r in json.loads((HERE / "calibration.json").read_text(encoding="utf-8"))["items"]}
     source = {}
     for item in ITEMS:
@@ -44,54 +44,69 @@ def main():
             source[item] = {"labeler": "v1 majority of 3", "verdict": V1_ITEMS[item]}
         else:
             source[item] = {"labeler": "24-item", "verdict": wide[item]}
-    wanted = set()
+    return source
+
+
+def load_records(ids):
+    wanted = set(ids)
+    return {r["id"]: r for r in facts_verdict.script.iter_records(str(ROOT / "open/train_unlabeled.jsonl"))
+            if r["id"] in wanted}
+
+
+def rows_of(directory, field):
+    rows = {}
+    for path in sorted(glob.glob(str(Path(directory) / "luna-*.jsonl"))):
+        for line in Path(path).read_text(encoding="utf-8").splitlines():
+            row = json.loads(line)
+            rows[row["id"]] = row[field]
+    return rows
+
+
+def merge(out, records, source, wide_dir, facts_dir, focus_dir, v1_dirs):
+    """Write one merged label CSV for the notices the 24-item labeler labelled in `wide_dir`."""
+    v1_runs = []
+    for run in v1_dirs:
+        rows = {}
+        for part in sorted(glob.glob(str(Path(run) / "luna-*.jsonl"))):
+            rows.update(v1_verdict.load(part))
+        v1_runs.append(rows)
+    focus_rows = rows_of(focus_dir, "facts")
+    wide_labels = rows_of(wide_dir, "labels")
+    fact_rows = rows_of(facts_dir, "facts")
+    out.parent.mkdir(exist_ok=True)
+    with out.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.writer(stream, lineterminator="\n")
+        writer.writerow(["id", *ITEMS])
+        for identifier in sorted(wide_labels):
+            row = [identifier]
+            for item in ITEMS:
+                labeler = source[item]["labeler"]
+                if labeler is None:
+                    row.append("")
+                elif labeler == "facts":
+                    f = fact_rows[identifier]
+                    row.append(0 if f.get("정보부족") is True
+                               else facts_verdict.VERDICTS[item](f, records[identifier]))
+                elif labeler == "focus":
+                    row.append(focus_verdict.label(item, focus_rows[identifier], records[identifier]))
+                elif item in V1_ITEMS:
+                    row.append(v1_verdict.majority(v1_runs, identifier, records[identifier]))
+                else:
+                    row.append(wide_labels[identifier][item]["위반여부"])
+            writer.writerow(row)
+    print(f"{out.relative_to(ROOT).as_posix()} rows={len(wide_labels)}")
+
+
+def main():
+    source = sources()
+    ids = []
     for sample in ("sealed", "diag"):
-        wanted |= set((HERE / f"{sample}-ids.txt").read_text(encoding="utf-8").split())
-    records = {r["id"]: r for r in facts_verdict.script.iter_records(str(ROOT / "open/train_unlabeled.jsonl"))
-               if r["id"] in wanted}
+        ids += (HERE / f"{sample}-ids.txt").read_text(encoding="utf-8").split()
+    records = load_records(ids)
+    v1_dirs = sorted(glob.glob(str(HERE / "facts" / "v1b-600" / "run*")))
     for sample in ("sealed", "diag"):
-        wide_labels, fact_rows, focus_rows = {}, {}, {}
-        v1_runs = []
-        for run in sorted(glob.glob(str(HERE / "facts" / "v1b-600" / "run*"))):
-            rows = {}
-            for part in sorted(glob.glob(str(Path(run) / "luna-*.jsonl"))):
-                rows.update(v1_verdict.load(part))
-            v1_runs.append(rows)
-        for path in sorted(glob.glob(str(HERE / "facts" / "focus3-600" / "luna-*.jsonl"))):
-            for line in Path(path).read_text(encoding="utf-8").splitlines():
-                row = json.loads(line)
-                focus_rows[row["id"]] = row["facts"]
-        for path in sorted(glob.glob(str(HERE / sample / "luna-*.jsonl"))):
-            for line in Path(path).read_text(encoding="utf-8").splitlines():
-                row = json.loads(line)
-                wide_labels[row["id"]] = row["labels"]
-        for path in sorted(glob.glob(str(HERE / "facts" / sample / "luna-*.jsonl"))):
-            for line in Path(path).read_text(encoding="utf-8").splitlines():
-                row = json.loads(line)
-                fact_rows[row["id"]] = row["facts"]
-        out = HERE / "merged" / f"{sample}.csv"
-        out.parent.mkdir(exist_ok=True)
-        with out.open("w", encoding="utf-8", newline="") as stream:
-            writer = csv.writer(stream, lineterminator="\n")
-            writer.writerow(["id", *ITEMS])
-            for identifier in sorted(wide_labels):
-                row = [identifier]
-                for item in ITEMS:
-                    labeler = source[item]["labeler"]
-                    if labeler is None:
-                        row.append("")
-                    elif labeler == "facts":
-                        f = fact_rows[identifier]
-                        row.append(0 if f.get("정보부족") is True
-                                   else facts_verdict.VERDICTS[item](f, records[identifier]))
-                    elif labeler == "focus":
-                        row.append(focus_verdict.label(item, focus_rows[identifier], records[identifier]))
-                    elif item in V1_ITEMS:
-                        row.append(v1_verdict.majority(v1_runs, identifier, records[identifier]))
-                    else:
-                        row.append(wide_labels[identifier][item]["위반여부"])
-                writer.writerow(row)
-        print(f"{out.relative_to(ROOT).as_posix()} rows={len(wide_labels)}")
+        merge(HERE / "merged" / f"{sample}.csv", records, source, HERE / sample, HERE / "facts" / sample,
+              HERE / "facts" / "focus3-600", v1_dirs)
     (HERE / "merged" / "sources.json").write_text(json.dumps(source, ensure_ascii=False, indent=2) + "\n",
                                                   encoding="utf-8", newline="\n")
     return 0
