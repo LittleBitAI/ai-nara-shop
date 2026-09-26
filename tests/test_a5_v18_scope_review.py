@@ -51,7 +51,8 @@ class ScopeReviewTests(unittest.TestCase):
         self.assertEqual({k: v for k, v in out.items() if k != 'v18'},
                          {k: v for k, v in baseline[0].items() if k != 'v18'})
         for fields, record, chars, reason in [
-            ({'qualification': 'sme_allowed', 'qualification_role': 'checklist'}, rec, 16000, 'unverified_qualification'),
+            # C7 (#152) reads checklist × sme_allowed as unrestricted; a limiting role with no limit stays unverified.
+            ({'qualification': 'unrestricted', 'qualification_role': 'eligibility'}, rec, 16000, 'unverified_qualification'),
             ({'priority_exception': 'unknown'}, rec, 16000, 'unverified_priority_exception'),
             ({}, dict(rec, input_completeness={'완전관측': False}), 16000, 'absence_not_observable'),
         ]:
@@ -59,6 +60,9 @@ class ScopeReviewTests(unittest.TestCase):
             trace = candidate.trace(f, record, chars)
             self.assertEqual(trace['review_reason'], reason)
             self.assertFalse(trace['v18_overwritten'])
+        c7 = dict(facts, qualification='sme_allowed', qualification_role='checklist',
+                  scope_review='general', scope_review_quote=facts['scope_quote'])
+        self.assertNotEqual(candidate.trace(c7, rec, 16000)['review_reason'], 'unverified_qualification')
         self.assertEqual(facts, original)
         # Actual input truncation, while both quotations remain visible, still blocks absence.
         long_rec = deepcopy(rec)
@@ -99,10 +103,12 @@ class ScopeReviewTests(unittest.TestCase):
             # `22` and `040` left with the ported #139 v18 rule (feat/a-dev-fit-stack): both arms raise them now.
             self.assertEqual([(c['id'], c['item']) for c in changed], [('PPS-DEV-041', 'v18')])
             # 9 before the facts dev-fit zeroed v10 on two no-bid contracts; 7 before the catalogue-miss
-            # gate (feat/a-offdev-stack) lowered 126 and 146, whose registered codes are outside the catalogue.
-            self.assertEqual(metrics['off']['items']['v10']['fp'], 5)
-            self.assertEqual(metrics['on']['items']['v10']['fp'], 5)
-            self.assertEqual(metrics['on']['items']['v18']['tp'], 4)  # 3 before the #139 v18 port
+            # gate (feat/a-offdev-stack) lowered 126 and 146, whose registered codes are outside the catalogue;
+            # 5 before C9 (feat/a-final-stack) lowered two more whose codes `competitive_product` rules out.
+            self.assertEqual(metrics['off']['items']['v10']['fp'], 3)
+            self.assertEqual(metrics['on']['items']['v10']['fp'], 3)
+            # 3 before the #139 v18 port, 4 before C7 (feat/a-final-stack) raised 044.
+            self.assertEqual(metrics['on']['items']['v18']['tp'], 5)
 
     def test_two_mock_episodes_record_comparisons_and_failures(self):
         with tempfile.TemporaryDirectory() as directory:

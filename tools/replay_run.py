@@ -246,6 +246,9 @@ OFFDEV_STACK_MOVES = [
     ("PPS-DEV-126", "v10"), ("PPS-DEV-135", "e22"), ("PPS-DEV-135", "v22"), ("PPS-DEV-146", "v10"),
     ("PPS-DEV-155", "v11"), ("PPS-DEV-23", "v11"),
 ]
+# Cells moved by feat/a-final-stack (2026-09-26) against colab-1789902969401579900: C7 raises v18 (044), C9
+# lowers v10 (128). The v19 heading walk moves no dev cell, and the H2 run moves nothing.
+FINAL_STACK_MOVES = [("PPS-DEV-044", "v18"), ("PPS-DEV-128", "v10")]
 # Against the H2 run's own CSV: its responses do not trip the catalogue gate, 12 or 23; 049's v21 moves.
 OFFDEV_STACK_MOVES_H2 = [
     ("PPS-DEV-039", "v11"), ("PPS-DEV-049", "e21"), ("PPS-DEV-049", "v21"), ("PPS-DEV-053", "e2"),
@@ -292,7 +295,7 @@ DELIBERATE_MOVES = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-199", "v24"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES))
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
 # 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
@@ -378,7 +381,7 @@ DELIBERATE_MOVES_A7 = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-198", "v13"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES))
 
 
 def csv_cell_diff(left: bytes, right: bytes):
