@@ -1,0 +1,11 @@
+{
+  "case": "dev-debug",
+  "purpose": "item_diagnosis_only",
+  "colab_pass": false,
+  "debug_responses": true,
+  "responses": 705,
+  "sme_items": [
+    "v13"
+  ],
+  "note": "원응답·항목별 변화 비교용입니다. 서버 진입점 검증 통과를 대신하지 않습니다."
+}

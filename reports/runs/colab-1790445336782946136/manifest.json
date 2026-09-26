@@ -1,0 +1,237 @@
+{
+  "run_id": "colab-1790445336782946136",
+  "archive": "colab-results-1790445336782946136.zip",
+  "zip_sha256": {
+    "results": "9166effec3ca23c05e3c134269453d47d162a2cee064cecabe057eec979d97f0",
+    "submit": "b3d11b9c61e0fc730ea711f52773ba6feb5754fe55d49e015e1774f85d3a09a1"
+  },
+  "registered_at": "2026-09-26T18:03:30.935663+00:00",
+  "code": {
+    "repository": "https://github.com/LittleBitAI/ai-nara-shop.git",
+    "requested_ref": "772ca1284c8918c1fa4ca5729cc15dfe4dedb2d4",
+    "commit": "772ca1284c8918c1fa4ca5729cc15dfe4dedb2d4",
+    "given_commit": "772ca1284c8918c1fa4ca5729cc15dfe4dedb2d4"
+  },
+  "environment": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "gpu_detail": "NVIDIA A100-SXM4-40GB, 40960 MiB, 580.82.07",
+    "python": "3.12.13",
+    "cuda": "13.0",
+    "packages": {
+      "torch": "2.11.0+cu130",
+      "vllm": "0.26.0",
+      "transformers": "5.14.1",
+      "xgrammar": "0.2.3"
+    },
+    "model": {
+      "id": "google/gemma-4-26B-A4B-it",
+      "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+    },
+    "notebook_python": "3.13.15 (main, Aug  6 2026, 11:06:22) [GCC 13.3.0]"
+  },
+  "cases": {
+    "sample": {
+      "count": 10,
+      "input_sha256": "1d8337db8a6973452487bbd324557e8da0e7d204eed150914eb6f7a41c48e504",
+      "mode": "live",
+      "seconds": {
+        "model_load": 485.0,
+        "baseline_inference": 35.0,
+        "extra_inference": 9.5,
+        "inference_total": 60.1,
+        "run_total": 545.735,
+        "wall_clock": 550.5412056446075
+      },
+      "counts": {
+        "model_success": 10,
+        "extra_model_success": 5,
+        "extra_selected": 5,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 0,
+        "valid_json": 10,
+        "filled_items": 0,
+        "evidence_kept": 5,
+        "evidence_dropped_not_verbatim": 8,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "var-01": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 219.7,
+        "baseline_inference": 369.8,
+        "extra_inference": 112.3,
+        "inference_total": 734.3,
+        "run_total": 968.581,
+        "wall_clock": 973.1652662754059
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 109,
+        "extra_selected": 109,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 22,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 109,
+        "evidence_dropped_not_verbatim": 97,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "var-02": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 189.9,
+        "baseline_inference": 369.0,
+        "extra_inference": 110.2,
+        "inference_total": 731.4,
+        "run_total": 935.818,
+        "wall_clock": 939.6096642017365
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 106,
+        "extra_selected": 106,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 22,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 109,
+        "evidence_dropped_not_verbatim": 100,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "var-03": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 177.0,
+        "baseline_inference": 368.9,
+        "extra_inference": 110.2,
+        "inference_total": 731.3,
+        "run_total": 922.858,
+        "wall_clock": 926.6847939491272
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 105,
+        "extra_selected": 105,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 25,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 110,
+        "evidence_dropped_not_verbatim": 94,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "var-04": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 134.9,
+        "baseline_inference": 369.7,
+        "extra_inference": 112.4,
+        "inference_total": 734.3,
+        "run_total": 883.751,
+        "wall_clock": 887.5930161476135
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 109,
+        "extra_selected": 109,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 22,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 110,
+        "evidence_dropped_not_verbatim": 97,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "var-05": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 132.0,
+        "baseline_inference": 368.2,
+        "extra_inference": 107.3,
+        "inference_total": 727.5,
+        "run_total": 874.214,
+        "wall_clock": 878.0522928237915
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 104,
+        "extra_selected": 104,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 23,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 111,
+        "evidence_dropped_not_verbatim": 101,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    },
+    "var-06": {
+      "count": 200,
+      "input_sha256": "614f9740210407131131c5c5be2a9cab3128dafb84ac8253260a09db9818f633",
+      "mode": "live",
+      "seconds": {
+        "model_load": 131.5,
+        "baseline_inference": 369.1,
+        "extra_inference": 110.9,
+        "inference_total": 732.1,
+        "run_total": 878.19,
+        "wall_clock": 882.013462305069
+      },
+      "counts": {
+        "model_success": 200,
+        "extra_model_success": 108,
+        "extra_selected": 108,
+        "extra_fallback": 0,
+        "extra_rejected_positive": 24,
+        "valid_json": 200,
+        "filled_items": 0,
+        "evidence_kept": 109,
+        "evidence_dropped_not_verbatim": 100,
+        "documents_shrunk": 0
+      },
+      "self_check": "PASS",
+      "macro_f1": null
+    }
+  },
+  "score": {
+    "final_macro_f1": null,
+    "baseline_macro_f1_same_run": null,
+    "source": "score/metrics.json, score-baseline/metrics.json, validation.json",
+    "note": "이 실행이 기록한 값을 그대로 옮겼다. 재계산하지 않았다."
+  },
+  "raw_responses": {
+    "included": true,
+    "source": "reproduction.settings.debug_responses"
+  },
+  "zip_sha256_source": {
+    "results": "artifacts/inbox/colab-results-1790445336782946136.zip",
+    "submit": "candidate.json"
+  }
+}

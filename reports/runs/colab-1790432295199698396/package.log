@@ -1,0 +1,3 @@
+{"path": "/content/t1-colab-2keq0_5o/candidate-submit.zip", "bytes": 77131, "sha256": "b3d11b9c61e0fc730ea711f52773ba6feb5754fe55d49e015e1774f85d3a09a1"}
+ZIP 검증 PASS (압축 해제 mock 10건·49열). 실제 모델·서버 제출 미검증.
+Colab 전용 번들: /content/t1-colab-2keq0_5o/candidate-colab-bundle.zip (대회 제출 금지)

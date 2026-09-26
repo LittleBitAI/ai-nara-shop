@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-g0m_sjud/repo",
+    "fetch",
+    "--depth",
+    "1",
+    "origin",
+    "772ca1284c8918c1fa4ca5729cc15dfe4dedb2d4"
+  ],
+  "cwd": "/content/t1-colab-g0m_sjud",
+  "started": 1790438844.7735946,
+  "returncode": 0,
+  "elapsed_seconds": 1.1184561252593994
+}
