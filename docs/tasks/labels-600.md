@@ -52,6 +52,7 @@
 2. dev 보정: 프롬프트를 보지 않은 dev 120건에서 항목별 Luna F1 표. 0.80 이상 신뢰, 0.60~0.80 조건부, 미만 제외
    ([plan](plan-0926-0929.md#보정-규칙--결과-보기-전에-고정)) — 충족.
 3. 봉인 400·진단 200 Luna 라벨 JSONL 과 manifest. 봉인 라벨은 후보 고정 전에 열지 않는다 — 충족.
+   Superseded 2026-09-27 by user decision: the sealed 400 is opened for development and tuning ([plan-0926-0929](plan-0926-0929.md#927-decisions-target-076-sealed-400-opened-off-dev-gate)). It is no longer a holdout.
 4. 두 번째 라벨러 합의·조건부 항목 원문 확인 — 이 PR 에서 하지 않는다.
 
 ## 결과

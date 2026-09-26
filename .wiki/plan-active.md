@@ -14,10 +14,13 @@ reads: [docs/tasks/team-handoff.md, docs/tasks.md, docs/runs.md, docs/workflow.m
 
 서버 최고는 0.6203720648(`61c495c`, 9/26 제출)이다. 장부는 [submissions.json](../reports/submissions.json)이 소유한다.
 9/26 항목은 아직 장부에 없다 — 열린 PR #157 이 머지되면 들어간다.
+Target from 2026-09-27: the cutoff rose to 0.76. The 9/27 slot aims at 0.70 (+0.0796); 0.76 needs +0.1396 over the three remaining slots.
+The 9/27 decisions — sealed 400 opened for development, off-dev adoption gate, Private is the best score — and the assignments are in
+[plan-0926-0929 9/27 decisions](../docs/tasks/plan-0926-0929.md#927-decisions-target-076-sealed-400-opened-off-dev-gate); A's own sheet is [a-offdev-0927](../docs/tasks/a-offdev-0927.md).
 0.72 까지 남은 거리와 9/27~9/29 계획은 [plan-0926-0929 의 9/26 결과](../docs/tasks/plan-0926-0929.md#926-결과와-072-까지의-대략-계획-2026-09-27-갱신)에 있다.
 그 전 진단과 0.72 실행 제안은 [9/25 서버 전이 감사](../reports/server-gap-20260925/result.md)에 있다.
 끝난 것: 라벨 600(#151)과 진단 200 의 dev 밖 감사, N3 회차(기각), 같은 코드 GPU 여섯 통과의 변동폭(#152).
-아직인 것: 문단 선택 감사, N1, 봉인 400 GPU.
+아직인 것: 문단 선택 감사, N1, 봉인 400 GPU(9/27 D), labels-3000(9/27 A).
 
 | 제출일 | 코드 | 바뀐 것 | 서버 | 직전 대비 |
 | --- | --- | --- | ---: | ---: |
@@ -82,6 +85,8 @@ FP 가 몰린 곳은 v10(6) · v11(5) · v13(4) 이다.
 7. 사용자 결정(2026-09-24~25): 0.76 은 안정적 후처리로 닿지 않으므로 과적합 위험을 감수하고 dev 에 맞춘 규칙도 넣는다.
    과소적합 기준은 dev F1 0.7 미만이다. 이런 규칙은 PR 에 `dev 라벨만` 과 무라벨 발화 배율을 그대로 적는다.
 8. 되돌릴 차례: `dev 라벨만` 규칙 중 근거가 가장 약한 것부터 뺀다 — v16 `role=none`(표본 2) → v11 C6-3(dev +0.0004) → v9 물품 한정.
+9. User decision (2026-09-27): the adoption gate moves from dev to the off-dev labelled pool, and the sealed 400 is opened for development and tuning (no holdout; a split-half check replaces it).
+   The Private score is the best submission, so a losing slot costs nothing. Rule text: [plan-0926-0929](../docs/tasks/plan-0926-0929.md#adoption-rule-from-927).
 
 ## `main` 운영 `script.py`에 들어간 것 (9/23 이후)
 
@@ -164,7 +169,6 @@ FP 가 몰린 곳은 v10(6) · v11(5) · v13(4) 이다.
 - 서버 변동폭을 재려고 같은 코드를 두 번 올릴 것인가. 한 칸을 쓰는 대신 이후 모든 판정의 분모가 생긴다.
   같은 코드의 한 회차 안 두 통과가 0.034 벌어진 뒤(9/25) 이 물음의 값이 커졌다. #152 의 여섯 통과 범위는 0.007287 이다.
   남은 칸이 셋이고 0.72 까지 +0.0996 이 필요하다.
-- Private Score 가 최고점인지 마지막 제출인지. `docs/contest.md` 는 "대회 종료 시점의 리더보드 점수"라고만 적는다.
 - 선택 회차 N1(v16·v18 분할)을 돌릴 것인가. 호출이 155건/200 늘어 서버 시간 벽에 걸리므로 이긴다 해도 그대로는 못 싣는다.
   N3 는 기각됐다(#152).
 - #143 을 지금 `main` 위에서 다시 잴지, 닫을지.
