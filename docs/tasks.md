@@ -30,6 +30,12 @@
 `plan-0926-0929`: ready / [일일 실행 계획](tasks/plan-0926-0929.md). astra 의 0.72 실행안을 3인(A+B · C · D) 일자별 작업으로 푼다.
 입력: `reports/server-gap-20260925/result.md`, 9/25 사용자 결정. 출력: 매일 제출 후보와 장부 한 줄, 봉인 400·진단 200 라벨.
 통과 조건: 문서의 채택 규칙(GPU 두 회차 · 대상 밖 회귀 ≤ 2셀 · 봉인 신뢰 항목 악화 없음 · 시간 ≤ 6,800초).
+From 9/27 the target is 0.76 and the gate is the [off-dev adoption rule](tasks/plan-0926-0929.md#adoption-rule-from-927).
+
+`a-offdev-0927`: ready / [A's sheet](tasks/a-offdev-0927.md). Label 3,000 more notices from the pool with saved responses, audit missed cells by stage,
+retune the thresholds on dev + diagnostic 200 + sealed 400, integrate and upload.
+Input: `reports/labels-600/merged/`, `reports/label-compare/unlabeled-d/`. Output: `reports/labels-3000/`, a threshold candidate, the daily ZIP.
+Pass condition: the off-dev adoption rule, split-half both ways.
 
 `server-gap-20260925`: done / [진단·실행 제안](../reports/server-gap-20260925/result.md).
 입력: 9/25 제출 장부·원응답·dev 200건·무라벨 20,000건.

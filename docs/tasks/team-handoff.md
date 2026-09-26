@@ -21,6 +21,9 @@
 | `n1-split` 회차 | D 실행, C 판정 | 9/26 | v16·v18 전→후 |
 | `daily-zip-gpu` | D | 매일 20:00 | 통합 ZIP GPU 두 회차 |
 
+From 9/27 the tickets above are replaced by the [9/27 assignments](plan-0926-0929.md#927-assignments): D runs the off-dev 600 on GPU,
+C works v10 · v11 · v13 · v18 under the off-dev gate, A runs [a-offdev-0927](a-offdev-0927.md). The sealed 400 is open to everyone.
+
 ## 0. 시작 전에 읽을 것 — 2026-09-17 저녁 갱신
 
 아래 네 가지는 이 문서 본문보다 나중에 확인한 실측이다. 본문과 어긋나면 이쪽이 맞다.
