@@ -236,6 +236,23 @@ A_STACK_MOVES = [
 ]
 A_STACK_RESTORED = {("PPS-DEV-16", "v13")}
 
+# Cells moved by feat/a-offdev-stack (`apply_clause_rules`, 2026-09-26), toggled against each pinned list:
+# the catalogue-miss gate lowers v10 (126·146) and v11 (23); the company-size guard lowers v11 (039·12·155);
+# v2 rises from a performance clause under 2.3억 (053·078); v21 from a share below the floor (056, and 049
+# where the archive had it at 0); v22 from a briefing-attendance bar (135). Nothing outside those columns.
+OFFDEV_STACK_MOVES = [
+    ("PPS-DEV-039", "v11"), ("PPS-DEV-053", "e2"), ("PPS-DEV-053", "v2"), ("PPS-DEV-056", "e21"),
+    ("PPS-DEV-056", "v21"), ("PPS-DEV-078", "e2"), ("PPS-DEV-078", "v2"), ("PPS-DEV-12", "v11"),
+    ("PPS-DEV-126", "v10"), ("PPS-DEV-135", "e22"), ("PPS-DEV-135", "v22"), ("PPS-DEV-146", "v10"),
+    ("PPS-DEV-155", "v11"), ("PPS-DEV-23", "v11"),
+]
+# Against the H2 run's own CSV: its responses do not trip the catalogue gate, 12 or 23; 049's v21 moves.
+OFFDEV_STACK_MOVES_H2 = [
+    ("PPS-DEV-039", "v11"), ("PPS-DEV-049", "e21"), ("PPS-DEV-049", "v21"), ("PPS-DEV-053", "e2"),
+    ("PPS-DEV-053", "v2"), ("PPS-DEV-056", "e21"), ("PPS-DEV-056", "v21"), ("PPS-DEV-078", "e2"),
+    ("PPS-DEV-078", "v2"), ("PPS-DEV-135", "e22"), ("PPS-DEV-135", "v22"), ("PPS-DEV-155", "v11"),
+]
+
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
 # `reports/team-c/a5-label-definition/head-replay/submission.csv` 와 대조할 때
@@ -275,7 +292,7 @@ DELIBERATE_MOVES = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-199", "v24"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED)
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES))
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
 # 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
@@ -326,7 +343,7 @@ DELIBERATE_MOVES_H2 = sorted(set([cell for cell in V9_V24_DEV_FIT_MOVES
     ("PPS-DEV-25", "e3"), ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"),
     ("PPS-DEV-28", "e23"), ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"),
     ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED)
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES_H2))
 
 # `reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv` 와 대조할 때.
 # 그 보관본은 이미 A7 대조 축이 적용된 산출물이므로, 지금 `script.py` 와의 차이는
@@ -361,7 +378,7 @@ DELIBERATE_MOVES_A7 = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-198", "v13"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED)
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES))
 
 
 def csv_cell_diff(left: bytes, right: bytes):

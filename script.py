@@ -3371,10 +3371,139 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     # services that deliver goods, so this is also fitted to dev (2026-09-25).
     if not str((rec.get("meta") or {}).get("업무구분") or "물품").startswith("물품"):
         out["v9"] = {"위반여부": 0, "근거문구": ""}
-    return out
+    return apply_clause_rules(out, rec)
 
 
 NO_BID_ZERO_ITEMS = ("v9", "v10", "v13", "v18")
+
+
+# ===== Rules replayed on dev 200 and outside dev (2026-09-26) =====
+# Each was measured as a replay candidate first: experiments/a_catalogue_miss_candidate.py,
+# a_offdev_candidate.py and a_v21_v22_raise_candidate.py (reports/recheck-0926, reports/offdev-0926).
+
+def catalogue_miss(rec: Dict[str, Any]) -> bool:
+    """판로지원법 제7조: a 경쟁제품 is a designated item. Registered codes none of which is in the provided
+    catalogue, and no catalogue name in the notice (S7-15: designation is by 세부품명 name), give no ground
+    for a 경쟁제품. Notices without codes — most services — are untouched."""
+    codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
+    if not codes or not _PRODUCTS:
+        return False
+    if codes & {p["세부품명번호"] for p in _PRODUCTS}:
+        return False
+    return not sme_product_lookup(rec, build_context(rec), _PRODUCTS)["일치후보"]
+
+
+# v11 is a 경쟁제품 bid NOT limited to 중소기업자 (판로지원법 제7조①). `SME_ALLOWED` wants "중소기업" within
+# 60 characters on one line and misses "소기업 또는 소상공인으로서 … 확인서를 소지한 업체" and wrapped limits;
+# outside dev the product and company-size stages raised 31 v11 false positives that way.
+SIZE_CLASS = r"(?:중\s*[·ㆍ・‧]?\s*소\s*기업자?|소\s*기업자?|소\s*상\s*공\s*인)"
+# The close must make the size class a condition on the bidder — not a bare 확인서 mention, a document list
+# line or "확인 가능하여야" about a website.
+SIZE_LIMIT = re.compile(SIZE_CLASS + r"[^。]{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
+                        r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)"
+                        r"|확인서를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
+                        r"|제한\s*경쟁\s*(?:입찰)?\s*\(\s*" + SIZE_CLASS, re.S)
+SIZE_TITLES = re.compile(r"[「｢『《][^」｣』》]{0,60}[」｣』》]|중소기업\s*기본법|중소기업\s*범위\s*및\s*확인에\s*관한\s*규정"
+                         r"|중소기업제품[^,.\n]{0,30}?(?:법률|시행령)|중소벤처기업부|중소기업자\s*간\s*경쟁\s*제품"
+                         r"|중소기업\s*공공\s*구매\s*(?:종합)?\s*정보망")
+
+
+def size_limited(rec: Dict[str, Any]) -> bool:
+    for doc in rec.get("docs") or ():
+        text = SIZE_TITLES.sub(" ", doc.get("text") or "")
+        for found in SIZE_LIMIT.finditer(text):
+            if _is_qualification_context(text, found.start()):
+                return True
+    return False
+
+
+# v2: a past-performance eligibility clause under 2.3억 is the item itself (restored from 202d197, dropped on
+# 9/25 over dev trade-offs; outside dev the model misses 19 of 22 labeled v2 positives). Only the 공고문 is
+# searched: restrictions are stated in the bid notice (국가 시행령 제21조② · 지방 시행령 제20조②).
+V2_ELIGIBILITY = re.compile(r"(?<!신용과 )실적(?:이|을)\s*(?:있는|보유한|갖춘)\s*(?:업체|자)"
+                            r"(?=[ \t]*(?:$|이어야|여야|만(?![가-힣])|로서|[(.,]))", re.M)
+
+
+def v2_performance_clause(rec: Dict[str, Any]) -> Optional[str]:
+    """The line demanding past performance, when the price is under 2.3억 and no local small-quote
+    exception applies (S7-3). None otherwise."""
+    meta = rec.get("meta") or {}
+    price = estimated_price(rec)
+    if price is None or price >= NOTICE_AMOUNT_WON:
+        return None
+    if ("지방" in str(meta.get("적용계약법") or "") and meta.get("계약방법") == "수의계약"
+            and price < 100_000_000):
+        return None
+    for doc in rec.get("docs") or ():
+        if doc.get("type") != "공고문":
+            continue
+        text = doc.get("text") or ""
+        for found in V2_ELIGIBILITY.finditer(text):
+            if _is_qualification_context(text, found.start()):
+                start = text.rfind("\n", 0, found.start()) + 1
+                return text[start:found.end()].strip()[-QUOTE_MAX:]
+    return None
+
+
+# v21 (공동계약운용요령 제9조⑤, 지방 집행기준 제6장 제2절 1.나.): a stated member minimum share below the floor;
+# 지방 공사 may adjust to 4%. v22 (국가 제43조⑥·지방 제43조⑦ 삭제): barring bidders absent from the briefing,
+# 협상에 의한 계약 only.
+V21_SHARE = re.compile(r"(?:최소\s*지분율|계약\s*참여\s*최소\s*지분율|최소\s*출자\s*비율)[^.\n%]{0,20}?(\d+(?:\.\d+)?)\s*%")
+V22_BARRED = re.compile(r"(?:현장|사업|과업|제안요청서?|제안)\s*설명회?[^.\n]{0,40}?(?:참석|참가)하?지\s*(?:아니한|않은)"
+                        r"[^.\n]{0,40}?(?:입찰|제안)[^.\n]{0,30}?(?:허용되지|불가|제한|할\s*수\s*없|참가\s*자격이\s*없)")
+
+
+def _window(text: str, found, before: int, after: int) -> str:
+    return text[max(0, found.start() - before): found.end() + after].strip()
+
+
+def v21_share_clause(rec: Dict[str, Any]) -> Optional[str]:
+    floor = v21_minimum_share(rec)
+    if floor is None:
+        return None
+    meta = rec.get("meta") or {}
+    if "지방" in str(meta.get("적용계약법") or "") and "공사" in str(meta.get("업무구분") or ""):
+        floor = 4.0
+    for doc in rec.get("docs") or ():
+        text = doc.get("text") or ""
+        for found in V21_SHARE.finditer(text):
+            if float(found.group(1)) < floor:
+                return _window(text, found, 40, 80)
+    return None
+
+
+def v22_briefing_clause(rec: Dict[str, Any]) -> Optional[str]:
+    meta = rec.get("meta") or {}
+    if "협상" not in str(meta.get("낙찰방법") or "") + str(meta.get("계약방법") or "") + _body(rec)[:3000]:
+        return None
+    for doc in rec.get("docs") or ():
+        text = doc.get("text") or ""
+        found = V22_BARRED.search(text)
+        if found:
+            return _window(text, found, 20, 20)
+    return None
+
+
+def apply_clause_rules(out: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    if catalogue_miss(rec):
+        for item in ("v10", "v11"):
+            if (out.get(item) or {}).get("위반여부") == 1:
+                out[item] = {**out[item], "위반여부": 0, "근거문구": None}
+    if (out.get("v11") or {}).get("위반여부") == 1 and size_limited(rec):
+        out["v11"] = {"위반여부": 0, "근거문구": None}
+    if (out.get("v2") or {}).get("위반여부") == 0:
+        quote = v2_performance_clause(rec)
+        for doc in rec["docs"] if quote else ():
+            cleaned = clean_evidence(quote, doc["text"])
+            if cleaned:
+                out["v2"] = {"위반여부": 1, "근거문구": cleaned}
+                break
+    for item, find in (("v21", v21_share_clause), ("v22", v22_briefing_clause)):
+        if (out.get(item) or {}).get("위반여부") != 1:
+            quote = find(rec)
+            if quote:
+                out[item] = {"위반여부": 1, "근거문구": quote[:EVIDENCE_MAX]}
+    return out
 
 
 def to_row(rec_id: str, judgment: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
