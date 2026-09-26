@@ -64,14 +64,67 @@ class ReviewRoundOneTests(unittest.TestCase):
         self.assertFalse(script.catalogue_miss(rec))
 
 
-class OffDevBatchTwoTests(unittest.TestCase):
-    """PR #154: the v8 local small-quote exemption and two more v11 limit forms (v19 moved to its own PR)."""
+class OutsideCatalogueTests(unittest.TestCase):
+    """C9 (#152), PR #156 round 1: a named catalogue product counts beside the registered codes (S7-15)."""
 
+    def setUp(self):
+        script.load_sme_reference(str(ROOT / "open/data"))
+
+    def test_a_named_product_within_its_limit_keeps_v10_and_v11(self):
+        rec = notice("품명: 석회질비료", 세부품명번호목록="[9999999999]", 조항호내용="석회질비료")
+        self.assertFalse(script.outside_catalogue(rec))
+        out = script.apply_clause_rules(cells(v10=1, v11=1), rec)
+        self.assertEqual((out["v10"]["위반여부"], out["v11"]["위반여부"]), (1, 1))
+
+    def test_codes_outside_with_no_named_product_close_the_items(self):
+        rec = notice("품명: 기타 물품", 세부품명번호목록="[9999999999]")
+        self.assertTrue(script.outside_catalogue(rec))
+        out = script.apply_clause_rules(cells(v10=1, v13=1), rec)
+        self.assertEqual((out["v10"], out["v13"]), ({"위반여부": 0, "근거문구": ""},) * 2)
+
+
+class OffDevBatchTwoTests(unittest.TestCase):
     def test_v8_is_not_raised_on_a_local_small_quote(self):
         text = "1. 견적제출 자격\n가. 경상북도에 소재하고 최근 3년간 유사 용역 실적이 있는 업체"
         local = notice(text, 적용계약법="지방계약법", 계약방법="수의계약")
         self.assertTrue(script.local_small_quote(local))
         self.assertEqual(script.apply_qualification_rules(cells(), local)["v8"]["위반여부"], 0)
+
+    def test_a_pledge_list_heading_past_notes_and_sub_bullets(self):
+        lines = ["다. 입찰 시 제출서류 [나라장터를 통한 온라인 제출]", "③ 법인등기부등본 1부",
+                 "- 증빙자료 : 카탈로그 등 규격 사항 증빙자료", "⑦ 제조자 정품 공급 및 기술지원 확약서"]
+        self.assertTrue(script.list_heading(lines, 3).startswith("- 증빙자료"))       # the old lookup stops here
+        self.assertTrue(script.enumerated_heading(lines, 3).startswith("다. 입찰 시"))
+        self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+
+    def test_a_labelled_bullet_naming_a_submission_or_recipient_ends_the_walk(self):
+        # PR #156 round 2: a colon heading that names a submission or a later recipient is a section of its own.
+        for bullet in ("- 우선협상대상자 제출서류: 선정 이후 제출", "- 낙찰자 제출서류: 계약 전 제출",
+                       "- 추가 제출서류: 별도 안내", "- 선정업체: 협상 후 제출"):
+            lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", bullet, "⑦ 물품공급 확약서 1부"]
+            with self.subTest(bullet=bullet):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+        # Round 3: a bare stage word in a detail's value is content, not a heading.
+        for bullet in ("- 증빙자료: 선정기준표", "- 첨부: 계약서 사본", "- 제안서(첨부) : 기본 양식을 준수하여, 제출 이후 변경할 수 없음",
+                       # Round 5: a stage phrase in a document title is content too.
+                       "- 증빙자료: 계약 후 유지관리 계획서", "- 첨부: 낙찰자 선정기준 안내문"):
+            lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", bullet, "⑦ 물품공급 확약서 1부"]
+            with self.subTest(bullet=bullet):
+                self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+        # Round 4: a stage phrase or a later recipient in the value still ends the walk.
+        for bullet in ("- 단계: 계약 체결 후 제출서류", "- 시기: 낙찰 시 제출", "- 제출자: 낙찰자", "- 대상: 선정된 업체"):
+            lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", bullet, "⑦ 물품공급 확약서 1부"]
+            with self.subTest(bullet=bullet):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+
+
+class Pr154RoundOneTests(unittest.TestCase):
+    """PR #154 round 1 findings, each on the reviewer's own input."""
+
+    def test_an_unmarked_section_heading_ends_the_walk(self):
+        lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", "계약 체결 후 제출서류", "① 물품공급 확약서 1부"]
+        self.assertEqual(script.enumerated_heading(lines, 3), "계약 체결 후 제출서류")
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
 
     def test_a_large_local_negotiated_contract_is_not_a_small_quote(self):
         self.assertFalse(script.local_small_quote(notice("x", 적용계약법="지방계약법", 계약방법="수의계약",
@@ -87,6 +140,77 @@ class OffDevBatchTwoTests(unittest.TestCase):
                      "입찰참가자격\n가. 소상공인인 업체, 대기업인 업체 모두 참가할 수 있습니다."):
             with self.subTest(text=text):
                 self.assertFalse(script.size_limited(notice(text)))
+
+    def test_a_bare_bid_time_on_the_pledge_line_is_another_requirement(self):
+        text = "계약 시 제출서류: 물품공급 확약서 1부. 입찰 시 평가표는 별첨."
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_a_bare_bid_time_on_the_pledge_line_is_read_as_on_main(self):
+        # PR #154 rounds 2-14: the pledge-line rule for a bare "입찰 시" was withdrawn — it moved no measured cell and
+        # every round found a new false-positive shape. The line is read as on main (a recall follow-up).
+        for text in ("① 입찰 시 물품공급 확약서 1부 제출", "물품공급 확약서는 입찰 시 제출하여야 합니다."):
+            with self.subTest(text=text):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_round_three_a_contract_time_in_the_sentence_binds_to_the_comma_clause(self):
+        # PR #154 round 3: "… 확약서 1부, 입찰 시 평가표는 별첨" — the pledge is due at contract time.
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("계약 시 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨")))
+        # Round 6: a bare bid time counts only in the pledge's own clause, so a section named by its recipient
+        # ("낙찰자 제출서류") cannot borrow another clause's time either.
+        for text in ("낙찰자 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨",
+                     "계약상대자 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨"):
+            with self.subTest(text=text):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_round_five_post_award_phrases_bind_the_bid_time_too(self):
+        for text in ("낙찰 후 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨",
+                     "계약 후 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨"):
+            with self.subTest(text=text):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_round_seven_the_bid_time_must_modify_the_pledge_submission(self):
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("물품공급 확약서는 낙찰자가 제출하며 입찰 시 가격평가를 진행합니다.")))
+        # Round 9: a negated demand is no demand.
+        for text in ("물품공급 확약서는 입찰 시 제출하지 않습니다.", "입찰 시 물품공급 확약서 제출은 요구하지 않습니다.",
+                     "물품공급 확약서는 입찰 시 제출 대상이 아닙니다.", "입찰 시 물품공급 확약서 제출은 필수가 아닙니다.",
+                     "입찰 시 물품공급 확약서 제출 의무 없음", "입찰 시 물품공급 확약서 제출 불요",
+                     "입찰 시 물품공급 확약서 제출은 선택사항",
+                     "입찰 시 물품공급 확약서는 제출하지 말 것", "입찰 시 물품공급 확약서 제출 금지",
+                     # Round 13: optional, deferred or incentive wording states no demand.
+                     "입찰 시 물품공급 확약서 제출은 권장사항입니다.", "입찰 시 물품공급 확약서 제출은 자율입니다.",
+                     "입찰 시 물품공급 확약서 제출은 선택입니다.", "입찰 시 물품공급 확약서 제출 시 가점을 부여합니다.",
+                     "입찰 시 물품공급 확약서는 제출할 수 있습니다.", "입찰 시 물품공급 확약서 제출 가능합니다.",
+                     "입찰 시 물품공급 확약서 제출은 보류합니다.", "입찰 시 물품공급 확약서 제출은 유예합니다.",
+                     "입찰 시 물품공급 확약서 제출은 추후 안내합니다.", "입찰 시 물품공급 확약서 제출 안 함"):
+            with self.subTest(text=text):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+        # Round 8: "입찰 시 제출한 가격표" is another item's bid-stage submission.
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("물품공급 확약서는 낙찰자가 제출하며 입찰 시 제출한 가격표를 평가합니다.")))
+
+    def test_a_flattened_list_item_is_its_own_sentence(self):
+        text = "① 입찰 시 제안서 6부 제출 ② 증빙서류 각 1부 ㉰ “확약서” 1부 [별지 7]"
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_round_fifteen_any_unmarked_heading_ends_the_walk(self):
+        for heading in ("낙찰 후 이행사항", "계약 단계 안내", "낙찰자 의무", "계약상대자 준수사항", "낙찰자 결정 후", "계약 후 준비사항",
+                        # Round 16: introductory sentences end the walk too.
+                        "낙찰자는 계약 체결 후 다음 서류를 제출하여야 합니다.", "계약상대자는 다음 각 호의 서류를 제출합니다.",
+                        "계약 체결 후 제출해야 하는 서류는 다음과 같습니다.",
+                        # Round 17: note and bullet lines naming a later stage head a section of their own.
+                        "※ 계약 체결 후 제출서류", "- 낙찰자 제출서류", "• 계약 단계 이행사항", "□ 낙찰 후 제출자료",
+                        # Round 18: any short marked heading, whatever stage it names.
+                        "※ 우선협상대상자 제출서류", "- 개찰 후 제출자료", "• 선정업체 준수사항", "□ 평가 완료 후 제출서류"):
+            lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", heading, "① 물품공급 확약서 1부 제출"]
+            with self.subTest(heading=heading):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+
+    def test_an_unmarked_line_ends_the_walk_as_on_main(self):
+        # Rounds 2 and 16 pulled opposite ways on introductory prose; any unmarked line now ends the walk, as
+        # `list_heading` on main does. The prose-then-list shape is a recall follow-up.
+        prose = ["다. 입찰 시 제출서류", "제출서류는 다음과 같습니다.", "① 물품공급 확약서 1부"]
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(prose))))
+        after = ["다. 입찰 시 제출서류", "③ 사업자등록증", "계약 체결 후 제출자료", "① 물품공급 확약서 1부"]
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(after))))
 
 
 class RaiseTests(unittest.TestCase):
