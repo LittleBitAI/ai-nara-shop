@@ -72,8 +72,12 @@ v9 and v24 have no labels off dev; their thresholds stay as they are.
 The 3,000 enter the pool for post-processing rules only. For thresholds the pool is the off-dev 600, the only off-dev responses with `item_p1`.
 
 The one exception: if nothing passes by 19:00, the slot carries an experimental submission (the best score counts, so a loss costs nothing).
-It is the candidate with the highest off-dev pool Macro among those whose server time estimate is ≤ 6,800 s.
-If no candidate beats `61c495c` on that Macro, upload `main` as it is. The ledger note says "experimental" and lists the conditions it failed.
+- Eligible: candidates whose server time estimate is ≤ 6,800 s.
+- Ranking: Macro over the labelled items on the off-dev 600 from D's run — the one pool every candidate, rule or threshold, can be replayed on.
+  Ties go to the higher dev replay Macro; a remaining tie goes to the candidate that changes fewer cells against `61c495c` on the 600.
+- If no candidate beats `61c495c` on that Macro, upload `main` as it is.
+- Path: the chosen candidate goes into the same 19:00 integration PR as any winner (operational `script.py`, reviewed before the round), is merged into `main`, and is packaged at 20:00 from `main` — the submission stays all of `main`.
+  The PR title and the ledger note say "experimental" and list the conditions it failed. If its server score comes in below `61c495c`, revert that PR the next morning before new work is merged.
 
 ## Stop lines
 

@@ -152,8 +152,8 @@ FP 가 몰린 곳은 v10(6) · v11(5) · v13(4) 이다.
 효과가 보일 때만 리뷰 루프. 운영 `script.py` 통합만 회차 전에 리뷰한다.
 
 9/25 밤 B(팀원 1)가 빠졌다. 본인이 A 와 B 를 함께 맡는다. 9/26~9/29 의 일자별 작업은
-[plan-0926-0929](../docs/tasks/plan-0926-0929.md)가 소유한다. 9/27 부터는 그 문서의
-[9/26 결과와 0.72 까지의 대략 계획](../docs/tasks/plan-0926-0929.md#926-결과와-072-까지의-대략-계획-2026-09-27-갱신)이 우선한다.
+[plan-0926-0929](../docs/tasks/plan-0926-0929.md)가 소유한다. From 9/27 that document's
+[9/27 decisions](../docs/tasks/plan-0926-0929.md#927-decisions-target-076-sealed-400-opened-off-dev-gate) take precedence (target 0.76, off-dev gate, 9/27 assignments).
 
 | 담당 | 책임 | 9/26~9/29 |
 | --- | --- | --- |
