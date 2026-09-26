@@ -1620,6 +1620,8 @@ def pledge_sentence(text: str, start: int, end: int) -> str:
 
 
 CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
+# A clause that says the submission is not required establishes no demand ("입찰 시 제출하지 않습니다").
+NEGATED_DEMAND = re.compile(r"(?:하|되)?지\s*(?:않|아니)|요구\s*(?:하지\s*)?않|불필요|필요\s*(?:없|치\s*않)|제외|면제|생략")
 BID_TIME_PLEDGE = re.compile(r"\s*(?:에\s*)?(?:[^\s,;.]{0,12}\s*){0,2}?확약서")
 # A predicative submission verb; "입찰 시 제출한 가격표" modifies another noun.
 BID_TIME_VERB = re.compile(r"\s*(?:에\s*)?(?:제출|첨부|구비|징구)(?!\s*(?:한|된|하는|할|되는)(?![가-힣]*[다요]))")
@@ -1644,7 +1646,7 @@ def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
     left = max((m.end() for m in CLAUSE_SEPARATOR.finditer(sentence, 0, at)), default=0)
     right = CLAUSE_SEPARATOR.search(sentence, at)
     clause = sentence[left: right.start() if right else len(sentence)]
-    if V19_AFTER_AWARD.search(clause):
+    if V19_AFTER_AWARD.search(clause) or NEGATED_DEMAND.search(clause):
         return False
     # The time must modify the pledge's submission: followed by the pledge itself ("입찰 시 물품공급 확약서"), or — after
     # the pledge with no predicate ending in between — by a predicative submission verb ("확약서는 입찰 시 제출").
