@@ -33,6 +33,38 @@ Report these keys:
 
 - "object_name": the name of what is being bought, exactly as written in the notice title or 과업명/품명,
   or null.
+- "catalogue_service": when the notice buys a service, the code of the one service below that IS the main
+  task being bought (not a side activity), or null when it is goods or none fits. Services designated as
+  중소기업자간 경쟁제품 in the provided 고시 (세부품명번호 세부품명):
+  7215401001 승강기유지보수서비스
+  7215409901 전시부스설치및디자인서비스
+  7215409902 전시홍보관설치및디자인서비스
+  7611150101 건물청소서비스
+  7811189901 공공기관통근운송서비스
+  7811189902 통학운송서비스
+  7811189904 기타도로여객운송서비스
+  8014162201 우편발송서비스
+  8014190201 회의기획및대행서비스
+  8014198801 전시회기획및대행서비스
+  8014198901 국제행사기획및대행서비스
+  8014199001 기타행사기획및대행서비스
+  8110159601 유수율제고서비스
+  8111159801 패키지소프트웨어개발및도입서비스
+  8111159901 정보시스템개발서비스
+  8111179901 정보인프라구축서비스
+  8111181101 운영위탁서비스
+  8111189901 정보시스템유지관리서비스
+  8111200201 데이터처리서비스
+  8111200202 빅데이터분석서비스
+  8111219901 인터넷지원개발서비스
+  8111229901 소프트웨어유지및지원서비스
+  8115160401 측량용역
+  8115169901 공간정보DB구축서비스
+  8115179901 지질연구조사서비스
+  8213160301 동영상제작서비스
+  8214150201 디자인서비스
+  9015189001 축제기획및대행서비스
+  9212159901 시설물경비서비스
 - "dp_required_quote": the participation requirement, exactly as written, that bidders must hold a
   직접생산확인증명서 (direct production certificate); null if there is none. A sentence about sanctions for
   violating direct production rules is not a requirement.
@@ -48,8 +80,10 @@ Report these keys:
    "timing_from": "same_sentence", "list_heading" (the heading of the list the document sits in), or "none"}.
   [] if there is no such document.
 
-- "sw_scope_quote": a passage exactly as written that shows the work is a software project (developing,
-  building, operating or maintaining software or an information system), or null.
+- "sw_scope_quote": the passage exactly as written — usually the project name or overview — that shows the
+  procurement itself is a software project whose main task is developing, building, operating or
+  maintaining software or an information system; null otherwise. A software task inside a larger
+  non-software job, buying hardware, or a remark about OS upgrades or source code is not such a passage.
 - "large_firm_floor_quote": the sentence exactly as written that states whether the large-company
   participation limit applies (대기업 참여제한, 사업금액 하한, 소프트웨어 진흥법 제48조), or null.
 
@@ -66,7 +100,7 @@ Report these keys:
 - "정보부족": true only when attachments are missing or truncated so that one of these cannot be observed.
 - "정보부족_사유": which ones, or null.
 
-Return one JSON object with exactly these sixteen keys and nothing else — no preamble, no markdown fence:
-v1_restrictions, v4_performance, v9_named, object_name, dp_required_quote, sme_limit_quote,
+Return one JSON object with exactly these seventeen keys and nothing else — no preamble, no markdown fence:
+v1_restrictions, v4_performance, v9_named, object_name, catalogue_service, dp_required_quote, sme_limit_quote,
 priority_exception_quote, v19_documents, sw_scope_quote, large_firm_floor_quote, v24_method_text,
 v24_region_text, v24_industry_texts, v24_amounts, 정보부족, 정보부족_사유.

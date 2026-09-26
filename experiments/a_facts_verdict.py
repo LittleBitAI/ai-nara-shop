@@ -24,8 +24,16 @@ import b11_b_facts_v2_verdict as b11  # noqa: E402
 SPACE = re.compile(r"\s+")
 CODE10 = re.compile(r"(?<!\d)\d{10}(?!\d)")
 PUBLIC_ORDERER = re.compile(r"국가|지방자치단체|지자체|공공기관|공기업|준정부|정부|관공서|행정기관")
-MID_SIZE = re.compile(r"중소기업|중기업|중[·ㆍ‧∙.]?소기업")
+MID_SIZE = re.compile(r"중소기업|중기업|중\W?소기업")    # 중·소기업 is written with several middle dots
 SMALL_SIZE = re.compile(r"소기업|소상공인")
+# Law, regulation and agency names carry 중소기업 without admitting 중기업: 「중소기업기본법」, 중소기업 범위 및
+# 확인에 관한 규정, 중소기업제품 구매촉진 … 법률. They are cut before the size class is read.
+TITLES = re.compile(r"[「｢『《\"“‘'][^」｣』》\"”’']{0,60}[」｣』》\"”’']"
+                    r"|중소기업\s*기본법|중소기업\s*범위\s*및\s*확인에\s*관한\s*규정|중소기업청|중소벤처기업부"
+                    r"|중소기업제품[^,，.。]{0,30}?(?:법률|시행령|운영요령|종합정보망|구매정보망)")
+EXCEPTION_TEXT = re.compile(r"우선\s*조달\s*계약?\s*(?:에\s*대한|의)?\s*예외|제\s*2\s*조\s*의\s*3|중소기업자\s*간\s*경쟁\s*(?:입찰)?\s*의?\s*예외")
+FACILITY_SCALE = re.compile(r"\d+\s*(?:명|인|대|개소|곳|㎡|평|톤)|모든|전국|각\s*(?:광역|시[·ㆍ]?도)")
+LAW_CITED = re.compile(r"법률|법\s*제|법」|법｣|시행령|시행규칙|허가\s*기준|허가를|면허|등록")
 SMALL_QUOTE_FLOOR = 10_000_000          # L29①: 수의계약 직생 확인은 추정가격 1천만원 이상
 
 
@@ -33,8 +41,18 @@ def squash(text) -> str:
     return SPACE.sub("", str(text or ""))
 
 
+PUNCT = re.compile(r"[\W_]+")
+
+
 def quoted(text, rec) -> bool:
-    return isinstance(text, str) and b11.in_notice(text, rec)
+    """The copy is in the notice, ignoring whitespace — or, for 10+ characters, ignoring punctuation too
+    (the labeler swaps middle dots and brackets: ㆍ/·/・, ｢/「)."""
+    if not isinstance(text, str):
+        return False
+    if b11.in_notice(text, rec):
+        return True
+    flat = PUNCT.sub("", text)
+    return len(flat) >= 10 and flat in PUNCT.sub("", script._body(rec))
 
 
 def price(rec):
@@ -52,6 +70,7 @@ def competitive(f, rec) -> bool:
     and the item's 특이사항 price cap, if any, is not exceeded."""
     meta_codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
     quote_codes = set(CODE10.findall(str(f.get("dp_required_quote") or "")))
+    quote_codes |= set(CODE10.findall(str(f.get("catalogue_service") or "")))
     name = squash(f.get("object_name")) + squash((rec.get("meta") or {}).get("세부품명번호목록"))
     value = price(rec)
     for row in products():
@@ -66,7 +85,9 @@ def competitive(f, rec) -> bool:
 
 
 def excepted(f, rec) -> bool:
-    return quoted(f.get("priority_exception_quote"), rec)
+    """L19 제2조의3② · L17②: the exception must be written in the notice. A copied sentence that drifted from
+    the original still counts when the notice itself carries the exception wording."""
+    return quoted(f.get("priority_exception_quote"), rec) or bool(EXCEPTION_TEXT.search(script._body(rec)))
 
 
 def size_class(f, rec):
@@ -74,7 +95,7 @@ def size_class(f, rec):
     quote = f.get("sme_limit_quote")
     if not quoted(quote, rec):
         return None
-    flat = squash(quote)
+    flat = squash(TITLES.sub(" ", str(quote)))
     if MID_SIZE.search(flat):
         return "sme"
     return "small" if SMALL_SIZE.search(flat) else None
@@ -94,7 +115,11 @@ def v1(f, rec):
         kind = item.get("kind")
         if kind in ("institution_type", "named_organisation") and item.get("private_firms_allowed") is False:
             return 1
-        if kind == "facility_or_staff_scale" and not small_private_quote(rec):
+        # A stated scale (a number, "all regions") without a statute behind it; a permit standard of another
+        # law is that law's requirement (L01 2호), not a scale the orderer chose.
+        quote = str(item["quote"])
+        if kind == "facility_or_staff_scale" and not small_private_quote(rec) \
+                and FACILITY_SCALE.search(quote) and not LAW_CITED.search(quote):
             return 1
     return 0
 
@@ -151,7 +176,8 @@ def v18(f, rec):
 
 def v20(f, rec):
     """L25 지침 제3조②: a software project states whether the large-company floor applies."""
-    return int(quoted(f.get("sw_scope_quote"), rec) and not quoted(f.get("large_firm_floor_quote"), rec))
+    service = "용역" in str((rec.get("meta") or {}).get("업무구분") or "")
+    return int(service and quoted(f.get("sw_scope_quote"), rec) and not quoted(f.get("large_firm_floor_quote"), rec))
 
 
 VERDICTS = {"v1": v1, "v4": v4, "v9": b11.v9, "v10": v10, "v11": v11, "v16": v16, "v17": v17,
@@ -160,7 +186,8 @@ TEXT = (str, type(None))
 SCHEMA = {
     "v1_restrictions": [{"quote": str, "kind": str, "private_firms_allowed": bool}],
     "v4_performance": [{"quote": str, "ordered_by": TEXT}],
-    "v9_named": [str], "object_name": TEXT, "dp_required_quote": TEXT, "sme_limit_quote": TEXT,
+    "v9_named": [str], "object_name": TEXT, "catalogue_service": TEXT, "dp_required_quote": TEXT,
+    "sme_limit_quote": TEXT,
     "priority_exception_quote": TEXT, "v19_documents": [b11.V19_DOCUMENT], "sw_scope_quote": TEXT,
     "large_firm_floor_quote": TEXT, "v24_method_text": TEXT, "v24_region_text": TEXT,
     "v24_industry_texts": [str], "v24_amounts": [{"text": str, "label": str, "won": int}], "정보부족": bool,
