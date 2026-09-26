@@ -103,10 +103,10 @@ class ScopeReviewTests(unittest.TestCase):
             # `22` and `040` left with the ported #139 v18 rule (feat/a-dev-fit-stack): both arms raise them now.
             self.assertEqual([(c['id'], c['item']) for c in changed], [('PPS-DEV-041', 'v18')])
             # 9 before the facts dev-fit zeroed v10 on two no-bid contracts; 7 before the catalogue-miss
-            # gate (feat/a-offdev-stack) lowered 126 and 146, whose registered codes are outside the catalogue;
-            # 5 before C9 (feat/a-final-stack) lowered two more whose codes `competitive_product` rules out.
-            self.assertEqual(metrics['off']['items']['v10']['fp'], 3)
-            self.assertEqual(metrics['on']['items']['v10']['fp'], 3)
+            # gate (feat/a-offdev-stack) lowered 126 and 146, whose registered codes are outside the catalogue.
+            # C9 (feat/a-final-stack) keeps the other five: their notices name a catalogue product (S7-15).
+            self.assertEqual(metrics['off']['items']['v10']['fp'], 5)
+            self.assertEqual(metrics['on']['items']['v10']['fp'], 5)
             # 3 before the #139 v18 port, 4 before C7 (feat/a-final-stack) raised 044.
             self.assertEqual(metrics['on']['items']['v18']['tp'], 5)
 

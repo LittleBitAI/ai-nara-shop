@@ -246,9 +246,10 @@ OFFDEV_STACK_MOVES = [
     ("PPS-DEV-126", "v10"), ("PPS-DEV-135", "e22"), ("PPS-DEV-135", "v22"), ("PPS-DEV-146", "v10"),
     ("PPS-DEV-155", "v11"), ("PPS-DEV-23", "v11"),
 ]
-# Cells moved by feat/a-final-stack (2026-09-26) against colab-1789902969401579900: C7 raises v18 (044), C9
-# lowers v10 (128). The v19 heading walk moves no dev cell, and the H2 run moves nothing.
-FINAL_STACK_MOVES = [("PPS-DEV-044", "v18"), ("PPS-DEV-128", "v10")]
+# Cells moved by feat/a-final-stack (2026-09-26) against colab-1789902969401579900: C7 raises v18 (044). C9 moves
+# no cell here — 128's spec names 비료살포기, a catalogue product (S7-15, PR #156 round 1). The v19 heading walk
+# moves no dev cell, and the H2 run moves nothing.
+FINAL_STACK_MOVES = [("PPS-DEV-044", "v18")]
 # Against the H2 run's own CSV: its responses do not trip the catalogue gate, 12 or 23; 049's v21 moves.
 OFFDEV_STACK_MOVES_H2 = [
     ("PPS-DEV-039", "v11"), ("PPS-DEV-049", "e21"), ("PPS-DEV-049", "v21"), ("PPS-DEV-053", "e2"),

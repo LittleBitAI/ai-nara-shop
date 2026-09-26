@@ -64,6 +64,25 @@ class ReviewRoundOneTests(unittest.TestCase):
         self.assertFalse(script.catalogue_miss(rec))
 
 
+class OutsideCatalogueTests(unittest.TestCase):
+    """C9 (#152), PR #156 round 1: a named catalogue product counts beside the registered codes (S7-15)."""
+
+    def setUp(self):
+        script.load_sme_reference(str(ROOT / "open/data"))
+
+    def test_a_named_product_within_its_limit_keeps_v10_and_v11(self):
+        rec = notice("품명: 석회질비료", 세부품명번호목록="[9999999999]", 조항호내용="석회질비료")
+        self.assertFalse(script.outside_catalogue(rec))
+        out = script.apply_clause_rules(cells(v10=1, v11=1), rec)
+        self.assertEqual((out["v10"]["위반여부"], out["v11"]["위반여부"]), (1, 1))
+
+    def test_codes_outside_with_no_named_product_close_the_items(self):
+        rec = notice("품명: 기타 물품", 세부품명번호목록="[9999999999]")
+        self.assertTrue(script.outside_catalogue(rec))
+        out = script.apply_clause_rules(cells(v10=1, v13=1), rec)
+        self.assertEqual((out["v10"], out["v13"]), ({"위반여부": 0, "근거문구": ""},) * 2)
+
+
 class OffDevBatchTwoTests(unittest.TestCase):
     def test_v8_is_not_raised_on_a_local_small_quote(self):
         text = "1. 견적제출 자격\n가. 경상북도에 소재하고 최근 3년간 유사 용역 실적이 있는 업체"

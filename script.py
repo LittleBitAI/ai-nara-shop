@@ -3458,9 +3458,18 @@ def catalogue_miss(rec: Dict[str, Any]) -> bool:
 
 def outside_catalogue(rec: Dict[str, Any]) -> bool:
     """C9 (#152): registered codes that `competitive_product` rules out — catalogue and the 특이사항 amount
-    limit, which `catalogue_miss` does not read — give no 경쟁제품 item. Notices without codes are untouched."""
+    limit, which `catalogue_miss` does not read — give no 경쟁제품 item. Notices without codes are untouched.
+    S7-15: a catalogue product named in the notice counts beside the registered codes, from the same sources
+    `catalogue_miss` reads, so a named product within its limit keeps the item (PR #156 round 1)."""
     codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
-    return bool(codes) and competitive_product(rec, codes) is False
+    if not codes:
+        return False
+    context = build_context(rec) + "\n" + str((rec.get("meta") or {}).get("조항호내용") or "")
+    found = sme_product_lookup(rec, context, _PRODUCTS)
+    if found["조회생략행수"]:
+        return False                        # the match list was cut — do not decide on part of it
+    named = {p["세부품명번호"] for p in found["일치후보"]}
+    return competitive_product(rec, codes | named) is False
 
 
 # v11 is a 경쟁제품 bid NOT limited to 중소기업자 (판로지원법 제7조①). `SME_ALLOWED` wants "중소기업" within
