@@ -3,39 +3,19 @@ scope: project
 severity: preference
 triggers: ["이력", "브랜치", "공개", "push", "train_unlabeled", "filter-branch", "master", "대용량"]
 domain: 'git-history'
-title: "chore: 공개 전 개발 이력을 대용량 파일만 빼고 공개한다"
+title: "chore: Publish pre-release development history excluding large files"
 branch: "chore/pre-public-history"
 ---
 
-# chore: 공개 전 개발 이력을 대용량 파일만 빼고 공개한다
+# chore: Publish pre-release development history excluding large files
 
-> **2026-09-19 갱신 — 이 브랜치는 이제 없습니다.** 사용자가 원격 브랜치를 `main` 하나로
-> 줄이기로 해 `chore/pre-public-history`(`2d5afad`)를 원격·로컬에서 지웠습니다.
-> 같은 6커밋이 로컬 `chore/team-agent-setup`(`01d2124`)에 그대로 있고, 지우기 전
-> `git diff --stat`으로 두 브랜치의 차이가 `open/train_unlabeled.jsonl` 하나뿐임을
-> 확인했습니다. 잃은 것은 GitHub의 off-machine 백업 하나입니다. 다시 만들려면 아래
-> 절차를 `chore/team-agent-setup`에 그대로 쓰면 됩니다.
-> 출처: `docs/tasks/public-push.md` "2026-09-19 후속".
+> **2026-09-19 Update — This branch no longer exists.** As the user decided to reduce remote branches to `main`, `chore/pre-public-history`(`2d5afad`) was deleted from both remote and local. The same 6 commits remain in local `chore/team-agent-setup`(`01d2124`), and it was confirmed via `git diff --stat` before deletion that the difference between the two branches was only `open/train_unlabeled.jsonl`. The only thing lost is one off-machine backup on GitHub. To recreate it, you can use the procedure below as `chore/team-agent-setup`.
+> Source: `docs/tasks/public-push.md` "2026-09-19 Follow-up".
 
-무엇. 로컬에만 있던 공개 전 개발 이력 6커밋을 `open/train_unlabeled.jsonl`(790,790,220 bytes)만
-제거한 사본으로 만들어 `chore/pre-public-history`(tip `2d5afad`)로 push했습니다. 원본
-`chore/team-agent-setup`(`01d2124`)과 `master`(`4816cf6`)는 로컬에 그대로 둡니다.
-`main`은 건드리지 않았고, 대용량 이력 브랜치를 `main`에 merge하지 않는 기존 결정은 유지합니다.
+What. I created a copy of the 6 pre-release development history commits that were only local, removing only `open/train_unlabeled.jsonl` (790,790,220 bytes), and pushed it to `chore/pre-public-history` (tip `2d5afad`). The original `chore/team-agent-setup` (`01d2124`) and `master` (`4816cf6`) are kept as is locally. `main` was not touched, and the existing decision not to merge the large history branch into `main` is maintained.
 
-왜. `master`와 `chore/team-agent-setup`이 `main`에 "미머지"인 것은 일이 빠져서가 아니라 공개 push 때 merge 대신 새 스냅샷 커밋을 올려 SHA만 갈라진 것입니다.
-근거는 `git diff --stat 01d2124 5506ca02`이며 차이는 제거한 790MB 파일과 `reports/publication.json`
-둘뿐입니다. `master`는 `chore/team-agent-setup`의 조상이고 `main`이 그 브랜치보다 새 것입니다
-(`script.py` main 1068줄 대 branch 621줄). 그래서 반영할 일감은 없었고, 남은 것은 이력을
-GitHub에도 남길지의 선택뿐이었습니다. 공개를 막던 것은 이력이 아니라 이력 안의 blob이므로
-`git filter-branch --index-filter`로 그 파일만 뺐습니다. 이 결정은
-`docs/tasks/public-push.md`의 "이 파일과 이를 포함한 기존 커밋 이력은 공개 push하지 않는다"를
-사용자 판단으로 갱신한 것입니다.
+Why. The fact that `master` and `chore/team-agent-setup` are "unmerged" in `main` is not because work is missing, but because a new snapshot commit was uploaded instead of a merge during the public push, causing the SHA to diverge. The evidence is `git diff --stat 01d2124 5506ca02`, and the differences are only the removed 790MB file and `reports/publication.json`. `master` is an ancestor of `chore/team-agent-setup`, and `main` is newer than that branch (`script.py` main 1068 lines vs branch 621 lines). Therefore, there was no work to reflect, and the only remaining choice was whether to leave the history on GitHub as well. Since what prevented publication was not the history but the blob within the history, I removed only that file using `git filter-branch --index-filter`. This decision is an update to `docs/tasks/public-push.md`'s "This file and the existing commit history containing it will not be publicly pushed" based on user judgment.
 
-검증: `2d5afad` 대 원본 `01d2124`의 차이는 제거한 파일 하나, 대 공개 첫 커밋 `5506ca02`의
-차이는 `publication.json` 하나입니다. 남은 최대 blob은 `open/dev.jsonl` 8.3MB입니다.
-이력 6커밋·고유 blob 111개 중 텍스트 107개를 비밀키·개인 절대경로로 검사했고, 적중한 blob
-7개는 전부 현재 공개 `main`에 있는 것과 같은 OID라 새로 노출되는 것이 없습니다.
-`reports/t2-*/manifest.json`의 개인 절대경로는 이 push 이전부터 공개 `main`에 있던 것이며
-별도로 판단합니다.
+Verification: The difference between `2d5afad` and the original `01d2124` is one removed file, and the difference from the first public commit `5506ca02` is only `publication.json`. The remaining largest blob is `open/dev.jsonl` 8.3MB. Among the 6 history commits and 111 unique blobs, 107 text files were checked for secret keys and private absolute paths, and the 7 hit blobs all have the same OID as those currently in public `main`, so nothing new is exposed. The private absolute path in `reports/t2-*/manifest.json` has been in public `main` since before this push and is judged separately.
 
-출처. `docs/tasks/public-push.md` "2026-09-17 후속" · `chore/pre-public-history`
+Source. `docs/tasks/public-push.md` "2026-09-17 Follow-up" · `chore/pre-public-history`

@@ -1,18 +1,18 @@
 ---
 scope: project
 severity: contract
-triggers: ["런처", "게이트", "postgres", "마이그레이션", "ci"]
-domain: infra
-title: "feat: 경쟁제품 게이트로 v11·v12에 첫 TP를 세운다"
+triggers: []
+domain: ''
+title: "feat: Establish the first TP for v11·v12 with the competitor product gate"
 pr: 57
 merged: 2026-09-20
 branch: "feat/a2-competitive-product"
 ---
 
-# feat: 경쟁제품 게이트로 v11·v12에 첫 TP를 세운다
+# feat: Establish the first TP for v11·v12 with the competitor product gate
 
-무엇. 고시 카탈로그의 `특이사항` 금액 상한을 코드가 읽게 해 v11·v12에 여섯 회차 만의 첫 TP를 세웠다. 보관 원응답 세 벌에서 같은 크기로 재현됐다. 전부 대상 밖 회귀 0이다. | 원응답 | Macro F1 | 바뀐 셀 | | --- | --- | --- | | `b113425` | 0.360884 → 0.396069 (+0.035185) | 6/4800 | | `99ebbf1` | 0.339492 → 0.375477 (+0. …
+What. By having the code read the price ceiling of the `특이사항` notification catalog, the first TP in six rounds was established for v11·v12. It was reproduced with the same size in three sets of original responses. All are out-of-scope regressions 0. | Original Response | Macro F1 | Changed Cell | | --- | --- | --- | | `b113425` | 0.360884 → 0.396069 (+0.035185) | 6/4800 | | `99ebbf1` | 0.339492 → 0.375477 (+0. …
 
-왜. 게이트는 고시 `특이사항`의 금액 상한이었다. 카탈로그 617행에는 용역·서비스가 들어 있고 (「기타행사기획및대행서비스」 8014199001, 「축제기획및대행서비스」 9015189001), 축제는 "추정가격 3억원 미만에 한함"이다. `PPS-DEV-054`는 그 품명으로 직생을 요구했는데 추정가격이 3.27억이다 — 경쟁제품이 아닌데 직생을 요구했으므로 v12 위반이다. 지금까지 코드는 이 칸을 모델에게 문자열로 넘기기만 하고 비교하지 않았다. 게이트를 여는 열쇠도 메타가 아니었다. dev 양성 21건 중 20건이 일반용역이라 `meta.세부품명번호목록`이 비어 있다. 반면 직생을 요구하는 공고는 거의 언제나 그 문장 안에 품명을 적는다 — 무라벨 6,000건에서 1,260건 중 1,244건(98. …
+Why. The gate was the price ceiling of the notification `특이사항`. Catalog row 617 contains services (「Other Event Planning and Agency Services」 8014199001, 「Festival Planning and Agency Services」 9015189001), and festivals are "limited to an estimated price of less than 300 million KRW". `PPS-DEV-054` required direct production for that product name, but the estimated price is 327 million KRW — it is not a competitor product, but it required direct production, so it is a v12 violation. Until now, the code only passed this cell to the model as a string and did not compare it. The key to opening the gate was also not meta. Out of 21 dev training cases, 20 are general services, so `meta.세부품명번호목록` is empty. On the other hand, announcements requiring direct production almost always write the product name in that sentence — 1,244 out of 1,260 cases in 6,000 unlabeled cases (98. …
 
-출처. PR #57 · `feat/a2-competitive-product`
+Source. PR #57 · `feat/a2-competitive-product`

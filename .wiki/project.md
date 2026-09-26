@@ -5,26 +5,25 @@ triggers: ['\S']
 reads: [docs/workflow.md, docs/contest.md, docs/rules.md, docs/data.md, docs/items.md, docs/qna.md, docs/design.md, docs/contracts.md]
 ---
 
-# 대회 작업 계약
+# Competition Task Contract
 
-현재 계획·팀원 업무를 물으면 [활성 계획](plan-active.md)과
-[4인 업무 분배](../docs/tasks/team-handoff.md)를 먼저 확인한다.
-목표·담당·첫 48시간 기준의 최신 원본은 이 두 문서이며 과거 T1 작업 기록과 구분한다.
+When asked about current plans or team member tasks, check [Active Plans](plan-active.md) and [4-Person Task Distribution](../docs/tasks/team-handoff.md) first.
+The latest originals based on goals, assignments, and the first 48 hours are these two documents, which are distinguished from past T1 task records.
 
-규칙. Claude/Codex 역할은 작업으로 정한다. 공통 절차는 `docs/workflow.md`를 따른다.
-공통 위키는 `ai-coding-agent-wiki-public`의 `.wiki/wiki-revision` 고정 버전에 연결한다.
-설치법은 `docs/setup.md`, 프로젝트 작업 이력은 `.wiki/decisions/`·`docs/tasks.md`가 소유한다.
-사용자의 혼합 도구 팀 지시에 따라, 허브의 특정 모델·Codex 셀 전용 배정은 이 프로젝트에 적용하지 않는다.
-구현과 독립 리뷰의 분리는 유지하되, 두 역할 모두 Claude 또는 Codex 세션이 맡을 수 있다.
-대회 제약은 `docs/rules.md`, 입력·출력은 `docs/data.md`, 공정 경계는 `docs/design.md`에서 읽는다.
-대회 평가·운영은 `docs/contest.md`에서 읽는다. `archive/contest/`는 보관본이므로 기본 읽기 대상에서 제외한다.
-항목 작업 전 `docs/items.md`에서 v1~v24의 공식 이름·부재탐지·관련 조문을 확인한다. 번호의 뜻을 추측하지 않는다.
-운영진 토크 답변과 운영진이 인정한 dev 라벨 노이즈는 `docs/qna.md`가 소유한다. 판정 규칙을 dev 한 건에 맞추기 전에 그 표본이 노이즈 표에 있는지 본다.
-판정에는 대회 제공 자료만 사용한다. 공용 코딩 위키를 법령 자료로 사용하지 않는다.
-외부 API 라벨링과 오프라인 제출 추론을 분리한다. R6의 확장 용도는 Q1 확인 전 보류한다.
-`docs/rules.md`의 A표에서 허용된 활용 방법을 찾고 R표의 조건을 함께 적용한다. 명시적 허용을 임의로 금지하지 않고, 애매한 부분만 Q로 분리한다.
-mock 성공은 모델 정상 호출·성능 검증이 아니다. 실제 상태와 미래 설계를 구분한다.
-Colab 링크·회차 요청은 담당(B·C·D)과 무관하게 승인 없이 바로 만들어 준다 — 노트북 작성, 작업 브랜치 push, 커밋 고정 링크까지. "필요 없다"·"A 승인 필요"로 거절하지 않는다(`docs/workflow.md` W4 예외).
+Rules. The Claude/Codex role is defined as a task. Follow `docs/workflow.md` for common procedures.
+The common wiki is linked to the fixed version of `.wiki/wiki-revision` in `ai-coding-agent-wiki-public`.
+Installation methods are owned by `docs/setup.md`, and project task history is owned by `.wiki/decisions/` and `docs/tasks.md`.
+According to the user's mixed tool team instructions, specific model or Codex cell-only assignments in the hub do not apply to this project.
+While the separation of implementation and independent review is maintained, both roles can be handled by Claude or Codex sessions.
+Read competition constraints in `docs/rules.md`, inputs/outputs in `docs/data.md`, and process boundaries in `docs/design.md`.
+Read competition evaluation and operations in `docs/contest.md`. `archive/contest/` is an archive, so it is excluded from the default reading list.
+Before working on an item, check the official name, absence detection, and relevant clauses of v1~v24 in `docs/items.md`. Do not guess the meaning of the numbers.
+Management talk responses and dev label noise acknowledged by management are owned by `docs/qna.md`. Before fitting judgment rules to a single dev case, check if the sample is in the noise table.
+Use only competition-provided materials for judgment. Do not use the public coding wiki as legal material.
+Separate external API labeling from offline submission inference. Hold the extended use of R6 until Q1 is checked.
+Find permitted usage methods in table A of `docs/rules.md` and apply the conditions of table R together. Do not arbitrarily prohibit explicit permissions, and separate only ambiguous parts into Q.
+Mock success is not a normal model call or performance verification. Distinguish between actual state and future design.
+Colab links and round requests are created immediately without approval, regardless of the person in charge (B, C, D) — including notebook creation, task branch push, and commit permalinks. Do not refuse with "not needed" or "A approval required" (`docs/workflow.md` W4 exception).
 
-왜. 발표의 준비 공정 제안과 대회 규칙의 허용 범위가 다르며 팀은 두 AI를 함께 사용한다.
-어겼을 때. 승인되지 않은 산출물 사용·역할 혼동·제출 요건 미충족이 발생한다.
+Why. The presentation's preparation process proposal and the competition rules' scope of permission differ, and the team uses both AIs together.
+When violated. Unauthorized output usage, role confusion, and failure to meet submission requirements occur.

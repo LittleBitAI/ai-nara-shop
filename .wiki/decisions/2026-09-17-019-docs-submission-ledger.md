@@ -3,33 +3,17 @@ scope: project
 severity: contract
 triggers: ["서버 점수", "리더보드", "제출", "submission", "0.2197", "dev 격차", "채점", "시간 한도", "2시간", "7200"]
 domain: 'submission-ledger'
-title: "docs: 첫 채점된 서버 제출을 제출 장부에 기록한다"
+title: "docs: Record the first scored server submission in the submission ledger"
 ---
 
-# docs: 첫 채점된 서버 제출을 제출 장부에 기록한다
+# docs: Record the first scored server submission in the submission ledger
 
-무엇. `654c556`을 2026-09-17에 제출해 리더보드 **0.2197036943**을 받았습니다. 저장소에는 이 사실이
-어디에도 없었고 `server_submitted: false`만 남아 있었습니다. 적을 자리가 없었던 것이 원인이라
-`reports/submissions.json`을 만들어 제출 한 건을 한 행으로 소유하게 했습니다. 실패한 `5506ca0`
-시도도 같은 장부에 넣었습니다. `docs/runs.md`·`docs/roadmap.md`·`.wiki/plan-active.md`와
-`reports/team-score-audit/result.md`는 이 장부를 가리킵니다.
+What. Submitted `654c556` on 2026-09-17 and received a leaderboard score of **0.2197036943**. This fact was nowhere to be found in the repository, and only `server_submitted: false` remained. The cause was that there was no place to write it down, so I created a `reports/submissions.json` to have each submission as a single row. Failed `5506ca0` attempts were also included in the same ledger. `docs/runs.md`, `docs/roadmap.md`, `.wiki/plan-active.md`, and `reports/team-score-audit/result.md` point to this ledger.
 
-같은 회차가 **6,192초(103분 12초)** 걸렸다는 것도 함께 적었습니다. 2시간 한도의 86.0%이고
-남은 여유는 1,008초입니다.
+I also noted that the same round took **6,192 seconds (103 minutes 12 seconds)**. This is 86.0% of the 2-hour limit, and the remaining margin is 1,008 seconds.
 
-왜. 제출은 실행과 다른 사건이고 점수는 실행이 끝난 한참 뒤에 나오므로, 실행 기록 색인에 두면
-`tools/register_run.py`가 같은 실행을 다시 등록할 때 손으로 적은 서버 점수를 지웁니다.
-공개 dev 200건 0.22078771129016228과 비공개 1,853건 0.2197036943의 차이는 0.0010840169901622787이지만
-**두 수는 다른 입력 집합의 측정이라 오차가 아닙니다.** 표본 한 개로 dev가 서버를 얼마나
-대표하는지 일반화하지 않습니다. 채점됐다는 사실이 앞선 `5506ca0` 실패의 원인을 규명한 것도
-아닙니다 — 서버 원응답을 볼 수 없고 두 제출은 코드가 다릅니다(`9abb9c4e` 대 `79a56041`).
-점수·제출일은 사용자가 대회 화면에서 옮긴 값이며 제출 ID·정확한 시각·public/private 구분은
-받지 못했습니다. 하루 1회 제출 제한(R16)의 남은 횟수는 대회 제출 이력에서 확인합니다.
+Why. A submission is a different event from an execution, and the score appears long after the execution finishes, so if I put it in the execution record index, `tools/register_run.py` would erase the manually written server score when re-registering the same execution. The difference between the public dev 200 count of 0.22078771129016228 and the private 1,853 count of 0.2197036943 is 0.0010840169901622787, but **the two numbers are measurements of different input sets, so it is not an error.** I do not generalize how well dev represents the server with a single sample. The fact that it was scored does not identify the cause of the previous `5506ca0` failure either — the server raw response cannot be seen, and the two submissions have different code (`9abb9c4e` vs `79a56041`). The score and submission date are values copied by the user from the competition screen, and the submission ID, exact time, and public/private distinction were not received. The remaining count for the once-a-day submission limit (R16) is checked in the competition submission history.
 
-시간이 점수보다 더 구속적입니다. 모델 호출을 늘리는 변경은 1,008초 안에 들어와야 하며, dev
-200건의 건당 초를 곱해 서버 시간을 추정하면 어긋납니다 — Colab A100 40GB의 건당 3.469초를
-1,853건에 곱하면 6,428초로 실측 6,192초를 넘습니다. 서버는 L40S 1장인데도 더 빨랐습니다.
-이유는 알 수 없고 서버 단계별 시간은 받을 수 없습니다. 이 여유는 그 코드·그 입력 한 회차의
-값이며 다음 회차를 보장하지 않습니다.
+Time is more restrictive than the score. Changes that increase model calls must fit within 1,008 seconds, and estimating server time by multiplying the seconds per count of the 200 dev items is inaccurate — multiplying the 3.469 seconds per count of the Colab A100 40GB by 1,853 items results in 6,428 seconds, which exceeds the actual measured 6,192 seconds. Even though the server is a single L40S, it was faster. The reason is unknown, and the time per server step cannot be obtained. This margin is the value for that code and that input round, and it does not guarantee the next round.
 
-출처. `reports/submissions.json` · `docs/runs.md` 대회 서버 제출 · `reports/t1-baseline/server-failure.md`
+Source. `reports/submissions.json` · `docs/runs.md` Competition server submission · `reports/t1-baseline/server-failure.md`
