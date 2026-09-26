@@ -149,14 +149,19 @@ class Pr154RoundOneTests(unittest.TestCase):
         self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
 
     def test_round_fifteen_any_unmarked_heading_ends_the_walk(self):
-        for heading in ("낙찰 후 이행사항", "계약 단계 안내", "낙찰자 의무", "계약상대자 준수사항", "낙찰자 결정 후", "계약 후 준비사항"):
+        for heading in ("낙찰 후 이행사항", "계약 단계 안내", "낙찰자 의무", "계약상대자 준수사항", "낙찰자 결정 후", "계약 후 준비사항",
+                        # Round 16: introductory sentences end the walk too.
+                        "낙찰자는 계약 체결 후 다음 서류를 제출하여야 합니다.", "계약상대자는 다음 각 호의 서류를 제출합니다.",
+                        "계약 체결 후 제출해야 하는 서류는 다음과 같습니다."):
             lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", heading, "① 물품공급 확약서 1부 제출"]
             with self.subTest(heading=heading):
                 self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
 
-    def test_round_two_prose_is_not_a_heading_but_a_named_section_is(self):
+    def test_an_unmarked_line_ends_the_walk_as_on_main(self):
+        # Rounds 2 and 16 pulled opposite ways on introductory prose; any unmarked line now ends the walk, as
+        # `list_heading` on main does. The prose-then-list shape is a recall follow-up.
         prose = ["다. 입찰 시 제출서류", "제출서류는 다음과 같습니다.", "① 물품공급 확약서 1부"]
-        self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(prose))))
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(prose))))
         after = ["다. 입찰 시 제출서류", "③ 사업자등록증", "계약 체결 후 제출자료", "① 물품공급 확약서 1부"]
         self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(after))))
 

@@ -1660,33 +1660,26 @@ def list_heading(lines, index):
 
 
 ENUMERATING = ("circled", "hangul", "paren_num", "num")
-PREDICATE_END = re.compile(r"(?:다|요|함|음|것)\s*[.。]?\s*$")
 
 
 def enumerated_heading(lines, index):
-    """For a numbered entry, the nearest line above with a different numbering kind — notes (※), sub-bullets
-    (-) and unmarked continuation lines inside the list are skipped. `list_heading` stops at those, so a list
-    like "다. 입찰 시 제출서류 / ③ … / - 증빙자료 … / ⑦ 확약서" lost its heading (off-dev audit, 4 v19 misses)."""
+    """For a numbered entry, the nearest line above with a different numbering kind, skipping only notes (※) and
+    sub-bullets (-) inside the list — `list_heading` stops at those, so a list like "다. 입찰 시 제출서류 / ③ … /
+    - 증빙자료 … / ⑦ 확약서" lost its heading (off-dev audit, 4 v19 misses). Any unmarked line — a heading of its own
+    ("낙찰 후 이행사항") or an introductory sentence ("낙찰자는 계약 체결 후 다음 서류를 제출하여야 합니다.") — ends the
+    walk and is returned, as `list_heading` does (PR #154 rounds 15-16)."""
     found = LIST_MARKER.match(lines[index])
     if not found or found.lastgroup not in ENUMERATING:
         return None
     for up in range(index - 1, max(-1, index - 1 - HEADING_REACH), -1):
+        if not lines[up].strip():
+            continue
         other = LIST_MARKER.match(lines[up])
-        if other and other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
+        if not other:
             return lines[up]
-        # An unmarked heading of its own ("계약 체결 후 제출자료") ends the walk rather than borrow an earlier
-        # list's timing. A heading is a short noun phrase naming documents; prose ends in a predicate
-        # ("제출서류는 다음과 같습니다.") and is skipped.
-        if not other and is_section_heading(lines[up]):
+        if other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
             return lines[up]
     return None
-
-
-def is_section_heading(line: str) -> bool:
-    """Any short unmarked line without a predicate ending is a heading of its own ("낙찰 후 이행사항", "계약 단계 안내",
-    "입찰 시 제출서류"). Misreading a short fragment as a heading only stops the walk early — the same as main."""
-    stripped = line.strip()
-    return 0 < len(stripped) <= 40 and not PREDICATE_END.search(stripped) and not stripped.endswith((",", "，"))
 
 
 # --- v24 대조 축 ---------------------------------------------------------------
