@@ -1620,6 +1620,7 @@ def pledge_sentence(text: str, start: int, end: int) -> str:
 
 
 CLAUSE_SEPARATOR = re.compile(r"[,，;；]")
+BID_TIME_OBJECT = re.compile(r"\s*(?:에\s*)?(?:[^\s,;.]{0,12}\s*){0,2}?확약서|\s*(?:에\s*)?(?:제출|첨부|구비|징구)")
 # Post-award times for binding a bid-time phrase to its clause. Wider than `V19_POST_AWARD`, which the evidence check
 # also uses and is left as it is.
 V19_AFTER_AWARD = re.compile(V19_POST_AWARD.pattern + r"|낙찰\s*(?:후|이후|통보\s*후)|계약\s*(?:후|이후|체결\s*후)"
@@ -1639,7 +1640,11 @@ def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
     left = max((m.end() for m in CLAUSE_SEPARATOR.finditer(sentence, 0, at)), default=0)
     right = CLAUSE_SEPARATOR.search(sentence, at)
     clause = sentence[left: right.start() if right else len(sentence)]
-    return bool(V19_BID_HEADING.search(clause)) and not V19_AFTER_AWARD.search(clause)
+    if V19_AFTER_AWARD.search(clause):
+        return False
+    # The time must modify the pledge's submission: followed by the pledge itself ("입찰 시 물품공급 확약서") or by a
+    # submission verb ("입찰 시 제출"). "…제출하며 입찰 시 가격평가를 진행" times another requirement.
+    return any(BID_TIME_OBJECT.match(clause, m.end()) for m in V19_BID_HEADING.finditer(clause))
 
 
 def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
