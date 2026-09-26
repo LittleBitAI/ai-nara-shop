@@ -1660,7 +1660,6 @@ def list_heading(lines, index):
 
 
 ENUMERATING = ("circled", "hangul", "paren_num", "num")
-SECTION_HEADING = re.compile(r"제출|서류|자료")
 PREDICATE_END = re.compile(r"(?:다|요|함|음|것)\s*[.。]?\s*$")
 
 
@@ -1684,9 +1683,10 @@ def enumerated_heading(lines, index):
 
 
 def is_section_heading(line: str) -> bool:
+    """Any short unmarked line without a predicate ending is a heading of its own ("낙찰 후 이행사항", "계약 단계 안내",
+    "입찰 시 제출서류"). Misreading a short fragment as a heading only stops the walk early — the same as main."""
     stripped = line.strip()
-    return (0 < len(stripped) <= 40 and SECTION_HEADING.search(stripped) is not None
-            and not PREDICATE_END.search(stripped))
+    return 0 < len(stripped) <= 40 and not PREDICATE_END.search(stripped) and not stripped.endswith((",", "，"))
 
 
 # --- v24 대조 축 ---------------------------------------------------------------

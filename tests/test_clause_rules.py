@@ -148,6 +148,12 @@ class Pr154RoundOneTests(unittest.TestCase):
         text = "① 입찰 시 제안서 6부 제출 ② 증빙서류 각 1부 ㉰ “확약서” 1부 [별지 7]"
         self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
 
+    def test_round_fifteen_any_unmarked_heading_ends_the_walk(self):
+        for heading in ("낙찰 후 이행사항", "계약 단계 안내", "낙찰자 의무", "계약상대자 준수사항", "낙찰자 결정 후", "계약 후 준비사항"):
+            lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", heading, "① 물품공급 확약서 1부 제출"]
+            with self.subTest(heading=heading):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+
     def test_round_two_prose_is_not_a_heading_but_a_named_section_is(self):
         prose = ["다. 입찰 시 제출서류", "제출서류는 다음과 같습니다.", "① 물품공급 확약서 1부"]
         self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(prose))))
