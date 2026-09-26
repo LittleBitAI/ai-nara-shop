@@ -105,7 +105,9 @@ class OffDevBatchTwoTests(unittest.TestCase):
             with self.subTest(bullet=bullet):
                 self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
         # Round 3: a bare stage word in a detail's value is content, not a heading.
-        for bullet in ("- 증빙자료: 선정기준표", "- 첨부: 계약서 사본", "- 제안서(첨부) : 기본 양식을 준수하여, 제출 이후 변경할 수 없음"):
+        for bullet in ("- 증빙자료: 선정기준표", "- 첨부: 계약서 사본", "- 제안서(첨부) : 기본 양식을 준수하여, 제출 이후 변경할 수 없음",
+                       # Round 5: a stage phrase in a document title is content too.
+                       "- 증빙자료: 계약 후 유지관리 계획서", "- 첨부: 낙찰자 선정기준 안내문"):
             lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", bullet, "⑦ 물품공급 확약서 1부"]
             with self.subTest(bullet=bullet):
                 self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))

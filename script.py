@@ -1671,6 +1671,7 @@ STAGE_AFTER_BID = re.compile(r"계약|낙찰|착수|납품|준공|이행|우선�
 # document name ("선정기준표", "계약서 사본"). PR #156 rounds 3-4.
 STAGE_PHRASE = re.compile(r"(?:계약|낙찰|착수|납품|준공|이행|협상|선정|개찰|평가)\s*(?:체결|완료|결정)?\s*"
                           r"(?:시|후|이후|전|단계)(?![가-힣])|우선협상대상자|낙찰자|계약상대자|선정\s*(?:된\s*)?업체")
+TIMING_LABEL = re.compile(r"단계|시기|시점|기한|일정|대상|제출처|수신")
 
 
 def enumerated_heading(lines, index):
@@ -1699,10 +1700,12 @@ def enumerated_heading(lines, index):
             stripped = lines[up].strip()
             label = re.split(r"[:：]", stripped, maxsplit=1)[0]
             if label != stripped:
-                # A "label : value" line. A bare stage word counts only in the label — in the value it is content
-                # ("선정기준표"); a stage phrase or a later recipient counts anywhere ("단계: 계약 체결 후 제출서류").
+                # A "label : value" line. A stage word counts in the label; in the value only a stage phrase or a
+                # recipient under a timing, phase or recipient label ("단계: 계약 체결 후 제출서류"). Any other value is
+                # content, document titles included ("선정기준표", "계약 후 유지관리 계획서"). PR #156 rounds 3-5.
+                value = stripped[len(label) + 1:]
                 detail = ("제출" not in label and not STAGE_AFTER_BID.search(label)
-                          and not STAGE_PHRASE.search(stripped))
+                          and not (TIMING_LABEL.search(label) and STAGE_PHRASE.search(value)))
             else:
                 detail = stripped.startswith("※") and len(stripped) > 40 and not STAGE_AFTER_BID.search(stripped)
             if not detail:
