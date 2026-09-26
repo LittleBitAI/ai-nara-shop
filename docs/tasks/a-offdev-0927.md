@@ -54,7 +54,7 @@ Macro over the 22 labelled items is 0.534; dev replay of the same code is about 
 | After the pilot | Scale to 3,000, or to whatever finishes by 15:00 (stop line below). Same labelers, same merge rules | `reports/labels-3000/merged.csv`, trust verdicts reused from labels-600 |
 | Meanwhile | Missed-cell stage audit on the diagnostic 200: for each FN, did the model say 0 or did a gate lower a true positive? A gate that lowers true positives off dev is the cheapest fix | Per-item table: model / gate / rule |
 | After the GPU run | Retune the thresholds for all labelled items on dev 200 + diagnostic 200 + sealed 400 (800 labels). `tools/tune_thresholds.py` takes one case today; extend it to several cases and label files | Candidate `ITEM_THRESHOLDS` with a split-half report |
-| 15:00 | Replay `main` and each candidate on the 3,000; merge the winners from C and from the audit | One integration branch |
+| 15:00 | Replay `main` and each post-processing candidate on the 3,000; merge the winners from C and from the audit. Those saved responses have no `item_p1`, so a threshold candidate does not move there — thresholds are judged only on dev 200 + the off-dev 600 from D's run | One integration branch |
 | 19:00 | Integration closes | PR, reviewed before the round (operational `script.py`) |
 | 20:00 / 21:00 | Freeze and package with `tools/package.py`; upload | ZIP, SHA-256 in the ledger |
 
@@ -69,15 +69,20 @@ A candidate is adopted when all of these hold, otherwise it is rejected. No hold
 5. Server time estimate ≤ 6,800 s. Threshold and post-processing changes add none.
 
 v9 and v24 have no labels off dev; their thresholds stay as they are.
+The 3,000 enter the pool for post-processing rules only. For thresholds the pool is the off-dev 600, the only off-dev responses with `item_p1`.
+
+The one exception: if nothing passes by 19:00, the slot carries an experimental submission (the best score counts, so a loss costs nothing).
+It is the candidate with the highest off-dev pool Macro among those whose server time estimate is ≤ 6,800 s.
+If no candidate beats `61c495c` on that Macro, upload `main` as it is. The ledger note says "experimental" and lists the conditions it failed.
 
 ## Stop lines
 
 | Condition | Then |
 | --- | --- |
 | Pilot throughput says 3,000 will not finish by 15:00 | Label what finishes by 15:00 (at least 1,500); the rest keeps running for 9/28 |
-| Pilot cost × 3,000 > $30 | Drop Luna to effort medium |
+| Pilot cost × 3,000 > $30 | Label fewer notices at effort high. The trust verdicts were calibrated for Luna high on dev 120; another effort needs its own calibration before its labels enter the gate |
 | The threshold retune fails the split-half check | Keep the current thresholds; submit the rules only |
-| Nothing passes by 19:00 | Submit the best available candidate anyway (the best score counts), and write down why it failed the gate |
+| Nothing passes by 19:00 | Experimental submission under the exception in the [adoption rule](#adoption-rule-fixed-before-any-result) |
 
 ## Files this task may change
 
