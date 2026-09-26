@@ -1680,10 +1680,15 @@ def enumerated_heading(lines, index):
             return lines[up]
         if other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
             return lines[up]
-        # A note or sub-bullet that names a contract or award stage heads a section of its own
-        # ("※ 계약 체결 후 제출서류", "- 낙찰자 제출서류"); only other notes are skipped (PR #154 round 17).
-        if other.lastgroup == "bullet" and STAGE_AFTER_BID.search(lines[up]):
-            return lines[up]
+        # A note or sub-bullet is skipped only when it is plainly a detail of the entry above — a "label : value"
+        # line ("- 증빙자료 : 카탈로그 …") or a long explanatory "※" note — and names no later stage. Any other marked
+        # line may head a section of its own ("※ 우선협상대상자 제출서류", "- 개찰 후 제출자료") and ends the walk
+        # (PR #154 rounds 17-18: no keyword list of later stages is complete).
+        if other.lastgroup == "bullet":
+            stripped = lines[up].strip()
+            detail = bool(re.search(r"[:：]", stripped)) or (stripped.startswith("※") and len(stripped) > 40)
+            if not detail or STAGE_AFTER_BID.search(stripped):
+                return lines[up]
     return None
 
 
