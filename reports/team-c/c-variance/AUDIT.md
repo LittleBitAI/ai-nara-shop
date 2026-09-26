@@ -13,7 +13,7 @@
 ## 1. 등록
 
 ```bash
-py -X utf8 tools/register_run.py --inbox <inbox> --code-commit e1474d1
+py -X utf8 tools/register_run.py --inbox <inbox> --code-commit 772ca1284c8918c1fa4ca5729cc15dfe4dedb2d4
 ```
 
 등록 규약은 `docs/runs.md` 가 소유한다. 이 회차는 `submit.zip` 이 없는 진단 회차이므로
@@ -23,7 +23,7 @@ py -X utf8 tools/register_run.py --inbox <inbox> --code-commit e1474d1
 ## 2. 바이트 재현 — 여섯 통과 각각
 
 ```bash
-git show e1474d1:script.py > <tmp>/pin.py
+git show 772ca12:script.py > <tmp>/pin.py
 
 for k in 01 02 03 04 05 06; do
   py -X utf8 tools/replay_run.py --case <run>/var-$k --script <tmp>/pin.py \
@@ -72,7 +72,7 @@ done
 
 빈칸에 수를 넣는다. 문장의 구조는 지금 정해졌다.
 
-> 같은 코드 `e1474d1` · 같은 입력 · 같은 설정으로 dev 200건을 **N회** 돌렸다.
+> 같은 코드 `772ca12` · 같은 입력 · 같은 설정으로 dev 200건을 **N회** 돌렸다.
 > 관측 N회의 Macro 범위는 **X** 다(최소 `___` · 최대 `___`).
 > 쌍 15개의 갈린 셀은 **`___`~`___`** 개다.
 > **따라서 X 보다 작은 Macro 차이는 한 쌍의 회차로 판정하지 않는다.**
@@ -92,11 +92,11 @@ done
 ```markdown
 ## 2026-09-26 — 한 코드를 N회 돌려 범위를 처음 쟀다
 
-지금까지의 관측은 코드마다 한두 쌍이었다. `e1474d1` 하나를 N회 돌려 쌍 15개를 얻었다.
+지금까지의 관측은 코드마다 한두 쌍이었다. `772ca12` 하나를 N회 돌려 쌍 15개를 얻었다.
 
 | | 값 |
 | --- | --- |
-| 코드 · 입력 | `e1474d1` · dev 200건 (해시 동일) |
+| 코드 · 입력 | `772ca12` · dev 200건 (해시 동일) |
 | 설정 | 여섯 통과 전부 `--debug-responses` 켬 |
 | Macro 범위 | `___` (최소 `___` · 최대 `___`) |
 | 갈린 셀 | `___`~`___` |
@@ -111,6 +111,6 @@ done
 
 - **서버 변동폭.** 같은 코드를 두 번 올린 적이 없다.
 - **왜 갈리나.** `temperature=0` 인데 갈리는 원인은 이 회차로 안 나온다.
-- **다른 코드·다른 GPU 의 크기.** `e1474d1` · A100 한 조합이다.
+- **다른 코드·다른 GPU 의 크기.** `772ca12` · A100 한 조합이다.
 - **최악값.** 관측된 범위일 뿐이다.
 - **재생 비교의 안정성.** 그쪽은 결정적이라 이 회차와 무관하다.
