@@ -1509,8 +1509,12 @@ def clean_evidence(ev: Optional[str], src: str) -> str:
 V19_POST_AWARD = re.compile(r"계약\s*시|계약체결|낙찰자\s*결정")   # 낙찰 후·계약 시 의무
 V19_BID_STAGE = re.compile(r"입찰|투찰")                        # 입찰 단계 표현이 있으면 유지
 V19_PLEDGE = re.compile(r"확약서")
+# The bid stage is also written "입찰 시 제출서류", "입찰참가 등록 시" and "전자입찰서 제출기간 내" (off-dev audit,
+# reports/offdev-0926: four v19 positives lowered for want of these). v19 is a demand at the bid or tender stage.
 V19_BID_DEADLINE = re.compile(r"입찰서?\s*제출\s*마감|입찰\s*전|입찰전|투찰\s*마감"
-                              r"|개찰\s*전|입찰\s*참가\s*시")
+                              r"|개찰\s*전|입찰\s*참가\s*시"
+                              r"|(?<![가-힣])(?:입찰|투찰)\s*시(?![가-힣])|입찰\s*참가\s*(?:자격\s*)?등록\s*시"
+                              r"|입찰서?\s*제출\s*기간")
 V19_WINDOW = 200                                               # 확약서 언급 앞뒤로 볼 글자 수
 V24_AMOUNT = re.compile(r"(\d{1,3}(?:,\d{3})+|\d{5,})\s*원")
 V24_REGION = re.compile(r"지역제한\s*\(([^)]*)\)")
@@ -1623,9 +1627,9 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
         lines = text.split("\n")
         for index, line in enumerate(lines):
             if V19_PLEDGE.search(line):
-                heading = list_heading(lines, index)
-                if heading and V19_BID_DEADLINE.search(heading):
-                    return True
+                for heading in (list_heading(lines, index), enumerated_heading(lines, index)):
+                    if heading and V19_BID_DEADLINE.search(heading):
+                        return True
     return False
 
 
@@ -1646,6 +1650,23 @@ def list_heading(lines, index):
             continue
         other = LIST_MARKER.match(lines[up])
         if (other.lastgroup if other else None) != kind:
+            return lines[up]
+    return None
+
+
+ENUMERATING = ("circled", "hangul", "paren_num", "num")
+
+
+def enumerated_heading(lines, index):
+    """For a numbered entry, the nearest line above with a different numbering kind — notes (※), sub-bullets
+    (-) and unmarked continuation lines inside the list are skipped. `list_heading` stops at those, so a list
+    like "다. 입찰 시 제출서류 / ③ … / - 증빙자료 … / ⑦ 확약서" lost its heading (off-dev audit, 4 v19 misses)."""
+    found = LIST_MARKER.match(lines[index])
+    if not found or found.lastgroup not in ENUMERATING:
+        return None
+    for up in range(index - 1, max(-1, index - 1 - HEADING_REACH), -1):
+        other = LIST_MARKER.match(lines[up])
+        if other and other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
             return lines[up]
     return None
 
@@ -2639,6 +2660,12 @@ def apply_product_rules(judgment, rec):
     return out
 
 
+def local_small_quote(rec) -> bool:
+    """A 지방 negotiated contract by quotes (집행기준 제5장 제3절 1.), which may combine limits."""
+    meta = rec.get("meta") or {}
+    return "지방" in str(meta.get("적용계약법") or "") and str(meta.get("계약방법") or "").startswith("수의")
+
+
 def apply_qualification_rules(judgment, rec):
     """모델 판정에 v8·v7·v4를 올리고 v3만 내린다. 다른 20항목은 그대로 돌려준다.
 
@@ -2653,6 +2680,10 @@ def apply_qualification_rules(judgment, rec):
         # `[수요기관(기초자치단체)|지역=r1]` 처럼 익명화된 기관 토큰에서 검출기가 None 을
         # 내므로 정답 양성까지 함께 지운다. 되돌렸다 — 여기서는 0 을 1 로만 올린다.
         if cell.get("위반여부") == 1:
+            continue
+        # v8 비고 "지방 + 소액수의 가능": a local 2-quote negotiated contract may combine region and 실적
+        # (집행기준 제5장 제3절 1. 6)·7)). The off-dev audit found all four rule-raised v8 FPs there.
+        if item == "v8" and local_small_quote(rec):
             continue
         hit = RULES[item](rec)
         if hit:
@@ -3407,8 +3438,8 @@ SIZE_CLASS = r"(?:중\s*[·ㆍ・‧]?\s*소\s*기업자?|소\s*기업자?|소\s
 CLAUSE_CHAR = (r"(?:(?!\n\s*(?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)]|[①-⑳]|[-•※○□◦❍▶]))"
                r"(?![\s,;·](?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)](?!\d))|\s*[①-⑳])(?!다\s*[.。])[^。])")
 SIZE_LIMIT = re.compile(SIZE_CLASS + CLAUSE_CHAR + r"{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
-                        r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)"
-                        r"|확인서를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
+                        r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)|인\s*(?:업체|자)(?![가-힣])"
+                        r"|확인서[’'\"」』]?\s*를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
                         r"|제한\s*경쟁\s*(?:입찰)?\s*\(\s*" + SIZE_CLASS, re.S)
 SIZE_TITLES = re.compile(r"[「｢『《][^」｣』》]{0,60}[」｣』》]|중소기업\s*기본법|중소기업\s*범위\s*및\s*확인에\s*관한\s*규정"
                          r"|중소기업제품[^,.\n]{0,30}?(?:법률|시행령)|중소벤처기업부|중소기업자\s*간\s*경쟁\s*제품"
