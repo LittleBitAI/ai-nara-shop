@@ -259,6 +259,39 @@ class SingleItemTest(unittest.TestCase):
             self.assertEqual(sorted(record["labels"]), ["v21"])
             self.assertEqual(record["usage"]["num_turns"], 1)
 
+    def test_facts_bundle_adds_computed_facts_only_when_asked(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            plain = label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl", data_dir=ROOT / "open/data",
+                                        bundle=Path(temporary) / "plain", ids=IDS[:1], excerpt_path=EXCERPT)
+            facts = label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl", data_dir=ROOT / "open/data",
+                                        bundle=Path(temporary) / "facts", ids=IDS[:1], excerpt_path=EXCERPT,
+                                        facts=True)
+            notice = (Path(temporary) / "facts/notices" / f"{IDS[0]}.md").read_text(encoding="utf-8")
+            self.assertEqual((plain["computed_facts"], facts["computed_facts"]), (False, True))
+            self.assertNotEqual(plain["notices"][0]["sha256"], facts["notices"][0]["sha256"])
+            self.assertIn("## Computed facts", notice)
+            self.assertIn("경쟁제품 카탈로그 조회: {", notice)
+            self.assertLess(notice.index("## Computed facts"), notice.index("## 공고 문서"))
+
+    def test_api_mode_sends_the_prompt_as_a_fixed_context_and_the_notice_apart(self):
+        calls = []
+
+        def api(context, notice):
+            calls.append((context, notice))
+            return json.dumps({"type": "result", "result": reply(), "usage": {"input_tokens": 1},
+                               "num_turns": 1})
+
+        with tempfile.TemporaryDirectory() as temporary:
+            bundle = Path(temporary) / "b"
+            label_bundle.export(SCRIPT, input_path=ROOT / "open/dev.jsonl", data_dir=ROOT / "open/data",
+                                bundle=bundle, ids=IDS, excerpt_path=EXCERPT)
+            summary = label_bundle.label(SCRIPT, bundle=bundle, cmd="api:stub", out=Path(temporary) / "l.jsonl",
+                                         model_label="stub", api=api)
+            prompt = (bundle / "prompt.md").read_text(encoding="utf-8")
+        self.assertEqual((summary["labelled"], summary["failures"]), (len(IDS), []))
+        self.assertEqual({context for context, _ in calls}, {prompt})       # one cacheable prefix
+        self.assertTrue(all(notice.startswith("# 공고 ") for _, notice in calls))
+
     def test_question_bundle_stores_facts_under_the_given_keys(self):
         question = ROOT / "reports/team-b/b10-v21-quote-share/question-v21-facts.md"
         facts_stub = (f"{sys.executable} -X utf8 -c \"import sys,json;sys.stdin.read();"

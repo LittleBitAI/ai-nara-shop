@@ -91,6 +91,9 @@ FILE_SOURCES = """- The statute snapshot under ./법령패키지/ in your workin
 Do not search the web, do not open files outside your working directory, and do not rely on statutes
 you remember."""
 INLINE_SOURCES = """- The statute clauses quoted verbatim under "Statute excerpt" below, copied from the provided snapshot.
+  Organizer rulings listed at the end of that excerpt override your own reading of the statutes.
+- A "Computed facts" section in the notice, when present: values code derived from the notice and the
+  provided catalogue. They are aids, not verdicts.
 You have no tools. Do not rely on statutes you remember."""
 
 
@@ -117,17 +120,48 @@ def build_prompt(table, items=ITEMS, excerpt=None):
     return body + tail + "\n"
 
 
-def build_notice(module, rec):
-    """공고 1건을 라벨러가 읽을 하나의 문서로 만든다. Gemma의 16k 예산을 적용하지 않는다."""
+def won(value):
+    return "없음" if value is None else f"{int(value):,}원"
+
+
+def computed_facts(module, rec, context, products):
+    """Deterministic aids for the labeler: amount comparisons and the catalogue lookup `script.py` uses."""
+    price = module.estimated_price(rec)
+    region = module.region_price_limit(rec)
+
+    def side(limit):
+        return "모름" if price is None or limit is None else ("미만" if price < limit else "이상")
+
+    lines = [
+        f"- 추정가격(입찰추정가격, 없으면 배정예산금액): {won(price)}",
+        f"- 1억원 대비: {side(module.SME_BAND_FLOOR_WON)}",
+        f"- 국가계약 물품·용역 고시금액 {module.NOTICE_AMOUNT_WON:,}원 대비: {side(module.NOTICE_AMOUNT_WON)}",
+        f"- 이 공고의 계약법·발주기관 기준 지역제한 상한: {won(region)} (대비 {side(region)})",
+        f"- SW 사업금액(추정가격 × 1.1): {won(price * 1.1 if price else None)}",
+        "- 경쟁제품 카탈로그 조회: "
+        + json.dumps(module.sme_product_lookup(rec, context, products), ensure_ascii=False, separators=(",", ":")),
+    ]
+    return "\n".join(lines)
+
+
+def build_notice(module, rec, products=None):
+    """공고 1건을 라벨러가 읽을 하나의 문서로 만든다. Gemma의 16k 예산을 적용하지 않는다.
+
+    `products` 를 주면 코드가 계산한 사실 절을 붙인다(--facts).
+    """
     completeness = json.dumps(rec.get("input_completeness"), ensure_ascii=False)
     dropped = json.dumps(rec.get("dropped_doc_counts") or {}, ensure_ascii=False)
+    context = module.build_context(rec, FULL_TEXT)
+    facts = ("## Computed facts\n\n" + computed_facts(module, rec, context, products) + "\n\n"
+             if products is not None else "")
     return (
         f"# 공고 {rec['id']}\n\n"
         "## 나라장터 등록 정보\n\n" + module.format_meta(rec) + "\n\n"
         "## 입력 관측 상태\n\n"
         f"- input_completeness: {completeness}\n"
         f"- dropped_doc_counts: {dropped}\n\n"
-        "## 공고 문서\n\n" + module.build_context(rec, FULL_TEXT) + "\n"
+        + facts +
+        "## 공고 문서\n\n" + context + "\n"
     )
 
 
@@ -168,7 +202,7 @@ def cover_ids(truth, per_item, negatives=0):
 
 def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
            truth_path=None, cover=None, negatives=0, items=ITEMS, excerpt_path=None,
-           question_path=None, keys=()):
+           question_path=None, keys=(), facts=False):
     # --question: the labeler reads facts under the given keys and code decides the verdict.
     question = Path(question_path).read_text(encoding="utf-8") if question_path else None
     if (question is None) != (not keys):
@@ -212,13 +246,14 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
         raise ValueError(f"제공 법령 스냅샷이 없다: {laws}")
 
     prompt = question if question is not None else build_prompt(table, items, excerpt)
+    products = module.load_sme_reference(str(data_dir))[1] if facts else None
     staged = bundle.with_name(bundle.name + ".partial")
     if staged.exists():
         shutil.rmtree(staged)
     (staged / "notices").mkdir(parents=True)
     notices = []
     for rec in records:
-        text = build_notice(module, rec)
+        text = build_notice(module, rec, products)
         (staged / "notices" / f"{rec['id']}.md").write_text(text, encoding="utf-8", newline="\n")
         notices.append({"id": rec["id"], "sha256": digest(text), "chars": len(text)})
     (staged / "prompt.md").write_text(prompt, encoding="utf-8", newline="\n")
@@ -237,6 +272,7 @@ def export(module, *, input_path, data_dir, bundle, ids=(), limit=None,
         "keys": list(keys) or None,
         "law_excerpt": module.record_path(str(excerpt_path)) if excerpt_path else None,
         "law_excerpt_sha256": digest(excerpt) if excerpt is not None else None,
+        "computed_facts": bool(facts),
         "law_file_count": 0 if excerpt is not None or question is not None else sum(1 for p in laws.rglob("*") if p.is_file()),
         "selection": selection,
         "notice_count": len(notices), "notices": notices,
@@ -325,7 +361,13 @@ def parse_labels(module, text, identifier, notice_text, items=ITEMS):
     return parsed
 
 
-def label(module, *, bundle, cmd, out, model_label, ids=(), limit=None, timeout=1800):
+def label(module, *, bundle, cmd, out, model_label, ids=(), limit=None, timeout=1800, api=None,
+          notice_only=False):
+    """`api(context, notice) -> envelope` replaces the `cmd` subprocess; `cmd` is then only recorded.
+
+    `notice_only` sends just the notice on stdin; `cmd` must load prompt.md itself (e.g.
+    `--system-prompt-file prompt.md`, run in the bundle directory) so that context stays a cached prefix.
+    """
     bundle = Path(bundle).resolve()
     manifest = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
     prompt = (bundle / "prompt.md").read_text(encoding="utf-8")
@@ -359,14 +401,21 @@ def label(module, *, bundle, cmd, out, model_label, ids=(), limit=None, timeout=
             notice = (bundle / "notices" / f"{entry['id']}.md").read_text(encoding="utf-8")
             if digest(notice) != entry["sha256"]:
                 raise ValueError(f"{entry['id']}: 번들의 공고 본문이 manifest와 다르다")
-            request = prompt + "\n\n" + notice
+            request = notice if notice_only else prompt + "\n\n" + notice
             began = time.perf_counter()
-            # 인코딩은 양쪽을 다 정해야 한다. encoding=은 내가 읽는 쪽이고, PYTHONIOENCODING은
-            # 자식이 쓰는 쪽이다. 한쪽만 정하면 한국어 응답이 깨진 채로 도착한다.
-            completed = subprocess.run(
-                cmd, shell=True, cwd=bundle, input=request, capture_output=True,
-                text=True, encoding="utf-8", errors="replace", timeout=timeout,
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+            if api is not None:
+                # In-process API call: prompt.md is the cached context, the notice is the only new input.
+                try:
+                    completed = subprocess.CompletedProcess(cmd, 0, api(prompt, notice), "")
+                except ValueError as exc:
+                    completed = subprocess.CompletedProcess(cmd, 1, "", str(exc))
+            else:
+                # 인코딩은 양쪽을 다 정해야 한다. encoding=은 내가 읽는 쪽이고, PYTHONIOENCODING은
+                # 자식이 쓰는 쪽이다. 한쪽만 정하면 한국어 응답이 깨진 채로 도착한다.
+                completed = subprocess.run(
+                    cmd, shell=True, cwd=bundle, input=request, capture_output=True,
+                    text=True, encoding="utf-8", errors="replace", timeout=timeout,
+                    env={**os.environ, "PYTHONIOENCODING": "utf-8"})
             elapsed = time.perf_counter() - began
             (bundle / "raw" / model_label).mkdir(parents=True, exist_ok=True)
             (bundle / "raw" / model_label / f"{entry['id']}.txt").write_text(
@@ -479,11 +528,17 @@ def main(argv=None):
     ex.add_argument("--law-excerpt",
                     help="제공 스냅샷에서 그대로 옮긴 조문 발췌 파일. 주면 프롬프트에 넣고 법령 패키지를 번들에 넣지 않는다. "
                          "도구 없는 명령(--tools \"\")과 함께 쓴다")
+    ex.add_argument("--facts", action="store_true",
+                    help="공고마다 금액 비교·경쟁제품 카탈로그 조회 결과를 코드로 계산해 붙인다")
 
     ru = sub.add_parser("run", help="번들의 공고를 외부 CLI에 하나씩 물어 라벨을 모은다")
     ru.add_argument("--bundle", required=True)
-    ru.add_argument("--cmd", required=True,
-                    help="프롬프트를 stdin으로 받아 모델 응답을 stdout으로 내는 명령. 웹 검색은 꺼서 준다")
+    how = ru.add_mutually_exclusive_group(required=True)
+    how.add_argument("--cmd", help="프롬프트를 stdin으로 받아 모델 응답을 stdout으로 내는 명령. 웹 검색은 꺼서 준다")
+    how.add_argument("--api", help="OpenAI Responses API 모델, 예: gpt-6-luna. prompt.md 를 캐시 컨텍스트로 보낸다")
+    ru.add_argument("--effort", default="high", help="--api 의 reasoning effort")
+    ru.add_argument("--stdin", choices=("full", "notice"), default="full",
+                    help="notice: --cmd 에 공고만 보낸다. 명령이 prompt.md 를 시스템 프롬프트로 직접 읽어 캐시한다")
     ru.add_argument("--model", required=True, dest="model_label", help="기록용 모델 이름, 예: opus5")
     ru.add_argument("--out", required=True, help="라벨 JSONL. 이어 붙이며 이미 끝난 ID는 건너뛴다")
     ru.add_argument("--ids", default="")
@@ -511,11 +566,20 @@ def main(argv=None):
                                 negatives=args.negatives,
                                 items=[x.strip() for x in args.items.split(",") if x.strip()] or ITEMS,
                                 excerpt_path=args.law_excerpt, question_path=args.question,
-                                keys=[x.strip() for x in args.keys.split(",") if x.strip()])
+                                keys=[x.strip() for x in args.keys.split(",") if x.strip()],
+                                facts=args.facts)
             else:
-                result = label(module, bundle=args.bundle, cmd=args.cmd, out=args.out,
+                cmd, api = args.cmd, None
+                if args.api:
+                    spec = importlib.util.spec_from_file_location("luna_api", ROOT / "tools/luna_api.py")
+                    luna = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(luna)
+                    cmd = f"api:{args.api} effort={args.effort} cache=explicit-30m (tools/luna_api.py)"
+                    api = lambda context, notice: luna.ask(context, notice, model=args.api,  # noqa: E731
+                                                           effort=args.effort, timeout=args.timeout)
+                result = label(module, bundle=args.bundle, cmd=cmd, out=args.out,
                                model_label=args.model_label, ids=ids, limit=args.limit,
-                               timeout=args.timeout)
+                               timeout=args.timeout, api=api, notice_only=args.stdin == "notice")
     except (OSError, ValueError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

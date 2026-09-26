@@ -1,0 +1,13 @@
+{
+  "purpose": "external_label_comparison",
+  "model": "luna-high-v3",
+  "command": "api:gpt-6-luna effort=high cache=explicit-30m (tools/luna_api.py)",
+  "bundle_prompt_sha256": "939b7c7bc16a1a93a656de8ad83bf4ad546d17f7b669becff41e8bbfec16a66c",
+  "requested": 20,
+  "labelled": 20,
+  "skipped_already_done": 0,
+  "failures": [],
+  "elapsed_seconds": 856.2179063999793,
+  "created_at": "2026-09-25T22:18:04.895277+00:00",
+  "note": "외부 LLM은 라벨 생성 단계 전용이다(R6). 제출 추론에서 호출하지 않는다."
+}

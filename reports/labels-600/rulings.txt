@@ -1,0 +1,64 @@
+Organizer rulings (official contest Q&A S7 and notice S6, restated without any example notice).
+Where a ruling and your own reading of the statutes differ, follow the ruling.
+
+General scope
+- Judge from the whole record: the 공고문 and every attached document actually present in the notice
+  (과업지시서, 제안요청서, 규격서 ...), not only the 입찰참가자격 section.
+- A document that is only named or referenced (입찰유의서, 계약일반조건 ...) but whose text is not in the
+  notice is not input.
+- The mere presence of a word or a document name is not a participation requirement. Sanction notices
+  and lists of documents to submit are not requirements to hold that status as a 참가자격.
+- A 중소기업자 requirement stated only in the 과업지시서 still counts; its absence from the 공고문 alone does
+  not make the restriction missing. v16 and v18 need different company sizes, so one sentence does not
+  settle both.
+
+v1 참가자격 특정기관 제한
+- Not limited to naming an institution. Restricting participation, without a statutory basis, to holders
+  of a specific facility or of personnel/equipment above a set scale is also in scope.
+- Do not decide by whether the requirement is personnel or equipment, or whether a number is given.
+  Weigh what the rules for that contract method allow together with the task need shown in the notice.
+  A small 수의계약 is not automatically compliant, and a 제한경쟁 is not automatically compliant just
+  because the restriction relates to the task.
+- 지방자치단체 입찰 및 계약 집행기준 제5장 lets a local small 수의계약 quotation limit bidders by equipment
+  or facilities; it does not apply to 국가계약법 contracts.
+
+v2 고시금액 미만 실적제한
+- A 실적 restriction when 추정가격 is below the 고시금액 is a violation. The exception allowing it below
+  1억원 exists only for 지방계약 + 소액수의 견적.
+
+v5-v7 지역제한 amounts (notice S6)
+- 지방계약, 물품·일반용역: 시·도 발주 3억 5천만원; 세종특별자치시 and 시·군·구 발주 5억원.
+- An anonymised region token `[지역:rN|단위=기초|...]` means a 시·군·구 level place name stands there;
+  such a restriction is not a single 광역 restriction.
+
+v9 과업지시서 특정 모델명 명시
+- Holds when a specific model name or manufacturer name is written in the specifications. Price+spec
+  simultaneous bidding, deduction-type evaluation, and a blank for the bidder to write its model name
+  are not exclusions.
+- "동등 이상" next to the name has no uniform rule; decide from the item definition and the whole
+  document, not from that phrase alone.
+
+v10-v18 중기간 경쟁제품 branches
+- 경쟁제품 are designated by 세부품명, not by goods code. Identify the object from the notice, task and
+  registration requirements and meta `조항호내용`, match it by name against the provided catalogue (a
+  number is not required), then apply 특이사항.
+- For 특이사항 amounts: a 추정가격 cap uses meta `입찰추정가격`; the 「소프트웨어 진흥법 제48조 적용」 type uses
+  사업금액 = 추정가격 + 부가가치세 (지침 제3조①3; long-term maintenance and split orders follow 4호·5호).
+  `배정예산금액` is not always the base.
+- v10 (직접생산), v11 (중소기업 확인서) and v20 (SW 사업금액 bracket restriction wording) are judged each by
+  its own definition; one amount bracket does not decide between them. The 20억원 in 별표 1 is a floor for
+  large-company participation, not an applicability floor for v20.
+- v10: whether requiring a 직접생산확인증명서 as a participation qualification is present.
+- v13: in competitive bidding for a 경쟁제품, whether participation is limited to 소기업·소상공인
+  (excluding 중기업). No amount bracket is required. Exception: small 수의 quotation. The 1억 미만
+  소기업·소상공인 special case belongs to the general-product branch, not to 경쟁제품.
+- v14-v18 "일반물품" is not goods only; it includes services that are not 경쟁제품.
+- v16 and v18 are not limited to 제한경쟁; 일반경쟁 is not excluded by contract method alone.
+- The 비고 "판로지원 예외 명시한 경우" (v15, v16, v18) means the exception reason is written directly in
+  the notice or its attachments. Do not infer it from the service nature or from a 나라장터 category.
+
+v24 공고서와 나라장터 입력값 상이
+- The only axes are the four in the 비고: 예산, 계약방법, 지역제한, 업종. Comparing the nature of the
+  restriction reasons in 조항호내용 is not an axis.
+- The 예산 axis compares the notice's 사업예산 with the meta budget fields (`배정예산금액`, `입찰추정가격`).
+- Typos are not violations; an obvious typo may be normalised when comparing.
