@@ -72,12 +72,12 @@ v9 and v24 have no labels off dev; their thresholds stay as they are.
 The 3,000 enter the pool for post-processing rules only. For thresholds the pool is the off-dev 600, the only off-dev responses with `item_p1`.
 
 The one exception: if nothing passes by 19:00, the slot carries an experimental submission (the best score counts, so a loss costs nothing).
-- Eligible: candidates whose server time estimate is ≤ 6,800 s.
-- Ranking: Macro over the labelled items on the off-dev 600 from D's run — the one pool every candidate, rule or threshold, can be replayed on.
-  Ties go to the higher dev replay Macro; a remaining tie goes to the candidate that changes fewer cells against `61c495c` on the 600.
-- If no candidate beats `61c495c` on that Macro, upload `main` as it is.
+- Eligible: post-processing and threshold candidates whose server time estimate is ≤ 6,800 s. A candidate that changes the prompt or the calls is eligible only with its own GPU output on the same 600 IDs; it is scored on that output, never on D's responses.
+- Ranking: Macro over the labelled items on the off-dev 600 — D's saved responses for replayable candidates, the candidate's own output otherwise.
+  Ties go to the higher dev replay Macro, then to fewer changed cells against current `main` on the 600, then to the lower PR number.
+- If no candidate beats current `main` on that Macro, upload `main` as it is.
 - Path: the chosen candidate goes into the same 19:00 integration PR as any winner (operational `script.py`, reviewed before the round), is merged into `main`, and is packaged at 20:00 from `main` — the submission stays all of `main`.
-  The PR title and the ledger note say "experimental" and list the conditions it failed. If its server score comes in below `61c495c`, revert that PR the next morning before new work is merged.
+  The PR title and the ledger note say "experimental" and list the conditions it failed. If its server score comes in below the best server score in the ledger before that upload, revert that PR the next morning before new work is merged.
 
 ## Stop lines
 
