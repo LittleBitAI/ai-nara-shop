@@ -86,6 +86,26 @@ class OffDevBatchTwoTests(unittest.TestCase):
         self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
 
 
+class Pr154RoundOneTests(unittest.TestCase):
+    """PR #154 round 1 findings, each on the reviewer's own input."""
+
+    def test_an_unmarked_section_heading_ends_the_walk(self):
+        lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", "계약 체결 후 제출서류", "① 물품공급 확약서 1부"]
+        self.assertEqual(script.enumerated_heading(lines, 3), "계약 체결 후 제출서류")
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+
+    def test_a_large_local_negotiated_contract_is_not_a_small_quote(self):
+        self.assertFalse(script.local_small_quote(notice("x", 적용계약법="지방계약법", 계약방법="수의계약",
+                                                         입찰추정가격=300_000_000)))
+
+    def test_a_bare_bid_time_on_the_pledge_line_is_another_requirement(self):
+        text = "계약 시 제출서류: 물품공급 확약서 1부. 입찰 시 평가표는 별첨."
+        self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
+
+    def test_the_copula_close_attaches_to_the_size_word(self):
+        self.assertFalse(script.size_limited(notice("입찰참가자격\n가. 소기업 확인서는 필요 없으며 참여 가능한 법인 업체")))
+
+
 class RaiseTests(unittest.TestCase):
     def test_v2_rises_below_the_notice_amount_but_not_for_a_local_small_quote(self):
         text = "1. 입찰참가자격\n가. 최근 3년 이내 유사 용역 실적이 있는 업체이어야 합니다."

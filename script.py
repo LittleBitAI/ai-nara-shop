@@ -1513,8 +1513,10 @@ V19_PLEDGE = re.compile(r"확약서")
 # reports/offdev-0926: four v19 positives lowered for want of these). v19 is a demand at the bid or tender stage.
 V19_BID_DEADLINE = re.compile(r"입찰서?\s*제출\s*마감|입찰\s*전|입찰전|투찰\s*마감"
                               r"|개찰\s*전|입찰\s*참가\s*시"
-                              r"|(?<![가-힣])(?:입찰|투찰)\s*시(?![가-힣])|입찰\s*참가\s*(?:자격\s*)?등록\s*시"
-                              r"|입찰서?\s*제출\s*기간")
+                              r"|입찰\s*참가\s*(?:자격\s*)?등록\s*시|입찰서?\s*제출\s*기간")
+# A bare "입찰 시" names a stage only as a list heading ("다. 입찰 시 제출서류"); on the pledge's own line it can
+# belong to another requirement ("계약 시 제출서류: 확약서 1부. 입찰 시 평가표는 별첨").
+V19_BID_HEADING = re.compile(V19_BID_DEADLINE.pattern + r"|(?<![가-힣])(?:입찰|투찰)\s*시(?![가-힣])")
 V19_WINDOW = 200                                               # 확약서 언급 앞뒤로 볼 글자 수
 V24_AMOUNT = re.compile(r"(\d{1,3}(?:,\d{3})+|\d{5,})\s*원")
 V24_REGION = re.compile(r"지역제한\s*\(([^)]*)\)")
@@ -1628,7 +1630,7 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
         for index, line in enumerate(lines):
             if V19_PLEDGE.search(line):
                 for heading in (list_heading(lines, index), enumerated_heading(lines, index)):
-                    if heading and V19_BID_DEADLINE.search(heading):
+                    if heading and V19_BID_HEADING.search(heading):
                         return True
     return False
 
@@ -1655,6 +1657,7 @@ def list_heading(lines, index):
 
 
 ENUMERATING = ("circled", "hangul", "paren_num", "num")
+SECTION_HEADING = re.compile(r"제출\s*서류|구비\s*서류|제출\s*(?:할|하여야\s*할)\s*서류|서류\s*제출")
 
 
 def enumerated_heading(lines, index):
@@ -1667,6 +1670,10 @@ def enumerated_heading(lines, index):
     for up in range(index - 1, max(-1, index - 1 - HEADING_REACH), -1):
         other = LIST_MARKER.match(lines[up])
         if other and other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
+            return lines[up]
+        # An unmarked line naming documents is a section heading of its own ("계약 체결 후 제출서류"); the walk
+        # stops there rather than borrow an earlier list's timing.
+        if not other and SECTION_HEADING.search(lines[up]):
             return lines[up]
     return None
 
@@ -2661,9 +2668,12 @@ def apply_product_rules(judgment, rec):
 
 
 def local_small_quote(rec) -> bool:
-    """A 지방 negotiated contract by quotes (집행기준 제5장 제3절 1.), which may combine limits."""
+    """A 지방 small-value quote contract (집행기준 제5장 제3절 1.), which may combine limits. Its general ceiling is
+    1억 — the same band S7-3 names for the 지방 소액수의 견적 exception."""
     meta = rec.get("meta") or {}
-    return "지방" in str(meta.get("적용계약법") or "") and str(meta.get("계약방법") or "").startswith("수의")
+    price = estimated_price(rec)
+    return ("지방" in str(meta.get("적용계약법") or "") and str(meta.get("계약방법") or "").startswith("수의")
+            and price is not None and price < 100_000_000)
 
 
 def apply_qualification_rules(judgment, rec):
@@ -3438,9 +3448,11 @@ SIZE_CLASS = r"(?:중\s*[·ㆍ・‧]?\s*소\s*기업자?|소\s*기업자?|소\s
 CLAUSE_CHAR = (r"(?:(?!\n\s*(?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)]|[①-⑳]|[-•※○□◦❍▶]))"
                r"(?![\s,;·](?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)](?!\d))|\s*[①-⑳])(?!다\s*[.。])[^。])")
 SIZE_LIMIT = re.compile(SIZE_CLASS + CLAUSE_CHAR + r"{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
-                        r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)|인\s*(?:업체|자)(?![가-힣])"
+                        r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)"
                         r"|확인서[’'\"」』]?\s*를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
-                        r"|제한\s*경쟁\s*(?:입찰)?\s*\(\s*" + SIZE_CLASS, re.S)
+                        r"|제한\s*경쟁\s*(?:입찰)?\s*\(\s*" + SIZE_CLASS
+                        # "소상공인인 업체": the copula must follow the size word itself, not a later noun ("법인 업체").
+                        + r"|" + SIZE_CLASS + r"인\s*(?:업체|자)(?![가-힣])", re.S)
 SIZE_TITLES = re.compile(r"[「｢『《][^」｣』》]{0,60}[」｣』》]|중소기업\s*기본법|중소기업\s*범위\s*및\s*확인에\s*관한\s*규정"
                          r"|중소기업제품[^,.\n]{0,30}?(?:법률|시행령)|중소벤처기업부|중소기업자\s*간\s*경쟁\s*제품"
                          r"|중소기업\s*공공\s*구매\s*(?:종합)?\s*정보망")
