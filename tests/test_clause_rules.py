@@ -111,8 +111,12 @@ class Pr154RoundOneTests(unittest.TestCase):
     def test_round_three_a_contract_time_in_the_sentence_binds_to_the_comma_clause(self):
         # PR #154 round 3: "… 확약서 1부, 입찰 시 평가표는 별첨" — the pledge is due at contract time.
         self.assertFalse(script.v19_demanded_at_bid_stage(notice("계약 시 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨")))
-        # Without a contract-stage time the sentence's bid time still governs the list.
-        self.assertTrue(script.v19_demanded_at_bid_stage(notice("입찰 시 사업자등록증, 물품공급 확약서 1부 제출")))
+        # Round 6: a bare bid time counts only in the pledge's own clause, so a section named by its recipient
+        # ("낙찰자 제출서류") cannot borrow another clause's time either.
+        for text in ("낙찰자 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨",
+                     "계약상대자 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨"):
+            with self.subTest(text=text):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice(text)))
 
     def test_round_five_post_award_phrases_bind_the_bid_time_too(self):
         for text in ("낙찰 후 제출서류: 물품공급 확약서 1부, 입찰 시 평가표는 별첨",

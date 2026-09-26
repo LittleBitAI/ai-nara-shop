@@ -1627,13 +1627,13 @@ V19_AFTER_AWARD = re.compile(V19_POST_AWARD.pattern + r"|낙찰\s*(?:후|이후|
 
 
 def bid_time_governs_pledge(text: str, start: int, end: int) -> bool:
-    """A bid-time phrase in the pledge's sentence governs it — unless the sentence also names a contract-stage time
-    ("계약 시 제출서류: 확약서 1부, 입찰 시 평가표는 별첨"); then only the pledge's own comma clause counts."""
+    """A bare bid-time phrase governs the pledge only inside the pledge's own clause (its sentence split at commas and
+    semicolons): "① 입찰 시 확약서 1부 제출", "확약서는 입찰 시 제출". In another clause it belongs to another item,
+    whatever names the pledge's own section ("계약 시 …", "낙찰 후 …", "낙찰자 제출서류: 확약서 1부, 입찰 시 평가표는 별첨").
+    A list heading's timing is read by `v19_demanded_at_bid_stage` separately."""
     sentence = pledge_sentence(text, start, end)
     if not V19_BID_HEADING.search(sentence):
         return False
-    if not V19_AFTER_AWARD.search(sentence):
-        return True
     offset = text.find(sentence, max(0, start - len(sentence)))
     at = start - offset if offset >= 0 else 0
     left = max((m.end() for m in CLAUSE_SEPARATOR.finditer(sentence, 0, at)), default=0)
