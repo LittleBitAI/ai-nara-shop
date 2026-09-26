@@ -10,7 +10,17 @@
 | `<run1>` · `<run2>` | 등록 뒤 `reports/runs/<run-id>/` |
 | `<tmp>` | 아무 빈 작업 폴더 |
 
-등록된 회차의 CSV 는 루트가 아니라 `<run>/dev/submission.csv` 다.
+등록된 회차의 CSV 는 루트가 아니라 케이스 폴더 아래에 있다.
+
+**판정에 쓰는 케이스는 `<run>/dev-debug` 다. `<run>/dev` 가 아니다.**
+
+`dev` 는 `--debug-responses` 가 꺼진 통과라 `diagnostics.jsonl` 에 `response_text` 가
+**0건**이다 — 9/25 회차에서 확인했다(`dev` 는 response 이벤트 508건 중 0건,
+`dev-debug` 는 504건 중 504건). 원응답이 없으면 `replay_run.py` 로 기준선을 못 만들고,
+§2 가 하는 일이 바로 그것이다.
+
+그래서 **노트북 셀 `[18]` 을 반드시 실행해야 한다**(`RUN_DIAGNOSTIC = True`, 기본값).
+`dev` 의 점수는 참고로만 적고 `dev-debug` 와 한 표에 섞지 않는다.
 
 ## 1. 등록과 바이트 재현 — 두 회차 각각
 
@@ -20,9 +30,9 @@ py -X utf8 tools/register_run.py --inbox <inbox> \
 
 git show ea1d8ad24da754a2537e8ffcb998926b09f0d9bb:script.py > <tmp>/n3.py
 
-py -X utf8 tools/replay_run.py --case <run1>/dev --script <tmp>/n3.py \
+py -X utf8 tools/replay_run.py --case <run1>/dev-debug --script <tmp>/n3.py \
   --output-dir <tmp>/verify1 --verify
-py -X utf8 tools/replay_run.py --case <run2>/dev --script <tmp>/n3.py \
+py -X utf8 tools/replay_run.py --case <run2>/dev-debug --script <tmp>/n3.py \
   --output-dir <tmp>/verify2 --verify
 ```
 
@@ -42,7 +52,7 @@ N3 는 **추가 호출을 늘리는 모델 앞 단계** 후보다. 그래서 같
 ```bash
 git show de5b873:script.py > <tmp>/base.py      # N3 가 꺼진 현재 main
 
-py -X utf8 tools/replay_run.py --case <run1>/dev --script <tmp>/base.py \
+py -X utf8 tools/replay_run.py --case <run1>/dev-debug --script <tmp>/base.py \
   --output-dir <tmp>/r1-base
 ```
 
@@ -54,7 +64,7 @@ py -X utf8 tools/replay_run.py --case <run1>/dev --script <tmp>/base.py \
 
 ```bash
 py -X utf8 tools/compare_runs.py --before <tmp>/r1-base/submission.csv \
-  --after <run1>/dev/submission.csv --truth open/dev_labels.csv \
+  --after <run1>/dev-debug/submission.csv --truth open/dev_labels.csv \
   --items v10,v11,v12 --output-dir <tmp>/r1-cmp
 ```
 
@@ -72,20 +82,20 @@ N3 가 쓰는 키가 v10·v11·v12 셋이므로 그 셋만 대상으로 잡는�
 | **C** | `changed_cells_off_focus` | 대상 밖 회귀. 정확히 0 이어야 한다 |
 | **D** | 24항목 각각의 **TP 감소** | 합계가 아니다. 하나라도 줄면 금지선 |
 | **E** | dev Macro | 기준선 대비. 과거 **+0.003788** |
-| **F** | 두 회차의 **churn** | `<run1>/dev` ↔ `<run2>/dev`, 같은 코드 |
+| **F** | 두 회차의 **churn** | `<run1>/dev-debug` ↔ `<run2>/dev-debug`, 같은 코드 |
 | **G** | `추론_s` | 서버 시간 추정의 입력 |
 
 ```bash
 # F — 두 회차 churn. 같은 코드이므로 이것이 흔들림이다
-py -X utf8 tools/compare_runs.py --before <run1>/dev/submission.csv \
-  --after <run2>/dev/submission.csv --truth open/dev_labels.csv \
+py -X utf8 tools/compare_runs.py --before <run1>/dev-debug/submission.csv \
+  --after <run2>/dev-debug/submission.csv --truth open/dev_labels.csv \
   --all --output-dir <tmp>/churn
 
 # D — 항목별 TP 감소. 합계로 보면 상쇄돼 숨는다
 py -X utf8 tools/score.py --truth open/dev_labels.csv \
   --pred <tmp>/r1-base/submission.csv --output-dir <tmp>/base-score
 py -X utf8 tools/score.py --truth open/dev_labels.csv \
-  --pred <run1>/dev/submission.csv --output-dir <tmp>/n3-score
+  --pred <run1>/dev-debug/submission.csv --output-dir <tmp>/n3-score
 py -X utf8 -c "import json;b=json.load(open(r'<tmp>/base-score/metrics.json',encoding='utf-8'))['items'];a=json.load(open(r'<tmp>/n3-score/metrics.json',encoding='utf-8'))['items'];lost=[(k,b[k]['tp'],a[k]['tp']) for k in b if a[k]['tp']<b[k]['tp']];print('TP 가 줄어든 항목:', lost or '없음')"
 ```
 

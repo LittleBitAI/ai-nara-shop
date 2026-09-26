@@ -69,6 +69,25 @@ REPO_REF = "ea1d8ad24da754a2537e8ffcb998926b09f0d9bb"  # run/a-n3-product-r2 코
 
 ## 3. 실행 — 첫 셀부터, 두 번
 
+### 3-0. Colab 셀에서 고칠 것은 없다. 확인할 것은 셋이다
+
+`REPO_REF` 는 링크 커밋에 박혀 있어 **타이핑할 것이 없다.** 대신 아래 셋을 확인한다.
+
+| 셀 | 무엇 | 해야 할 일 |
+| --- | --- | --- |
+| `[1]` | `SOURCE_MODE = "clone"` · `REPO_REF = "ea1d8ad…"` | **눈으로 확인만.** 고치지 않는다 |
+| `[10]` | `HF_TOKEN` | **Colab 보안 비밀에 등록하고 노트북 접근을 허용한다.** 없으면 셀이 `getpass` 로 묻고, 비우면 `ValueError` 로 죽는다 |
+| `[18]` | `RUN_DIAGNOSTIC = True` · `DIAGNOSE_ITEMS = ""` | **반드시 실행한다.** 기본값이 이미 맞다 — 아래 이유를 본다 |
+
+**셀 `[18]` 을 건너뛰면 이 회차는 판정에 못 쓴다.** `[14]` 의 `dev` 통과는
+`--debug-responses` 가 꺼져 있어 `diagnostics.jsonl` 에 `response_text` 가 안 남는다
+(9/25 회차 실측: `dev` 508건 중 **0건**, `dev-debug` 504건 중 **504건**). 원응답이 없으면
+기준선을 재생으로 못 만들고, 그러면 N3 효과를 뗄 수 없다.
+
+`DIAGNOSE_ITEMS` 는 **비워 둔다.** 별도 항목 질의는 이 회차의 목적이 아니고 시간만 쓴다.
+
+### 3-1. 누르는 순서
+
 **첫 셀부터 순서대로** 누른다. 중간부터 누르면 앞 셀이 만든 `WORK`·`run_case()` 가 없다.
 
 | 회차 | 무엇 | 왜 |
@@ -78,6 +97,16 @@ REPO_REF = "ea1d8ad24da754a2537e8ffcb998926b09f0d9bb"  # run/a-n3-product-r2 코
 
 두 회차의 결과 ZIP 을 **둘 다** 보관한다. 2회차를 같은 런타임에서 이어 돌리지 않는다 —
 `run_case` 가 `mkdir(parents=True)` 라 같은 이름 재실행이 `FileExistsError` 다.
+
+받은 ZIP 안에 이것이 있어야 한다.
+
+| 경로 | 확인 |
+| --- | --- |
+| `dev-debug/submission.csv` | **판정은 이것으로 한다** |
+| `dev-debug/diagnostics.jsonl` | `response_text` 가 200건 있는가 — 없으면 셀 `[18]` 을 안 돌린 것이다 |
+| `dev-debug/run_report.json` | `settings.product_items` 가 `["v10","v11","v12"]` 인가 |
+| `dev/submission.csv` | 참고용. `dev-debug` 와 한 표에 섞지 않는다 |
+| `source.json` | `commit` 이 `ea1d8ad24da754a2537e8ffcb998926b09f0d9bb` 인가 |
 
 예상 소요는 회차당 셋업 + 약 20분이다(현재 기준 dev 추론 727.7초에 추가 호출 200건이
 붙는다). 정확한 수는 회차가 알려 준다.
