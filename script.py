@@ -1660,6 +1660,7 @@ def list_heading(lines, index):
 
 
 ENUMERATING = ("circled", "hangul", "paren_num", "num")
+STAGE_AFTER_BID = re.compile(r"계약|낙찰|착수|납품|준공|이행")
 
 
 def enumerated_heading(lines, index):
@@ -1678,6 +1679,10 @@ def enumerated_heading(lines, index):
         if not other:
             return lines[up]
         if other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
+            return lines[up]
+        # A note or sub-bullet that names a contract or award stage heads a section of its own
+        # ("※ 계약 체결 후 제출서류", "- 낙찰자 제출서류"); only other notes are skipped (PR #154 round 17).
+        if other.lastgroup == "bullet" and STAGE_AFTER_BID.search(lines[up]):
             return lines[up]
     return None
 

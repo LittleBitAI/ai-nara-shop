@@ -152,7 +152,9 @@ class Pr154RoundOneTests(unittest.TestCase):
         for heading in ("낙찰 후 이행사항", "계약 단계 안내", "낙찰자 의무", "계약상대자 준수사항", "낙찰자 결정 후", "계약 후 준비사항",
                         # Round 16: introductory sentences end the walk too.
                         "낙찰자는 계약 체결 후 다음 서류를 제출하여야 합니다.", "계약상대자는 다음 각 호의 서류를 제출합니다.",
-                        "계약 체결 후 제출해야 하는 서류는 다음과 같습니다."):
+                        "계약 체결 후 제출해야 하는 서류는 다음과 같습니다.",
+                        # Round 17: note and bullet lines naming a later stage head a section of their own.
+                        "※ 계약 체결 후 제출서류", "- 낙찰자 제출서류", "• 계약 단계 이행사항", "□ 낙찰 후 제출자료"):
             lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", heading, "① 물품공급 확약서 1부 제출"]
             with self.subTest(heading=heading):
                 self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
