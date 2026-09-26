@@ -15,6 +15,10 @@
     py -X utf8 reports/team-c/c-variance/aggregate.py --runs <등록된 회차 폴더> ...
 
 각 폴더는 `submission.csv` 와 `run_report.json` 을 든다.
+
+설정이 하나라도 갈리면 범위를 내기 전에 exit 2 로 멈춘다. 설정이 갈린 쌍(`dev` ·
+`dev-debug`)을 일부러 보려면 `--allow-mismatch` 를 준다 — 그때도 수는 내지만 exit 1 이다.
+exit 0 은 같은 설정의 변동폭일 때만 나온다.
 """
 
 from __future__ import annotations
@@ -81,6 +85,8 @@ def main(argv=None):
                         help="통과 폴더들. 각각 submission.csv 와 run_report.json 을 든다")
     parser.add_argument("--truth", default=str(ROOT / "open/dev_labels.csv"))
     parser.add_argument("--output", help="요약 JSON 을 쓸 경로")
+    parser.add_argument("--allow-mismatch", action="store_true",
+                        help="설정이 갈려도 수를 낸다. 변동폭이 아니므로 exit 1 로 끝난다")
     args = parser.parse_args(argv)
 
     with open(args.truth, encoding="utf-8", newline="") as stream:
@@ -117,6 +123,9 @@ def main(argv=None):
           f"{'같다' if len(debug) == 1 else '**다르다**'}")
     if not settings_ok:
         print("\n설정이 갈렸다. 이 수를 변동폭으로 쓰지 않는다 — 설정 차이다.")
+        if not args.allow_mismatch:
+            print("범위를 내지 않고 멈춘다. 설정 차이를 일부러 보려면 --allow-mismatch.")
+            return 2
 
     # 1. 통과별 Macro 와 범위
     print(f"\n=== 통과 {len(runs)}회의 Macro ===")
@@ -181,7 +190,7 @@ def main(argv=None):
             json.dump(payload, stream, ensure_ascii=False, indent=1)
             stream.write("\n")
         print(f"\n요약을 {out} 에 썼다")
-    return 0
+    return 0 if settings_ok else 1
 
 
 if __name__ == "__main__":

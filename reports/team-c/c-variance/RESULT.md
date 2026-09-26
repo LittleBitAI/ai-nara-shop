@@ -138,7 +138,7 @@ py -X utf8 tools/replay_run.py --case reports/runs/colab-1790432295199698396/dev
 py -X utf8 reports/team-c/c-variance/aggregate.py \
   --runs reports/runs/colab-1790432295199698396/dev \
          reports/runs/colab-1790432295199698396/dev-debug \
-  --output reports/team-c/c-variance/pair-772ca12.json
+  --output reports/team-c/c-variance/pair-772ca12.json --allow-mismatch  # 설정이 갈린 쌍이라 exit 1
 
 for c in dev dev-debug; do
   py -X utf8 tools/score.py --truth open/dev_labels.csv \

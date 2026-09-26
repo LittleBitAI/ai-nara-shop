@@ -187,6 +187,26 @@ class Shape(unittest.TestCase):
         short = "「판로지원법 시행령」 제7조제1항제4호"
         self.assertIsNotNone(self.c11.EXCEPTION.search(short), "줄여 쓴 법률명이 안 걸린다")
 
+    def test_a_citation_alone_is_not_an_exception(self):
+        """인용만 하거나 부정하면 예외 적용이 아니다 — #152 2차 리뷰 P1 의 탐침."""
+        cite = "「판로지원법 시행령」 제7조제1항"
+        cases = {
+            f"{cite}의 예외에 해당하지 않아 중소기업자간 경쟁입찰로 진행합니다.": False,
+            f"{cite}을 적용하지 아니한다.": False,
+            f"{cite} 제4호는 이 입찰과 무관하다.": False,
+            f"{cite}제4호에 따라 중소기업자간 경쟁입찰의 예외에 해당합니다.": True,
+            f"{cite}제4호를 적용합니다.": True,
+            f"{cite}제3호에 따라 경쟁입찰의 예외를 적용합니다 ※ 공동수급을 허용하지 않습니다.": True,
+        }
+        for text, expected in cases.items():
+            with self.subTest(text):
+                rec = {"docs": [{"text": text}]}
+                self.assertIs(self.c11.competition_exception(rec), expected)
+
+    def test_it_closes_only_v10_and_v11(self):
+        """v12 는 일반제품, v13 은 제7조의2 특례라 예외가 근거가 안 된다."""
+        self.assertEqual(self.c11.ITEMS, ("v10", "v11"))
+
     def test_it_reads_the_documents_not_the_prompt_window(self):
         """제2항이 요구한 기재는 16,000자 예산 뒤쪽에 있을 수 있다."""
         self.assertIn('rec.get("docs")', self.source)

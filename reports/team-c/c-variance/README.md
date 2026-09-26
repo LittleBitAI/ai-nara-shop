@@ -105,10 +105,11 @@ py -X utf8 tools/compare_runs.py --before "$TMP/run-dev/submission.csv" \
   --all --output-dir "$TMP/cmp"
 
 py -X utf8 reports/team-c/c-variance/aggregate.py \
-  --runs "$TMP/run-dev" "$TMP/run-dev-debug"
+  --runs "$TMP/run-dev" "$TMP/run-dev-debug" --allow-mismatch
 ```
 
-집계기는 이 쌍에서 `debug_responses` 가 갈렸다고 **경고한다** — 설계대로다. 그래서 이
+집계기는 이 쌍에서 `debug_responses` 가 갈렸다고 **경고하고 exit 1 로 끝난다** — 설계대로다.
+`--allow-mismatch` 가 없으면 범위를 내기 전에 exit 2 로 멈춘다. 그래서 이
 쌍은 변동폭 관측 하나로만 쓰고, 본 회차는 여섯 통과의 설정을 전부 같게 맞춘다(§3-4).
 
 | 항목 | 공고 | 라벨 | `dev` | `dev-debug` | 방향 |
