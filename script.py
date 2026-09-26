@@ -1666,7 +1666,7 @@ def list_heading(lines, index):
 
 
 ENUMERATING = ("circled", "hangul", "paren_num", "num")
-STAGE_AFTER_BID = re.compile(r"계약|낙찰|착수|납품|준공|이행")
+STAGE_AFTER_BID = re.compile(r"계약|낙찰|착수|납품|준공|이행|우선협상|협상|선정|개찰\s*후|평가[^:：]{0,6}후")
 
 
 def enumerated_heading(lines, index):
@@ -1689,10 +1689,12 @@ def enumerated_heading(lines, index):
         # A note or sub-bullet is skipped only when it is plainly a detail of the entry above — a "label : value"
         # line ("- 증빙자료 : 카탈로그 …") or a long explanatory "※" note — and names no later stage. Any other marked
         # line may head a section of its own ("※ 우선협상대상자 제출서류", "- 개찰 후 제출자료") and ends the walk
-        # (PR #154 rounds 17-18: no keyword list of later stages is complete).
+        # (PR #154 rounds 17-18: no keyword list of later stages is complete). A label that names a submission
+        # ("- 우선협상대상자 제출서류: 선정 이후 제출") heads a section too, colon or not (PR #156 round 2).
         if other.lastgroup == "bullet":
             stripped = lines[up].strip()
-            detail = bool(re.search(r"[:：]", stripped)) or (stripped.startswith("※") and len(stripped) > 40)
+            label = re.split(r"[:：]", stripped, maxsplit=1)[0]
+            detail = (label != stripped and "제출" not in label) or (stripped.startswith("※") and len(stripped) > 40)
             if not detail or STAGE_AFTER_BID.search(stripped):
                 return lines[up]
     return None

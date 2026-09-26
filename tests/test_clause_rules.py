@@ -97,6 +97,14 @@ class OffDevBatchTwoTests(unittest.TestCase):
         self.assertTrue(script.enumerated_heading(lines, 3).startswith("다. 입찰 시"))
         self.assertTrue(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
 
+    def test_a_labelled_bullet_naming_a_submission_or_recipient_ends_the_walk(self):
+        # PR #156 round 2: a colon heading that names a submission or a later recipient is a section of its own.
+        for bullet in ("- 우선협상대상자 제출서류: 선정 이후 제출", "- 낙찰자 제출서류: 계약 전 제출",
+                       "- 추가 제출서류: 별도 안내", "- 선정업체: 협상 후 제출"):
+            lines = ["다. 입찰 시 제출서류", "③ 사업자등록증", bullet, "⑦ 물품공급 확약서 1부"]
+            with self.subTest(bullet=bullet):
+                self.assertFalse(script.v19_demanded_at_bid_stage(notice("\n".join(lines))))
+
 
 class Pr154RoundOneTests(unittest.TestCase):
     """PR #154 round 1 findings, each on the reviewer's own input."""
