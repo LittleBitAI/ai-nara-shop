@@ -66,20 +66,21 @@ def products():
 
 
 # Korean compounds are head-final: "매트리스 동적 롤링시스템" is a system, not a 매트리스. A catalogue name names the
-# purchased object only as the whole name or its last element, once procurement words and notes are cut off.
-PROCUREMENT_TAIL = re.compile(r"(?:\([^)]*\)|\[[^\]]*\]|구매|구입|납품|제작|설치|교체|임차|조달|보급|및|등|\d+(?:식|대|개|EA))+$")
+# purchased object only as the whole name or its last element, once trailing procurement words and notes are cut
+# off. Only separate words are cut — "등" ends catalogue names like 태양광가로등, so nothing is cut inside a word.
+NOTES = re.compile(r"\([^)]*\)|\[[^\]]*\]|（[^）]*）")
+PROCUREMENT_WORDS = {"구매", "구입", "납품", "제작", "설치", "교체", "임차", "조달", "보급", "및", "등", "일체", "외"}
+COUNT = re.compile(r"\d+(?:식|대|개|EA|ea|set|SET)")
 META_ITEM = re.compile(r"([^\[\],]+)\[\d{10}\]")
 
 
 def object_heads(object_name, registered) -> list:
     heads = []
     for raw in [object_name, *META_ITEM.findall(str(registered or ""))]:
-        name = squash(raw)
-        while True:
-            cut = PROCUREMENT_TAIL.sub("", name)
-            if cut == name:
-                break
-            name = cut
+        words = NOTES.sub(" ", str(raw or "")).split()
+        while words and (words[-1] in PROCUREMENT_WORDS or COUNT.fullmatch(words[-1])):
+            words.pop()
+        name = squash("".join(words))
         if name:
             heads.append(name)
     return heads
@@ -95,7 +96,7 @@ def competitive(f, rec) -> bool:
     value = price(rec)
     for row in products():
         by_code = row["세부품명번호"] in meta_codes | quote_codes
-        item = squash(row["세부품명"])
+        item = squash(NOTES.sub("", row["세부품명"]))      # compared the way object names are cut
         by_name = len(item) >= 4 and any(name.endswith(item) for name in names)
         if not (by_code or by_name):
             continue

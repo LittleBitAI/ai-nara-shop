@@ -48,6 +48,8 @@ class ReviewRoundOneTests(unittest.TestCase):
         self.assertFalse(script.size_limited(notice(text)))
         # Round 2: flattened text keeps its list markers inline.
         self.assertFalse(script.size_limited(notice("입찰참가자격 가. 소기업 확인서는 선택사항, 나. 입찰은 대기업으로 제한합니다.")))
+        # Round 3: a marker glued to punctuation is still a boundary.
+        self.assertFalse(script.size_limited(notice("입찰참가자격 가. 소기업 확인서는 선택사항,나.입찰은 대기업으로 제한합니다.")))
         # A limit that wraps within its own clause still counts.
         self.assertTrue(script.size_limited(notice("입찰참가자격\n가. 「중소기업기본법」 제2조에 따른 소기업 또는\n소상공인으로서 확인서를 소지한 업체")))
 

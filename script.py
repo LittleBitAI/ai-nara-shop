@@ -3402,9 +3402,10 @@ SIZE_CLASS = r"(?:중\s*[·ㆍ・‧]?\s*소\s*기업자?|소\s*기업자?|소\s
 # The close must make the size class a condition on the bidder — not a bare 확인서 mention, a document list
 # line or "확인 가능하여야" about a website. It must sit in the same clause: a limit may wrap over lines, but
 # the span stops at a sentence end ("다.") or the next list item ("나.", "2)", "②", "-") — at a line start or
-# inline, as flattened text writes "… 선택사항, 나. 입찰은 …".
+# inline, as flattened text writes "… 선택사항, 나. 입찰은 …" or "…선택사항,나.입찰은…". A list marker is one
+# syllable 가–하 or a 1–2 digit number after whitespace or punctuation; after a syllable ("업체나.") it is prose.
 CLAUSE_CHAR = (r"(?:(?!\n\s*(?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)]|[①-⑳]|[-•※○□◦❍▶]))"
-               r"(?!\s(?:[가-하]|\(?\d{1,2})\s*[.)]\s|\s*[①-⑳])(?!다\s*[.。])[^。])")
+               r"(?![\s,;·](?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)](?!\d))|\s*[①-⑳])(?!다\s*[.。])[^。])")
 SIZE_LIMIT = re.compile(SIZE_CLASS + CLAUSE_CHAR + r"{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
                         r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)"
                         r"|확인서를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
