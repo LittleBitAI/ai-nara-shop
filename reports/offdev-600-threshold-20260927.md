@@ -18,7 +18,8 @@ Rerun, once the archive is back:
 
 ```
 python -X utf8 tools/tune_offdev_thresholds.py --case <combined 600 case dir> \
-  --input <600 records in manifest order> --truth <diag + sealed labels> --out <new dir>
+  --input <600 records in manifest order> --truth <diag + sealed labels> \
+  --script <archived deb6831 script.py> --out <new dir>
 ```
 
 Smoke check of the fixed tool on dev (`colab-1790432295199698396/dev-debug`, dev labels):
@@ -98,3 +99,29 @@ The full-pool candidate would add v3=`0.95` and raise v6 to `0.7`.  It passes th
 `TP-FP` guard, but fails the adoption rule: a cut chosen on A scores B `0.464069 -> 0.460106`
 (down), while a cut chosen on B scores A `0.449220 -> 0.454638` (up).  Therefore
 `split_half_pass=false`; no `script.py` threshold change is permitted.
+
+## Current-code replay gate
+
+The prior section is explicitly an **archived-code measurement**: it passes
+`--script artifacts/.../script-deb6831.py`, because those were the exact GPU
+responses' post-processing semantics.  It cannot decide the current main
+post-processing gate on its own.
+
+The same 600 saved responses were therefore replayed with the current PR
+`script.py` (no `--script` override), using the same reviewed 22-item grid,
+fixed salted A/B split, and `item_p1` completeness guard.
+
+| measurement | Macro F1 |
+| --- | ---: |
+| current script baseline | 0.499681 |
+| current script full-pool candidate | 0.508940 |
+
+The final current-code candidate adds only v3=`0.95`; its configured cuts are
+otherwise unchanged.  Its final candidate improves both fixed halves
+(A `0.446440 -> 0.460293`, B `0.431193 -> 0.434223`), and the independently
+chosen cross-half candidates also improve both held-out sides.  Thus
+`split_half_pass=true` and `trusted_guard_pass=true` for current code.
+
+This is still **not an operational threshold adoption**: the fixed adoption
+rule also requires a matching dev replay with Macro drop no greater than
+0.01.  That dev gate has not yet been run, so `script.py` remains unchanged.
