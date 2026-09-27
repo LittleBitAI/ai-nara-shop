@@ -82,6 +82,20 @@ The facts call is rejected. `NOT_ENTRY_QUOTE` held its checklist and evaluation 
 calls many plain performance clauses eligibility where the labels say otherwise: 11 true positives for 19
 false alarms. The facts call cost 1.0 s per selected notice here (349 s over 352).
 
+## v2 label audit — fixed before reading (2026-09-27, user decision)
+
+v2 rises in F1 on dev gold (5/0/2 → 7/1/0), the 400 and the 600, and fails only rule 3, whose cells are
+unaudited LLM labels (v2 trust rests on 5 dev positives). The 30 cells v2 changes on the 600 are read:
+the 19 new false alarms and the 11 new true positives. Each is judged against `docs/items.md` v2 and S7-3:
+v2 = 1 when the notice makes a past performance record (실적) of the bidder an entry condition
+(입찰참가자격) and the estimated price is under 2.3억. Not v2: a record used only in evaluation or 적격심사,
+a document checklist line that no eligibility clause requires, a licence or business registration, a
+personnel career, a record-free condition. Unclear when the notice text cannot settle it; unclear cells
+keep their label. This is a model reading (Claude), not a human one.
+
+Pass line: v2's corrected net (TP − FP) on the 600 ≥ 6, i.e. at most one cell below the facts-off 7.
+Pass → review round 2 on the facts call with `QUALIFICATION_FACTS_ITEMS = ["v2"]`. Fail → rejected stands.
+
 ## Server time
 
 Dev phase seconds (200 notices, 165 non-수의계약): main 368, SME 90, company size 206, facts 151.
