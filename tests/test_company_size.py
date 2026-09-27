@@ -73,10 +73,12 @@ class CompanySizeTests(unittest.TestCase):
         self.assertEqual(script.verify_company_size(f, rec, 16000)[0]["v18"]["위반여부"], 1)
         for role in ("eligibility", "unknown"):
             self.assertNotIn("v18", script.verify_company_size(dict(f, qualification_role=role), rec, 16000)[0])
-        # 등급과 역할이 모순이면 보류한다. 체크리스트를 unrestricted로 강제 변환하지 않는다.
+        # C7 (#152, feat/a-final-stack) reverses the 9/20 hold: a checklist role outranks a limiting value, so the
+        # conflict reads as the checklist's own unrestricted. Dev-label only (044 v18); 0 of 5,500 unlabeled move.
         f.update(qualification="sme_allowed", qualification_quote="중소기업확인서 1부.")
         out, _ = script.verify_company_size(f, rec, 16000)
-        self.assertFalse(set(out) & {"v17", "v18"})
+        self.assertEqual(out, script.verify_company_size(dict(f, qualification="unrestricted"), rec, 16000)[0])
+        self.assertEqual(out["v18"]["위반여부"], 1)
         independent = dict(f, scope="competitive", requirements_complete="yes", software_business="yes",
                            software_business_quote="일반 의료기기 구매.")
         out, _ = script.verify_company_size(independent, rec, 16000)

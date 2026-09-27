@@ -3,29 +3,26 @@ scope: project
 severity: knowledge
 triggers: ["QnA", "질의응답", "토크", "운영진 답변", "라벨 노이즈", "logprob", "동등 이상", "단위=기초", "제48조", "사업금액", "S7"]
 domain: 'contest-rules'
-title: "docs: 운영진 토크 답변 17건을 S7로 보관하고 docs/qna.md로 옮긴다"
+title: "docs: Archive 17 management talk responses to S7 and move to docs/qna.md"
 ---
 
-# 운영진 토크 답변 17건을 S7로 보관한다
+# Archive 17 management talk responses to S7
 
-2026-09-23 사용자가 데이콘 토크 질의응답 17건을 모아 줬다. 저장소 어디에도 기록이 없었다.
-원문은 `archive/contest/qna/`에 바이트 그대로(S7), 작업본은 `docs/qna.md`다.
+2026-09-23 A user provided 17 Dacon talk Q&As. There was no record of them anywhere in the repository. The original text is in `archive/contest/qna/` as bytes (S7), and the working copy is `docs/qna.md`.
 
-판정을 바꿀 수 있는 답은 넷이다.
+There are four answers that can change the judgment.
 
-| 답 | 출처 | 현재 코드 |
+| Answer | Source | Current Code |
 | --- | --- | --- |
-| 지방 지역제한 금액 — 시·도 3억 5천만원, 세종·시·군·구 5억원(공지 S6) | S7-17 | `fix/c-notice-region-limit`가 고친다 |
-| logprob 항목별 고정 임계는 A4 후처리로 허용, dev·자가 라벨로 정해도 된다 | S7-12 | 안 쓴다 |
-| v9는 "동등 이상" 표현만으로 정하지 않는다 | S7-4·14 | `V9_EQUIVALENT`가 그 표현으로 v9를 내린다 |
-| 지역 토큰의 `단위=기초`는 시·군·구 제한이다 | S7-15 | 운영은 안 읽는다. A4 후보의 v6 게이트가 쓰지만 묶음째 미채택 |
+| Local area restriction amount — 350 million KRW for cities/provinces, 500 million KRW for Sejong/cities/counties/districts (Notice S6) | S7-17 | `fix/c-notice-region-limit` fixes it |
+| Fixed threshold by logprob item is allowed via A4 post-processing, can be set as dev/self-label | S7-12 | Not used |
+| v9 is not determined solely by the expression "equivalent or higher" | S7-4·14 | `V9_EQUIVALENT` drops v9 with that expression |
+| The `단위=기초` of the region token is a city/county/district restriction | S7-15 | Operations does not read it. A4 candidate's v6 gate uses it, but it is unadopted as a bundle |
 
-그리고 평가셋은 24항목 모두 양성이 있다(S7-1). 한 항목을 포기하면 그 항목은 0점이다.
+Also, the evaluation set has positive cases for all 24 items (S7-1). If you give up on one item, that item gets 0 points.
 
-운영진이 dev 라벨 노이즈를 인정한 표본이 넷이다 — `062` v24, `193` v13, `180` v9, `119` v10·v11.
-`097` v18 은 근거를 특정할 수 없다고만 했다. 이 셀들을 맞추려고 규칙을 만들면 9/21 제출에서 본
-"dev 에서 이기고 서버에서 지는" 규칙을 하나 더 만드는 것이다.
-`132` 는 노이즈가 아니다 — 운영진이 그 라벨을 뒷받침하는 원리를 설명했다(S7-13). PR #100 리뷰 라운드 1 이
-처음 초안에서 이것을 노이즈로 묶은 것을 잡았다.
+There are four samples where the management acknowledged dev label noise — `062` v24, `193` v13, `180` v9, `119` v10·v11.
+`097` v18 only stated that the evidence could not be specified. Creating rules to match these cells is just creating another rule like the one seen in the 9/21 submission where it "wins in dev but loses on the server."
+`132` is not noise — the management explained the principle supporting that label (S7-13). PR #100 review round 1 caught that the initial draft grouped this as noise.
 
-v16·v18의 수의계약 적용, v24 지역제한 축의 방향은 운영진도 답하지 않았다. 미확정으로 남긴다.
+The application of private contract for v16·v18 and the direction of the v24 regional restriction axis were not answered by the management either. They remain unconfirmed.

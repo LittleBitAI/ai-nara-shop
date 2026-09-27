@@ -6,64 +6,59 @@ reads: [docs/items.md, docs/rules.md, docs/qna.md]
 sources: [reports/labels-600/citation-audit.md, reports/team-c/law-index/README.md, reports/team-c/a1-company-size/result.md, reports/team-c/a2-competitive-product/README.md]
 ---
 
-# 제공 법령 패키지를 읽는 법 — 항목표 인용을 그대로 믿지 않는다
+# How to read the provided legal package — Do not trust the item table citations as they are
 
-규칙. 판정·라벨·프롬프트에 결합하는 법령 지식은 배포 스냅샷(`open/data/법령패키지/`)에서만 온다. 웹 검색으로
-얻은 해설·개정 연혁은 파이프라인·위키·프롬프트 어디에도 옮기지 않는다 — 재현성 평가(R15)의 대상이다.
-`항목표.json` 의 조문 인용은 출발점일 뿐이다. 항목마다 인용이 과다·과소·삭제 조항·고아일 수 있으니,
-조각을 쓰기 전에 [인용 감사](../reports/labels-600/citation-audit.md)의 판정을 확인하고 항·호 단위로 좁힌다.
+Rule. Legal knowledge combined with judgments, labels, and prompts comes only from the distribution snapshot (`open/data/법령패키지/`). Explanations or revision histories obtained through web searches are not to be moved to any pipeline, wiki, or prompt — they are subject to reproducibility evaluation (R15).
+Citations of articles in `항목표.json` are only a starting point. Since citations for each item may be excessive, insufficient, deleted clauses, or orphans, confirm the judgment of [citation audit](../reports/labels-600/citation-audit.md) and narrow it down to the paragraph or item level before using the fragment.
 
-왜. 첫 라벨러 발췌판이 v23 의 핵심(낙찰자 결정기준 제7장 제3절 2.다)을 잘라 먹었고, v20 은 명시 의무 조항
-(지침 제3조②)이 인용에 없었고, v22 는 인용 조항이 `삭제` 뿐이었다. 항목표를 그대로 옮기면 이것이 전부 빠진다.
+Why. The first labeler excerpt version cut out the core of v23 (낙찰자 결정기준 제7장 제3절 2.다), v20 lacked the mandatory clause (지침 제3조②) in the citation, and v22 had only `삭제` as the cited clause. If you move the item table as is, all of this will be missing.
 
-## 체계 — 무엇이 무엇을 채우는가
+## System — What fills what
 
-| 층 | 제공 파일 예 | 역할 |
+| Layer | Provided file example | Role |
 | --- | --- | --- |
-| 법률 | 국가계약법, 지방계약법, 판로지원법, 소프트웨어 진흥법, 중소기업기본법 | 원칙과 위임 |
-| 시행령 | 국가 시행령 제21조, 지방 시행령 제20조, 판로지원법 시행령 제2조의2 | 제한할 수 있는 경우와 그 대상 |
-| 시행규칙 | 국가·지방 시행규칙 제17조·제24조·제25조 | 제한의 기준(금액·배수·지역 범위·중복 금지) |
-| 예규·집행기준·결정기준 | 정부 입찰·계약 집행기준, 지방 입찰 및 계약 집행기준, 공동계약운용요령, 낙찰자 결정기준 | 실무 기준과 금지 사례 목록 |
-| 고시·지침 | 고시금액, 경쟁제품 지정 내역·세부품명 CSV, 중소 SW 사업자 지침 | 금액·품목·하한 표 |
+| Law | National contract Act, 지방계약법, Public Procurement Support Act, Software Promotion Act, Framework Act on Small and Medium Enterprises | Principles and delegation |
+| Enforcement Decree | National Enforcement Decree Article 21, Local Enforcement Decree Article 20, Public Procurement Support Act Enforcement Decree Article 2-2 | Cases where restrictions are possible and their targets |
+| Enforcement Rule | National/Local Enforcement Rule Article 17, Article 24, Article 25 | Criteria for restrictions (amount, multiple, regional scope, prohibition of duplication) |
+| Detailed Regulations/Execution Standards/Decision Criteria | Government Bidding/contract Execution Standards, Local Bidding and contract Execution Standards, Joint contract Operation Guidelines, Criteria for Determining Successful Bidders | Practical standards and lists of prohibited cases |
+| Public Notice/Guidelines | Public notice amount, competitive product designation details/detailed product name CSV, Small and Medium SW Business Guidelines | Amount, item, lower limit table |
 
-아래 층은 위 층이 "○○령으로 정한다"고 넘긴 것을 채운다. 한 항목의 판정은 보통 시행령(허용되는 제한)과
-시행규칙·집행기준(그 기준과 금지 사례)을 함께 읽어야 선다.
+The lower layer fills what the upper layer delegates by saying "determined by ○○ decree." A judgment for an item usually stands only when reading the Enforcement Decree (permitted restrictions) and the Enforcement Rule/Execution Standards (those criteria and prohibited cases) together.
 
-## 주소 — 조·항·호·목과 두 번째 체계
+## Address — Article, Paragraph, Item, Sub-item and the second system
 
-- 법률·시행령·시행규칙은 `제N조(제목)` → 항 `①` → 호 `1.` → 목 `가.` 이다. `제2조의2` 처럼 가지 조문이 있다.
-- 집행기준·결정기준은 `제N장` → `제N절` → `1.` → `가.` → `1)` → `가)` 다. 「낙찰자 결정기준」에는 `제N조` 가 하나도 없다.
-- 별표는 부칙 뒤에 붙는다. 본문의 `[별표1]` 은 참조일 뿐이고, 실제 별표 구역은 단독 `[별표]` 줄 뒤다.
-- 한 조문을 통째로 넣지 않는다. 시행령 제21조는 2,646자인데 v14~v18 에 필요한 것은 10호뿐이다.
-  조각은 `reports/labels-600/build_excerpt.py` 의 `paragraphs()`·`subparagraphs()` 로 항·호 단위로 자른다.
+- Laws, Enforcement Decrees, and Enforcement Rules are `제N조(제목)` → Paragraph `①` → Item `1.` → Sub-item `가.`. There are branch articles like `제2조의2`.
+- Execution Standards and Decision Criteria are `제N장` → `제N절` → `1.` → `가.` → `1)` → `가)`. There is not a single `제N조` in the 「Criteria for Determining Successful Bidders」.
+- Appended tables are attached after the addenda. The `[별표1]` in the main text is just a reference, and the actual appended table section is after a single `[별표]` line.
+- Do not include an entire article. Enforcement Decree Article 21 is 2,646 characters long, but only item 10 is needed for v14~v18. Fragments are cut by paragraph/item level using `reports/labels-600/build_excerpt.py`'s `paragraphs()`·`subparagraphs()`.
 
-## 문장 읽기
+## Reading sentences
 
-- `다만, …` 은 앞 문장에서 떼어 내는 단서다. 실적제한의 고시금액 조건(집행기준 제5조① 단서)처럼 판정이 단서에서 갈린다.
-- `삭제 <날짜>` 는 조항이 없다는 뜻이다. 인용이 삭제 조항뿐이면(v22) 판정은 항목명과 일반 금지 조항(시행규칙 제17조)으로 한다.
-- `준용한다`·`제N조에 따른` 은 다른 조문을 끌어온다. 끌려온 조문이 인용에 없으면 고아 조각이다.
-- `미만` 은 경계를 빼고 `이상`·`이내` 는 넣는다. 추정가격은 meta `입찰추정가격`, 없으면 `배정예산금액` 이다.
+- `다만, …` is a proviso detached from the previous sentence. Judgments are divided by the proviso, such as the public notice amount condition for performance restrictions (Execution Standards Article 5① proviso).
+- `삭제 <날짜>` means there is no clause. If the citation only contains deleted clauses (v22), the judgment is made based on the item name and general prohibition clauses (Enforcement Rule Article 17).
+- `준용한다`·`제N조에 따른` bring in other articles. If the brought-in article is not in the citation, it is an orphan fragment.
+- `미만` excludes boundaries, while `이상`·`이내` include them. The estimated price is meta `입찰추정가격`, and if absent, it is `배정예산금액`.
 
-## 국가와 지방은 다른 법이다
+## National and Local are different laws
 
-meta `적용계약법` 으로 고른다. 같은 주제라도 숫자가 다르다.
+Select with meta `적용계약법`. Even for the same topic, the numbers are different.
 
-| 주제 | 국가 | 지방 |
+| Topic | National | Local |
 | --- | --- | --- |
-| 지역제한 상한(물품·일반용역) | 시행규칙 제24조 → 고시금액 2억3천만원 | 시행규칙 제24조 + 공지 S6: 시·도 3억5천만원, 세종·시·군·구 5억원 |
-| 실적 규모 기준 | 1배 이내(고시금액 이상에 한함) | 3분의 1 이내, 필요시 1배 |
-| 공동이행 최소지분율 | 10% 이상 | 5% 이상(20% 범위 조정) |
-| 소액수의 견적의 지역·실적 제한 | 해당 조항 없음 | 제5장 수의계약 요령이 시·군 제한·실적·중복을 허용 |
-| 협상 제안요청서 설명 시기 | 해당 조항 없음(v23 은 지방만) | 낙찰자 결정기준 제7장 제3절 2.다 |
+| Regional restriction upper limit (goods/general services) | Enforcement Rule Article 24 → Public notice amount 230 million KRW | Enforcement Rule Article 24 + Notice S6: City/Province 350 million KRW, Sejong/City/County/District 500 million KRW |
+| Performance scale criteria | Within 1x (limited to public notice amount or more) | Within 1/3, 1x if necessary |
+| Minimum joint implementation share | 10% or more | 5% or more (20% range adjustment) |
+| Regional/performance restrictions for small-sum private contracts | No corresponding clause | Chapter 5 Private contract Guidelines allow city/county restrictions, performance, and duplication |
+| Timing of explanation for negotiation request for proposals | No corresponding clause (v23 is local only) | 낙찰자 결정기준 제7장 제3절 2.다 |
 
-## 항목을 가르는 축 네 개
+## Four axes that divide items
 
-1. 금액 구간 — 1억원, 고시금액, 지역제한 상한. 항목 대부분이 구간에서 먼저 갈린다(v2·v5~v8·v14~v18).
-2. 계약방법 — 수의계약·협상·제한경쟁. 같은 문구가 경쟁입찰에선 위반, 소액수의 견적에선 정상이다.
-3. 대상 — 경쟁제품(판로지원법 제7조) 여부. 카탈로그에는 용역도 있다. 경쟁제품이면 v10~v13, 아니면 v14~v18 의 표.
-4. 참가자격의 실체 — 제목·법령 이름·제출서류 목록이 아니라, 입찰에 참가할 자를 실제로 거르는 문장인지.
+1. Amount range — 100 million KRW, public notice amount, regional restriction upper limit. Most items are first divided by range (v2·v5~v8·v14~v18).
+2. contract method — Private contract, negotiation, restricted competition. The same phrase is a violation in competitive bidding, but normal in small-sum private contract estimates.
+3. Target — Whether it is a competitive product (Public Procurement Support Act Article 7). Catalogs also include services. If it is a competitive product, use the table for v10~v13, otherwise v14~v18.
+4. Substance of participation qualification — Not the title, law name, or list of submitted documents, but whether it is a sentence that actually filters those who can participate in the bidding.
 
-## 무엇이 여기 없나
+## What is not here
 
-항목별 판정 규칙은 [item-guide.txt](../reports/labels-600/item-guide.txt), 운영진 해석은 [qna](../docs/qna.md),
-조각 목록과 크기는 [build_excerpt.py](../reports/labels-600/build_excerpt.py)가 소유한다. 이 페이지는 읽는 법만 둔다.
+Judgment rules by item are in [item-guide.txt](../reports/labels-600/item-guide.txt), management interpretations are in [qna](../docs/qna.md),
+and the fragment list and sizes are owned by [build_excerpt.py](../reports/labels-600/build_excerpt.py). This page only contains how to read.

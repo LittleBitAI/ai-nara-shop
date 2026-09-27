@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "docs: PR #39 리뷰의 남은 두 건을 D7·D8 티켓으로 적는다"
+title: "docs: Record the remaining two items from the PR #39 review as D7 and D8 tickets"
 pr: 40
 merged: 2026-09-18
 branch: "docs/d-review39-followups"
 ---
 
-# docs: PR #39 리뷰의 남은 두 건을 D7·D8 티켓으로 적는다
+# docs: Record the remaining two items from the PR #39 review as D7 and D8 tickets
 
-무엇. PR #39 리뷰에서 나온 두 건이 코멘트에만 남아 있었다. 코멘트는 다음 세션이 찾아 읽지 않으므로 D 표에 옮긴다. #39는 이미 머지됐고(`046dc86`) 이 PR은 문서만 바꾼다.
+What. Two items from the PR #39 review remained only in the comments. Since the next session will not find and read the comments, I am moving them to the D table. #39 is already merged (`046dc86`) and this PR only changes the documentation.
 
-왜. #39가 붙인 참가자격 가드는 리뷰가 낸 원래 오탐을 막는다. 남은 자리가 셋이고 고치는 곳이 서로 다르다. 1. `_is_qualification_context`가 같은 줄에서 머리글을 부인 문구보다 먼저 보고 `break`한다. `※ 위 항목은 평가 배점이며 입찰참가자격을 제한하지 않는다`가 두 정규식에 다 걸려서, 참가자격을 부인하는 문장이 통행증이 된다. 2. 문장 안에 쓰인 `참가자격`을 머리글로 인정한다. `○ 입찰참가자격을 갖춘 자를 대상으로 다음과 같이 평가한다`가 끼면 위의 배점표 머리글까지 못 올라간다. 순서를 바꿔도 안 닫힌다. 3. `NOT_QUALIFICATION`에 `기술능력 평가`·`협상에 의한 계약 평가`가 없다. 이건 #39가 만든 게 아니라 v4가 쓰던 목록의 공백이다. …
+Why. The participant qualification gate added by #39 prevents the original false positive raised by the review. There are three remaining spots, and the places to fix are different. 1. `_is_qualification_context` sees the header before the denial phrase on the same line and `break`. `※ 위 항목은 평가 배점이며 입찰참가자격을 제한하지 않는다` is caught by both regular expressions, so the sentence denying participant qualification becomes a pass. 2. It recognizes `참가자격` used within a sentence as a header. If `○ 입찰참가자격을 갖춘 자를 대상으로 다음과 같이 평가한다` is inserted, it cannot reach the header of the scoring table above. Changing the order does not close it either. 3. `NOT_QUALIFICATION` lacks `기술능력 평가` and `협상에 의한 계약 평가`. This was not created by #39 but is a blank space in the list used by v4. …
 
-출처. PR #40 · `docs/d-review39-followups`
+Source. PR #40 · `docs/d-review39-followups`

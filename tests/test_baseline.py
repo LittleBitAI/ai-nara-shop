@@ -229,8 +229,10 @@ class BaselineTests(unittest.TestCase):
                 final = list(csv.DictReader(f))
             with out.with_name("baseline_submission.csv").open(encoding="utf-8") as f:
                 original = list(csv.DictReader(f))
+            records = {r["id"]: r for r in baseline.iter_records(str(ROOT / "open/data/test.jsonl.gz"))}
             for before, after in zip(original, final):
-                self.assertEqual(before["v13"], "1")
+                # C9 (#152) already closes v13 in the base pass when the registered codes are no 경쟁제품.
+                self.assertEqual(before["v13"], "0" if baseline.outside_catalogue(records[before["id"]]) else "1")
                 self.assertEqual(after["v13"], "0")
                 # 추가 호출이 건드릴 수 있는 칸은 v13과 N1 분할 2항목뿐이다.
                 # 그 밖의 항목이 하나라도 움직이면 회차 colab-1789719173182820657의
