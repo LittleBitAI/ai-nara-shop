@@ -153,17 +153,21 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(self.decide(evaluation, evidence=extra, v2=1)["위반여부"], 1)
 
     def test_purchase_scope_is_what_the_company_size_verifier_settled(self):
-        def purchase(reason, scope="general", outside=False):
-            with mock.patch.object(script, "outside_catalogue", return_value=outside):
+        def purchase(reason, scope="general", outside=False, body=None):
+            with mock.patch.object(script, "outside_catalogue", return_value=outside), \
+                    mock.patch.object(script, "competitive_product", return_value=body):
                 slots = script.relation_slots(verified(reason, scope=scope), self.rec)
             return tuple(None if n in slots["unknown"] else slots[n]
                          for n in ("purchase_general", "purchase_competitive"))
         self.assertEqual(purchase("decided"), (True, False))
-        self.assertEqual(purchase("unknown_price"), (True, False))
+        self.assertEqual(purchase("absence_not_observable"), (True, False))
+        for early in ("unknown_price", "unverified_qualification", "unverified_size_exception"):
+            self.assertEqual(purchase(early), (None, None), early)   # before the joint-scope check
         self.assertEqual(purchase("competitive_by_catalogue"), (False, None))   # listed: not general, unproven
         self.assertEqual(purchase("outside_general_scope", "other"), (False, False))   # e.g. construction
         self.assertEqual(purchase("outside_general_scope", "competitive"), (False, True))
         self.assertEqual(purchase("outside_general_scope", "competitive", outside=True), (False, False))
+        self.assertEqual(purchase("outside_general_scope", "competitive", body=False), (False, False))
         self.assertEqual(purchase("unresolved_high_joint_scope"), (None, None))
         self.assertEqual(purchase("unverified_scope"), (None, None))
         self.assertEqual(purchase("a_reason_added_later"), (None, None))

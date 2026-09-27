@@ -3654,9 +3654,10 @@ PURCHASE_SCOPE_BY_REASON = {
     "unresolved_high_joint_scope": None,        # general and a high-value joint exception conflict
     "outside_general_scope": "model",           # a verified competitive or other: the model's answer
     "competitive_by_catalogue": "not_general",  # a listed demanded product: not general, purchase unproven
-    "unknown_price": "general", "unverified_qualification": "general",
-    "unverified_size_exception": "general", "absence_not_observable": "general",
-    "unverified_priority_exception": "general", "decided": "general",   # past every scope check
+    # Exits before the high-value joint_small conflict check leave the scope unfinished, so unknown.
+    "unknown_price": None, "unverified_qualification": None, "unverified_size_exception": None,
+    # The unrestricted branch has no further scope check; `decided` passed all of them.
+    "absence_not_observable": "general", "unverified_priority_exception": "general", "decided": "general",
 }
 
 
@@ -3689,7 +3690,9 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     # catalogue's deterministic veto on the registered codes (`outside_catalogue`), as final
     # post-processing does. The older `scope_general`/`scope_competitive` stay as the existing rows read them.
     purchase = facts.get("purchase_scope")
-    purchase_competitive = purchase == "competitive" and not outside_catalogue(rec)
+    # The catalogue rules the purchased product out from the registered codes or from the product the
+    # notice's direct-production demand names; either confirmed exclusion outranks the model's answer.
+    purchase_competitive = purchase == "competitive" and catalogue is not False and not outside_catalogue(rec)
     limit = region_price_limit(rec)
     # Slots whose "no" is only "not known" on this notice. A relation row lets a known "no" decide and
     # never an unknown one (`slot_row_cell`).

@@ -65,13 +65,16 @@ v2 net fell 7 → −1.
    - Every such slot a relation row reads comes from what an existing gate verified, never from the raw
      model answer. `attach_company_facts` records it, and `run()` and replay share it:
      - `purchase_general` / `purchase_competitive` come from `purchase_scope`, the outcome of
-       `_company_size_bands` mapped by `PURCHASE_SCOPE_BY_REASON`. For example `decided` is general,
+       `_company_size_bands` mapped by `PURCHASE_SCOPE_BY_REASON`. Only exits past every scope check are
+       general (`decided`, and the unrestricted branch's exits); exits before the high-value joint check
+       (`unknown_price`, `unverified_qualification`, `unverified_size_exception`) are unknown. Further,
        `outside_general_scope` is the verified competitive or other, `competitive_by_catalogue` is not
        general with the purchase unproven, and `unverified_scope` / `unresolved_high_joint_scope` are
        unknown. An outcome not in the table is unknown, and a test keeps every return of that function in
        the table.
-     - A verified competitive answer still yields to the catalogue's veto on the registered codes
-       (`outside_catalogue`), as final post-processing does. A product outside the catalogue never stands in
+     - A verified competitive answer still yields to a confirmed catalogue exclusion, from the registered
+       codes (`outside_catalogue`) or from the product the direct-production demand names
+       (`competitive_product` false; PPS-DEV-054 has codes only in its text). A product outside the catalogue never stands in
        for a general purchase (construction stays other).
      - `software` and `priority_exception` are known only when their gates verify them (`software_verified`:
        the deliverable quote; `priority_verified`: "no", or "yes" with a verified quote), through
