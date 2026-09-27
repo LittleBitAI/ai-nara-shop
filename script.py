@@ -105,7 +105,7 @@ COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 �
 # lost (v1 FP 6 -> 160 off-dev, 0 -> 74 dev; v4 FP 3 -> 23; v8 FP 0 -> 12), v5 moved nothing.
 # Kept: v2 (with NOT_ENTRY_QUOTE), v6, v7 — off-dev and both halves up, dev drop within 0.01.
 # v3 passed alone but not on top of #163's v3 cut 0.95: off-dev 0/2/2 -> 1/6/1, net -2 -> -5.
-# Experimental slot 2026-09-27: v2 only — on the off-dev 600 v2+L1 equals v2+v6+v7+L1 and dev is higher.
+# v2 only (2026-09-27): on the off-dev 600 adding v6 and v7 moved nothing further, and dev is higher with v2 alone.
 QUALIFICATION_FACTS_ITEMS: List[str] = ["v2"]
 # The facts call is the last extra call and the only optional one. It stops starting chunks once the
 # process has run this long, leaving the rest of the 7,200 s limit for the chunk in flight and the CSV.
@@ -3195,45 +3195,6 @@ def v6_basic_region_limits(rec: Dict[str, Any]):
     return found
 
 
-# A 시·군·구 name bound to a location predicate. A bare `…시` is not enough: `계약체결시` and
-# `계약체결시에 제출` are no places (review #172 round 2 P1).
-V6_BASIC_PLACE_BOUND = re.compile(
-    r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)\s*(?:에\s*(?:소재|있|위치|둔|두)|내에?\s*(?:소재|있|위치)|관내)")
-
-
-def v6_quote_names_basic_place(quote: Optional[str]) -> bool:
-    """The verified v6 quote itself places the bidder in a 시·군·구: an anonymized basic-unit or agency
-    token, or a place name followed by a location predicate. Lets a clause wrapped across lines keep v6
-    where the line-based L1 would lower it (review #172 round 1 P1)."""
-    text = quote or ""
-    return _v6_confirmed_basic(text) or bool(V6_BASIC_PLACE_BOUND.search(re.sub(WIDE_REGION, " ", text)))
-
-
-def v6_no_basic_region_limit(rec: Dict[str, Any]) -> bool:
-    """L1 of D9: no qualification line limiting the participant's location carries a 시·군·구 signal.
-
-    v6 is the 시·군·구 limit; a notice limited only to a 광역 name ("강원도", "대구광역시") is outside
-    it. Ported from `experiments/qualification_candidate.py` (`v6_decision` L1, 2026-09-23), which dev
-    could not score (0 cells). On the non-수의계약 off-dev labels it lowered 16 labelled cells, 15 of them
-    label 0 (v6 3/17/2 -> 2/2/3, 2026-09-27). Reads lines broadly, as the lowering side should: any
-    basic signal, name-based included, keeps the cell. A notice with dropped documents is never lowered.
-    """
-    if any((rec.get("dropped_doc_counts") or {}).values()):
-        return False
-    for doc in rec.get("docs", []):
-        text = doc.get("text") or ""
-        position = 0
-        for line in text.split("\n"):
-            start, position = position, position + len(line) + 1
-            if not line.strip() or not V6_LIMIT_ANCHOR.search(line):
-                continue
-            if V6_NOT_A_LIMIT.search(line) or not _is_qualification_context(text, start):
-                continue
-            if _v6_confirmed_basic(line) or "[수요기관(기초자치단체)" in line or _has_basic_unit(line):
-                return False
-    return True
-
-
 def v6_should_raise(rec: Dict[str, Any]) -> Optional[str]:
     """v6 을 0 에서 1 로 올릴 근거문구. 없으면 None.
 
@@ -3648,10 +3609,7 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                     break
             if (not ev and v not in EVIDENCE_EXEMPT) or evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
-        # L1 is line-based; a verified quote that itself names a 시·군·구 keeps the cell even when the clause
-        # wraps its anchor and its place name onto separate lines (review #172 round 1 P1).
-        if hit and v == "v6" and (v6_not_a_basic_region_limit(ev, rec)
-                                  or (v6_no_basic_region_limit(rec) and not v6_quote_names_basic_place(ev))):
+        if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
             hit, ev = 0, ""
         if v == "v5" and hit == 0 and cell.get("위반여부") != 1:
             # 고시금액 이상인데 모델이 놓친 참가업체 소재지 제한만 올린다. 모델 양성을

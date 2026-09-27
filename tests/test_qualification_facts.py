@@ -83,28 +83,6 @@ class Decide(unittest.TestCase):
         self.assertNotIn("v8", out)
 
 
-class V6QuotePlace(unittest.TestCase):
-
-    def test_a_place_bound_to_a_location_keeps_v6_and_a_bare_si_word_does_not(self):
-        self.assertTrue(script.v6_quote_names_basic_place("본점 소재지는\n고양시에 있는 업체"))
-        self.assertTrue(script.v6_quote_names_basic_place("[지역:r1|단위=기초|광역=경기도] 관내에 소재한 업체"))
-        for quote in ("본점 소재지가 강원도에 있는 업체로 제한한다.\n계약체결시 증빙 제출.",
-                      "본점 소재지가 서울특별시에 있는 업체, 계약체결시에 제출",
-                      "본점 소재지가 대구광역시에 있는 업체"):
-            self.assertFalse(script.v6_quote_names_basic_place(quote), quote)
-
-    def test_postprocess_keeps_a_wrapped_city_clause_and_lowers_a_province_one(self):
-        def run(quote):
-            rec = {"id": "T", "docs": [{"doc_id": "D0", "type": "공고문", "text": "입찰참가자격\n" + quote + "\n"}],
-                   "meta": {"적용계약법": "지방계약법", "업무구분": "일반용역", "계약방법": "제한경쟁",
-                            "입찰추정가격": 50_000_000}}
-            j = {v: {"위반여부": 0, "근거문구": None} for v in script.ITEMS}
-            j["v6"] = {"위반여부": 1, "근거문구": quote}
-            return script.postprocess(j, rec)["v6"]["위반여부"]
-        self.assertEqual(run("본점 소재지는\n고양시에 있는 업체"), 1)
-        self.assertEqual(run("본점 소재지가 강원도에 있는 업체로 제한한다.\n계약체결시 증빙 제출."), 0)
-
-
 class Merge(unittest.TestCase):
 
     def test_merge_applies_only_listed_items_and_survives_bad_json(self):
