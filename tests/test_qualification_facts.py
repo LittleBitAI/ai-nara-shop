@@ -43,6 +43,18 @@ class Decide(unittest.TestCase):
                                           rec(300_000_000))
         self.assertEqual(out["v2"]["위반여부"], 0)
 
+    def test_a_certificate_in_an_operative_clause_is_an_entry_condition(self):
+        clause = "입찰참가자격: 최근 3년간 1억원 이상 납품실적증명서를 소지한 자만 입찰 가능"
+        out = script.decide_qualification(facts(performance="eligibility", performance_quote=clause),
+                                          rec(90_000_000, f"입찰참가자격\n{clause}\n"))
+        self.assertEqual(out["v2"]["위반여부"], 1)
+
+    def test_a_checklist_or_evaluation_quote_is_no_entry_condition(self):
+        for quote in ("최근 3년간 사업수행 실적 1부", "실적은 평가 점수에만 반영"):
+            out = script.decide_qualification(facts(performance="eligibility", performance_quote=quote),
+                                              rec(90_000_000, f"입찰참가자격\n{quote}\n"))
+            self.assertNotIn("v2", out, quote)
+
     def test_record_at_budget_is_v3(self):
         out = script.decide_qualification(
             facts(performance="eligibility", performance_quote=PERF, performance_amount="at_or_above_budget"),

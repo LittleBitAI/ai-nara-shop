@@ -589,7 +589,10 @@ def empty_qualification_facts():
 # ("실적증명서 1부", "평가 점수에 반영", "이행실적 심사분야"). The words follow the item definition but
 # were written after reading those quotes on the whole 400, so its split-half gain is not independent
 # evidence: v2 off-dev 16/28/8 -> 15/12/9, dev 7/4/0 -> 7/1/0.
-NOT_ENTRY_QUOTE = re.compile(r"\d+\s*부\b|증명서|사본|평가|심사|배점|점수|가점|감점|작성하여|양식|제출\s*서류|확인\b")
+# Only checklist (copy counts, 제출서류), evaluation (평가·심사·배점·점수·가점·감점) and form (작성하여·양식)
+# markers: a certificate named in an operative clause ("실적증명서를 소지한 자만 입찰 가능") is an entry
+# condition (review #168 round 1 P1). Frozen before the off-dev 600 run, which it has not seen.
+NOT_ENTRY_QUOTE = re.compile(r"\d+\s*부\b|제출\s*서류|평가|심사|배점|점수|가점|감점|작성하여|양식")
 
 
 def decide_qualification(facts, rec) -> Dict[str, Dict[str, Any]]:
