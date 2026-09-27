@@ -75,7 +75,7 @@ def main(argv=None):
         # Every notice needs P(1) for every item, or replay silently falls back to argmax for it.
         responses = set(replay_run.saved_responses(case)["baseline"])
         probabilities = replay_run.saved_probabilities(case)
-        short = [i for i in responses if set(probabilities.get(i) or {}) < set(script.ITEMS)]
+        short = [i for i in responses if not set(script.ITEMS) <= set(probabilities.get(i) or {})]
         if short:
             raise SystemExit(f"{case}: {len(short)} of {len(responses)} notices lack item_p1 for some item, "
                              f"e.g. {sorted(short)[:3]}")
