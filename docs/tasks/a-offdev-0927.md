@@ -99,4 +99,9 @@ The one exception: if nothing passes by 19:00, the slot carries an experimental 
 - The four passes reproduce labels-600 exactly: prompt hashes `34bd9cf7` (24-item, `--law-excerpt` + `--facts`), `43380d80` (facts), `740bf1c4` (focus), `25f869e7` (v1, three runs); notice hashes match the recorded ones.
 - Pilot (first 100): 600 calls, 0 failures, 1,129 s wall on 24 workers. $1.428 in all — $0.0143 per notice (24-item 0.0042 · facts 0.0031 · focus 0.0019 · v1 3 × 0.0017). About 109 s of serial calls per notice.
 - The full 3,000 would cost about $42.8, over the $30 stop line. User decision (09:00): label 2,000 — the first 2,000 of the fixed order, so still a prefix of one random draw. The last 1,000 stay unlabelled.
+- Labels 2,000 done (11:05): six passes × 2,000, no duplicates, merged to [labels-3000/merged.csv](../../reports/labels-3000/merged.csv). Total label cost $28.46.
+  The run hit the key's empty balance at about 10:05 (`HTTP 429 insufficient_quota`); the wrapper retried it as a rate limit, which hid it — fixed in `2ce6f71`. After the top-up, the missing calls were resumed and every retry succeeded.
+- Baseline of the current `script.py` on the 2,000 (saved u00~u10 responses, no thresholds — those runs have no `item_p1`): Macro 0.436 over 22 labelled items, halves 0.418 / 0.415.
+  Largest losses by count, TP / FP / FN: v18 42 / 15 / 133 · v1 14 / 33 / 86 · v10 18 / 10 / 76 · v2 12 / 1 / 60 · v11 20 / 19 / 35 · v20 26 / 2 / 32 · v12 6 / 2 / 26 · v16 9 / 4 / 24.
+  False alarms: v6 81 · v7 40 · v3 35 · v1 33 · v4 22 (v1, v4, v6 lose their thresholds in this replay, so read those as upper bounds).
 - Missed-cell stage audit on the diagnostic 200 with the current `script.py` ([stage_trace.py](../../reports/offdev-0927/stage_trace.py)): misses are almost all model-stage — v2 14 · v10 11 · v1 8 · v18 8 (+2 postprocess) · v8 6 · v11 5. False alarms: model v6 7 · v3 5; SME / company-size calls v18 6 · v10 5 · v11 3; postprocess v11 6.
