@@ -330,6 +330,8 @@ class CompanySizeTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "mock/api"):
                 measured(case, [notice()], "irrelevant")
 
+    # The runner pins the company-size call sequence; the relation call has its own tests (test_slot_rules).
+    @patch.object(script, "RELATION_CALL", False)
     def test_single_extra_stage_fallback_and_replay(self):
         from tools import replay_run
         calls = []
