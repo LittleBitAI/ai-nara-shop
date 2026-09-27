@@ -223,6 +223,10 @@ ITEM_THRESHOLDS: Dict[str, float] = {
 # improve, trusted net guard passes, and the matching saved-response dev replay drops 0.002778 (< 0.01).
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
+# Main-call schema writes 근거문구 before 위반여부 (field-order finding: a field before the answer is a
+# scratchpad, one after it is a justification). Off-dev, 218 of 236 missed positives had their evidence
+# inside the model's visible text (2026-09-27).
+EVIDENCE_FIRST = True
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
 SME_ITEMS = ["v13"]
 SME_FILES = (
@@ -391,9 +395,15 @@ def decode_schema(data_dir: str = DATA_DIR) -> Dict[str, Any]:
             s = json.load(f)
         s = s["properties"]["판정"] if "판정" in s.get("properties", {}) else s
         for v in ITEMS:
-            evidence = s["properties"][v]["properties"]["근거문구"]
+            cell = s["properties"][v]
+            evidence = cell["properties"]["근거문구"]
             if v not in ABSENCE:
                 evidence["maxLength"] = EVIDENCE_MAX
+            if EVIDENCE_FIRST:
+                # Guided decoding writes properties in schema order: the quote becomes the scratchpad the
+                # verdict is conditioned on, instead of a justification written after it (2026-09-27).
+                cell["properties"] = {"근거문구": evidence, "위반여부": cell["properties"]["위반여부"]}
+                cell["required"] = ["근거문구", "위반여부"]
         return s
     props = {}
     for v in ITEMS:
@@ -427,8 +437,9 @@ Rules:
 Items to evaluate:"""
 
 SYSTEM_TAIL = """
-Return only one JSON object with keys v1~v24. Each value has "위반여부" (integer 0 or 1)
-and "근거문구" (exact Korean quotation or null). No preamble, markdown or additional explanation."""
+Return only one JSON object with keys v1~v24. Each value first gives "근거문구" (the exact Korean
+quotation that decides the item, or null) and then "위반여부" (integer 0 or 1) based on that quotation.
+No preamble, markdown or additional explanation."""
 
 
 def load_sme_reference(data_dir):
