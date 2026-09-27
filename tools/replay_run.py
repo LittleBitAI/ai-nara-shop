@@ -264,6 +264,9 @@ FINAL_STACK_MOVES = [("PPS-DEV-044", "v18")]
 # Cells moved by feat/a-skip-nobid-calls (2026-09-27): v17 is zeroed on 수의계약, so 21 loses its gold
 # positive and 090 its false alarm. Toggled like the lists above.
 NO_BID_V17_MOVES = [("PPS-DEV-090", "e17"), ("PPS-DEV-090", "v17"), ("PPS-DEV-21", "e17"), ("PPS-DEV-21", "v17")]
+# Cells moved by feat/a-slot-decisions (2026-09-28): the slot table raises v15 (036, quoted size clause) and v16
+# (066), and leaves 149's v16 at the archived value. Toggled like the lists above.
+SLOT_MOVES = [("PPS-DEV-036", "e15"), ("PPS-DEV-036", "v15"), ("PPS-DEV-066", "v16"), ("PPS-DEV-149", "v16")]
 # The H2 run's company-size call also raised v17 on 수의계약 105 and 163, both gold 0.
 NO_BID_V17_MOVES_H2 = NO_BID_V17_MOVES + [("PPS-DEV-105", "e17"), ("PPS-DEV-105", "v17"),
                                           ("PPS-DEV-163", "e17"), ("PPS-DEV-163", "v17")]
@@ -313,7 +316,8 @@ DELIBERATE_MOVES = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-199", "v24"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES)
+    ^ set(SLOT_MOVES))
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
 # 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
@@ -399,7 +403,8 @@ DELIBERATE_MOVES_A7 = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-198", "v13"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES)
+    ^ set(SLOT_MOVES))
 
 
 def csv_cell_diff(left: bytes, right: bytes):
