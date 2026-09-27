@@ -1,6 +1,6 @@
 # Off-dev 600 logprob threshold measurement — 2026-09-27
 
-Status after the PR #163 hold review (round 1): the numbers below were measured with code that
+Status after the PR #163 hold review (rounds 1–2): the numbers below were measured with code that
 the review found wrong, so they are withdrawn. The tool is fixed; the measurement has not been
 rerun, because the 600 archive (`artifacts/offdev-600-1790471557297701344/`, Drive
 `MyDrive/a5/offdev-600-deb6831ff0e2/`) is not in the repository. No verdict on the candidate yet.
@@ -11,6 +11,8 @@ rerun, because the 600 archive (`artifacts/offdev-600-1790471557297701344/`, Dri
 | P1 split used unsalted SHA-256, not the fixed `half(id)` | The tool imports `half` from `reports/labels-3000/pick.py` (298/302 on the 600, per the review) |
 | P2 only the five items already in `ITEM_THRESHOLDS` were searched | Every labelled item except v9/v24 is searched, with a no-cut (argmax) option |
 | P2 Macro averaged 24 items, two of them unlabelled | Macro is over the labelled items (22) |
+| Round 2 P1: split-half pass judged cuts picked per half, not the full-pool cut that is reported | A full-pool cut is picked only if it beats the baseline item F1 on half A and on half B; `split_half_pass` also requires the final candidate's Macro to rise on each half (`final_by_half`) |
+| Round 2 P1: `item_p1` completeness checked by map count only | Every searched item needs `item_p1` on every notice, or the tool stops |
 
 Rerun, once the archive is back:
 
