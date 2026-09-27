@@ -33,7 +33,8 @@ from slot_gate import ITEMS, f1, read_labels  # noqa: E402
 MARGIN = 0.02     # the least held-in F1 gain a row must show, as in the slot-table fit
 
 # Relation rows read the verified purchase scope (`purchase_*`), never the raw model fact.
-GENERAL = [("purchase_general",), ("!catalogue_product",)]
+# A product outside the catalogue does not make the purchase a general good (construction stays other).
+GENERAL = [("purchase_general",)]
 SIZE_EXCEPTIONS = [(), ("priority_exception",), ("stated_exception",), ("priority_exception", "stated_exception")]
 
 
@@ -75,7 +76,7 @@ CANDIDATES = {
 
 # The scope each item's official name sets (docs/items.md). Every candidate's applies must name one slot of
 # every group, so no candidate can fire outside its item whatever the score says. Checked on import.
-GENERAL_SCOPE = {"purchase_general", "!catalogue_product"}
+GENERAL_SCOPE = {"purchase_general"}
 SCOPE = {
     "v2": [{"under_notice"}], "v4": [{"over_notice"}],
     "v6": [{"region_allowed"}], "v7": [{"region_allowed"}], "v5": [{"over_region_limit"}],
@@ -93,7 +94,7 @@ for _key, _candidates in CANDIDATES.items():
         # The selector picks clauses by trigger words, so a missing label never proves absence. A negated
         # relation slot is allowed only where it can do nothing but lower: the absence items' requirement.
         _negated = {n for n in _row[0] if n.startswith("!")}
-        assert _negated <= {"!catalogue_product"}, (_key, _row, "negated scope")
+        assert not _negated, (_key, _row, "negated scope")
         if _key.split("/")[0] not in ABSENCE:
             assert not any(n.startswith("!") for n in _row[1]), (_key, _row, "reads a missing label as absence")
 

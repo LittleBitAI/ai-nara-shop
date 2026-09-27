@@ -23,7 +23,7 @@ def judgment(**facts):
     return {script.COMPANY_FACTS_KEY: {**base, **facts}}
 
 
-def verified(reason="ok", rec=None, **facts):
+def verified(reason="decided", rec=None, **facts):
     """Company facts as `attach_company_facts` records them after the company-size gates."""
     parsed = {}
     script.attach_company_facts(parsed, judgment(**facts)[script.COMPANY_FACTS_KEY], reason,
@@ -139,7 +139,7 @@ class RelationTests(unittest.TestCase):
 
     def test_a_missing_label_never_raises_an_absence_and_a_label_lowers_it(self):
         absence = {"v10": (("purchase_competitive",), ("!entry_direct_production",), (), None)}
-        facts = verified(scope="competitive")
+        facts = verified("outside_general_scope", scope="competitive")
         self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=facts)["위반여부"], 0)
         self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=facts, v10=1)["위반여부"], 1)
         demand = labels({"id": self.clause_id, "kind": "direct_production", "stage": "entry"})
@@ -152,21 +152,34 @@ class RelationTests(unittest.TestCase):
         extra = PERFORMANCE + "\n낙찰자는 실적증명서를 제출"
         self.assertEqual(self.decide(evaluation, evidence=extra, v2=1)["위반여부"], 1)
 
-    def test_the_catalogue_vetoes_general_but_never_makes_the_purchase_competitive(self):
-        with mock.patch.object(script, "direct_production_demand", return_value=("직접생산", {"4321"})), \
-                mock.patch.object(script, "competitive_product", return_value=True):
-            general = script.relation_slots(verified(scope="general"), self.rec)
-            other = script.relation_slots(verified(scope="other"), self.rec)   # e.g. construction
-        self.assertEqual((general["purchase_general"], general["purchase_competitive"]), (False, False))
-        self.assertEqual((other["purchase_general"], other["purchase_competitive"]), (False, False))
-        self.assertTrue(general["scope_general"])        # the existing rows' slot is as before
+    def test_purchase_scope_is_what_the_company_size_verifier_settled(self):
+        def purchase(reason, scope="general", outside=False):
+            with mock.patch.object(script, "outside_catalogue", return_value=outside):
+                slots = script.relation_slots(verified(reason, scope=scope), self.rec)
+            return tuple(None if n in slots["unknown"] else slots[n]
+                         for n in ("purchase_general", "purchase_competitive"))
+        self.assertEqual(purchase("decided"), (True, False))
+        self.assertEqual(purchase("unknown_price"), (True, False))
+        self.assertEqual(purchase("competitive_by_catalogue"), (False, None))   # listed: not general, unproven
+        self.assertEqual(purchase("outside_general_scope", "other"), (False, False))   # e.g. construction
+        self.assertEqual(purchase("outside_general_scope", "competitive"), (False, True))
+        self.assertEqual(purchase("outside_general_scope", "competitive", outside=True), (False, False))
+        self.assertEqual(purchase("unresolved_high_joint_scope"), (None, None))
+        self.assertEqual(purchase("unverified_scope"), (None, None))
+        self.assertEqual(purchase("a_reason_added_later"), (None, None))
+        self.assertTrue(script.relation_slots(verified(scope="general"), self.rec)["scope_general"])   # as before
+
+    def test_every_company_size_outcome_has_a_purchase_scope(self):
+        import inspect, re
+        returned = set(re.findall(r'return [^,\n]*, "(\w+)"', inspect.getsource(script._company_size_bands)))
+        self.assertEqual(returned, set(script.PURCHASE_SCOPE_BY_REASON))
 
     def test_a_scope_the_quotation_gate_rejected_decides_nothing(self):
         absence = {"v10": (("purchase_competitive",), ("!entry_direct_production",), (), None)}
         parsed = verified("unverified_scope", scope="other")
         self.assertIn("purchase_competitive", script.relation_slots(parsed, self.rec)["unknown"])
         self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=parsed, v10=1)["위반여부"], 1)
-        rejected = verified(scope="other")
+        rejected = verified("outside_general_scope", scope="other")
         self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=rejected, v10=1)["위반여부"], 0)
 
     def test_an_unknown_scope_or_region_never_raises(self):

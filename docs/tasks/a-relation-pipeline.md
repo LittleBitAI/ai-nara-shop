@@ -59,19 +59,25 @@ v2 net fell 7 → −1.
      "Shown" means whole shown clauses and headings, plus pieces of consecutive shown clauses at the edges
      of a window quote. On dev, all six v4 clause-rule window quotes pass this check. Everywhere else a
      missing label is unknown.
-   - A scope or exception slot that does not read the labels (price band, product scope, `negotiation`,
-     `priority_exception`) is known unless `slots["unknown"]` lists it.
-   - Relation rows read the purchased subject only as verified: `purchase_general` / `purchase_competitive`.
-     They are known only when the scope passed the company-size quotation gate; `attach_company_facts`
-     records that as `scope_verified`, and `run()` and replay share it. It also records `software_verified`
-     (the v20 gate: the deliverable quote verifies) and `priority_verified` (the v16/v18 gate: "no", or
-     "yes" with a verified quote), using `quote_verified`, the gates' own quotation check. Unverified,
-     `software` and `priority_exception` are unknown to relation rows. The provided catalogue vetoes
-     "general" for a listed product (`competitive_by_catalogue`), but a listed component never makes the
-     purchase competitive. The older `scope_general` / `scope_competitive` are unchanged for the existing
-     rows: replaying the real off-dev 600 case with `ab9eb9e` and with this code gives the same CSV. It is listed for no price, a scope
-     or priority fact the model gave as unknown, no product code, and no registered estimated price or
-     region limit (`region_allowed`, `over_region_limit`).
+   - A scope or exception slot that does not read the labels is known unless `slots["unknown"]` lists it.
+     It is listed for no price, and for no registered estimated price or region limit (`region_allowed`,
+     `over_region_limit`).
+   - Every such slot a relation row reads comes from what an existing gate verified, never from the raw
+     model answer. `attach_company_facts` records it, and `run()` and replay share it:
+     - `purchase_general` / `purchase_competitive` come from `purchase_scope`, the outcome of
+       `_company_size_bands` mapped by `PURCHASE_SCOPE_BY_REASON`. For example `decided` is general,
+       `outside_general_scope` is the verified competitive or other, `competitive_by_catalogue` is not
+       general with the purchase unproven, and `unverified_scope` / `unresolved_high_joint_scope` are
+       unknown. An outcome not in the table is unknown, and a test keeps every return of that function in
+       the table.
+     - A verified competitive answer still yields to the catalogue's veto on the registered codes
+       (`outside_catalogue`), as final post-processing does. A product outside the catalogue never stands in
+       for a general purchase (construction stays other).
+     - `software` and `priority_exception` are known only when their gates verify them (`software_verified`:
+       the deliverable quote; `priority_verified`: "no", or "yes" with a verified quote), through
+       `quote_verified`, the gates' own quotation check.
+     - The older `scope_general` / `scope_competitive` / `catalogue_product` are unchanged for the existing
+       rows. Replaying the real off-dev 600 case with `ab9eb9e` and with this code gives byte-identical CSVs.
    - Applies and requirement combine by "and", exceptions by "or". Yes raises (with the clause as evidence);
      no sets the cell to 0; unknown leaves it.
 
