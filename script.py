@@ -3436,21 +3436,26 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 break
         out["v23"] = ({"위반여부": 1, "근거문구": evidence} if evidence
                       else {"위반여부": 0, "근거문구": ""})
-    # Facts dev-fit (2026-09-25): on a no-bid contract (수의계약) these items are never positive in dev
-    # but fired 2·5·3·4 times. S7-4 names small negotiated quotes as v13's exception; the rest is
-    # fitted to dev on purpose (v9 loses one TP for four FPs). Dev +0.0155.
-    if (rec.get("meta") or {}).get("계약방법") == "수의계약":
-        for item in NO_BID_ZERO_ITEMS:
-            out[item] = {"위반여부": 0, "근거문구": ""}
     # v9 is goods only. 정부 입찰·계약 집행기준 제5조 names "물품의 제조ㆍ구매입찰"; dev has
     # v9=1 in 6 of 78 goods notices and 0 of 122 services. The article does not settle mixed
     # services that deliver goods, so this is also fitted to dev (2026-09-25).
     if not str((rec.get("meta") or {}).get("업무구분") or "물품").startswith("물품"):
         out["v9"] = {"위반여부": 0, "근거문구": ""}
-    return apply_clause_rules(out, rec)
+    out = apply_clause_rules(out, rec)
+    # No-bid contracts (수의계약) last, so no raise above can undo it. Dev gold puts 6 of its 153
+    # positive cells on its 35 수의계약 notices (18% of notices, ~27 cells expected at an even spread);
+    # the items that have one keep their cells, except v9 (given up on 2026-09-25). Fitted to dev on purpose and submitted as a server
+    # experiment (user decision 2026-09-27): the unlabeled pool is 45% 수의계약 and a quarter of the
+    # current positive cells sit there. First version (2026-09-25) zeroed only v9, v10, v13, v18.
+    if (rec.get("meta") or {}).get("계약방법") == "수의계약":
+        for item in NO_BID_ZERO_ITEMS:
+            out[item] = {"위반여부": 0, "근거문구": ""}
+    return out
 
 
-NO_BID_ZERO_ITEMS = ("v9", "v10", "v13", "v18")
+# Items with a dev gold positive on a 수의계약 notice keep their cells there; v9's one is given up (2026-09-25).
+NO_BID_KEEP_ITEMS = ("v3", "v4", "v17", "v21", "v24")
+NO_BID_ZERO_ITEMS = tuple(v for v in ITEMS if v not in NO_BID_KEEP_ITEMS)
 
 
 # ===== Rules replayed on dev 200 and outside dev (2026-09-26) =====

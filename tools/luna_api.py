@@ -53,7 +53,8 @@ def post(payload, timeout, retries=3):
                 return json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", "replace")[:300]
-            if exc.code not in (429, 500, 502, 503) or attempt == retries - 1:
+            # An empty balance also answers 429; retrying it only hides the cause (labels-3000, 2026-09-27).
+            if exc.code not in (429, 500, 502, 503) or "insufficient_quota" in detail or attempt == retries - 1:
                 raise ValueError(f"HTTP {exc.code}: {detail}") from exc
         except (urllib.error.URLError, TimeoutError) as exc:
             if attempt == retries - 1:

@@ -6,23 +6,16 @@ reads: [docs/workflow.md]
 sources: [reports/wiki-rag-pilot, reports/team-c/a8-v20-annex/results.md, reports/runs/colab-1790141677344456786, docs/tasks.md]
 ---
 
-# 가설 PR 은 회차가 먼저, 리뷰 루프는 효과가 보인 뒤
+# Hypothesis PRs: Rounds first, review loops after effects are shown
 
-규칙. 이 저장소에서 가설 브랜치의 PR 을 열었으면 다음 안내는 리뷰 라운드가 아니라 회차다.
-모델 뒤 단계만 바꿨으면 `tools/replay_run.py` 재생, 프롬프트·스키마를 바꿨으면 Colab 회차
-실행 안내(`run-request.md`)를 먼저 낸다. 리뷰 루프는 회차에서 대상 항목 TP/FP/FN이 움직인
-뒤, 모델 앞 단계 후보면 같은 ZIP 두 번째 회차로 churn을 재고 무라벨 발화율까지 낸 다음
-(재생 후보는 churn이 없어 두 번째 회차가 없다), 머지·제출 전에 돌린다. 무라벨 6,000건 실제 모델 수집은 첫 회차 판정의 조건이 아니다. 효과가 없으면 보고서만
-남기고 닫는다 — 리뷰 0라운드. 순서의 원본은 `docs/workflow.md` W5 다.
+Rule. If you open a PR for a hypothesis branch in this repository, the next instruction is not a review round, but a round.
+If you only changed the steps after the model, run `tools/replay_run.py`; if you changed the prompt or schema, run the Colab round.
+Issue the execution instruction (`run-request.md`) first. The review loop is conducted after the target item TP/FP/FN changes in the round. If it is a candidate for the steps before the model, measure churn with a second round of the same ZIP and even calculate the unlabeled utterance rate (re-run candidates have no churn, so there is no second round), and run it before merging or submitting. Collecting 6,000 unlabeled actual model samples is not a condition for the first round judgment. If there is no effect, leave only the report and close it — review round 0. The original source of the order is `docs/workflow.md` W5.
 
-- 회차 전에 발동만 확인한다(주입이 프롬프트에 들어갔나, 규칙이 대상 셀을 바꾸나). 자가 점검이며
-  독립 리뷰로 적지 않는다. 버그로 고쳐 다시 돌리는 것은 발동 확인이 실패했을 때뿐이다.
-  발동이 확인됐는데 대상 셀·TP/FP/FN이 그대로면 가설 기각이다.
-- 가설이 아닌 공용 인프라(관측·감사·재생 도구)와 `main`·운영 `script.py`에 들어가는 코드는
-  예외 없이 리뷰를 거친다. 사용자가 리뷰를 먼저 하라고 하면 그 지시가 우선한다.
+- Before the round, only check the activation (is the injection in the prompt, does the rule change the target cell?). This is a self-check and is not recorded as an independent review. Fixing it as a bug and running it again is only for when the activation check fails. If the activation is confirmed but the target cell or TP/FP/FN remains the same, the hypothesis is rejected.
+- Code that goes into common infrastructure (observation, audit, re-run tools) that is not a hypothesis, and `main`/operational `script.py`, goes through review without exception. If a user asks to review first, that instruction takes precedence.
 
-왜. 가설 PR 마다 리뷰가 6라운드 안팎 돈 뒤 회차에서 기각됐다. PR #82 는 두 회차 1,200회 호출에서
-인용 0건, B1 은 v18 FN 6→6 — 모델의 반응이 결과를 정했고 어느 라운드도 그것을 바꾸지 못했다.
-A8 은 리뷰 7라운드와 관측 배선 10라운드를 거친 뒤 두 회차에서 바뀐 공고 0건으로 기각됐다.
+Why. For every hypothesis PR, about 6 rounds of reviews were conducted, only to be rejected in the round. PR #82 had 0 citations in 1,200 calls over two rounds, and B1 had v18 FN 6→6 — the model's response determined the result, and no round could change it.
+A8 was rejected after 7 rounds of reviews and 10 rounds of observation wiring, with 0 notices changed in two rounds.
 
-어겼을 때. 가장 비싼 단계인 리뷰가 버려질 가설에 먼저 쓰이고, 회차는 며칠씩 밀린다.
+When violated. The most expensive step, the review, is used first on a hypothesis that will be discarded, and the round is delayed by several days.

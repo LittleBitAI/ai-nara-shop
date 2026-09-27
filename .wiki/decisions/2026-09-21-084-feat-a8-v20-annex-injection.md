@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "feat: A8 — v20 경로에 지침 제2조·별표 1 주입, CPU 준비·GPU 미실행"
+title: "feat: A8 — Injection of Article 2 and Annex 1 of the guidelines into the v20 path, CPU preparation, GPU not executed"
 pr: 84
 merged: 2026-09-21
 branch: "feat/a8-v20-annex-injection"
 ---
 
-# feat: A8 — v20 경로에 지침 제2조·별표 1 주입, CPU 준비·GPU 미실행
+# feat: A8 — Injection of Article 2 and Annex 1 of the guidelines into the v20 path, CPU preparation, GPU not executed
 
-무엇. RAG 주입 파이프라인 2단계(주입). `company_size` 시스템 프롬프트에 제공 지침 제2조(305자)와 `[별표 1]`(629자) 원문만 붙이고, control/후보를 같은 ZIP으로 두 회차 비교할 준비를 끝냈다. 독립 리뷰 7라운드에서 P1 12건·P2 5건을 잡고 `머지 허용`을 받았다. 설계·통과 조건은 [착수서](docs/tasks/a8-v20-annex-injection. …
+What. RAG injection pipeline stage 2 (injection). Attached only the original text of Article 2 of the guidelines (305 characters) and `[별표 1]` (629 characters) to the `company_size` system prompt, and finished preparing to compare the two rounds with control/candidates in the same ZIP. Caught 12 P1 and 5 P2 issues in the 7th round of independent review and received `머지 허용`. Design and passing conditions are in the [Task Document](docs/tasks/a8-v20-annex-injection. …
 
-왜. (PR 본문에 이유 절이 없다. 이 결정의 근거는 기록되지 않았다)
+Why. (There is no reason section in the PR body. The evidence for this decision was not recorded.)
 
-출처. PR #84 · `feat/a8-v20-annex-injection`
+Source. PR #84 · `feat/a8-v20-annex-injection`

@@ -3,45 +3,34 @@ scope: project
 severity: contract
 triggers: ["게이트", "검증기", "인용 검증", "quoted", "restore_spacing", "evidence_refutes", "조기 반환", "early return", "후처리", "postprocess"]
 domain: 'judgement-pipeline'
-title: "fix: 검증기가 옆에 있는데 게이트가 안 부른다 — 하루에 세 번 나온 결함 가족"
+title: "fix: The gate does not call the validator even though it is right next to it — A defect family that appeared three times in one day"
 ---
 
-# 검증기가 옆에 있는데 게이트가 안 부른다
+# The gate does not call the validator even though it is right next to it
 
-2026-09-22 하루에 같은 모양의 결함을 세 곳에서 찾았다. 셋 다 "판정에 필요한 검사기가
-이미 코드에 있는데 게이트가 그것을 호출하지 않는" 형태다. 둘은 점수를 움직였고
-하나는 중립이었지만, 셋을 따로 고치는 동안 같은 병이라는 것을 세 번째에야 알아봤다.
+2026-09-22 I found the same type of defect in three places in one day. All three were in the form of "the validator needed for the judgment is already in the code, but the gate does not call it." Two moved the score and one was neutral, but I only realized it was the same disease on the third one while fixing them separately.
 
-| 자리 | 무엇이 빠졌나 | 증상 |
+| Location | What is missing | Symptom |
 | --- | --- | --- |
-| `evidence_refutes()` | 맨 위 `if not evidence: return False` 가 v24 가지보다 앞에 있었다 | v24 오탐의 대부분이 근거 빈 양성이라 대조 검사에 도달조차 못 했다. v24 `5/28/3` 에서 멈췄고 가지를 조기 반환 위로 올려야 `4/12/4` 가 됐다 |
-| `competitive_product()` 조회 | 직생 절이 지목한 코드만 조회했다 | `PPS-DEV-060` 은 본문에 고시 일치 코드 3개를 적고도 카탈로그가 말할 기회가 없었다 |
-| `_company_size_bands()` 의 `quoted()` | `restore_spacing()` 을 안 불렀다 | 줄바꿈이 공백으로 눌린 정확한 인용이 미검증으로 떨어졌다. `PPS-DEV-043`·`PPS-DEV-22` 가 `unverified_qualification` 으로 막혔고 둘 다 v18 양성이다 |
+| `evidence_refutes()` | The top `if not evidence: return False` was before the v24 branch | Most of the v24 false positives were evidence-empty positives, so they did not even reach the contrast test. It stopped at v24 `5/28/3`, and the branch had to be moved above the early return to become `4/12/4` |
+| `competitive_product()` lookup | Only looked up the code pointed out by the direct generation clause | `PPS-DEV-060` wrote 3 code matches in the body, but the catalog did not have a chance to speak |
+| `_company_size_bands()`'s `quoted()` | Did not call `restore_spacing()` | An exact citation where a line break was pressed as a space fell as unverified. `PPS-DEV-043`·`PPS-DEV-22` were blocked by `unverified_qualification`, and both are v18 positives |
 
-## 왜 이 모양이 반복되나
+## Why does this pattern repeat?
 
-게이트와 검증기를 따로 만들기 때문이다. 검증기는 "이 인용이 원문에 있는가" 를 제대로
-답하도록 공들여 짜는데, 게이트는 그 앞에서 값싼 조건으로 먼저 걸러낸다. 그 값싼 조건이
-검증기가 답할 수 있는 경우까지 쳐내면, 검증기는 멀쩡한 채로 호출되지 않는다.
+Because the gate and the validator are created separately. The validator is carefully crafted to properly answer "is this citation in the original text?", but the gate filters it out first with a cheap condition in front of it. If that cheap condition cuts out cases that the validator could answer, the validator is not called even though it is perfectly fine.
 
-`verify_document_requirements()` 의 `quoted()` 는 `restore_spacing()` 을 부른다.
-`_company_size_bands()` 의 `quoted()` 는 안 불렀다. 같은 이름의 함수 둘이 같은 인용을
-다르게 판정하고 있었고, 어느 쪽도 틀렸다고 말할 수 없는 모양이라 오래 살아남았다.
+`verify_document_requirements()`'s `quoted()` calls `restore_spacing()`.
+`_company_size_bands()`'s `quoted()` did not call it. Two functions with the same name were judging the same citation differently, and since neither could be said to be wrong, they survived for a long time.
 
-## 어떻게 잡나
+## How to catch it
 
-같은 판정을 하는 함수가 둘 이상이면 그 둘이 같은 검증기를 부르는지 본다. 이름이 같으면
-특히 그렇다 — 이름이 같다는 것은 같은 판정이라는 뜻이고, 다르게 판정하면 둘 중 하나는
-버그다. 조기 반환을 넣을 때는 그 아래 가지들이 그 조건과 무관하게 답할 수 있는지 본다.
+If there are two or more functions that make the same judgment, check if they both call the same validator. This is especially true if the names are the same — the same name means the same judgment, and if they judge differently, one of the two is a bug. When adding an early return, check if the branches below it can answer regardless of that condition.
 
-세 번째 것은 회귀 검사를 남겼다 —
-`tests/test_baseline.py::test_both_quote_gates_restore_spacing_before_judging` 이
-두 `quoted()` 의 소스에 `restore_spacing` 이 있는지 검사한다. 수리를 되돌려 실제로
-빨개지는 것을 확인했다. 통과만 보면 아무것도 안 하는 검사와 못 가른다.
+I left a regression test for the third one —
+`tests/test_baseline.py::test_both_quote_gates_restore_spacing_before_judging` checks if `restore_spacing` exists in the source of the two `quoted()`s. I reverted the fix to confirm that it actually turns red. If you only look at the pass, you cannot distinguish it from a test that does nothing.
 
-## 무엇을 증명하지 않나
+## What is not proven
 
-이 수리들이 서버 점수를 올린다는 근거는 없다. 앞의 둘을 담은 제출 `227631f` 은
-dev 를 같은 원응답 재생으로 +0.015428 올렸는데 서버는 0.5084137874 → 0.5077356078
-(−0.0006781796) 이었다([결과](../../reports/submission-227631f-server-result.md)).
-세 번째는 dev 중립이다. 이 기록의 값어치는 점수가 아니라 결함 가족의 이름이다.
+There is no evidence that these repairs increase the server score. Submission `227631f`, which contained the first two, raised dev by +0.015428 with the same original response playback, but the server was 0.5084137874 → 0.5077356078 (−0.0006781796) ([Result ](../../reports/submission-227631f-server-result.md)).
+The third one is dev neutral. The value of this record is not the score, but the name of the defect family.

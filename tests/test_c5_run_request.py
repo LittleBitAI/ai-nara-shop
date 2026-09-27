@@ -30,6 +30,16 @@ CELLS = {1: ("SOURCE_MODE", "REPO_REF"), 18: ("RUN_DIAGNOSTIC", "DIAGNOSTIC_ARGS
 COMMAND = 'run_case("dev-debug", WORK / "open/dev.jsonl", args=DIAGNOSTIC_ARGS)'
 
 
+def plain(text: str) -> str:
+    """강조를 걷어낸다.
+
+    위키 lint 가 표 칸의 `**` 를 지운다(`6c263c9`). 이 검사가 고정하는 것은 요청서에
+    **어떤 문구가 적혀 있는가**이지 그 문구가 굵은가가 아니다. 강조를 문자로 박아 두면
+    문서 서식 정리 한 번에 회차 요청서 검사가 통째로 빨개진다 — 실제로 그렇게 됐다.
+    """
+    return text.replace("**", "")
+
+
 def cells():
     data = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     return ["".join(cell["source"]) for cell in data["cells"]]
@@ -97,8 +107,8 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         기준이 전부 절대값이면 무효과 후보가 B·C·D 를 통과한다(기준 v11 이 2/3/4 라
         FP 3 ≤ 6). **움직였는가를 먼저 묻는 기준 Z** 가 있어야 한다.
         """
-        self.assertIn("| **Z** |", self.request, "기준 Z 가 없다")
-        self.assertIn("FN **감소 ≥ 1**", self.request)
+        self.assertIn("| Z |", plain(self.request), "기준 Z 가 없다")
+        self.assertIn("FN 감소 ≥ 1", plain(self.request))
         self.assertIn("가설 기각", self.request,
                       "Z 실패 시 기각한다는 말이 없다")
 
@@ -109,13 +119,13 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         한다. churn 범위(17~45셀)는 **회차1↔회차2** 에만 쓴다. 한 칸에 섞으면 대상 밖
         45셀까지 승인된다.
         """
-        self.assertIn("| **D1** |", self.request)
-        self.assertIn("| **D2** |", self.request)
+        self.assertIn("| D1 |", plain(self.request))
+        self.assertIn("| D2 |", plain(self.request))
         # D1 은 여러 표에 나온다 — 기준 정의 · 감사 지시 · 결과값.
         # **규칙을 적는 줄**만 "정확히 0" 을 요구한다. 결과값 줄(`| **D1** | 0 | 0 | 0 |`)은
         # 수를 적는 자리이므로 문구를 요구하지 않는다.
         # **어느 줄에도** churn 범위가 섞여서는 안 된다 — 그것이 이 [P2] 의 핵심이다.
-        d1 = [line for line in self.request.splitlines() if line.startswith("| **D1** |")]
+        d1 = [line for line in plain(self.request).splitlines() if line.startswith("| D1 |")]
         self.assertTrue(d1, "D1 줄이 없다")
         for line in d1:
             self.assertNotIn("17~45", line, "D1 에 churn 범위가 섞였다")
@@ -123,7 +133,7 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         self.assertTrue(rules, "D1 의 규칙을 적는 줄이 없다")
         for line in rules:
             self.assertIn("정확히 0", line)
-        d2 = [line for line in self.request.splitlines() if line.startswith("| **D2** |")]
+        d2 = [line for line in plain(self.request).splitlines() if line.startswith("| D2 |")]
         self.assertTrue(d2, "D2 줄이 없다")
         self.assertTrue(any("17~45" in line for line in d2))
 

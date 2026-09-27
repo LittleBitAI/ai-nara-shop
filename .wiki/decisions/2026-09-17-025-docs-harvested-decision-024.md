@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "docs: 캔 결정 기록 하나를 커밋하고 가드가 선 것을 확인한다"
+title: "docs: Commit one can decision record and confirm that the guard is standing"
 pr: 25
 merged: 2026-09-17
 branch: "docs/harvested-decision-024"
 ---
 
-# docs: 캔 결정 기록 하나를 커밋하고 가드가 선 것을 확인한다
+# docs: Commit one can decision record and confirm that the guard is standing
 
-무엇. 공용 위키 `sync`가 PR #24에서 캔 결정 기록을 커밋한다.
+What. The public wiki `sync` commits a can decision record in PR #24.
 
-왜. 허브 가드([PR #6](https://github.com/LittleBitAI/ai-coding-agent-wiki-public/pull/6))가 실제 저장소에서 서는지 확인했다. `sync.new_decisions`를 이 저장소에 직접 걸었다. ``` 새로 쓴 것: ['2026-09-17-024-fix-decision-numbering-and-cpu-replay'] 기존 파일 중 바뀐 것: 없음 ← 가드가 섰다 사라진 것: 없음 ``` 앞서 날아갔던 013·015·016도 그대로다. LF·no-BOM으로 쓴 것도 확인했다. 이것으로 직전 PR의 "미확인" 하나가 닫힌다. 그리고 이번 PR 본문에 `## 변경 요약`·`## 변경 이유` 절을 둔 결과가 눈에 보인다 …
+Why. Confirmed that the hub guard ([PR #6](https://github.com/LittleBitAI/ai-coding-agent-wiki-public/pull/6)) stands in the actual repository. Attached `sync.new_decisions` directly to this repository. ``` 새로 쓴 것: ['2026-09-17-024-fix-decision-numbering-and-cpu-replay'] 기존 파일 중 바뀐 것: 없음 ← 가드가 섰다 사라진 것: 없음 ``` The 013, 015, and 016 that flew off earlier remain as they are. Confirmed that it was written in LF/no-BOM. With this, one "unconfirmed" item from the previous PR is closed. And the result of placing the `## 변경 요약`·`## 변경 이유` sections in the body of this PR is visible …
 
-출처. PR #25 · `docs/harvested-decision-024`
+Source. PR #25 · `docs/harvested-decision-024`

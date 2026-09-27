@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "feat: A5 진단과 H2 무라벨 GPU 회차 준비"
+title: "feat: A5 diagnosis and H2 unlabeled GPU round preparation"
 pr: 71
 merged: 2026-09-21
 branch: "LittleBitAI/a5-label-wall"
 ---
 
-# feat: A5 진단과 H2 무라벨 GPU 회차 준비
+# feat: A5 diagnosis and H2 unlabeled GPU round preparation
 
-무엇. 최신 추가는 A5 H3 지정 조건 관측 파일럿입니다. `colab-a5-scope.ipynb`는 `173533093617e340f4d4d5858d39766726cf0488`를 고정 실행합니다. 같은 company_size 호출에서 지정 코드·조건 인용·조건 상태를 먼저 출력하고 기존 H2 소비자는 유지합니다. 대조군/후보 dev 200건과 진단 5건씩, 별도 런타임에서 순서를 바꿔 반복합니다. …
+What. The latest addition is the A5 H3 specified condition observation pilot. `colab-a5-scope.ipynb` executes `173533093617e340f4d4d5858d39766726cf0488` fixedly. In the same company_size call, it first outputs the specified code, condition citation, and condition status, and maintains the existing H2 consumer. 200 control/candidate dev cases and 5 diagnosis cases each are repeated in separate runtimes with the order swapped. …
 
-왜. 20,000건 전수 수집을 채택 판단의 필수 선행 조건으로 삼았던 계획을 변경합니다. 남은 18회차를 연속 실행하기보다 확보한 술어 통과 83건(dev 9 + 무라벨 74)의 원문 타당성 및 입력 분포를 먼저 감사합니다. 2,000건을 새 만능 통과선으로 정하거나 배율 1.033을 일반화 통과로 선언하지 않습니다. `complete=false`는 전수 미완료라는 정확한 의미로 유지합니다. 브리프의 Wilson·델타법 산술은 재현됐습니다. 다만 dev 모집단 비율을 추정하는 모델과 고정 dev/유한 무라벨 전체의 경험적 비율은 다릅니다. 전수에서도 RSE 57.6%가 반드시 남는다는 해석은 성립하지 않습니다. 순서 표집의 대표성, 군집 및 dev에서 후보를 고른 효과도 이 근사식이 보장하지 않습니다. …
+Why. We are changing the plan that adopted full collection of 20,000 cases as an essential prerequisite for judgment. Rather than executing the remaining 18 rounds consecutively, we first appreciate the original text validity and input distribution of the 83 predicate passes secured (9 dev + 74 unlabeled). We do not set 2,000 cases as the new universal pass line or declare a multiplier of 1.033 as the generalized pass. `complete=false` is maintained with the precise meaning of incomplete full collection. The Wilson/delta method arithmetic in the brief has been reproduced. However, the model estimating the dev population ratio is different from the empirical ratio of the fixed dev/finite unlabeled total. The interpretation that an RSE of 57.6% necessarily remains even in full collection does not hold. This approximation formula does not guarantee the representativeness of sequential sampling, nor the effect of selecting candidates from clusters and dev. …
 
-출처. PR #71 · `LittleBitAI/a5-label-wall`
+Source. PR #71 · `LittleBitAI/a5-label-wall`

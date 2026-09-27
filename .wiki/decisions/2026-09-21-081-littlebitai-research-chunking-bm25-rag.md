@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "feat: RAG 주입 파이프라인 1단계 — 법령 구조 인지 조회 + v24 메타 대조"
+title: "feat: RAG injection pipeline phase 1 — statute structure recognition lookup + v24 meta comparison"
 pr: 81
 merged: 2026-09-21
 branch: "LittleBitAI/research-chunking-bm25-rag"
 ---
 
-# feat: RAG 주입 파이프라인 1단계 — 법령 구조 인지 조회 + v24 메타 대조
+# feat: RAG injection pipeline phase 1 — statute structure recognition lookup + v24 meta comparison
 
-무엇. RAG 주입 파이프라인을 고도화한다. 이 PR 은 그 1단계인 조회까지다. 프롬프트에는 아직 아무것도 넣지 않았다 — 조회가 틀리면 주입이 전부 그 위에 쌓이므로, 주입보다 먼저 만들고 먼저 리뷰받았다.
+What. Upgrade the RAG injection pipeline. This PR covers the first phase, which is the lookup. Nothing has been put into the prompt yet — since if the lookup is wrong, the injection will all be built on top of it, so it was created and reviewed before the injection.
 
-왜. `artifacts/review/rag-pipeline-round-{1..9}{,-result}.md`. 라운드 9 결과: `머지 허용` · 새 발견 없음. 라운드별 P1: 2 → 3 → 4 → 3 → 2 → 1 → 2 → 0. 21건 전부 "조용히 틀린 값을 돌려주는" 한 종류였다. 그중 다섯은 내 수정이 만든 회귀다. 주입을 얹기 전에 잡은 것 중 가장 위험했던 것: | 결함 | 주입 단계에서 무엇이 됐을까 | | --- | --- | | `국가계약법 시행령 제21조` → 법률 제21조 | 다른 법령의 원문을 근거로 주입 | | `제21조 제20항`(없는 항) → 조 전문 2,646자 | 요청하지 않은 조문 전체가 근거 | | `[별표1]` 본문 참조로 잘라 420,768자 → 11,267자 | v23 …
+Why. `artifacts/review/rag-pipeline-round-{1..9}{,-result}.md`. Round 9 results: `머지 허용` · No new findings. P1 per round: 2 → 3 → 4 → 3 → 2 → 1 → 2 → 0. All 21 cases were of the same type: "silently returning incorrect values." Five of them were regressions caused by my modifications. The most dangerous ones caught before adding the injection: | Defect | What would have happened at the injection stage | | --- | --- | | `국가계약법 시행령 제21조` → Article 21 of the Act | Injection based on the original text of another statute | | `제21조 제20항` (non-existent clause) → 2,646 characters of the full article | The entire article not requested as evidence | | `[별표1]` 420,768 characters cut to 11,267 characters by body reference → v23 …
 
-출처. PR #81 · `LittleBitAI/research-chunking-bm25-rag`
+Source. PR #81 · `LittleBitAI/research-chunking-bm25-rag`
