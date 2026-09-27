@@ -241,13 +241,25 @@ OWN_EXCEPTION = re.compile(
 # `해당 사업` …)이면 괜찮다. `해당하는` · `되는` 같은 관형형은 주제가 아니다. 실제 발화 18건의
 # 인용 뒤에는 주제가 하나도 없다. 한정(`부대장비에만` · `2권역만` · `…에 한하여`)도 같다.
 TOPIC = re.compile(r"[가-힣]+((?<![하되있없않])는|은|에는|에\s*대해서는|에\s*대하여는"
-                   r"|에만|(?<!지)만|에\s*한하여|에\s*한정하여|에\s*한해)(?=[\s,])")
+                   r"|에만|(?<!지)만|에\s*한(하여|정하여|해서?))(?=[\s,])")
 WHOLE_NOTICE = re.compile(r"(본|이|해당|당해)\s*(입찰|물품|사업|용역|계약|공고|구매|건|과업)\S*$")
 
 
 def partial_scope(head: str) -> bool:
     """인용과 서술어 사이(`head`)에 공고 전체가 아닌 주제가 서는가."""
     return any(WHOLE_NOTICE.search(head[:topic.start(1)]) is None for topic in TOPIC.finditer(head))
+
+
+# 서술어 **뒤**에서는 `는`·`은` 이 범위를 좁히지 않는다. 거기서는 그냥 뒤 절의 주어다 —
+# "적용하여 입찰참가자는 별도 서류를 낼 수 있다" · "적용하여 많은 업체가 참여할 수 있다".
+# 그래서 꼬리에서는 **한정 표지만** 센다. 뜻이 오직 좁히는 것뿐인 어미들이다.
+LIMITER = re.compile(r"[가-힣0-9]+(에만|(?<!지)만|에\s*한(하여|정하여|해서?)"
+                     r"|에\s*대해서는|에\s*대하여는)(?=[\s,])")
+
+
+def narrowed_after(rest: str) -> bool:
+    """서술어 뒤(`rest`)에서 적용 범위를 좁히는 한정이 서는가."""
+    return any(WHOLE_NOTICE.search(rest[:limit.start(1)]) is None for limit in LIMITER.finditer(rest))
 
 
 ASIDE = re.compile(r"\s*(여부|[^\s가-힣0-9A-Za-z.)\]}>」』])")
@@ -271,6 +283,20 @@ def aside_withdraws(clause: str, end: int) -> bool:
         aside = clause[opened.end():opened.end() + 25]
     return (REASON.search(aside) is None or ASIDE_NEGATIVE.search(aside) is not None
             or ASIDE_CLAUSE.search(aside) is not None)
+
+
+# 곁말을 받아들였다고 문장이 끝난 것이 아니다. 그 뒤에서 같은 적용을 거두어들일 수 있다 —
+# "제4호를 적용합니다(사유: …), 그러나 본 공고에는 적용하지 않습니다". `NEGATED` 는 서술어
+# **앞**만 보고 `aside_withdraws` 는 곁말 **안**만 보므로, 그 사이로 이 꼴이 빠져나갔다.
+# 좁게 잡는다 — 서술어 뒤에서 `적용·해당`이 **바로** 부정되는 경우만 철회로 읽는다. 결과의
+# 서술("적용하므로 … 제한이 없습니다")은 `적용`에 부정이 안 붙으므로 안 걸린다.
+RETRACTED = re.compile(r"(적용|해당)(하지|되지|치)?\s*(않|아니|못)|[미비]\s*적용"
+                       r"|적용\s*(제외|배제|불가|안\s*함)")
+
+
+def retracted_after(clause: str, end: int) -> bool:
+    """서술어 끝(`end`) 뒤에서 그 적용을 거두어들이는가."""
+    return RETRACTED.search(clause[end:]) is not None
 
 
 SENTENCE = 160
@@ -303,6 +329,7 @@ def competition_exception(rec: dict[str, Any]) -> bool:
             for found in APPLIED.finditer(clause):
                 if (NEGATED.search(clause[:found.end()]) is None and asserted(clause, found)
                         and not aside_withdraws(clause, found.end())
+                        and not retracted_after(clause, found.end())
                         and not partial_scope(clause[:found.start()])
                         and (not found.group().startswith("예외") or OWN_EXCEPTION.search(clause[:found.start()]))):
                     return True
@@ -310,12 +337,14 @@ def competition_exception(rec: dict[str, Any]) -> bool:
                 # 앞에 조건이 있으면("…에 해당하는 경우 대기업도 …") 가정이다.
                 if (NEGATED.search(clause[:found.end()]) is None and MODAL.search(clause[:found.start()]) is None
                         and not aside_withdraws(clause, found.end())
+                        and not retracted_after(clause, found.end())
                         and not partial_scope(clause[:found.start()])):
                     return True
             for found in NOT_SME_BID.finditer(clause):
                 head = clause[:found.start()]
                 if (NEGATED.search(head) is None and MODAL.search(head) is None
                         and not aside_withdraws(clause, found.end())
+                        and not retracted_after(clause, found.end())
                         and not partial_scope(clause[:found.start()])):
                     return True
     return False
@@ -328,6 +357,12 @@ def asserted(clause: str, found: re.Match) -> bool:
         return True
     rest = clause[found.end():]
     if DECLARATIVE_END.search(rest) is None:
+        return False
+    # `하여` 는 앞뒤를 한 문장으로 잇는다. 그러므로 범위를 좁히는 한정이 **뒤 절**에 설 수도
+    # 있다 — "예외를 적용하여 부대장비만 일반입찰로 구매한다". 앞만 보면 그것을 놓친다.
+    # `competition_exception` 이 인용~서술어 사이를 보고, 여기가 서술어 뒤를 본다.
+    # 꼬리에서는 `partial_scope` 가 아니라 `narrowed_after` 다 — 이유는 `LIMITER` 위에 있다.
+    if narrowed_after(rest):
         return False
     modal = MODAL.search(rest)
     if modal is None:
@@ -342,7 +377,7 @@ def asserted(clause: str, found: re.Match) -> bool:
 
 
 def postprocess(parsed: dict[str, Any], rec: dict[str, Any]):
-    """운영 후처리를 낸 뒤, 예외 공고의 네 항목만 0 으로 닫는다.
+    """운영 후처리를 낸 뒤, 예외 공고의 `ITEMS` 두 항목(v10·v11)만 0 으로 닫는다.
 
     닫기만 한다. 0 을 1 로 만들지 않는다. 근거문구는 비운다.
     """
