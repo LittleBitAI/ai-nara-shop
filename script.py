@@ -181,10 +181,11 @@ LOGPROBS_K = 5
 # own quote. On the five saved sets no value rose; v6 stays at 0.6 because moving it only swapped
 # two e6 quotes that way (review pr146 round 1).
 ITEM_THRESHOLDS: Dict[str, float] = {
-    "v1": 0.97, "v4": 0.995, "v6": 0.6, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
+    "v1": 0.97, "v3": 0.95, "v4": 0.995, "v6": 0.6, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
 }
-# v3's 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive
-# (re-tuned on the bundle: 0.715215 without it vs 0.715217 with it).
+# v3's former 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive.
+# The fixed off-dev-600 gate later selected 0.95: Macro 0.499681 -> 0.508940, both split halves
+# improve, trusted net guard passes, and the matching saved-response dev replay drops 0.002778 (< 0.01).
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
