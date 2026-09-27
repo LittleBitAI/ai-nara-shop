@@ -97,11 +97,21 @@ py -X utf8 tools/replay_run.py --case reports/runs/colab-1790445336782946136/var
 
 ## 5. 회차용 커밋
 
-브랜치 `run/c-fewshot-v18` 을 푸시한 뒤 40자 SHA 를 여기 적는다.
+```
+REPO_REF = "d92e0a36293eb801c68b9b7e84d51280d73634c1"
+```
 
+**이 커밋이 `script.py` 를 담은 커밋이다.** 이 문서의 SHA 는 그 뒤 커밋에 들어가므로
+(문서가 자기 커밋 SHA 를 담을 수 없다) 브랜치 tip 과 `REPO_REF` 가 다를 수 있다.
+**`script.py` 는 둘 사이에 안 바뀐다** — 확인하려면:
+
+```bash
+git diff --stat d92e0a36293eb801c68b9b7e84d51280d73634c1 run/c-fewshot-v18 -- script.py
+# 빈 출력이어야 한다
 ```
-REPO_REF = "<이 브랜치의 40자 커밋 SHA>"
-```
+
+`origin/main` 대비 이 브랜치가 바꾼 것은 `script.py` **한 파일 41줄**과
+`reports/team-c/c-fewshot/` 문서뿐이다.
 
 ## 6. 이 회차가 답하지 않는 것
 
