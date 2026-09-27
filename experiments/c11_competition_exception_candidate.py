@@ -24,6 +24,13 @@
   낱말 `예외` 하나로는 안 된다
 - 부정 표지 — 서술어 뒤(`않` · `못`), 서술어 앞(`안 적용` · `못 적용`), 명사 뒤(`불가` · `불허` ·
   `배제` · `없` · `아니`). 하나라도 있으면 적용으로 읽지 않는다
+- 대상 — 적용하는 것이 **이 예외**여야 한다. 목적어는 `예외`(인용한 조문이나 중소기업자간
+  경쟁입찰의 것) 이거나 인용 바로 뒤의 조문(`제4호를`)이다. 사이에 `대신` 이나 다른 법령 인용이
+  끼면 안 된다
+- 곁말 — 서술어 바로 뒤에 부호로 여는 곁말이 붙으면 그것이 사유(`사유` · `근거` · `경우` ·
+  `필요`)일 때만 받는다. 서식 값(`(■아니오)`) · 삭제 · 예시 · 뒤로 미룸 · 일부 한정은 적용이 아니다
+- 범위 — 인용과 서술어 사이에 공고 전체가 아닌 주제(`부대장비는` · `2권역에 대해서는`)가 서면
+  일부에만 걸린 말이라 닫지 않는다
 
 문장 끝은 첫 `.` 이나 `※` 까지, 길이는 인용 뒤 160자까지다. 공백은 먼저 한 칸으로 접는다
 (원문이 문장 중간에서 줄을 바꾼다).
@@ -110,7 +117,7 @@ EXCEPTION = re.compile(r"(중소기업제품\s*구매촉진|판로지원)[^\n]{0
 # 인용 뒤 같은 문장에서 본다. 낱말이 아니라 **긍정 서술어**를 찾는다 — 적용·해당이
 # 목적어(예외를·규정을·제4호를)나 `예외에` 바로 뒤에서 긍정 어미로 끝나야 한다.
 # `적용하지`·`해당하는지` 는 어미가 달라 안 걸린다. 어미 없이 끝나는 명사형(`예외 적용`)은
-# 거기서 절이 끝날 때만 받는다 — 문장 끝이나 다음 항목의 시작(`<` `(` `[` 숫자).
+# 거기서 절이 끝날 때만 받는다 — 문장 끝, 닫는 괄호, 다음 항목의 시작(`<` `(` `[` 숫자).
 # `예외 적용 여부: 미해당` 처럼 뒤에 말이 이어지면 서술이 아니라 항목 이름이다.
 # 어미는 **거기서 끝나야** 한다. 한글이 더 붙으면 더 긴 어미의 앞부분이다 — `한다면`(조건) ·
 # `한다고`(인용) · `하여야`(의무) · `진행할 수`(가능) 는 이 공고가 적용한다는 서술이 아니다.
@@ -120,10 +127,15 @@ EXCEPTION = re.compile(r"(중소기업제품\s*구매촉진|판로지원)[^\n]{0
 # 서법을 물려받는다 — "적용하여 진행할 수 있다"(가능) · "적용하여 입찰하는 경우 …"(조건) 는
 # 적용한다는 서술이 아니다. 그래서 `하여` 뒤는 문장 끝까지 조건·가능·목적·의문·의무 구문이
 # 없고 평서 종결어미로 끝나야 한다(`MAIN_ASSERTED`).
+#
+# 적용하는 **대상**은 예외여야 한다. 목적어는 `예외` 이거나 인용한 조문 자체 — 인용 바로
+# 뒤에서(`제4호를` · `제4호 규정을` · `을`) — 일 때만 받는다. "제4호의 예외 대신 일반 규정을
+# 적용합니다" 의 `규정을` 은 인용과 떨어져 있어 예외가 아니다. 실제 발화 18건의 목적어는
+# 전부 이 셋(`예외` · 인용 바로 뒤 · `경쟁입찰 외의 방법`) 중 하나다.
 _END = r"(?![가-힣])"
 APPLIED = re.compile(
-    rf"(예외\S{{0,2}}|[을를])\s*(적용|해당)((?P<e1>합니다|한다|함|하여|하므로|하며|됩니다|됨|되며){_END}"
-    r"|(?=\s*($|[<(\[0-9])))"
+    rf"(예외\S{{0,2}}|^\s*(제\s*\d+\s*호\s*)?(의\s*)?(규정\s*)?[을를])\s*(적용|해당)((?P<e1>합니다|한다|함|하여|하므로|하며|됩니다|됨|되며){_END}"
+    r"|(?=\s*($|[<(\[0-9)\]])))"
     rf"|경쟁입찰\s*외의\s*방법으로\s*(추진|구매|진행|입찰|계약)(?P<e2>함|합니다|한다|하여)?{_END}")
 MANNER = "하여"
 # 평서 종결 — 동사의 `-다`(한다·합니다·있습니다·있다) 와 명사형 `함·음·임·됨`.
@@ -198,7 +210,54 @@ NOT_SME_BID = re.compile(
 # 부정(`적용하지 않`·`안 적용`·`미적용`·`예외 적용 불가`)은 `APPLIED` 가 애초에 안 받는다.
 # 남는 것은 서술어 **앞**의 부정이다 — "예외에 해당하지 않으므로 일반 규정을 적용합니다".
 # 서술어 **뒤**의 부정은 결과의 서술이다 — "적용하므로 대기업의 참여 제한이 없습니다".
-NEGATED = re.compile(r"않|아니|없|못|불가|불허|배제|[안미]\s*(적용|해당)")
+# 같은 범위에서 예외를 **바꿔 치우는** 말도 본다 — `대신`("제4호 대신 …의 예외를 적용"), 그리고
+# 다른 법령 인용(`「` · `법 제N` · `시행령` · `제N조`). 그 뒤의 `예외` 는 인용한 조문의 것이 아니다.
+NEGATED = re.compile(r"않|아니|없|못|불가|불허|배제|[안미]\s*(적용|해당)|대신"
+                     r"|「|법\s*제\s*\d|시행령|제\s*\d+\s*조")
+# `예외` 도 누구의 예외인지 본다. 인용한 조문의 것(인용 바로 뒤, `제4호에 따라` 같은 연결만 끼어도
+# 된다)이거나 (중소기업자간) 경쟁입찰·우선조달의 것이어야 한다 — "제4호의 경우 수의계약의 예외에
+# 해당합니다" 는 아니다. 실제 발화 중 `예외` 꼴 10건은 전부 뒤쪽(`중소기업자간 경쟁입찰의 예외`)이다.
+OWN_EXCEPTION = re.compile(
+    r"(중소기업자?[^.]{0,25}|경쟁\s*입찰[^.]{0,10}"
+    r"|^\s*((제\s*)?\d+\s*호\s*\*?\s*)?(의|에\s*(따른|따라|의한|의하여|의거한?|의거하여|근거한|근거하여))?\s*,?\s*)$")
+# 서술어가 **말해진 것이 아니라 언급된 것**이면 적용이 아니다 — 서식 항목의 값("예외 적용
+# (□예 ■아니오)"), 인용·삭제("…적용합니다\"라는 문구는 삭제"), 물음과 답("적용합니다? 아니오"),
+# 정정·폐지("(정정 전)" · "[폐지]"), 예시("(작성 예시)"), 뒤로 미룸("(향후 공고부터)"), 일부 범위
+# ("(부대장비에 한함)"), 단서("적용함, 단 해당 품목은 제외"). 이런 말을 하나씩 늘어놓지 않고
+# 모양을 본다 — 서술어 **바로 뒤**에 곁말(닫는 괄호가 아닌 문장 부호로 여는 말)이 붙으면, 그 곁말이
+# 예외의 **사유**를 대는 것(`사유` · `근거` · `경우` · `필요`, 부정 없이)일 때만 적용으로 읽는다.
+# 서술어 바로 뒤 `여부`("적용함 여부는 …")도 곁말을 연다. 부호 없이 이어지는 결과 서술("적용하므로
+# 대기업의 참여 제한이 없습니다")은 곁말이 아니다. 실제 발화 18건 중 곁말이 붙은 것은 `009599`
+# 하나이고 그 곁말은 `<중소기업자간 경쟁제도 예외사유>` 다.
+# 예외가 공고의 **일부**에만 걸리면 셀을 닫지 않는다 — "부대장비는 중소기업자간 경쟁입찰 제품에
+# 해당하지 않음" · "2권역에 대해서는 … 예외를 적용합니다". 인용과 서술어 사이에 주제(`X는` ·
+# `X에는` · `X에 대해서는`)가 서면 그 X 에만 걸린 말이다. X 가 공고 전체(`본 물품` · `이 입찰` ·
+# `해당 사업` …)이면 괜찮다. `해당하는` · `되는` 같은 관형형은 주제가 아니다. 실제 발화 18건의
+# 인용 뒤에는 주제가 하나도 없다.
+TOPIC = re.compile(r"[가-힣]+((?<![하되있없않])는|은|에는|에\s*대해서는|에\s*대하여는)(?=[\s,])")
+WHOLE_NOTICE = re.compile(r"(본|이|해당|당해)\s*(입찰|물품|사업|용역|계약|공고|구매|건|과업)\S*$")
+
+
+def partial_scope(head: str) -> bool:
+    """인용과 서술어 사이(`head`)에 공고 전체가 아닌 주제가 서는가."""
+    return any(WHOLE_NOTICE.search(head[:topic.start(1)]) is None for topic in TOPIC.finditer(head))
+
+
+ASIDE = re.compile(r"\s*(여부|[^\s가-힣0-9A-Za-z.)\]}>」』])")
+REASON = re.compile(r"사유|근거|경우|필요")
+ASIDE_NEGATIVE = re.compile(r"아니|없|미\s*(해당|적용)|비해당|삭제|정정|취소|철회|폐지|제외"
+                            r"|(?<![가-힣A-Za-z])([Xx×]|N|No|NO)(?![A-Za-z])")
+
+
+def aside_withdraws(clause: str, end: int) -> bool:
+    """서술어 끝(`end`) 바로 뒤 곁말이 그 서술을 언급·철회·한정으로 바꾸는가."""
+    opened = ASIDE.match(clause, end)
+    if opened is None:
+        return False
+    aside = clause[opened.end():opened.end() + 25]
+    return REASON.search(aside) is None or ASIDE_NEGATIVE.search(aside) is not None
+
+
 SENTENCE = 160
 
 
@@ -227,15 +286,22 @@ def competition_exception(rec: dict[str, Any]) -> bool:
         for match in EXCEPTION.finditer(text):
             clause = re.split(r"[.※]", text[match.end():match.end() + SENTENCE], maxsplit=1)[0]
             for found in APPLIED.finditer(clause):
-                if NEGATED.search(clause[:found.end()]) is None and asserted(clause, found):
+                if (NEGATED.search(clause[:found.end()]) is None and asserted(clause, found)
+                        and not aside_withdraws(clause, found.end())
+                        and not partial_scope(clause[:found.start()])
+                        and (not found.group().startswith("예외") or OWN_EXCEPTION.search(clause[:found.start()]))):
                     return True
             for found in ELIGIBLE.finditer(clause):
                 # 앞에 조건이 있으면("…에 해당하는 경우 대기업도 …") 가정이다.
-                if NEGATED.search(clause[:found.end()]) is None and MODAL.search(clause[:found.start()]) is None:
+                if (NEGATED.search(clause[:found.end()]) is None and MODAL.search(clause[:found.start()]) is None
+                        and not aside_withdraws(clause, found.end())
+                        and not partial_scope(clause[:found.start()])):
                     return True
             for found in NOT_SME_BID.finditer(clause):
                 head = clause[:found.start()]
-                if NEGATED.search(head) is None and MODAL.search(head) is None:
+                if (NEGATED.search(head) is None and MODAL.search(head) is None
+                        and not aside_withdraws(clause, found.end())
+                        and not partial_scope(clause[:found.start()])):
                     return True
     return False
 
