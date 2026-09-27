@@ -49,6 +49,22 @@ Adoption rule of 9/27: pool Macro up; both halves up; no trusted item loses more
 
 Net (TP − FP): v2 4 → 3, v6 −5 → 0, v7 4 → 6. Dev −0.0004.
 
+## Off-dev 600 run — how it is judged (fixed 2026-09-27 before its results)
+
+Review #168 round 1 required the 9/27 rule's own evidence: a GPU run of the call change on the off-dev 600
+(`reports/labels-600/offdev-600-ids.txt`, diagnostic 200 + sealed 400) and a check of `NOT_ENTRY_QUOTE` on
+cases it was not written from. Code `c23ed84` (the filter narrowed to checklist, evaluation and form
+markers, frozen), notebook `notebooks/colab-d-facts-600.ipynb`.
+
+1. Replay the run with `QUALIFICATION_FACTS_ITEMS = []` (baseline) and `["v2", "v6", "v7"]` (candidate);
+   the run's own CSV must replay byte-identically first.
+2. Score against `reports/labels-600/merged/diag.csv` + `sealed.csv`, leaving out
+   `reports/labels-3000/private-ids.txt` (수의계약, as all off-dev scoring since 9/27). Halves by `half(id)`.
+3. The 9/27 rule: Macro over the labelled items rises; it rises on each half; no trusted item loses more
+   than one net (TP − FP) cell; dev replay (the dev run above) drops by no more than 0.01.
+4. An item that alone breaks rule 3 is dropped and the rest re-checked once. Nothing else is tuned.
+5. The 400 above are reported next to it but do not decide.
+
 ## Server time
 
 Dev phase seconds (200 notices, 165 non-수의계약): main 368, SME 90, company size 206, facts 151.
