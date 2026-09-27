@@ -135,10 +135,18 @@ MODAL = re.compile(r"경우|때에?는?|(?<=[가-힣])면(?![가-힣])|려면|�
 #     입찰·참가·공급·제조·수급·계약상대·사업·판매 뒤의 `자`). `도` 로 끝나는 낱말 전부를
 #     받으면 제도·정도·`수도 있다` 가, `-자` 전부를 받으면 관리자·담당자(발주처 쪽)가
 #     주어로 읽힌다. `기관` 도 뺐다 — 수요기관은 발주처다.
-#   조사 — `도`·`는`·`은`. `이`·`가` 는 안 본다(업체가 → 그 주어를 놓치면 발화하지 않을 뿐,
-#     안전한 쪽이다).
+#   조사 — 주어·보조사 전부(`도`·`는`·`은`·`이`·`가`). 명사를 당사자 목록으로 묶었으므로
+#     `이`·`가` 가 참가·평가 같은 낱말과 겹치지 않는다. 명사와 조사 사이 괄호 보충
+#     (`대기업도(비영리법인 포함)`, `기업(비영리법인 포함)도`)도 받는다.
 SUBJECT = re.compile(r"(기업|업체|법인|회사|단체|조합|소상공인|(입찰|참가|공급|제조|수급|계약상대|사업|판매)자)"
-                     r"(도|는|은)(?=\s)")
+                     r"(\([^)]{0,30}\))?(도|는|은|이|가)(?=[\s(,])")
+# 주어만으로는 모자란다. 서법이 그 당사자의 것이려면 **문장이 당사자 행위의 가능으로 끝나야**
+# 한다 — "대기업도 참여할 수 있습니다". "…참여할 수 있는지 검토한다"(내포 의문) · "…있도록
+# 검토한다"(목적) 는 끝 서술어가 발주처의 검토라 적용이 서술되지 않았다. "기업이 제출한
+# 서류를 검토할 수 있다" 처럼 주어가 관형절 안에 있어도 끝 행위(검토)가 당사자 행위가 아니라
+# 걸러진다.
+BIDDER_POSSIBLE_END = re.compile(
+    r"((참여|참가|입찰|응찰|투찰|제출|제안|납품|계약|등록)할|낼)\s*수\s*도?\s*있(다|습니다|음)\s*$")
 # 부정은 **예외 판단의 범위 안에서만** 본다 — 인용 끝부터 적용 서술어 끝까지. 서술어 자체의
 # 부정(`적용하지 않`·`안 적용`·`미적용`·`예외 적용 불가`)은 `APPLIED` 가 애초에 안 받는다.
 # 남는 것은 서술어 **앞**의 부정이다 — "예외에 해당하지 않으므로 일반 규정을 적용합니다".
@@ -176,15 +184,18 @@ def competition_exception(rec: dict[str, Any]) -> bool:
 
 
 def asserted(clause: str, found: re.Match) -> bool:
-    """`하여` 로 이어지면 뒤 절이 평서로 끝나고, 서법 구문이 있으면 그 앞에 새 주어가 있어야
-    적용 서술이다."""
+    """`하여` 로 이어지면 뒤 절이 평서로 끝나야 한다. 서법 구문이 있으면 입찰 당사자가 그보다
+    먼저 새 주어로 서고, 문장이 그 당사자 행위의 가능으로 끝날 때만 적용 서술이다."""
     if MANNER not in (found.group("e1"), found.group("e2")):
         return True
     rest = clause[found.end():]
     if DECLARATIVE_END.search(rest) is None:
         return False
     modal = MODAL.search(rest)
-    return modal is None or SUBJECT.search(rest[:modal.start()]) is not None
+    if modal is None:
+        return True
+    subject = SUBJECT.search(rest[:modal.start()])
+    return subject is not None and BIDDER_POSSIBLE_END.search(rest) is not None
 
 
 def postprocess(parsed: dict[str, Any], rec: dict[str, Any]):
