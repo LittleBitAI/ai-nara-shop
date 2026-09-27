@@ -223,6 +223,20 @@
       "error": null,
       "source": "User report (competition screen, 2026-09-26 night). No submission ID or exact time. ZIP: artifacts/outbox/submit-main-61c495c.zip.",
       "note": "New server best (+0.0273383489). In main since 4a15529: #153 four clause rules (catalogue-miss gate, company-size guard on v11, v2 raise under 2.3억, v21/v22 raises), #154 v8 local small-quote exemption and v11 size-limit forms, #156 v19 list-heading walk, C7 role over value (v18) and C9 catalogue exclusion (v10/v11/v13, named products count per S7-15). Post-processing only, no extra model calls; server time 6,356 -> 6,428 s (+72 s, 89.3% of the limit)."
+    },
+    {
+      "submitted_on": "2026-09-27",
+      "code_commit": "8a274ec82dfb12c7154bdd4154801a4bec810995",
+      "script_sha256": null,
+      "submit_zip_sha256": "785f798ea3481f213be81430e99e2ef13fc65b4e20aece9000a8a857b5b44433",
+      "run_id": null,
+      "outcome": "scored",
+      "leaderboard_macro_f1": 0.584,
+      "elapsed_seconds": null,
+      "elapsed_reported": null,
+      "error": null,
+      "source": "User report (competition screen, 2026-09-27 night, after 23:30). Score as reported to three decimals; no submission ID or time yet. ZIP: artifacts/outbox/submit-efplus-8a274ec.zip.",
+      "note": "Below the best (0.6203720648, -0.036). Experimental and unmeasured on GPU at upload: branch exp/0927-best = main 9356dc6 (#164 no positives on 수의계약 except v3 v4 v21 v24, #166 extra calls skipped on 수의계약 and v17 zeroed, #163 v3 cut 0.95) + facts call on v2 with section gate + v6 L1 + refit cuts (v1 v4 v8 v19 v22) + label-sweep zeroing (v22 non-협상, v1 지명경쟁, v4 under 2천만원) + evidence-first main schema with a clause-role field, role gate and contrastive examples. The last three changed the model's output and had no GPU run before upload. Attribution needs the combined runs (colab-efplus-600/-dev) scored against be87c9f."
     }
   ],
   "time_budget": {
