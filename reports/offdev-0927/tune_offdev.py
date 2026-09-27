@@ -45,6 +45,18 @@ def pick(counts, current, halves):
     return order[0]
 
 
+def decide(counts, now):
+    """Steps 2-3 for one item: (pick_A, pick_B, held-out gains, passed, final cut)."""
+    a, b = pick(counts, now, {"A"}), pick(counts, now, {"B"})
+    gains = (f1(counts[a]["B"]) - f1(counts[now]["B"]), f1(counts[b]["A"]) - f1(counts[now]["A"]))
+    # The final cut is itself held to both halves: only cuts beating the current one on A and on B.
+    both = {c: v for c, v in counts.items()
+            if f1(v["A"]) > f1(counts[now]["A"]) and f1(v["B"]) > f1(counts[now]["B"])}
+    passed = gains[0] > 0 and gains[1] > 0 and bool(both)
+    final = pick({**both, now: counts[now]}, now, {"A", "B"}) if passed else now
+    return a, b, gains, passed and final != now, final
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", required=True)
@@ -60,8 +72,13 @@ def main(argv=None):
     script = replay_run.load_module(ROOT / "script.py", "submission")
     current = dict(script.ITEM_THRESHOLDS)
     for case in args.case:
-        if not replay_run.saved_probabilities(case):
-            raise SystemExit(f"{case}: no item_p1 saved; thresholds cannot move there")
+        # Every notice needs P(1) for every item, or replay silently falls back to argmax for it.
+        responses = set(replay_run.saved_responses(case)["baseline"])
+        probabilities = replay_run.saved_probabilities(case)
+        short = [i for i in responses if set(probabilities.get(i) or {}) < set(script.ITEMS)]
+        if short:
+            raise SystemExit(f"{case}: {len(short)} of {len(responses)} notices lack item_p1 for some item, "
+                             f"e.g. {sorted(short)[:3]}")
     labels = {}
     for path in args.labels:
         with open(path, encoding="utf-8") as stream:
@@ -92,10 +109,7 @@ def main(argv=None):
     report, chosen = {}, dict(current)
     for i in items:
         now = current.get(i)
-        a, b = pick(counts[i], now, {"A"}), pick(counts[i], now, {"B"})
-        gains = (f1(counts[i][a]["B"]) - f1(counts[i][now]["B"]), f1(counts[i][b]["A"]) - f1(counts[i][now]["A"]))
-        passed = gains[0] > 0 and gains[1] > 0
-        final = pick(counts[i], now, {"A", "B"}) if passed else now
+        a, b, gains, passed, final = decide(counts[i], now)
         if final is None:
             chosen.pop(i, None)
         else:
@@ -119,4 +133,13 @@ def main(argv=None):
 if __name__ == "__main__":
     toy = {None: {"A": [1, 1, 1], "B": [1, 1, 1]}, 0.5: {"A": [2, 0, 0], "B": [1, 1, 1]}}
     assert pick(toy, None, {"A"}) == 0.5 and pick(toy, 0.5, {"B"}) == 0.5 and pick(toy, None, {"B"}) is None
+    # Review PR #161 round 1: a passed item's final cut must itself beat the current cut on both halves.
+    import random
+    rng = random.Random(0)
+    for _ in range(2000):
+        grid_ = [None, 0.1, 0.5, 0.7, 0.9]
+        toy = {c: {h: [rng.randint(0, 5) for _ in range(3)] for h in "AB"} for c in grid_}
+        now_ = rng.choice(grid_)
+        _, _, _, ok, cut = decide(toy, now_)
+        assert not ok or all(f1(toy[cut][h]) > f1(toy[now_][h]) for h in "AB")
     sys.exit(main())

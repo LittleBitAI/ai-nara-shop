@@ -19,7 +19,7 @@ def main():
     ids = (HERE / "ids.txt").read_text(encoding="utf-8").split()
     merge_labels.merge(HERE / "merged.csv", merge_labels.load_records(ids), merge_labels.sources(),
                        HERE / "wide", HERE / "facts", HERE / "focus",
-                       [HERE / "v1" / f"run{n}" for n in (1, 2, 3)])
+                       [HERE / "v1" / f"run{n}" for n in (1, 2, 3)], strict=True)
     return 0
 
 

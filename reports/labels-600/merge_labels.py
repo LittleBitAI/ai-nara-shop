@@ -62,8 +62,12 @@ def rows_of(directory, field):
     return rows
 
 
-def merge(out, records, source, wide_dir, facts_dir, focus_dir, v1_dirs):
-    """Write one merged label CSV for the notices the 24-item labeler labelled in `wide_dir`."""
+def merge(out, records, source, wide_dir, facts_dir, focus_dir, v1_dirs, strict=False):
+    """Write one merged label CSV for the notices the 24-item labeler labelled in `wide_dir`.
+
+    strict: every notice must be in every pass, v1 runs included (a run's malformed row counts as
+    missing). labels-600 keeps the default: its v1 run 1 has 599 rows and majority() votes on the rest.
+    """
     v1_runs = []
     for run in v1_dirs:
         rows = {}
@@ -73,6 +77,11 @@ def merge(out, records, source, wide_dir, facts_dir, focus_dir, v1_dirs):
     focus_rows = rows_of(focus_dir, "facts")
     wide_labels = rows_of(wide_dir, "labels")
     fact_rows = rows_of(facts_dir, "facts")
+    if strict:
+        passes = {"facts": fact_rows, "focus": focus_rows, **{f"v1 run {n}": r for n, r in enumerate(v1_runs, 1)}}
+        missing = {name: len(set(wide_labels) - set(rows)) for name, rows in passes.items()}
+        if any(missing.values()):
+            raise ValueError(f"notices missing from a pass: {missing}")
     out.parent.mkdir(exist_ok=True)
     with out.open("w", encoding="utf-8", newline="") as stream:
         writer = csv.writer(stream, lineterminator="\n")

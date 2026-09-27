@@ -21,9 +21,13 @@ ITEMS = [f"v{i}" for i in range(1, 25)]
 
 
 def score(pred, labels, keep=lambda identifier: True):
+    missing = sorted(set(labels) - set(pred))
+    if missing:
+        # A truncated replay would otherwise score only the notices it kept.
+        raise ValueError(f"{len(missing)} labelled notices have no prediction, e.g. {missing[:3]}")
     counts = {}
     for identifier, truth in labels.items():
-        if identifier not in pred or not keep(identifier):
+        if not keep(identifier):
             continue
         for item in ITEMS:
             if truth[item] == "":
@@ -42,7 +46,10 @@ def load(paths):
     rows = {}
     for path in paths:
         with open(path, encoding="utf-8") as stream:
-            rows.update({r["id"]: r for r in csv.DictReader(stream)})
+            for r in csv.DictReader(stream):
+                if r["id"] in rows:
+                    raise ValueError(f"{path}: duplicate ID {r['id']}")
+                rows[r["id"]] = r
     return rows
 
 
@@ -52,8 +59,7 @@ def main(argv=None):
     parser.add_argument("--labels", nargs="+", required=True)
     args = parser.parse_args(argv)
     pred, labels = load(args.pred), load(args.labels)
-    scored = sum(i in pred for i in labels)
-    print(json.dumps({"scored": scored, "all": score(pred, labels),
+    print(json.dumps({"scored": len(labels), "all": score(pred, labels),
                       "A": score(pred, labels, lambda i: half(i) == "A")["macro"],
                       "B": score(pred, labels, lambda i: half(i) == "B")["macro"]}, ensure_ascii=False))
     return 0
@@ -62,4 +68,9 @@ def main(argv=None):
 if __name__ == "__main__":
     demo = score({"x": {**{v: "0" for v in ITEMS}, "v1": "1"}}, {"x": {**{v: "0" for v in ITEMS}, "v1": "1", "v9": ""}})
     assert demo["items"]["v1"] == [1, 0, 0] and "v9" not in demo["items"]
+    try:
+        score({}, {"x": {v: "0" for v in ITEMS}})
+        raise AssertionError("a missing prediction must fail")
+    except ValueError:
+        pass
     sys.exit(main())
