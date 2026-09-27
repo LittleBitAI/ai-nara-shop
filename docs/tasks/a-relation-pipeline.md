@@ -63,7 +63,10 @@ v2 net fell 7 → −1.
      `priority_exception`) is known unless `slots["unknown"]` lists it.
    - Relation rows read the purchased subject only as verified: `purchase_general` / `purchase_competitive`.
      They are known only when the scope passed the company-size quotation gate; `attach_company_facts`
-     records that as `scope_verified`, and `run()` and replay share it. The provided catalogue vetoes
+     records that as `scope_verified`, and `run()` and replay share it. It also records `software_verified`
+     (the v20 gate: the deliverable quote verifies) and `priority_verified` (the v16/v18 gate: "no", or
+     "yes" with a verified quote), using `quote_verified`, the gates' own quotation check. Unverified,
+     `software` and `priority_exception` are unknown to relation rows. The provided catalogue vetoes
      "general" for a listed product (`competitive_by_catalogue`), but a listed component never makes the
      purchase competitive. The older `scope_general` / `scope_competitive` are unchanged for the existing
      rows: replaying the real off-dev 600 case with `ab9eb9e` and with this code gives the same CSV. It is listed for no price, a scope

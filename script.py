@@ -785,6 +785,15 @@ def verify_company_size(facts, rec, max_chars):
 
 
 
+def quote_verified(value, rec, visible) -> bool:
+    """The company-size gates' quotation check (`quoted()` in `_company_size_bands` and
+    `verify_document_requirements`, kept as they are): the quote, spacing restored, is in the model's view
+    and in a document."""
+    value = restore_spacing(value, rec, visible) or value
+    return bool(value and value.strip() and value in visible
+                and any(value in d["text"] for d in rec["docs"]))
+
+
 def verify_document_requirements(facts, rec, visible):
     """A3 관측 사실의 소비자. 옛 원응답·unknown·불완전 문서는 기본 판정을 보존한다."""
     def quoted(value):
@@ -3638,10 +3647,21 @@ def attach_relations(parsed: Dict[str, Any], rec: Dict[str, Any], text: Optional
 COMPANY_FACTS_KEY = "_company_facts"  # the company-size call's facts, as the model gave them
 
 
-def attach_company_facts(parsed: Dict[str, Any], facts: Dict[str, Any], reason: str) -> None:
-    """The company-size facts for the slot table, with whether their scope passed the quotation gate.
-    `run()` and replay share it."""
-    parsed[COMPANY_FACTS_KEY] = dict(facts, scope_verified=reason != "unverified_scope")
+def attach_company_facts(parsed: Dict[str, Any], facts: Dict[str, Any], reason: str,
+                         rec: Dict[str, Any], max_chars: int) -> None:
+    """The company-size facts for the slot table, with what the existing gates verified of them.
+    `run()` and replay share it. Relation rows read a fact as known only when it is verified here."""
+    visible = build_context(rec, max_chars)
+    priority = facts.get("priority_exception")
+    parsed[COMPANY_FACTS_KEY] = dict(
+        facts,
+        scope_verified=reason != "unverified_scope",
+        # The v20 gate: the purchased deliverable's quote must verify (either answer).
+        software_verified=(facts.get("software_business") in ("yes", "no")
+                           and quote_verified(facts.get("software_business_quote"), rec, visible)),
+        # The v16/v18 gate: "no" stands, "yes" needs its quote.
+        priority_verified=(priority == "no" or (priority == "yes" and quote_verified(
+            facts.get("priority_exception_quote"), rec, visible))))
 
 
 def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, bool]:
@@ -3664,10 +3684,10 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     region_price = (rec.get("meta") or {}).get("입찰추정가격") or None
     unknown = {"small", "mid", "under_notice", "over_notice"} if price is None else set()
     unknown |= {"region_allowed", "over_region_limit"} if limit is None or region_price is None else set()
-    unknown |= {"priority_exception"} if facts.get("priority_exception") not in ("yes", "no") else set()
+    unknown |= {"priority_exception"} if facts.get("priority_verified") is not True else set()
     unknown |= {"scope_general", "scope_competitive"} if facts.get("scope") not in ("general", "competitive", "other") else set()
     unknown |= {"purchase_general", "purchase_competitive"} if not verified else set()
-    unknown |= {"software"} if facts.get("software_business") not in ("yes", "no") else set()
+    unknown |= {"software"} if facts.get("software_verified") is not True else set()
     unknown |= {"catalogue_product"} if catalogue is None else set()
     return {
         "unknown": frozenset(unknown),
@@ -4476,7 +4496,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             focused, _ = parse_judgment(band_texts[index], expected_items=COMPANY_SIZE_KEYS)
             verified, reason = verify_company_size(focused["company_size"], rec, band_chars[index])
             parsed.update(verified)
-            attach_company_facts(parsed, focused["company_size"], reason)
+            attach_company_facts(parsed, focused["company_size"], reason, rec, band_chars[index])
             company_size_reasons[reason] += 1
             emit("company_size_verified", id=rec["id"], reason=reason,
                  flags={v: c["위반여부"] for v, c in verified.items()})

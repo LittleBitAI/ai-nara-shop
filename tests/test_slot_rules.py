@@ -23,10 +23,11 @@ def judgment(**facts):
     return {script.COMPANY_FACTS_KEY: {**base, **facts}}
 
 
-def verified(**facts):
-    """Company facts whose scope passed the company-size quotation gate, as `attach_company_facts` records."""
+def verified(reason="ok", rec=None, **facts):
+    """Company facts as `attach_company_facts` records them after the company-size gates."""
     parsed = {}
-    script.attach_company_facts(parsed, judgment(**facts)[script.COMPANY_FACTS_KEY], "ok")
+    script.attach_company_facts(parsed, judgment(**facts)[script.COMPANY_FACTS_KEY], reason,
+                                rec or notice(50_000_000), 16000)
     return parsed
 
 
@@ -162,8 +163,7 @@ class RelationTests(unittest.TestCase):
 
     def test_a_scope_the_quotation_gate_rejected_decides_nothing(self):
         absence = {"v10": (("purchase_competitive",), ("!entry_direct_production",), (), None)}
-        parsed = {}
-        script.attach_company_facts(parsed, judgment(scope="other")[script.COMPANY_FACTS_KEY], "unverified_scope")
+        parsed = verified("unverified_scope", scope="other")
         self.assertIn("purchase_competitive", script.relation_slots(parsed, self.rec)["unknown"])
         self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=parsed, v10=1)["위반여부"], 1)
         rejected = verified(scope="other")
@@ -185,11 +185,21 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(self.decide(production, row=row, item="v12", facts=verified())["위반여부"], 1)
         self.assertEqual(self.decide(production, row=row, item="v12", facts=judgment())["위반여부"], 0)
 
+    def test_software_and_priority_are_known_only_as_their_gates_verify_them(self):
+        rec = notice(50_000_000, "3. 입찰참가자격\n" + PERFORMANCE + "\n본 사업은 소프트웨어 개발 사업임")
+        quoted = verified(rec=rec, software_business="yes", software_business_quote="본 사업은 소프트웨어 개발 사업임")
+        invented = verified(rec=rec, software_business="no", software_business_quote="물품 구매")
+        self.assertNotIn("software", script.relation_slots(quoted, rec)["unknown"])
+        self.assertIn("software", script.relation_slots(invented, rec)["unknown"])
+        claimed = verified(rec=rec, priority_exception="yes", priority_exception_quote="판로지원법 예외")
+        self.assertIn("priority_exception", script.relation_slots(claimed, rec)["unknown"])
+        self.assertNotIn("priority_exception", script.relation_slots(verified(rec=rec), rec)["unknown"])
+
     def test_a_known_exception_decides_on_its_own(self):
         row = {"v17": (("small",), ("entry_sme",), ("priority_exception",), None)}
-        facts = judgment(priority_exception="yes")
+        facts = verified(rec=self.rec, priority_exception="yes", priority_exception_quote=PERFORMANCE)
         self.assertEqual(self.decide(labels(), row=row, item="v17", facts=facts, v17=1)["위반여부"], 0)
-        facts = judgment(priority_exception="unknown")
+        facts = verified(rec=self.rec, priority_exception="unknown")
         self.assertEqual(self.decide(labels(), row=row, item="v17", facts=facts, v17=1)["위반여부"], 1)
 
     def test_a_known_scope_failure_decides_even_when_the_labels_say_nothing(self):

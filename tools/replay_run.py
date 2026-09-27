@@ -161,7 +161,7 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
             parsed.update(verified)
             if hasattr(script, "attach_company_facts"):
-                script.attach_company_facts(parsed, focused["company_size"], reason)
+                script.attach_company_facts(parsed, focused["company_size"], reason, rec, company_chars[rec["id"]])
             elif hasattr(script, "COMPANY_FACTS_KEY"):   # older submission code has no slot table
                 parsed[script.COMPANY_FACTS_KEY] = focused["company_size"]
             reasons.setdefault(rec["id"], {})["company_size"] = reason

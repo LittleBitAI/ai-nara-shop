@@ -628,7 +628,8 @@ class BaselineTests(unittest.TestCase):
         self.assertTrue(restored and restored in visible)        # 복원기는 찾아낸다
 
         import inspect
-        for owner in (baseline._company_size_bands, baseline.verify_document_requirements):
+        for owner in (baseline._company_size_bands, baseline.verify_document_requirements,
+                      baseline.quote_verified):
             self.assertIn("restore_spacing", inspect.getsource(owner),
                           f"{owner.__name__} 의 인용 검사가 복원기를 부르지 않는다")
 
