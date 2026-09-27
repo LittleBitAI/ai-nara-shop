@@ -16,25 +16,32 @@
 | 회차용 커밋 | `run/c-fewshot-v18` — `origin/main` 위에 `script.py` 한 곳만 바꿨다 |
 | 바뀐 것 | `build_system_prompt()` 이 `items is None`(=`baseline`)일 때만 v18 예시 한 쌍을 붙인다 |
 | 대상 | **회차 1 — off-dev 600**(진단 200 + 봉인 400) · **회차 2 — dev 200**(기준 4, §2-1) |
-| ID 목록 | `reports/team-c/c-fewshot/offdev-600.ids.txt` (600줄, 매니페스트 동봉) |
+| ID 목록 | **`reports/labels-600/offdev-600-ids.txt`** — D 가 #163 으로 넣은 정본 |
 | 예상 | A100 한 장에 **35~40분** (`a-offdev-0927.md` 의 같은 회차 추정) |
 | 운영 `main` | **안 바꾼다.** 이 브랜치는 회차용이다 |
 
-### 노트북
+### 노트북 — **이미 있다. 한 줄만 바꾼다**
 
-`a-offdev-0927.md` §Steps 가 정한 방식 그대로다 — `notebooks/colab-unlabeled-d.ipynb`
-를 복사해 셋만 바꾼다.
+D 가 PR #163 으로 **`notebooks/colab-offdev-600.ipynb`** 를 넣었다. `IDS_FILE` 과
+`N_NOTICES` 가 이미 박혀 있으므로 **손댈 곳은 `REPO_REF` 하나**다.
 
-| 바꿀 것 | 값 |
-| --- | --- |
-| `REPO_REF` | `run/c-fewshot-v18` 의 **40자 커밋 SHA** (아래 §5) |
-| `IDS_FILE` | `reports/team-c/c-fewshot/offdev-600.ids.txt` |
-| `N_NOTICES` | `600` |
+| | 노트북에 이미 박힌 값 | 바꿀 것 |
+| --- | --- | --- |
+| `IDS_FILE` | `REPO / "reports/labels-600/offdev-600-ids.txt"` | 그대로 |
+| `N_NOTICES` | `600` | 그대로 |
+| `REPO_REF` | `deb6831…` (D 의 기준선 회차용) | **`d92e0a36293eb801c68b9b7e84d51280d73634c1`** |
 
 **약칭 SHA 를 쓰지 않는다** — 노트북이 명시적으로 거부한다. 브랜치 이름도 쓰지 않는다.
 
-**기준선 회차는 따로 안 돈다.** D 가 같은 600건에 현재 `script.py` 를 돌리고 있고
-(9/27 배정), 그 결과가 이 회차의 짝이다. 같은 ID 목록·같은 라벨로 견준다.
+> **ID 목록을 D 의 정본으로 바꿨다(2026-09-27).** 처음엔 같은 600건을
+> `reports/team-c/c-fewshot/offdev-600.ids.txt` 로 따로 만들었는데, #163 이
+> `reports/labels-600/offdev-600-ids.txt` 를 정본으로 넣었다. **집합은 같고 순서만
+> 다르다**(sha256 은 그래서 다르다). 두 벌을 두면 어느 것이 정본인지 흐려지므로
+> **내 사본을 지웠다.** D 의 매니페스트가 `code_commit`·`input_sha256` 까지 들고 있어 더 낫다.
+
+**기준선 회차는 따로 안 돈다.** D 가 같은 600건·같은 노트북으로 현재 `script.py`
+(`REPO_REF = deb6831…`)를 돌리고 있고, 그 결과가 이 회차의 짝이다. **같은 ID 목록·같은
+순서·같은 라벨**로 견준다.
 
 ## 2. 합격 기준 — 회차 전에 정한다
 
