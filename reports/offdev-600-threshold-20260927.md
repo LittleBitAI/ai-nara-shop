@@ -1,9 +1,9 @@
 # Off-dev 600 logprob threshold measurement — 2026-09-27
 
-Status after the PR #163 hold review (rounds 1–2): the numbers below were measured with code that
-the review found wrong, so they are withdrawn. The tool is fixed; the measurement has not been
-rerun, because the 600 archive (`artifacts/offdev-600-1790471557297701344/`, Drive
-`MyDrive/a5/offdev-600-deb6831ff0e2/`) is not in the repository. No verdict on the candidate yet.
+Status after the PR #163 hold review (rounds 1–3): the withdrawn round-0 numbers remain invalid.
+The supplied `offdev-600-results-1790471557297701344.zip` archive was then recovered locally and
+remeasured with the reviewed tool and the archived `deb6831` submission code.  The candidate fails
+the fixed split-half gate; operational thresholds remain unchanged.
 
 | Review finding | Fix |
 | --- | --- |
@@ -74,3 +74,27 @@ The adoption rule requires a gain in both directions.  It therefore fails;
 
 Machine-readable result: ignored local artifact
 `artifacts/offdev-600-1790471557297701344/threshold-measurement-r2/thresholds.json`.
+
+## Verified rerun from the supplied Colab archive
+
+The archive's original shards, not a GPU rerun, were used.  `u00` (500 rows) and `u01` (100 rows)
+each reproduce their own archived LF CSV byte-for-byte when replayed with the source commit
+`deb6831ff0e2c008c9479ad80013a701b5ffdb1` recovered from the shared Git object database.
+
+| shard | rows | CSV SHA-256 | result |
+| --- | ---: | --- | --- |
+| u00 | 500 | `1da908a47474d231cdb3a1d5a5294f0e0a8f77b7872489d5571ba7f5097b7640` | identical |
+| u01 | 100 | `535267fb806d631f22ad7968fdad397d6c707c69bf06125911da02776961e8f1` | identical |
+
+The reviewed tuner searches all 22 labelled items (v9/v24 fixed), includes no-cut, requires every
+searched `item_p1`, and uses the fixed salted `half(id)` partition: A=298, B=302.
+
+| measurement | Macro F1 (22 labelled items) |
+| --- | ---: |
+| current archived thresholds | 0.514170 |
+| full-pool candidate | 0.525625 |
+
+The full-pool candidate would add v3=`0.95` and raise v6 to `0.7`.  It passes the trusted net
+`TP-FP` guard, but fails the adoption rule: a cut chosen on A scores B `0.464069 -> 0.460106`
+(down), while a cut chosen on B scores A `0.449220 -> 0.454638` (up).  Therefore
+`split_half_pass=false`; no `script.py` threshold change is permitted.

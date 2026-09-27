@@ -27,9 +27,9 @@ def macro(x): return sum(v["f1"] for v in x.values()) / len(x)
 def on(rows, h): return [r for r in rows if half(r["id"])==h]
 
 def main():
-    p=argparse.ArgumentParser(); p.add_argument("--case",required=True); p.add_argument("--input",required=True); p.add_argument("--truth",required=True); p.add_argument("--out",required=True); a=p.parse_args()
+    p=argparse.ArgumentParser(); p.add_argument("--case",required=True); p.add_argument("--input",required=True); p.add_argument("--truth",required=True); p.add_argument("--out",required=True); p.add_argument("--script",default=str(ROOT/"script.py")); a=p.parse_args()
     out=Path(a.out); out.mkdir(parents=True,exist_ok=False)
-    replay=load("replay_run",ROOT/"tools/replay_run.py"); script=load("submission",ROOT/"script.py")
+    replay=load("replay_run",ROOT/"tools/replay_run.py"); script=load("submission",a.script)
     truth={r["id"]:r for r in csv.DictReader(Path(a.truth).open(encoding="utf-8",newline=""))}; records=list(script.iter_records(a.input)); ids=[r["id"] for r in records]
     if set(ids)!=set(truth) or len(ids)!=len(truth): raise SystemExit("input과 truth ID 집합/건수가 다르다")
     original=dict(script.ITEM_THRESHOLDS); labelled=[i for i in script.ITEMS if any(truth[x][i] in ("0","1") for x in ids)]; eligible=[i for i in labelled if i not in FIXED]
@@ -68,7 +68,7 @@ def main():
                 halves[h]={"train_n":len(train),"test_n":len(test),"chosen":hcuts,"test_base_macro":macro(score(testbase,test_truth,labelled)),"test_candidate_macro":macro(score(testcandidate,test_truth,labelled))}
         final={h:{"base_macro":macro(score(on(base,h),truth,labelled)),"candidate_macro":macro(score(on(candidate,h),truth,labelled))} for h in ("A","B")}
         net={i:(cscore[i]["tp"]-cscore[i]["fp"])-(bscore[i]["tp"]-bscore[i]["fp"]) for i in TRUSTED}
-        result={"purpose":"offdev_logprob_threshold_measurement","model_called":False,"case":a.case,"input":a.input,"truth":a.truth,"notices":len(ids),"labelled_items":labelled,"eligible_items":eligible,"fixed_items":fixed,"grid":grid,"baseline_thresholds":original,"chosen_thresholds":chosen,"baseline_macro":macro(bscore),"candidate_macro":macro(cscore),"per_item":{i:{"baseline":bscore[i],"candidate":cscore[i]} for i in labelled},"trusted_net_tp_minus_fp_delta":net,"split_half":halves,"final_by_half":final,"split_half_pass":all(x["test_candidate_macro"]>x["test_base_macro"] for x in halves.values()) and all(x["candidate_macro"]>x["base_macro"] for x in final.values()),"trusted_guard_pass":all(x>=-1 for x in net.values())}
+        result={"purpose":"offdev_logprob_threshold_measurement","model_called":False,"case":a.case,"input":a.input,"truth":a.truth,"script":a.script,"notices":len(ids),"labelled_items":labelled,"eligible_items":eligible,"fixed_items":fixed,"grid":grid,"baseline_thresholds":original,"chosen_thresholds":chosen,"baseline_macro":macro(bscore),"candidate_macro":macro(cscore),"per_item":{i:{"baseline":bscore[i],"candidate":cscore[i]} for i in labelled},"trusted_net_tp_minus_fp_delta":net,"split_half":halves,"final_by_half":final,"split_half_pass":all(x["test_candidate_macro"]>x["test_base_macro"] for x in halves.values()) and all(x["candidate_macro"]>x["base_macro"] for x in final.values()),"trusted_guard_pass":all(x>=-1 for x in net.values())}
         (out/"thresholds.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
         print(json.dumps({k:result[k] for k in ("baseline_macro","candidate_macro","chosen_thresholds","split_half_pass","trusted_guard_pass")},ensure_ascii=False))
     finally:
