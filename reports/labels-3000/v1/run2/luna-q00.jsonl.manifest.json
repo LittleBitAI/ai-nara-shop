@@ -1,0 +1,42 @@
+{
+  "purpose": "external_label_comparison",
+  "model": "luna-high-v1b",
+  "command": "api:gpt-6-luna effort=high cache=explicit-30m (tools/luna_api.py)",
+  "bundle_prompt_sha256": "25f869e7724d4204620175a3f23fda0b3c1141969565a77ca1f551a8d1a9bae8",
+  "requested": 297,
+  "labelled": 290,
+  "skipped_already_done": 0,
+  "failures": [
+    {
+      "id": "PPS-D-018888",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    },
+    {
+      "id": "PPS-D-006423",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    },
+    {
+      "id": "PPS-D-020816",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    },
+    {
+      "id": "PPS-D-006029",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    },
+    {
+      "id": "PPS-D-010506",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    },
+    {
+      "id": "PPS-D-020961",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    },
+    {
+      "id": "PPS-D-020043",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    }
+  ],
+  "elapsed_seconds": 2757.0861926000216,
+  "created_at": "2026-09-27T02:02:35.887066+00:00",
+  "note": "외부 LLM은 라벨 생성 단계 전용이다(R6). 제출 추론에서 호출하지 않는다."
+}
