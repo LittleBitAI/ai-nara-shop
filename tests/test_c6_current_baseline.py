@@ -280,10 +280,18 @@ class VerifiedSectionSaysTheSame(unittest.TestCase):
         나란히 적는 것 자체는 막지 않는다 — 기준선이 갈렸다는 것이 §8 의 말이다.
         막는 것은 **경고 없이** 적는 것이다. 그러면 다음 사람이 두 수를 한 줄에
         놓고 "좋아졌다"고 읽는다.
+
+        경고는 **그 수가 든 문단 안에서** 찾는다. §8 어디서든 찾으면 게이트가 가짜가
+        된다 — §8 은 반올림 문단에서 이미 "읽지 않는다"를 쓰므로, 정작 옛 기준 수
+        옆의 경고를 지워도 검사가 초록으로 남는다.
         """
-        if "0.007850135975" in self.section:
+        for paragraph in self.section.split("\n\n"):
+            if "0.007850135975" not in paragraph:
+                continue
+            self.assertIn("기준선", paragraph,
+                          "옛 기준 수를 적으면서 기준선이 갈렸다는 말이 없다")
             self.assertTrue(
-                any(w in self.section for w in ("읽지 않는다", "견주지 않는다")),
+                any(w in paragraph for w in ("읽지 않는다", "견주지 않는다")),
                 "§8 이 옛 기준 수를 경고 없이 적었다")
         self.assertIn("0.007850135975", self.text[:self.text.index("## 8.")],
                       "§3~§4 에서 옛 기준 수가 사라졌다")
