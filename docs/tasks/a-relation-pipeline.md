@@ -17,45 +17,54 @@ v2 net fell 7 → −1.
 ## What
 
 1. Stage 1, `clause_candidates()`. Numbered clauses: qualification sections first, then clauses with
-   strong and then weak trigger words, within 80 clauses / 7,000 characters. PDF-wrapped lines are joined
+   strong and then weak trigger words, within 160 clauses / 14,000 characters. PDF-wrapped lines are joined
    into one clause until a list marker or a sentence end, so the stage words on a wrapped line reach the
    model with the rest of the clause (PPS-DEV-110's pledge clause). Only a short top-level line
    (`N.`, Roman numeral, `제N조`, box) is a section heading; `N)` and `가.` are list items.
    A short `가.` line is kept as the clause's sub-heading (`4. 입찰자격 조건 › 나. 계약 시 제출서류`), so the
    stage a list heading states reaches the clauses under it (PPS-D-002037, PPS-D-008654).
-   A clause's evidence is its exact document span. A clause over 400 characters is cut, and a cut
-   qualification or strong clause makes the notice incomplete: the model never saw its tail.
-   The flag `complete` says every qualification-section and strong clause fit whole. The slot
-   `relations_complete` also needs `완전관측`, no dropped document, and fewer than 30 records.
-   Dev gold evidence: every in-scope quote is covered. Median 60.5 clauses and 5,054 characters;
-   `complete` holds on 146 of 200 notices.
+   A clause's evidence is its exact document span. A clause over 800 characters is cut.
+   The flag `complete` says every candidate clause, at any rank, reached the model whole: a dropped or
+   cut candidate may hold the kind an absence row looks for. The slot `relations_complete` also needs
+   `완전관측`, no dropped document, and fewer than 30 records.
+   Dev gold evidence: every in-scope quote is covered. Median 6,117 characters, the largest 14,000
+   (about 9,900 prompt tokens by the mock's characters/2 estimate, against 14,336 of room);
+   `complete` holds on 144 of 200 notices.
 2. Stage 2, the relation call. It runs on non-수의계약 notices, after the company-size call. It sees only
    the numbered clauses, grouped under their section lines, with no metadata. It returns up to 30 records:
    `id`, kind, stage (entry / bid_submission / evaluation / after_award / citation) and the attributes the
    items differ on (holder, size, region, orderer, amount).
    - It makes no verdict and writes no quote; the evidence is the labelled clause line itself.
-   - xgrammar 0.2.3 (the server version) enforces the id range 1–80, the 30-record cap and every enum.
+   - xgrammar 0.2.3 (the server version) enforces the id range 1–160, the 30-record cap and every enum.
      This was checked locally.
    - Code, not the model, compares a won amount with the notice price, with the v3 deletion rule's own
      comparison (`_below_budget`: under one multiple only when under both the estimated price and the budget).
    - Region separates `adjacent` (the ordering area plus neighbours) from `multi_province` (listed provinces).
-   - Deadline: a probe batch of 8 notices runs first, only if 600 s are left before the 300 s reserve
-     (one full 2,048-token decode fits). Its seconds per notice, then the slowest batch so far, sizes
-     every later batch: at most `left / (1.5 × seconds per notice)` notices. Postprocessing costs about
-     4 ms a notice. Notices past the guard keep the path without labels.
+   - Deadline: a probe batch of 8 notices runs first, only if 600 s are left before the 300 s reserve.
+     Its seconds per notice (timed from building the messages), then the slowest batch so far, sizes
+     every later batch: at most `left / (1.5 × seconds per notice)` notices. A serial retry of a failed
+     response starts only while one full decode (`RELATION_DECODE_S`, 300 s, unmeasured) still ends before
+     the reserve; otherwise that notice keeps the path without labels. Postprocessing costs about 4 ms a
+     notice.
 3. Stage 3, the slot table. `relation_slots()` turns the labels into shared questions such as
    `entry_performance`, `entry_location_basic`, `entry_size`, `pledge_at_bid` and `sw_limit_stated`.
    A row in `SLOT_RULES` can name them next to the price and scope slots. A row that names a relation slot
    owns its item on every fully observed labelled notice: the cell is 1 only when the shared labels derive
    it, so a positive from the item's own path (a clause rule, the main call) is lowered when the labels do
    not derive it. Unknown never decides: on a notice that is not fully observed, the row neither lowers a
-   positive nor raises an absence; it can only raise what the labels positively derive.
+   positive nor raises an absence; it can only raise what the labels positively derive. A scope slot that
+   does not read the labels (price band, product scope, `negotiation`) still decides when it is known to
+   fail. When it is unknown (no price, `scope: unknown`), it is listed in `slots["unknown"]` and decides
+   nothing. `region_allowed` is true also when unknown, so v5 reads the known `over_region_limit`, never
+   its negation. `negotiation` is the same `negotiated()` test v22's clause rule uses
+   (낙찰방법 or 계약방법).
    On a notice without labels such a row does nothing. `slot_row_cell()` is the one per-cell rule; the fit
    calls the same function. A key `vN/<tag>` adds a second row for an item that already has one.
 4. **No relation row is on yet.** The GPU round only saves the labels, so its CSV equals the base code's.
    After it, [reports/relation-pipeline/fit.py](../../reports/relation-pipeline/fit.py) picks rows per item
-   from definition-grounded candidates: every candidate keeps its item's scope (v4 over the notice
-   threshold, v13 competitive products, v7 adjacency only). It uses the same nested cross-fit as the slot-table rows: pick on
+   from definition-grounded candidates. `SCOPE` in fit.py lists the scope each item's official name sets,
+   and every candidate's applies must name it; fit.py asserts this on import, so no candidate can fire
+   outside its item (v4 over the threshold, v12/v14/v17 general products, v13 competitive, v7 adjacency). It uses the same nested cross-fit as the slot-table rows: pick on
    off-dev half A with dev half A as a no-loss constraint, score on the other halves, then swap. The held-out
    halves only admit an item; the row itself is then picked on both halves as training data. It writes
    `candidate.py`, and `tools/slot_gate.py` then decides PASS or FAIL on the same saved responses. That gate

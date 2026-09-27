@@ -1201,10 +1201,15 @@ def fit_to_budget(rec: Dict[str, Any], system_prompt: str, runner, max_chars: in
 
 def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
               emit=None, debug_responses=False, items=None, phase="baseline",
-              baseline_texts=None, indices=None, probabilities=None) -> List[Optional[str]]:
-    """실패 공고만 재시도한다. 실제 러너는 출력 항목을 분할하며 결손은 허용하지 않는다."""
+              baseline_texts=None, indices=None, probabilities=None,
+              deadline: Optional[float] = None) -> List[Optional[str]]:
+    """실패 공고만 재시도한다. 실제 러너는 출력 항목을 분할하며 결손은 허용하지 않는다.
+
+    `deadline` (epoch seconds): no serial retry starts after it; that notice keeps its validated baseline."""
     if indices is not None and len(indices) != len(batch):
         raise ValueError("선택 공고 인덱스 건수 불일치")
+    if deadline is not None and baseline_texts is None:
+        raise ValueError("a retry deadline needs a validated baseline to fall back on")
     if baseline_texts is not None:
         # 추가 호출이 실패하면 그 공고의 검증된 합동 판정을 그대로 남긴다(보호 결정).
         # v13 단계와 추가 호출 단계 전부 같은 성질이다.
@@ -1259,6 +1264,11 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
                 continue
             except ValueError:
                 pass
+        if deadline is not None and time.time() > deadline:
+            record("retry_skipped", chunk_index=i, global_index=indices[i] if indices is not None else start + i,
+                   id=ids[i] if ids is not None else None, reason="deadline")
+            outs[i] = None
+            continue
         stage = "call"
         retry_info = {}
         try:
@@ -3404,13 +3414,13 @@ CLAUSE_START = re.compile(r"^\s*(?:[※\-•·○◦□■◆◇▣▶❍*]|[①
                           r"|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+|제\s*\d+\s*(?:조|장|절))")
 SENTENCE_END = re.compile(r"(?:[.。:：]|다|함|음|임|요|것)\s*$")
 CLAUSE_JOIN_MAX = 400     # characters of one joined clause; longer text starts a new one
-CLAUSE_TEXT_MAX = 400     # characters of one clause shown to the model; a longer one is cut and not observed
+CLAUSE_TEXT_MAX = 800     # characters of one clause shown to the model; a longer one is cut and not observed
 # A short "가." line inside a section is a list heading; it often carries the stage ("나. 계약 시 제출서류",
 # PPS-D-002037) that the items under it do not repeat, so it is shown with them.
 SUBSECTION_LINE = re.compile(r"^\s*[가-하]\s*[.)]\s*\S")
 SUBSECTION_MAX = 40
-CLAUSE_BUDGET = 7000      # characters of all clauses; about 3,500 prompt tokens
-CLAUSE_COUNT_MAX = 80
+CLAUSE_BUDGET = 14000     # characters of all clauses; dev max about 11,000 prompt tokens, median 6,100 characters
+CLAUSE_COUNT_MAX = 160   # dev: every candidate fits whole on 144 of 200 notices
 
 
 def _clause_spans(text: str) -> List[Tuple[int, int, bool]]:
@@ -3466,9 +3476,9 @@ def clause_candidates(rec: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], bool]:
     for rank, doc_index, clause_index, clause in sorted(found, key=lambda c: c[:3]):
         cut = clause.pop("cut")
         if len(kept) >= CLAUSE_COUNT_MAX or used + len(clause["text"]) > CLAUSE_BUDGET:
-            complete = complete and rank > 2
+            complete = False            # any candidate the model did not see may hold the missing kind
             continue
-        complete = complete and not (cut and rank <= 2)   # the model never sees a cut tail
+        complete = complete and not cut   # the model never sees a cut tail
         kept.append((doc_index, clause_index, clause))
         used += len(clause["text"])
     kept.sort(key=lambda c: c[:2])
@@ -3489,7 +3499,8 @@ SERVER_LIMIT_S = 7200              # the server stops the whole run here
 RELATION_RESERVE_S = 300           # after the relation phase: postprocess (~4 ms a notice), CSV, report
 RELATION_SAFETY = 1.5              # a batch is admitted only if 1.5x its projected time still fits
 RELATION_PROBE = 8                 # the first batch: small, so the relation rate is measured, not borrowed
-RELATION_PROBE_S = 600             # the probe runs only with this much time left (one 2,048-token decode)
+RELATION_DECODE_S = 300            # one notice's full 2,048-token decode, alone (>= 7 tokens/s); unmeasured
+RELATION_PROBE_S = 600             # the probe runs only with this much time left: its batch plus one retry
 PROCESS_START = time.time()
 RELATION_KINDS = ["performance_record", "bidder_location", "institution_type", "company_size",
                   "direct_production", "license_registration", "staff_or_facility", "supply_pledge",
@@ -3624,20 +3635,31 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     price = estimated_price(rec)
     facts = judgment.get(COMPANY_FACTS_KEY) or {}
     _, codes = direct_production_demand(rec)
+    catalogue = competitive_product(rec, codes)
+    limit = region_price_limit(rec)
+    # Slots whose "no" is only "not known" on this notice. A relation row lets a known "no" decide and
+    # never an unknown one (`slot_row_cell`).
+    unknown = ({"small", "mid", "under_notice", "over_notice", "over_region_limit"} if price is None else set())
+    unknown |= {"over_region_limit"} if limit is None else set()
+    unknown |= {"scope_general", "scope_competitive"} if facts.get("scope") not in ("general", "competitive", "other") else set()
+    unknown |= {"software"} if facts.get("software_business") not in ("yes", "no") else set()
+    unknown |= {"catalogue_product"} if catalogue is None else set()
     return {
+        "unknown": frozenset(unknown),
         # 판로지원법 시행령 제2조의2: 1억 미만 소기업·소상공인, 1억 이상 고시금액 미만 중소기업
         "small": price is not None and price < SME_BAND_FLOOR_WON,
         "mid": price is not None and SME_BAND_FLOOR_WON <= price < NOTICE_AMOUNT_WON,
         "scope_general": facts.get("scope") == "general",
-        "catalogue_product": competitive_product(rec, codes) is True,
+        "catalogue_product": catalogue is True,
         "only_small": facts.get("qualification") == "small_only",
         "no_size_limit": facts.get("qualification") == "unrestricted",
         "size_limit_text": size_limited(rec),
         "priority_exception": facts.get("priority_exception") == "yes",
         "under_notice": price is not None and price < NOTICE_AMOUNT_WON,
         "over_notice": price is not None and price >= NOTICE_AMOUNT_WON,
-        "region_allowed": region_restriction_allowed(rec),
-        "negotiation": "협상" in str((rec.get("meta") or {}).get("계약방법") or ""),
+        "region_allowed": region_restriction_allowed(rec),     # True also when unknown: never read it negated
+        "over_region_limit": price is not None and limit is not None and price >= limit,
+        "negotiation": negotiated(rec),
         "scope_competitive": facts.get("scope") == "competitive",
         "software": facts.get("software_business") == "yes",
         # Absence needs the whole notice: every clause fit the call, and no document was missing or dropped.
@@ -3727,11 +3749,14 @@ def slot_row_cell(item: str, row, cell: Dict[str, Any], slots: Dict[str, bool], 
     derived = holds(applies) and holds(requirement) and not any(slots[n] for n in exceptions)
     if _uses_relations(row):
         # A missing label means "absent" only on a notice seen whole (`relations_complete`); otherwise it is
-        # unknown. Unknown never decides: it neither raises an absence nor clears a positive.
+        # unknown. Unknown never decides: it neither raises an absence nor clears a positive. A scope that
+        # does not read the labels (price band, product scope) is known either way, so its failure still decides.
         observed = slots["relations_complete"]
         reads_absence = (any(n.startswith("!") and n[1:] in RELATION_SLOTS for n in (*applies, *requirement))
                          or any(n in RELATION_SLOTS for n in exceptions))
-        if not observed and (reads_absence or not derived):
+        scope_fails = not holds([n for n in applies if n.lstrip("!") not in RELATION_SLOTS
+                                 and n != "relations_complete" and n.lstrip("!") not in slots["unknown"]])
+        if not observed and not scope_fails and (reads_absence or not derived):
             return cell
         if not derived:
             # A relation row owns its item: a positive from the item's own path survives only if the shared
@@ -3975,11 +4000,15 @@ def v21_share_clause(rec: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def v22_briefing_clause(rec: Dict[str, Any]) -> Optional[str]:
+def negotiated(rec: Dict[str, Any]) -> bool:
     # The item is 협상에 의한 계약 only; the registered award method says which (all dev notices carry it).
-    # A body mention of 협상 is not the contract method.
+    # A body mention of 협상 is not the contract method. v22's clause rule and the slot table both read this.
     meta = rec.get("meta") or {}
-    if "협상" not in str(meta.get("낙찰방법") or "") + str(meta.get("계약방법") or ""):
+    return "협상" in str(meta.get("낙찰방법") or "") + str(meta.get("계약방법") or "")
+
+
+def v22_briefing_clause(rec: Dict[str, Any]) -> Optional[str]:
+    if not negotiated(rec):
         return None
     for doc in rec.get("docs") or ():
         text = doc.get("text") or ""
@@ -4306,6 +4335,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             break
         indices = relation_selected[s:s + size]
         s += len(indices)
+        t_batch = time.time()           # the batch's time includes building and counting its messages
         batch = []
         for i in indices:
             messages, clauses, complete = relation_messages(recs[i])
@@ -4314,10 +4344,11 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             emit("relation_input", id=recs[i]["id"], clauses=len(clauses), complete=complete,
                  prompt_tokens=relation_ntok[-1])
         emit("chunk_started", phase="relation", chunk_start=indices[0], count=len(batch), indices=indices)
-        t_batch = time.time()
+        # A serial retry starts only while one full decode still ends before the reserve.
         responses = run_chunk(runner, batch, start=indices[0], ids=[recs[i]["id"] for i in indices],
                               emit=emit, debug_responses=debug_responses, items=RELATION_KEYS,
-                              phase="relation", baseline_texts=[texts[i] for i in indices], indices=indices)
+                              phase="relation", baseline_texts=[texts[i] for i in indices], indices=indices,
+                              deadline=PROCESS_START + SERVER_LIMIT_S - RELATION_RESERVE_S - RELATION_DECODE_S)
         for i, response in zip(indices, responses):
             relation_texts[i] = response
         per_notice = max(per_notice or 0.0, (time.time() - t_batch) / len(indices))
