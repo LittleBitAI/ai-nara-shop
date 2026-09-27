@@ -15,3 +15,13 @@ the main call write `근거문구` before `위반여부` for every item. Runs: `
    reported next to it; the adopted version is whichever of the two passes 4, the higher if both do.
 6. Server time: the run's inference seconds per notice against `be87c9f`'s; over 6,800 s estimated means not adopted.
 7. Not scored by 23:10 → `be87c9f` is uploaded.
+
+## Combined run (added 21:05, before any result)
+
+Code `8a274ec82dfb12c7154bdd4154801a4bec810995` adds, on top of the evidence-first code, a `조항역할` field between quote and
+verdict, a prompt rule with contrastive examples (positives from dev gold; negatives generic, none from the off-dev 600),
+and a postprocess gate that zeroes v1–v8 on evaluation, checklist or law-citation quotes. Runs:
+`notebooks/colab-efplus-600.ipynb`, `notebooks/colab-efplus-dev.ipynb`. Judged exactly as above, against the same
+`be87c9f` baseline; also replayed with the role gate off. Dev is inflated on v1–v3 by the dev-gold examples, so the
+dev check (drop ≤ 0.01) is the only use of dev here. If both the evidence-first run and the combined run pass, the one
+with the higher off-dev 600 Macro goes up.
