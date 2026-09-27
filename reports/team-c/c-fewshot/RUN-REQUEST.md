@@ -60,11 +60,26 @@ git diff 9356dc6 1f7a65cfdab898dad7939722c81044d1b594c8fb -- script.py     # V18
 기준선 재생 명령. 원응답에는 #166 이전의 수의계약 `sme`·`company_size` 호출도 들어 있지만
 재생기가 `needs_extra_call()` 로 그 응답을 건너뛴다(`tools/replay_run.py`).
 
+D 의 아카이브는 한 회차가 아니라 **두 샤드**다. 노트북(`notebooks/colab-offdev-600.ipynb`)이
+`SHARD_SIZE = 500` 으로 `offdev-600-ids.txt` 순서를 잘라 `u00`(앞 500건)·`u01`(뒤 100건)을 각각
+`script.py` 한 번으로 돌린다. `replay_run.py` 는 한 회차의 `run_report.json` 건수와 입력 건수가
+같아야 돌므로 샤드마다 따로 재생한다. 합칠 필요는 없다 — `score_offdev.py --pred` 가 CSV
+여러 개를 받아 합치고, 중복 ID 와 예측이 빠진 라벨 공고를 거부한다.
+
 ```bash
 git show 9356dc6:script.py > <tmp>/base-9356dc6.py
-py -X utf8 tools/replay_run.py --case <600건 합친 회차 폴더> --input <매니페스트 순서의 600건> \
-  --script <tmp>/base-9356dc6.py --output-dir <tmp>/offdev-base
+for s in u00 u01; do
+  # 그 샤드가 실제로 돈 공고를 그 샤드 CSV 의 순서대로 뽑아 입력을 만든다
+  py -X utf8 -c "import csv,json,sys; ids=[r['id'] for r in csv.DictReader(open(sys.argv[1],encoding='utf-8'))]; want=set(ids); rows={}; [rows.__setitem__(json.loads(l)['id'], l) for l in open('open/train_unlabeled.jsonl',encoding='utf-8') if json.loads(l)['id'] in want]; open(sys.argv[2],'w',encoding='utf-8',newline='\n').write(''.join(rows[i] for i in ids))" \
+    <아카이브>/$s/submission.csv <tmp>/$s.jsonl
+  py -X utf8 tools/replay_run.py --case <아카이브>/$s --input <tmp>/$s.jsonl \
+    --script <tmp>/base-9356dc6.py --output-dir <tmp>/offdev-base-$s
+done
 ```
+
+`<아카이브>/$s` 는 그 샤드의 `run_report.json`·`diagnostics.jsonl`·`submission.csv` 가 있는
+폴더다. 이 절차는 저장된 무라벨 샤드(`reports/label-compare/unlabeled-d/run-1790141381430477242/u00`)
+로 시험했다 — 입력 500건, 재생 500건, 건수 검사 통과.
 
 **아직 안 돌렸다.** D 의 복원 아카이브가 이 워크트리에 없다. D 의 보고서
 (`reports/offdev-600-threshold-20260927.md`)가 적은 현재 코드 Macro 0.499681 → 0.508940 은
@@ -176,10 +191,11 @@ Colab 회차가 필요하다".
 ```bash
 py -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <RUN_COMMIT>
 
-# 1·3 — off-dev 라벨로 채점. 후보와 기준선(§1, 9356dc6 재생)을 같은 명령으로
-py -X utf8 reports/offdev-0927/score_offdev.py --pred <run>/submission.csv \
+# 1·3 — off-dev 라벨로 채점. 후보도 같은 노트북이라 u00·u01 두 샤드다. 두 CSV 를 함께 넘긴다
+py -X utf8 reports/offdev-0927/score_offdev.py --pred <run>/u00/submission.csv <run>/u01/submission.csv \
   --labels reports/labels-600/merged/diag.csv reports/labels-600/merged/sealed.csv
-py -X utf8 reports/offdev-0927/score_offdev.py --pred <tmp>/offdev-base/submission.csv \
+py -X utf8 reports/offdev-0927/score_offdev.py \
+  --pred <tmp>/offdev-base-u00/submission.csv <tmp>/offdev-base-u01/submission.csv \
   --labels reports/labels-600/merged/diag.csv reports/labels-600/merged/sealed.csv
 
 # 4 — dev. **회차 2 의 CSV 로 잰다. 재생이 아니다**(§2-1)
