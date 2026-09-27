@@ -95,4 +95,4 @@ The one exception: if nothing passes by 19:00, the slot carries an experimental 
 
 ## Results
 
-Empty. One line per step as it finishes.
+- 2026-09-27: D's fixed diagnostic-200 + sealed-400 GPU archive (600/600) was CPU-replayed byte-identically.  Existing logprob grid measurement improved the full pool from 0.471322 to 0.486298, but split-half gained in neither direction; keep operational thresholds unchanged.  See `reports/offdev-600-threshold-20260927.md`.
