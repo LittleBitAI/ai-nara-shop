@@ -64,7 +64,7 @@ def labels(*records):
 
 
 class RelationTests(unittest.TestCase):
-    ROW = {"v2": (("under_notice",), ("entry_performance",), (), ("entry_performance",))}
+    ROW = {"v2": (("under_notice",), ("entry_performance",), (), None)}   # no keep-if: the row owns the cell
 
     def setUp(self):
         self.rec = notice(50_000_000, "3. 입찰참가자격\n" + PERFORMANCE)
@@ -89,13 +89,39 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(self.decide(None, v2=1)["위반여부"], 1)
         self.assertEqual(self.decide("not json", v2=1)["위반여부"], 1)
 
-    def test_code_compares_the_required_amount_with_the_price(self):
+    def test_the_amount_is_compared_as_the_v3_deletion_rule_compares_it(self):
         text = labels({"id": self.clause_id, "kind": "performance_record", "stage": "entry"})
-        for price, one_times in ((40_000_000, True), (50_000_000, True), (90_000_000, False)):   # asks 5천만원
+        for price, budget in ((40_000_000, None), (50_000_000, None), (90_000_000, None),
+                              (40_000_000, 60_000_000), (60_000_000, 40_000_000)):   # the clause asks 5천만원
             rec = notice(price, "3. 입찰참가자격\n" + PERFORMANCE)
+            if budget:
+                rec["meta"]["배정예산금액"] = budget
             judgment = {}
             script.attach_relations(judgment, rec, text)
-            self.assertEqual(script.relation_slots(judgment, rec)["entry_performance_budget"], one_times)
+            self.assertEqual(script.relation_slots(judgment, rec)["entry_performance_budget"],
+                             not script._below_budget(PERFORMANCE, rec), (price, budget))
+
+    def test_absence_needs_the_whole_input_not_only_the_clause_budget(self):
+        judgment = {}
+        script.attach_relations(judgment, self.rec, labels())
+        self.assertFalse(script.relation_slots(judgment, self.rec)["relations_complete"])   # no completeness record
+        seen = dict(self.rec, input_completeness={"완전관측": True}, dropped_doc_counts={})
+        self.assertTrue(script.relation_slots(judgment, seen)["relations_complete"])
+        dropped = dict(seen, dropped_doc_counts={"제안요청서": 1})
+        self.assertFalse(script.relation_slots(judgment, dropped)["relations_complete"])
+
+    def test_a_wrapped_line_is_one_clause_and_its_evidence_is_the_exact_span(self):
+        wrapped = ("2) 전자입찰서 제출 마감일 전일까지 입찰참가 등록한 업체\n"
+                   "※ 제조업체가 아닐 경우 물품계약 시 제조업체로부터 “제조자의 공급\n"
+                   "확약서 및 기술지원 A/S확약서”를 제출할 수 있는 업체\n"
+                   "3) 농업용기계 제조업으로 사업자등록을 필한 업체")
+        rec = notice(50_000_000, "3. 입찰참가자격\n" + wrapped)
+        clauses, _ = script.clause_candidates(rec)
+        pledge = next(c for c in clauses if "확약서" in c["text"])
+        self.assertIn("물품계약 시", pledge["text"])
+        self.assertIn("\n", pledge["full"])
+        self.assertEqual(script.clean_evidence(pledge["full"], rec["docs"][0]["text"]), pledge["full"])
+        self.assertEqual(len([c for c in clauses if c["text"].startswith(("2)", "※", "3)"))]), 3)
 
     def test_labels_must_use_the_schema_values_and_known_clause_ids(self):
         with self.assertRaises(ValueError):

@@ -1,11 +1,14 @@
 """Pick relation rows for the slot table from a GPU run that saved relation labels. No model call.
 
 Every candidate row is read off its item's definition (CANDIDATES below): the price band or scope the item
-names, the relation its requirement names, the exception it allows, and "keep an existing positive only if".
+names, the relation its requirement names and the exception it allows. A relation row owns its cell: it also
+lowers a positive the shared labels do not derive.
 Nested cross-fit, as in reports/slot-decisions/fit3.py: on half A of the off-dev labels pick the row that
 gains most among rows that do not lower dev half A, score it on half B and dev half B, then swap.
-A row is proposed only when both directions pick one, both held-out off-dev halves gain and neither held-out
-dev half falls. The proposal is written as a candidate script; it still has to pass tools/slot_gate.py.
+An item is admitted only when both directions pick a row, both held-out off-dev halves gain and neither
+held-out dev half falls. The admitted row is then picked on both halves as training data, never by a
+held-out score. It is written as a candidate script and still has to pass tools/slot_gate.py; that gate
+scores the same labels, so the cross-fit is the held-out evidence and the gate is the in-sample check.
 
   python -X utf8 reports/relation-pipeline/fit.py \
       --pool dev <case> <input.jsonl> <dev_labels.csv> \
@@ -33,8 +36,9 @@ GENERAL = [("scope_general",), ("!catalogue_product",), ()]
 SIZE_EXCEPTIONS = [(), ("priority_exception",), ("stated_exception",), ("priority_exception", "stated_exception")]
 
 
-def rows(applies, requirements, exceptions=((),), keeps=(None,)):
-    return [(a, r, x, k) for a in applies for r in requirements for x in exceptions for k in keeps]
+def rows(applies, requirements, exceptions=((),)):
+    # No "keep only if" option: a relation row owns its cell (`slot_row_cell`), so it lowers what it does not derive.
+    return [(a, r, x, None) for a in applies for r in requirements for x in exceptions]
 
 
 def banded(band, scopes):
@@ -42,37 +46,28 @@ def banded(band, scopes):
 
 
 CANDIDATES = {
-    "v1": rows([()], [("entry_institution",)], keeps=(None, ("entry_institution",))),
-    "v2": rows([("under_notice",)], [("entry_performance",)],
-               keeps=(None, ("entry_performance",), ("under_notice", "entry_performance"))),
-    "v3": rows([()], [("entry_performance_budget",)],
-               keeps=(None, ("entry_performance",), ("entry_performance_budget",))),
-    "v4": rows([("over_notice",), ()], [("entry_performance_institution",)],
-               keeps=(None, ("entry_performance",), ("entry_performance_institution",))),
-    "v5": rows([("!region_allowed",)], [("entry_location",)], keeps=(None, ("entry_location",))),
-    "v6": rows([("region_allowed",)], [("entry_location_basic",)],
-               keeps=(None, ("entry_location",), ("entry_location_basic",))),
-    "v7": rows([("region_allowed",)], [("entry_location_multi",)], keeps=(None, ("entry_location_multi",))),
-    "v8": rows([(), ("region_allowed",)], [("entry_performance", "entry_location")],
-               keeps=(None, ("entry_performance", "entry_location"))),
-    "v10": rows([("scope_competitive", "relations_complete")], [("!entry_direct_production",)],
-                keeps=(None, ("scope_competitive",))),
-    "v11": rows([("scope_competitive", "relations_complete")], [("!entry_size",)], SIZE_EXCEPTIONS,
-                keeps=(None, ("scope_competitive",))),
-    "v12": rows(GENERAL, [("entry_direct_production",)], keeps=(None, ("entry_direct_production",))),
-    "v13": rows([("scope_competitive",), ()], [("entry_small",)], keeps=(None, ("entry_small",))),
-    "v14": rows(banded("over_notice", GENERAL), [("entry_size",)], SIZE_EXCEPTIONS[:1],
-                keeps=(None, ("over_notice", "entry_size"))),
-    "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)], keeps=(None, ("entry_small",))),
-    "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size", "relations_complete")], SIZE_EXCEPTIONS,
-                         keeps=(None, ("!entry_size",))),
-    "v17": rows(banded("small", GENERAL), [("entry_sme",)], SIZE_EXCEPTIONS[:1] + SIZE_EXCEPTIONS[2:3],
-                keeps=(None, ("small", "entry_sme"))),
-    "v18/relation": rows(banded("small", GENERAL[:1]), [("!entry_size", "relations_complete")], SIZE_EXCEPTIONS,
-                         keeps=(None, ("!entry_size",))),
-    "v19": rows([()], [("pledge_at_bid",)], keeps=(None, ("pledge_at_bid",))),
-    "v20": rows([("software", "relations_complete")], [("!sw_limit_stated",)], keeps=(None, ("software",))),
-    "v22": rows([("negotiation",)], [("briefing_entry",)], keeps=(None, ("negotiation", "briefing_entry"))),
+    "v1": rows([()], [("entry_institution",)]),
+    "v2": rows([("under_notice",)], [("entry_performance",)]),
+    "v3": rows([()], [("entry_performance_budget",)]),
+    "v4": rows([("over_notice",), ()], [("entry_performance_institution",)]),
+    "v5": rows([("!region_allowed",)], [("entry_location",)]),
+    "v6": rows([("region_allowed",)], [("entry_location_basic",)]),
+    # Adjacency is the item's wording; two listed provinces is what the existing v7 rule
+    # (`detect_region_expansion`, dev 7/0/0) already counts, so both readings are offered.
+    "v7": rows([("region_allowed",)], [("entry_location_adjacent",), ("entry_location_multi",)]),
+    "v8": rows([(), ("region_allowed",)], [("entry_performance", "entry_location")]),
+    "v10": rows([("scope_competitive", "relations_complete")], [("!entry_direct_production",)]),
+    "v11": rows([("scope_competitive", "relations_complete")], [("!entry_size",)], SIZE_EXCEPTIONS),
+    "v12": rows(GENERAL, [("entry_direct_production",)]),
+    "v13": rows([("scope_competitive",), ()], [("entry_small",)]),
+    "v14": rows(banded("over_notice", GENERAL), [("entry_size",)]),
+    "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)]),
+    "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size", "relations_complete")], SIZE_EXCEPTIONS),
+    "v17": rows(banded("small", GENERAL), [("entry_sme",)], SIZE_EXCEPTIONS[:1] + SIZE_EXCEPTIONS[2:3]),
+    "v18/relation": rows(banded("small", GENERAL[:1]), [("!entry_size", "relations_complete")], SIZE_EXCEPTIONS),
+    "v19": rows([()], [("pledge_at_bid",)]),
+    "v20": rows([("software", "relations_complete")], [("!sw_limit_stated",)]),
+    "v22": rows([("negotiation",)], [("briefing_entry",)]),
 }
 
 
@@ -152,20 +147,25 @@ def main(argv=None):
         for name, (notices, truth, ids) in pools.items():
             labelled = [i for i in ids if truth[i][item] is not None]
             split[name] = {h: [i for i in labelled if half(i) == h] for h in "AB"}
-        cross = {}
-        for fit_h, test_h in (("A", "B"), ("B", "A")):
-            def gain(name, h, row):
-                notices, truth, _ = pools[name]
-                ids = split[name][h]
-                base = score(truth, [notices[i]["final"][item] for i in ids], ids, item)
-                cand = score(truth, predict(script, key, row, notices, ids), ids, item)
-                return cand[0] - base[0], base[1], cand[1]
+        def gain(name, halves, row):
+            notices, truth, _ = pools[name]
+            ids = [i for h in halves for i in split[name][h]]
+            base = score(truth, [notices[i]["final"][item] for i in ids], ids, item)
+            cand = score(truth, predict(script, key, row, notices, ids), ids, item)
+            return cand[0] - base[0], base[1], cand[1]
+
+        def pick(halves):
+            """The best row on these halves only: off-dev gain above MARGIN, no dev loss on the same halves."""
             best = (MARGIN, None)
             for row in candidates:
-                g = gain(off_name, fit_h, row)[0]
-                if g > best[0] and gain("dev", fit_h, row)[0] >= 0:
+                g = gain(off_name, halves, row)[0]
+                if g > best[0] and gain("dev", halves, row)[0] >= 0:
                     best = (g, row)
-            row = best[1]
+            return best[1]
+
+        cross = {}
+        for fit_h, test_h in (("A", "B"), ("B", "A")):
+            row = pick(fit_h)
             cross[fit_h] = {"row": row}
             if row is not None:
                 for name in pools:
@@ -175,9 +175,13 @@ def main(argv=None):
         admitted = (all(rows_picked)
                     and all(cross[h][off_name]["gain"] > 0 and cross[h]["dev"]["gain"] >= 0 for h in "AB"))
         if admitted:
-            # Both directions agree the item gains; keep the row that did better held out on the off-dev side.
-            chosen[key] = max(rows_picked, key=lambda r: sum(cross[h][off_name]["gain"]
-                                                             for h in "AB" if cross[h]["row"] == r))
+            # The held-out halves only decide whether the item is admitted. The row itself is chosen on
+            # training-side evidence (both halves as training), so no held-out score picks it. The gate that
+            # follows scores the same labels, so its gain is in-sample; the cross-fit above is the held-out test.
+            row = pick("AB")
+            admitted = row is not None
+            if admitted:
+                chosen[key] = row
         report[key] = {"admitted": admitted, "cross": cross, "row": chosen.get(key)}
         print(key, json.dumps(report[key], ensure_ascii=False), flush=True)
     out.mkdir(parents=True)
