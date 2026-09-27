@@ -3620,7 +3620,8 @@ def attach_relations(parsed: Dict[str, Any], rec: Dict[str, Any], text: Optional
             relations.append(dict(r, clause=clause, ratio=required / basis if required and basis else None))
     # What the call read, so a missing label can be a known "no" for a positive citing one of these clauses.
     # At the record cap the model may have stopped before labelling every clause it read, so then nothing is.
-    read = [] if len(records) >= RELATION_MAX else [re.sub(r"\s+", "", c["full"]) for c in clauses]
+    # The shown text, not `full`: a clause over CLAUSE_TEXT_MAX is cut and its tail was never read.
+    read = [] if len(records) >= RELATION_MAX else [re.sub(r"\s+", "", c["text"]) for c in clauses]
     parsed[RELATION_KEY] = {"read": read, "relations": relations}
 
 

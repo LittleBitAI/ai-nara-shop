@@ -111,6 +111,10 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(self.decide(nothing, v2=1)["위반여부"], 1)                    # no evidence: unknown
         full = [{"id": self.clause_id, "kind": "performance_record", "stage": "evaluation"}] * script.RELATION_MAX
         self.assertEqual(self.decide(labels(*full), evidence=PERFORMANCE, v2=1)["위반여부"], 1)   # at the cap
+        tail = "최근 3년간 납품 실적이 있는 업체"                  # past the cut: never shown to the model
+        rec = dict(self.rec, docs=[dict(self.rec["docs"][0],
+                                        text="3. 입찰참가자격\n가. 참가자격 " + "가" * script.CLAUSE_TEXT_MAX + tail)])
+        self.assertEqual(self.decide(nothing, rec=rec, evidence=tail, v2=1)["위반여부"], 1)
 
     def test_a_wrapped_line_is_one_clause_and_its_evidence_is_the_exact_span(self):
         wrapped = ("2) 전자입찰서 제출 마감일 전일까지 입찰참가 등록한 업체\n"
