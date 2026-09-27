@@ -3195,6 +3195,20 @@ def v6_basic_region_limits(rec: Dict[str, Any]):
     return found
 
 
+# A 시·군·구 name bound to a location predicate. A bare `…시` is not enough: `계약체결시` and
+# `계약체결시에 제출` are no places (review #172 round 2 P1).
+V6_BASIC_PLACE_BOUND = re.compile(
+    r"(?<![가-힣])[가-힣]{2,4}(?:시|군|구)\s*(?:에\s*(?:소재|있|위치|둔|두)|내에?\s*(?:소재|있|위치)|관내)")
+
+
+def v6_quote_names_basic_place(quote: Optional[str]) -> bool:
+    """The verified v6 quote itself places the bidder in a 시·군·구: an anonymized basic-unit or agency
+    token, or a place name followed by a location predicate. Lets a clause wrapped across lines keep v6
+    where the line-based L1 would lower it (review #172 round 1 P1)."""
+    text = quote or ""
+    return _v6_confirmed_basic(text) or bool(V6_BASIC_PLACE_BOUND.search(re.sub(WIDE_REGION, " ", text)))
+
+
 def v6_no_basic_region_limit(rec: Dict[str, Any]) -> bool:
     """L1 of D9: no qualification line limiting the participant's location carries a 시·군·구 signal.
 
@@ -3637,7 +3651,7 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
         # L1 is line-based; a verified quote that itself names a 시·군·구 keeps the cell even when the clause
         # wraps its anchor and its place name onto separate lines (review #172 round 1 P1).
         if hit and v == "v6" and (v6_not_a_basic_region_limit(ev, rec)
-                                  or (v6_no_basic_region_limit(rec) and not _has_basic_unit(ev))):
+                                  or (v6_no_basic_region_limit(rec) and not v6_quote_names_basic_place(ev))):
             hit, ev = 0, ""
         if v == "v5" and hit == 0 and cell.get("위반여부") != 1:
             # 고시금액 이상인데 모델이 놓친 참가업체 소재지 제한만 올린다. 모델 양성을
