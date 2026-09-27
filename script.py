@@ -424,11 +424,11 @@ def load_sme_reference(data_dir):
 
 # C few-shot (회차 전용): v18 의 오탐·누락이 나는 경계 하나를 예시 한 쌍으로 보인다.
 #
-# 왜 v18 이고 왜 `baseline` 인가. 진단 200 을 `main` 으로 재생해 FN 을 갈랐더니 v10 은
-# 11건 중 10건이 문서 절단이라 예시가 닿지 않고, v18 은 10건 중 7건이 닿으며 양성이
-# 38건으로 가장 두껍다. 그리고 v10·v11·v18 의 FN 은 **전부 `baseline` 에서 모델이 0**
-# 이라 한 것이고 게이트가 정탐을 내린 경우가 0건이다 — v18 FN 들의 `company_size`
-# 사실은 이미 `unrestricted`·`complete=yes` 로 맞다. 사실이 아니라 판정이 틀린다.
+# 왜 v18 이고 왜 `baseline` 인가. 진단 200 을 `a0d6aea` 로 재생해 FN 마다 baseline 만 1 로
+# 바꿔 끝까지 돌렸더니 v18 은 10건 중 5건이 최종까지 산다(나머지 5건은 수의계약이라
+# `postprocess` 가 내린다). 문서 절단은 이 경로를 막지 않는다. v10 은 11건이 다 닿지만 10건이
+# 절단이라 겨냥 여부는 열린 판단으로 남겼다. v18 FN 은 일곱 지점 전부 0 이고 `company_size`
+# 사실은 이미 `unrestricted`·`complete=yes` 로 맞다 — 사실이 아니라 판정이 틀린다.
 # 측정은 `reports/team-c/c-fewshot/TARGET.md` 가 소유한다.
 #
 # 예시는 **dev 에서** 뽑았다(`docs/rules.md` A1 이 dev 사례의 프롬프트 사용을 허용한다).
@@ -439,8 +439,8 @@ def load_sme_reference(data_dir):
 # 참가자격으로서의 소지 요구가 아니다".
 #
 # 크기: 692자. 보수적으로 403토큰(회차 실측 1.716 자/토큰), 한글·영문을 나눠 세면 약 229.
-# `baseline` 200호출 × 403토큰 ≈ 서버 +114초로, 여유 372초 안이다
-# (`reports/team-c/c-fewshot/BUDGET.md`).
+# `baseline` 200호출 × 403토큰 ≈ 서버 +114초로 추정한다(평균에서 끌어낸 계획용 값이고
+# 상한이 아니다 — 회차가 잰다. `reports/team-c/c-fewshot/BUDGET.md`).
 V18_EXAMPLES = """
 [Worked examples for v18 — the 소기업 boundary]
 A 소기업 or 소상공인 mention restricts bidding only when the sentence states who may bid.
