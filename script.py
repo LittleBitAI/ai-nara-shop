@@ -105,7 +105,8 @@ COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 �
 # lost (v1 FP 6 -> 160 off-dev, 0 -> 74 dev; v4 FP 3 -> 23; v8 FP 0 -> 12), v5 moved nothing.
 # Kept: v2 (with NOT_ENTRY_QUOTE), v6, v7 — off-dev and both halves up, dev drop within 0.01.
 # v3 passed alone but not on top of #163's v3 cut 0.95: off-dev 0/2/2 -> 1/6/1, net -2 -> -5.
-QUALIFICATION_FACTS_ITEMS: List[str] = ["v2", "v6", "v7"]
+# Experimental slot 2026-09-27: v2 only — on the off-dev 600 v2+L1 equals v2+v6+v7+L1 and dev is higher.
+QUALIFICATION_FACTS_ITEMS: List[str] = ["v2"]
 # The facts call is the last extra call and the only optional one. It stops starting chunks once the
 # process has run this long, leaving the rest of the 7,200 s limit for the chunk in flight and the CSV.
 # Unreached notices keep the main call's verdicts (the same fallback as a failed extra call).
@@ -214,7 +215,8 @@ LOGPROBS_K = 5
 # own quote. On the five saved sets no value rose; v6 stays at 0.6 because moving it only swapped
 # two e6 quotes that way (review pr146 round 1).
 ITEM_THRESHOLDS: Dict[str, float] = {
-    "v1": 0.97, "v3": 0.95, "v4": 0.995, "v6": 0.6, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
+    "v1": 0.98, "v3": 0.95, "v4": 0.9998, "v6": 0.6, "v8": 0.9998, "v9": 0.9998, "v19": 0.9, "v22": 0.98,
+    "v23": 0.6, "v24": 0.01,
 }
 # v3's former 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive.
 # The fixed off-dev-600 gate later selected 0.95: Macro 0.499681 -> 0.508940, both split halves
@@ -3673,6 +3675,17 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     if (rec.get("meta") or {}).get("계약방법") == "수의계약":
         for item in NO_BID_ZERO_ITEMS:
             out[item] = {"위반여부": 0, "근거문구": ""}
+    # Label sweep (2026-09-27, experimental slot): zeroing rules picked on one off-dev half and kept only
+    # when the other half also gained and no dev gold positive was lost. v22 is the item definition
+    # ("계약방법 협상만 적용"); v1 on 지명경쟁 and v4 under 2천만원 are empirical (no labelled positive there).
+    meta = rec.get("meta") or {}
+    price = estimated_price(rec)
+    if meta.get("낙찰방법") != "협상에의한계약":
+        out["v22"] = {"위반여부": 0, "근거문구": ""}
+    if meta.get("계약방법") == "지명경쟁":
+        out["v1"] = {"위반여부": 0, "근거문구": ""}
+    if price is not None and price < 20_000_000:
+        out["v4"] = {"위반여부": 0, "근거문구": ""}
     return out
 
 
