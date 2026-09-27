@@ -444,7 +444,8 @@ def to_csv_bytes(script, rows):
     """`script.write_csv`와 같은 바이트를 메모리에서 만든다."""
     stream = io.StringIO(newline="")
     writer = csv.DictWriter(stream, fieldnames=script.HEADER if hasattr(script, "HEADER")
-                            else ["id"] + script.ITEMS + [f"e{i}" for i in range(1, 25)])
+                            else ["id"] + script.ITEMS + [f"e{i}" for i in range(1, 25)],
+                            lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
     return stream.getvalue().encode("utf-8")

@@ -1,9 +1,15 @@
-"""Measure existing logprob cuts from a saved-response labelled run. No model calls."""
-import argparse, csv, hashlib, importlib.util, json, tempfile
+"""Measure per-item logprob cuts from a saved-response labelled run. No model calls.
+
+Every labelled item except v9/v24 is searched over GRID plus "no cut" (None: the argmax answer).
+Macro is over the labelled items; halves are the fixed `half(id)` of reports/labels-3000/pick.py."""
+import argparse, csv, importlib.util, json, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "reports" / "labels-3000"))
+from pick import half  # noqa: E402
 GRID = (0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9, 0.95, 0.98, 0.99, 0.999)
+FIXED = ("v9", "v24")  # no off-dev labels; their cuts stay as they are
 TRUSTED = ("v1", "v2", "v3", "v5", "v6", "v7", "v8", "v12", "v13", "v14", "v15", "v19", "v21", "v22", "v23")
 
 def load(name, path):
@@ -18,7 +24,6 @@ def score(rows, truth, items):
     return out
 
 def macro(x): return sum(v["f1"] for v in x.values()) / len(x)
-def half(i): return hashlib.sha256(i.encode()).digest()[0] & 1
 
 def main():
     p=argparse.ArgumentParser(); p.add_argument("--case",required=True); p.add_argument("--input",required=True); p.add_argument("--truth",required=True); p.add_argument("--out",required=True); a=p.parse_args()
@@ -27,8 +32,9 @@ def main():
     truth={r["id"]:r for r in csv.DictReader(Path(a.truth).open(encoding="utf-8",newline=""))}; records=list(script.iter_records(a.input)); ids=[r["id"] for r in records]
     if set(ids)!=set(truth) or len(ids)!=len(truth): raise SystemExit("input과 truth ID 집합/건수가 다르다")
     if len(replay.saved_probabilities(a.case))!=len(ids): raise SystemExit("item_p1이 전 건에 없다")
-    original=dict(script.ITEM_THRESHOLDS); eligible=[i for i in script.ITEMS if i in original and any(truth[x][i] in ("0","1") for x in ids)]
-    fixed={i:x for i,x in original.items() if i not in eligible}; grid=sorted(set(GRID)|{original[i] for i in eligible})
+    original=dict(script.ITEM_THRESHOLDS); labelled=[i for i in script.ITEMS if any(truth[x][i] in ("0","1") for x in ids)]; eligible=[i for i in labelled if i not in FIXED]
+    fixed={i:x for i,x in original.items() if i not in eligible}; grid=[None]+sorted(set(GRID)|{original[i] for i in eligible if i in original})
+    def cuts(c): return {**fixed,**({} if c is None else {i:c for i in eligible})}
     def run(path, cuts):
         script.ITEM_THRESHOLDS.clear(); script.ITEM_THRESHOLDS.update(cuts)
         expected=[r["id"] for r in script.iter_records(path)]
@@ -36,27 +42,27 @@ def main():
     def choose(gridrows, base, labels):
         base_s=score(base,labels,eligible); selected={}
         for item in eligible:
-            best=(base_s[item]["f1"],original[item])
+            best=(base_s[item]["f1"],original.get(item))
             for cut,rows in gridrows.items():
                 f=score(rows,labels,(item,))[item]["f1"]
                 if f>best[0]+1e-12: best=(f,cut)
             selected[item]=best[1]
-        return {**fixed,**selected}
+        return {**fixed,**{i:c for i,c in selected.items() if c is not None}}
     try:
-        base=run(a.input,original); allgrid={c:run(a.input,{**fixed,**{i:c for i in eligible}}) for c in grid}; chosen=choose(allgrid,base,truth); candidate=run(a.input,chosen)
-        bscore,cscore=score(base,truth,script.ITEMS),score(candidate,truth,script.ITEMS); halves={}
+        base=run(a.input,original); allgrid={c:run(a.input,cuts(c)) for c in grid}; chosen=choose(allgrid,base,truth); candidate=run(a.input,chosen)
+        bscore,cscore=score(base,truth,labelled),score(candidate,truth,labelled); halves={}
         with tempfile.TemporaryDirectory(prefix="threshold-halves-") as tmp:
-            for h in (0,1):
+            for h in ("A","B"):
                 train=[r for r in records if half(r["id"])==h]; test=[r for r in records if half(r["id"])!=h]
                 paths=[]
                 for name, rows in (("train",train),("test",test)):
                     path=Path(tmp)/f"{name}-{h}.jsonl"; path.write_text("".join(json.dumps(r,ensure_ascii=False)+"\n" for r in rows),encoding="utf-8",newline="\n"); paths.append(path)
                 train_truth={r["id"]:truth[r["id"]] for r in train}; test_truth={r["id"]:truth[r["id"]] for r in test}
-                trainbase=run(paths[0],original); traingrid={c:run(paths[0],{**fixed,**{i:c for i in eligible}}) for c in grid}; hcuts=choose(traingrid,trainbase,train_truth)
+                trainbase=run(paths[0],original); traingrid={c:run(paths[0],cuts(c)) for c in grid}; hcuts=choose(traingrid,trainbase,train_truth)
                 testbase=run(paths[1],original); testcandidate=run(paths[1],hcuts)
-                halves[str(h)]={"train_n":len(train),"test_n":len(test),"chosen":hcuts,"test_base_macro":macro(score(testbase,test_truth,script.ITEMS)),"test_candidate_macro":macro(score(testcandidate,test_truth,script.ITEMS))}
+                halves[h]={"train_n":len(train),"test_n":len(test),"chosen":hcuts,"test_base_macro":macro(score(testbase,test_truth,labelled)),"test_candidate_macro":macro(score(testcandidate,test_truth,labelled))}
         net={i:(cscore[i]["tp"]-cscore[i]["fp"])-(bscore[i]["tp"]-bscore[i]["fp"]) for i in TRUSTED}
-        result={"purpose":"offdev_logprob_threshold_measurement","model_called":False,"case":a.case,"input":a.input,"truth":a.truth,"notices":len(ids),"eligible_items":eligible,"fixed_items":fixed,"grid":grid,"baseline_thresholds":original,"chosen_thresholds":chosen,"baseline_macro":macro(bscore),"candidate_macro":macro(cscore),"per_item":{i:{"baseline":bscore[i],"candidate":cscore[i]} for i in script.ITEMS},"trusted_net_tp_minus_fp_delta":net,"split_half":halves,"split_half_pass":all(x["test_candidate_macro"]>x["test_base_macro"] for x in halves.values()),"trusted_guard_pass":all(x>=-1 for x in net.values())}
+        result={"purpose":"offdev_logprob_threshold_measurement","model_called":False,"case":a.case,"input":a.input,"truth":a.truth,"notices":len(ids),"labelled_items":labelled,"eligible_items":eligible,"fixed_items":fixed,"grid":grid,"baseline_thresholds":original,"chosen_thresholds":chosen,"baseline_macro":macro(bscore),"candidate_macro":macro(cscore),"per_item":{i:{"baseline":bscore[i],"candidate":cscore[i]} for i in labelled},"trusted_net_tp_minus_fp_delta":net,"split_half":halves,"split_half_pass":all(x["test_candidate_macro"]>x["test_base_macro"] for x in halves.values()),"trusted_guard_pass":all(x>=-1 for x in net.values())}
         (out/"thresholds.json").write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
         print(json.dumps({k:result[k] for k in ("baseline_macro","candidate_macro","chosen_thresholds","split_half_pass","trusted_guard_pass")},ensure_ascii=False))
     finally:
