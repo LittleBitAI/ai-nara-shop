@@ -27,8 +27,8 @@ The v10 direct-production sentence is not corrected mechanically either: 3 of 7 
 
 ## The larger mismatch: 수의계약 (found after the audit)
 
-Dev gold almost never marks a violation on a no-bid contract: 5 of about 150 positive cells sit on its 35 수의계약
-notices (18% of notices; about 26 cells expected at an even spread). All 7 dev v18 positives are 제한경쟁.
+Dev gold almost never marks a violation on a no-bid contract: 6 of its 153 positive cells sit on its 35 수의계약
+notices (18% of notices; about 27 cells expected at an even spread) — v3, v4, v9, v17, v21, v24, one each. All 7 dev v18 positives are 제한경쟁.
 The labeler does not follow this: 48% of the 2,000 are 수의계약, and 105 of their 175 v18 positives, 34 of 100 v1,
 15 of 58 v20 and 14 of 32 v12 positives sit on them. The v18 cells above were graded by the item guide, which has no
 수의계약 exclusion; under dev's convention most of the label-1 수의계약 cells would be 0.

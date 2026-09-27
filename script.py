@@ -3442,9 +3442,9 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     if not str((rec.get("meta") or {}).get("업무구분") or "물품").startswith("물품"):
         out["v9"] = {"위반여부": 0, "근거문구": ""}
     out = apply_clause_rules(out, rec)
-    # No-bid contracts (수의계약) last, so no raise above can undo it. Dev gold puts 5 of about 150
-    # positive cells on its 35 수의계약 notices (18% of notices, ~26 cells expected at an even spread);
-    # the items that do have one keep their cells. Fitted to dev on purpose and submitted as a server
+    # No-bid contracts (수의계약) last, so no raise above can undo it. Dev gold puts 6 of its 153
+    # positive cells on its 35 수의계약 notices (18% of notices, ~27 cells expected at an even spread);
+    # the items that have one keep their cells, except v9 (given up on 2026-09-25). Fitted to dev on purpose and submitted as a server
     # experiment (user decision 2026-09-27): the unlabeled pool is 45% 수의계약 and a quarter of the
     # current positive cells sit there. First version (2026-09-25) zeroed only v9, v10, v13, v18.
     if (rec.get("meta") or {}).get("계약방법") == "수의계약":
