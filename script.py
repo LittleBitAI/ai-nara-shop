@@ -103,8 +103,9 @@ COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 �
 # Empty turns the phase off.
 # GPU run 2026-09-27 (code 278ca53, 400 labelled off-dev + dev 200, replayed per item): v1, v4 and v8
 # lost (v1 FP 6 -> 160 off-dev, 0 -> 74 dev; v4 FP 3 -> 23; v8 FP 0 -> 12), v5 moved nothing.
-# Kept: v2 (with NOT_ENTRY_QUOTE), v3, v6, v7 — off-dev and both halves up, dev drop within 0.01.
-QUALIFICATION_FACTS_ITEMS: List[str] = ["v2", "v3", "v6", "v7"]
+# Kept: v2 (with NOT_ENTRY_QUOTE), v6, v7 — off-dev and both halves up, dev drop within 0.01.
+# v3 passed alone but not on top of #163's v3 cut 0.95: off-dev 0/2/2 -> 1/6/1, net -2 -> -5.
+QUALIFICATION_FACTS_ITEMS: List[str] = ["v2", "v6", "v7"]
 # The facts call is the last extra call and the only optional one. It stops starting chunks once the
 # process has run this long, leaving the rest of the 7,200 s limit for the chunk in flight and the CSV.
 # Unreached notices keep the main call's verdicts (the same fallback as a failed extra call).

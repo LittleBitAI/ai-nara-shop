@@ -37,6 +37,18 @@ Adoption rule of 9/27: pool Macro up; both halves up; no trusted item loses more
 (TP − FP) cell (v2 4 → 3, v3 −10 → −6, v6 −5 → 0, v7 4 → 6); dev −0.0004. Passes, with the
 `NOT_ENTRY_QUOTE` caveat above.
 
+## On top of #163 (v3 cut 0.95) — what the PR carries: v2 (filtered), v6, v7
+
+#163 merged into `main` while this ran. With its v3 cut the facts call's v3 fails the trusted-item guard
+(off-dev 0/2/2 → 1/6/1, net −2 → −5), so v3 is off.
+
+| | Off-dev Macro | Half A | Half B | Dev Macro |
+| --- | ---: | ---: | ---: | ---: |
+| `main` with #163, facts call off | 0.369842 | 0.395150 | 0.314146 | 0.821299 |
+| v2, v6, v7 on | 0.400351 | 0.416500 | 0.331270 | 0.820920 |
+
+Net (TP − FP): v2 4 → 3, v6 −5 → 0, v7 4 → 6. Dev −0.0004.
+
 ## Server time
 
 Dev phase seconds (200 notices, 165 non-수의계약): main 368, SME 90, company size 206, facts 151.
