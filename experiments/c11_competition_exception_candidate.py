@@ -191,6 +191,15 @@ ELIGIBLE = re.compile(
 #     상용구, 발화하는 공고 다섯에 있다)는 이름 뒤가 `의` 라 안 걸린다.
 # 이 거부 전체가 dev 6건 · 무라벨 910건에 걸리고, C11 이 발화하는 18건(dev 1 · 무라벨 17)과는
 # 하나도 겹치지 않는다.
+#
+# **다만 겹치지 않는 것과 모순이 없는 것은 다르다**(2026-09-27, #162 1라운드에서 18건을 다시
+# 읽다 찾았다). `PPS-D-018597` 은 `4.1` 의 `※` 에서 예외를 적용한다고 적고 **`4.2` 에서
+# 입찰참가자격을 "중소기업자 또는 소상공인으로서 … 확인서를 소지한 자" 로 제한한다.**
+# 이 거부가 그 공고를 안 잡는 것은 제한이 없어서가 아니라 `참가자격` 표제와 `중소기업` 사이가
+# 80자를 넘고 그 사이에 `.` 이 있어 닿지 않기 때문이다. 라운드 15 가 "모순 갈래는 실제 증거가
+# 있어야 움직인다" 고 남겼는데 **그 증거가 이것이다.** 넓히는 판단은 여기서 하지 않는다 —
+# 이 거부는 무라벨 910건에 걸려 있어 넓히면 그 전부가 움직인다. 근거만 남기고 A 가 정한다.
+# 자세한 것은 `reports/team-c/c11-p2/README.md` §3.
 SME_ONLY_BID = re.compile(
     r"중소기업자\s*간\s*경쟁(\s*입찰)?\s*(방식|방법)?\s*(으로|로|을|를)\s*(진행|실시|집행|추진|시행|입찰|한다|합니다|함)"
     r"|중소기업자\s*간\s*경쟁\s*입찰\s*대상(입니다|이다|임)"
@@ -250,16 +259,40 @@ def partial_scope(head: str) -> bool:
     return any(WHOLE_NOTICE.search(head[:topic.start(1)]) is None for topic in TOPIC.finditer(head))
 
 
-# 서술어 **뒤**에서는 `는`·`은` 이 범위를 좁히지 않는다. 거기서는 그냥 뒤 절의 주어다 —
-# "적용하여 입찰참가자는 별도 서류를 낼 수 있다" · "적용하여 많은 업체가 참여할 수 있다".
-# 그래서 꼬리에서는 **한정 표지만** 센다. 뜻이 오직 좁히는 것뿐인 어미들이다.
-LIMITER = re.compile(r"[가-힣0-9]+(에만|(?<!지)만|에\s*한(하여|정하여|해서?)"
-                     r"|에\s*대해서는|에\s*대하여는)(?=[\s,])")
+# 서술어 **뒤**의 주제는 두 가지를 뜻할 수 있다. 하나는 적용 범위를 좁히는 것이고
+# ("적용하여 부대장비는 일반입찰로 구매한다" · "적용하여 2권역에는 …"), 다른 하나는 그냥
+# 뒤 절의 주어다("적용하여 입찰참가자는 별도 서류를 낼 수 있다"). 둘을 갈라야 한다.
+#
+# 표지로 먼저 가른다. `에만` · `만` · `에 한…` · `에 대해서는` · `에는` 은 **오직 좁히는
+# 뜻뿐**이라 그대로 한정이다. 관형형이 될 수 없고 주어 자리에도 못 선다.
+LIMITER_ONLY = re.compile(r"[가-힣0-9]+(에만|(?<!지)만|에\s*한(하여|정하여|해서?)"
+                          r"|에\s*대해서는|에\s*대하여는|에는)(?=[\s,])")
+# 맨 `는`·`은` 은 갈리지 않으므로 두 가지를 걸러 낸다.
+#   ① 임자가 **입찰 당사자**면 범위가 아니라 주어다 — `SUBJECT` 가 그것을 안다.
+#   ② 관형형이면 뒤 명사를 꾸미는 말이다 — "많은 **업체가**". 꾸밈을 받는 명사가 제 격조사
+#      (`가`·`이`·`을`·`를`)를 달고 바로 뒤에 선다. 주제라면 그 자리에 격조사가 안 온다
+#      ("부대장비는 **일반입찰로** 구매한다").
+BARE_TOPIC = re.compile(r"[가-힣0-9]+(?<![하되있없않])(?P<mark>는|은)"
+                        r"(?=\s+(?P<next>[가-힣0-9]+))")
+MODIFIED_NOUN = re.compile(r"(가|이|을|를)$")
 
 
 def narrowed_after(rest: str) -> bool:
     """서술어 뒤(`rest`)에서 적용 범위를 좁히는 한정이 서는가."""
-    return any(WHOLE_NOTICE.search(rest[:limit.start(1)]) is None for limit in LIMITER.finditer(rest))
+    for limit in LIMITER_ONLY.finditer(rest):
+        if WHOLE_NOTICE.search(rest[:limit.start(1)]) is None:
+            return True
+    for topic in BARE_TOPIC.finditer(rest):
+        if WHOLE_NOTICE.search(rest[:topic.start("mark")]) is not None:
+            continue                                   # "본 입찰은 …" — 공고 전체다
+        # `SUBJECT` 는 임자와 조사와 그 뒤 한 글자를 함께 본다("…자는 "). 임자만 떼어
+        # 넘기면 안 맞으므로 주제 구간에 뒤 한 글자를 붙여 준다.
+        if SUBJECT.search(rest[topic.start():topic.end() + 1]):
+            continue                                   # ① 입찰 당사자가 주어로 선 것
+        if MODIFIED_NOUN.search(topic.group("next")):
+            continue                                   # ② 관형형이 뒤 명사를 꾸민 것
+        return True
+    return False
 
 
 ASIDE = re.compile(r"\s*(여부|[^\s가-힣0-9A-Za-z.)\]}>」』])")
