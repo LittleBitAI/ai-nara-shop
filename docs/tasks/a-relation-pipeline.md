@@ -67,7 +67,9 @@ v2 net fell 7 → −1.
      - `purchase_general` / `purchase_competitive` come from `purchase_scope`, the outcome of
        `_company_size_bands` mapped by `PURCHASE_SCOPE_BY_REASON`. Only exits past every scope check are
        general (`decided`, and the unrestricted branch's exits); exits before the high-value joint check
-       (`unknown_price`, `unverified_qualification`, `unverified_size_exception`) are unknown. Further,
+       (`unknown_price`, `unverified_qualification`, `unverified_size_exception`) are unknown. The
+       high-value `joint_small` conflict is decided on its own, whatever the qualification answer was: a
+       general purchase with that exception at or over the notice amount is unknown. Further,
        `outside_general_scope` is the verified competitive or other, `competitive_by_catalogue` is not
        general with the purchase unproven, and `unverified_scope` / `unresolved_high_joint_scope` are
        unknown. An outcome not in the table is unknown, and a test keeps every return of that function in
@@ -94,7 +96,8 @@ v2 net fell 7 → −1.
    from definition-grounded candidates. `SCOPE` in fit.py lists the scope each item's official name sets,
    and every candidate's applies must name it; fit.py asserts this on import, so no candidate can fire
    outside its item (v4 over the threshold, v12/v14/v17 general products, v13 competitive, v7 adjacency).
-   It also asserts that only the absence items (v10, v11, v16, v18, v20) negate a relation slot. For them
+   It also asserts that every v15 and v17 row reads the stated exception their definitions allow, and
+   that only the absence items (v10, v11, v16, v18, v20) negate a relation slot. For them
    the negation is unknown without a label and no with one, so those rows can only lower an absence
    positive that a shared label contradicts, such as v10 against a labelled entry direct-production demand. The fit hands `slot_row_cell` each cell's
    evidence as the run had it. It uses the same nested cross-fit as the slot-table rows: pick on

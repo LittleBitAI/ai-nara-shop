@@ -173,6 +173,15 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(purchase("a_reason_added_later"), (None, None))
         self.assertTrue(script.relation_slots(verified(scope="general"), self.rec)["scope_general"])   # as before
 
+    def test_a_high_value_joint_exception_leaves_the_purchase_unresolved_under_any_qualification(self):
+        high = notice(400_000_000)
+        for reason in ("decided", "absence_not_observable", "unverified_priority_exception"):
+            facts = verified(reason, rec=high, qualification="unrestricted", size_exception="joint_small")
+            self.assertIn("purchase_general", script.relation_slots(facts, high)["unknown"], reason)
+        low = notice(50_000_000)
+        facts = verified(rec=low, size_exception="joint_small")
+        self.assertTrue(script.relation_slots(facts, low)["purchase_general"])
+
     def test_every_company_size_outcome_has_a_purchase_scope(self):
         import inspect, re
         returned = set(re.findall(r'return [^,\n]*, "(\w+)"', inspect.getsource(script._company_size_bands)))

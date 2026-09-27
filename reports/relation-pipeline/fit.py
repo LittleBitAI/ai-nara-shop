@@ -67,8 +67,9 @@ CANDIDATES = {
     "v12": rows(GENERAL, [("entry_direct_production",)]),
     "v13": rows([("purchase_competitive",)], [("entry_small",)]),
     "v14": rows(banded("over_notice", GENERAL), [("entry_size",)]),
-    "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)]),
-    "v17": rows(banded("small", GENERAL), [("entry_sme",)], SIZE_EXCEPTIONS[:1] + SIZE_EXCEPTIONS[2:3]),
+    # v15 and v17 name a legal exception (판로지원 예외): every row reads the stated one.
+    "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)], SIZE_EXCEPTIONS[2:]),
+    "v17": rows(banded("small", GENERAL), [("entry_sme",)], SIZE_EXCEPTIONS[2:]),
     "v19": rows([()], [("pledge_at_bid",)]),
     "v22": rows([("negotiation",)], [("briefing_entry",)]),
 }
@@ -87,12 +88,15 @@ SCOPE = {
     "v20": [{"software"}], "v22": [{"negotiation"}],
 }
 ABSENCE = {"v10", "v11", "v16", "v18", "v20"}
+EXCEPTION_REQUIRED = {"v15", "v17"}      # restriction items whose definition allows a stated exception
 for _key, _candidates in CANDIDATES.items():
     for _row in _candidates:
         for _group in SCOPE.get(_key.split("/")[0], ()):
             assert _group & set(_row[0]), (_key, _row, "applies outside the item's scope")
         # The selector picks clauses by trigger words, so a missing label never proves absence. A negated
         # relation slot is allowed only where it can do nothing but lower: the absence items' requirement.
+        if _key.split("/")[0] in EXCEPTION_REQUIRED:
+            assert "stated_exception" in _row[2], (_key, _row, "ignores the item's legal exception")
         _negated = {n for n in _row[0] if n.startswith("!")}
         assert not _negated, (_key, _row, "negated scope")
         if _key.split("/")[0] not in ABSENCE:

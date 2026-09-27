@@ -3668,6 +3668,14 @@ def attach_company_facts(parsed: Dict[str, Any], facts: Dict[str, Any], reason: 
     visible = build_context(rec, max_chars)
     priority = facts.get("priority_exception")
     purchase = PURCHASE_SCOPE_BY_REASON.get(reason)
+    # The high-value joint_small conflict (`unresolved_high_joint_scope`) sits inside the verifier's
+    # restrictive-qualification branch, so an unrestricted reading would skip it. Decide it here on its own:
+    # a general purchase with a joint_small exception at or over the notice amount (or at no known price)
+    # is unresolved, whatever the qualification answer was.
+    price = estimated_price(rec)
+    if purchase == "general" and facts.get("size_exception") == "joint_small" and (
+            price is None or price >= NOTICE_AMOUNT_WON):
+        purchase = None
     parsed[COMPANY_FACTS_KEY] = dict(
         facts,
         purchase_scope=facts.get("scope") if purchase == "model" else purchase,
