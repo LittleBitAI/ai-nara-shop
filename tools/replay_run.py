@@ -159,6 +159,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
                                                **legacy)
             verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
             parsed.update(verified)
+            if hasattr(script, "COMPANY_FACTS_KEY"):   # older submission code has no slot table
+                parsed[script.COMPANY_FACTS_KEY] = focused["company_size"]
             reasons.setdefault(rec["id"], {})["company_size"] = reason
         rows.append(script.to_row(rec["id"], postprocess(parsed, rec)))
     expected_ids = list(expected_ids) if expected_ids is not None else None

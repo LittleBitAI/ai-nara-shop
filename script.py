@@ -3371,6 +3371,80 @@ def v23_axis_a(rec: Dict[str, Any]) -> Optional[str]:
     return held[1]
 
 
+# ===== Slot table: every item it names is decided from the same relations, in one place =====
+# An item is a violation when four things hold together: it applies (price band, scope), the requirement
+# is there (or, for an absence item, missing), no exception lifts it, and the notice was observed enough.
+# Each slot reads one shared relation below, so v15, v16 and v18 read the same price band and the same
+# company-size facts instead of each re-deriving them. The table is the last word on its items; it runs
+# after every raise and gate above and before the 수의계약 zeroing, so nothing below it moves its cells.
+# A row enters only through `tools/slot_gate.py`: picked on one half of the off-dev labels, scored on the
+# other half and on dev gold, and kept only if no side loses. See docs/tasks/a-slot-decisions.md.
+COMPANY_FACTS_KEY = "_company_facts"  # the company-size call's facts, as the model gave them
+
+
+def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, bool]:
+    """The shared relations, each a plain yes/no. Unknown reads as no: an unseen fact never raises."""
+    price = estimated_price(rec)
+    facts = judgment.get(COMPANY_FACTS_KEY) or {}
+    _, codes = direct_production_demand(rec)
+    return {
+        # 판로지원법 시행령 제2조의2: 1억 미만 소기업·소상공인, 1억 이상 고시금액 미만 중소기업
+        "small": price is not None and price < SME_BAND_FLOOR_WON,
+        "mid": price is not None and SME_BAND_FLOOR_WON <= price < NOTICE_AMOUNT_WON,
+        "scope_general": facts.get("scope") == "general",
+        "catalogue_product": competitive_product(rec, codes) is True,
+        "only_small": facts.get("qualification") == "small_only",
+        "no_size_limit": facts.get("qualification") == "unrestricted",
+        "size_limit_text": size_limited(rec),
+        "priority_exception": facts.get("priority_exception") == "yes",
+    }
+
+
+# item: (applies, requirement, exceptions, keep an existing positive only if). A slot is an AND of names;
+# "!name" negates. Exceptions: any one true stops the raise.
+SLOT_RULES = {
+    "v15": (("mid", "!catalogue_product"), ("only_small",), (), None),
+    "v16": (("mid", "scope_general"), ("no_size_limit", "!size_limit_text"), ("priority_exception",), ("mid",)),
+    "v18": (("small", "scope_general"), ("no_size_limit",), ("priority_exception",), None),
+}
+
+
+def _slot_evidence(item: str, judgment: Dict[str, Any], rec: Dict[str, Any]) -> Optional[str]:
+    """The quote a non-absence item needs: the operative size clause (v15 is the only such row today)."""
+    quote = (judgment.get(COMPANY_FACTS_KEY) or {}).get("qualification_quote")
+    if not isinstance(quote, str):
+        return None
+    quote = restore_spacing(quote, rec, build_context(rec)) or quote
+    for doc in rec.get("docs") or ():
+        cleaned = clean_evidence(quote, doc.get("text") or "")
+        if cleaned:
+            return cleaned
+    return None
+
+
+def decide_slots(out: Dict[str, Dict[str, Any]], judgment: Dict[str, Any],
+                 rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    slots = relation_slots(judgment, rec)
+
+    def holds(names):
+        return all(not slots[n[1:]] if n.startswith("!") else slots[n] for n in names)
+
+    for item, (applies, requirement, exceptions, keep_if) in SLOT_RULES.items():
+        if keep_if is not None and not holds(keep_if):
+            out[item] = {"위반여부": 0, "근거문구": ""}
+        if out[item]["위반여부"] == 1 or not (holds(applies) and holds(requirement)):
+            continue
+        if any(slots[n] for n in exceptions):
+            continue
+        if item in ABSENCE:
+            out[item] = {"위반여부": 1, "근거문구": ""}
+        else:
+            quote = _slot_evidence(item, judgment, rec)
+            if quote:
+                out[item] = {"위반여부": 1, "근거문구": quote}
+    return out
+
+
 def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """후처리: ① 부재탐지 5항목 근거 빈칸 고정 ② 위반이 아니면 근거 빈칸 ③ 근거문구 원문 대조(NFC)
     ④ 근거가 위반 조건을 스스로 부정하면 양성을 내린다(evidence_refutes)
@@ -3443,6 +3517,7 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     if not str((rec.get("meta") or {}).get("업무구분") or "물품").startswith("물품"):
         out["v9"] = {"위반여부": 0, "근거문구": ""}
     out = apply_clause_rules(out, rec)
+    out = decide_slots(out, judgment, rec)
     # No-bid contracts (수의계약) last, so no raise above can undo it. Dev gold puts 6 of its 153
     # positive cells on its 35 수의계약 notices (18% of notices, ~27 cells expected at an even spread);
     # the items that have one keep their cells, except v9 (given up on 2026-09-25). Fitted to dev on purpose and submitted as a server
@@ -3947,6 +4022,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             focused, _ = parse_judgment(band_texts[index], expected_items=COMPANY_SIZE_KEYS)
             verified, reason = verify_company_size(focused["company_size"], rec, band_chars[index])
             parsed.update(verified)
+            parsed[COMPANY_FACTS_KEY] = focused["company_size"]
             company_size_reasons[reason] += 1
             emit("company_size_verified", id=rec["id"], reason=reason,
                  flags={v: c["위반여부"] for v, c in verified.items()})
