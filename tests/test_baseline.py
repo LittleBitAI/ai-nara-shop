@@ -40,7 +40,7 @@ class BaselineTests(unittest.TestCase):
                     if items == baseline.SME_ITEMS:
                         return [json.dumps({"v13": {"facts": baseline.empty_sme_facts(),
                                                    "위반여부": 0, "근거문구": None}})] * len(batch)
-                    if items == baseline.COMPANY_SIZE_KEYS:
+                    if items in (baseline.COMPANY_SIZE_KEYS, baseline.QUALIFICATION_FACTS_KEYS):
                         return super().chat(batch, items)
                     if items is not None:   # 추가 호출은 facts 없이 두 칸만 낸다
                         return [json.dumps({k: {"위반여부": 0, "근거문구": None}
@@ -66,6 +66,8 @@ class BaselineTests(unittest.TestCase):
                     expected.append((baseline.COMPANY_SIZE_KEYS, 3))
                 if baseline.PRODUCT_ITEMS:
                     expected.append((baseline.PRODUCT_ITEMS, 4))
+                if baseline.QUALIFICATION_FACTS_ITEMS:   # same notices as the company-size call
+                    expected.append((baseline.QUALIFICATION_FACTS_KEYS, 3))
                 self.assertEqual(calls, expected)
                 self.assertEqual(report["sme_selected_count"], len(positives))
                 self.assertEqual(report["sme_skipped_count"], 4 - len(positives))
@@ -184,7 +186,7 @@ class BaselineTests(unittest.TestCase):
                 instances.append(self)
             def chat(self, batch, items=None):
                 calls.append(items)
-                if items == baseline.COMPANY_SIZE_KEYS:
+                if items in (baseline.COMPANY_SIZE_KEYS, baseline.QUALIFICATION_FACTS_KEYS):
                     return super().chat(batch, items)
                 outputs = []
                 for messages in batch:
@@ -223,6 +225,8 @@ class BaselineTests(unittest.TestCase):
                 expected.append(baseline.COMPANY_SIZE_KEYS)
             if baseline.PRODUCT_ITEMS:
                 expected.append(baseline.PRODUCT_ITEMS)
+            if baseline.QUALIFICATION_FACTS_ITEMS:
+                expected.append(baseline.QUALIFICATION_FACTS_KEYS)
             # 켜진 추가 호출 말고 다른 항목 목록이 오면 실패한다.
             self.assertEqual(calls, expected)
             with out.open(encoding="utf-8") as f:
@@ -238,7 +242,7 @@ class BaselineTests(unittest.TestCase):
                 # 그 밖의 항목이 하나라도 움직이면 회차 colab-1789719173182820657의
                 # 실패(대상 밖 여덟 항목이 TP 열하나를 잃음)가 되풀이된 것이다.
                 touched = ["v13", "e13"]
-                for item in baseline.SPLIT_ITEMS:
+                for item in baseline.SPLIT_ITEMS + baseline.QUALIFICATION_FACTS_ITEMS:
                     touched += [item, "e" + item[1:]]
                 for col in baseline.COLUMNS:
                     if col not in touched:
