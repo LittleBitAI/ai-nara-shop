@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "A3 H4: 기업등급 전에 자격 문장 역할을 추출"
+title: "A3 H4: Extract qualification utterance roles before company grade"
 pr: 64
 merged: 2026-09-20
 branch: "feat/a3-qualification-role"
 ---
 
-# A3 H4: 기업등급 전에 자격 문장 역할을 추출
+# A3 H4: Extract qualification utterance roles before company grade
 
-무엇. A3 회차 4는 v10 4/7/3·v18 0/2/7·v20 1/4/4로 세 항목 동시 TP>0에 미달했습니다. H4는 기존 company_size 호출에서 기업등급보다 먼저 자격 문장의 역할을 추출합니다. 실제 참가자격, 제출서류 목록, 법령 인용, 언급 없음, 미확인을 구분하고 역할과 기업등급이 모순이면 자격 판정을 보류합니다. 체크리스트를 unrestricted로 강제 변환하지 않습니다. …
+What. A3 round 4 failed to meet TP>0 for all three items with v10 4/7/3, v18 0/2/7, and v20 1/4/4. H4 extracts the role of the qualification utterance before the company grade in the existing company_size call. It distinguishes between actual participation qualifications, lists of submitted documents, legal citations, no mention, and unverified, and withholds qualification judgment if the role and company grade are contradictory. It does not force the checklist to unrestricted. …
 
-왜. H1의 산문 역할 지시 이후에도 H3 원응답은 확인서 제출 목록을 기업등급 참가자격으로 읽었습니다. 역할·원문 관측을 기업등급 전에 구조화해 출력하면 이 혼동이 줄어드는지 시험합니다. 공고 ID나 업무명 예외는 없습니다. 새 호출도 추가하지 않습니다. 검증: 공유 파이프라인 151개 검사 통과(37.833초), Ruff·diff 통과, 원래 scope/H1/H2/H3 각 200건 원응답의 수정 전·후 CSV 바이트 동일, 보호 함수 AST 동일. 압축 해제 mock 10건·49열 및 모델 없는 기본 진입 실패 확인. 노트북 JSON·모든 코드 셀 컴파일·고정 SHA와 ZIP 소스 일치 확인. 실제 GPU 효과·동일 ZIP 별도 반복 churn·무라벨 6,000건·시간은 미측정입니다. …
+Why. Even after the prose role instruction in H1, the H3 original response read the confirmation submission list as company grade participation qualifications. We are testing whether structuring the role and original text observation before the company grade reduces this confusion. There are no exceptions for announcement IDs or task names. No new calls are added. Verification: Passed 151 shared pipeline checks (37.833 seconds), passed Ruff and diff, CSV bytes before and after modification for 200 original responses each in original scope/H1/H2/H3 are identical, protected function AST is identical. Confirmed decompression mock 10 cases/49 columns and default entry failure without model. Confirmed notebook JSON, all code cell compilation, and fixed SHA and ZIP source match. Actual GPU effect, separate repeated churn for identical ZIP, 6,000 unlabeled cases, and time are unmeasured. …
 
-출처. PR #64 · `feat/a3-qualification-role`
+Source. PR #64 · `feat/a3-qualification-role`

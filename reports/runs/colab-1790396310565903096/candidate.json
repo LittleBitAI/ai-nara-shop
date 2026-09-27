@@ -1,0 +1,7 @@
+{
+  "bundle_sha256": "1ca9f74cffdcc24debd8d4ba708a91eeef6ed6194c73a301457d0be3186a37d1",
+  "submit_sha256": "d8b39d79c7090cebc664c5af71cceacfeef9e8f8f5329fe42a08c0c4e754784d",
+  "script_sha256": "b08df8cbae01eedb50cce0f21bab54aa3ae9f2145bf5b8c9dcd476a443cf9ba9",
+  "model_id": "google/gemma-4-26B-A4B-it",
+  "revision": "4d7ae4984b7db7de8f8457170b3f1a419ee76d52"
+}

@@ -85,7 +85,7 @@ def saved_probabilities(case_dir):
 
 
 def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_sme=None,
-           verify_company_size=None):
+           verify_company_size=None, expected_ids=None):
     """저장된 응답으로 행을 다시 만든다. 바꿀 단계만 인자로 갈아 끼운다."""
     case_dir = Path(case_dir)
     report = json.loads((case_dir / "run_report.json").read_text(encoding="utf-8"))
@@ -120,7 +120,9 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
         raise ValueError("기업규모 원응답 건수가 실행 기록과 다르다")
     _, products = script.load_sme_reference(str(data_dir))
     rows, baseline_rows, reasons = [], [], {}
+    seen_ids = []
     for rec in script.iter_records(str(input_path)):
+        seen_ids.append(rec["id"])
         text = texts["baseline"].get(rec["id"])
         if text is None:
             raise ValueError(f"{rec['id']}: 저장된 기본 응답이 없다")
@@ -133,13 +135,15 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
         for phase in getattr(script, "VERDICT_PHASES", ()):
             script.merge_extra_call(parsed, rec, phase, script.extra_call_items().get(phase) or (),
                                     texts.get(phase, {}).get(rec["id"]))
-        sme_text = texts["sme"].get(rec["id"])
+        # Runs after the skip read no extra call on these notices; older runs saved one, so drop it here.
+        extra = getattr(script, "needs_extra_call", lambda rec: True)(rec)
+        sme_text = texts["sme"].get(rec["id"]) if extra else None
         if sme_text is not None:
             focused, _ = script.parse_judgment(sme_text, expected_items=script.SME_ITEMS, sme=True)
             verified, rejected = verify_sme(focused, rec, products, max_chars)
             reasons[rec["id"]] = rejected
             parsed.update(verified)
-        company_text = texts.get("company_size", {}).get(rec["id"])
+        company_text = texts.get("company_size", {}).get(rec["id"]) if extra else None
         if company_text is not None:
             if rec["id"] not in company_chars:
                 raise ValueError("기업규모 입력의 문서 예산 기록이 없다")
@@ -157,8 +161,13 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             parsed.update(verified)
             reasons.setdefault(rec["id"], {})["company_size"] = reason
         rows.append(script.to_row(rec["id"], postprocess(parsed, rec)))
-    if len(rows) != report["건수"]:
-        raise ValueError(f"입력 건수가 회차와 다르다: {len(rows)} != {report['건수']}")
+    expected_ids = list(expected_ids) if expected_ids is not None else None
+    expected_count = report["건수"] if expected_ids is None else len(expected_ids)
+    if len(rows) != expected_count:
+        raise ValueError(f"입력 건수가 회차와 다르다: {len(rows)} != {expected_count}")
+    if expected_ids is not None and (len(set(expected_ids)) != len(expected_ids)
+                                    or seen_ids != expected_ids):
+        raise ValueError("부분 재생 ID 순서/집합이 호출자가 고정한 목록과 다르다")
     return {"rows": rows, "baseline_rows": baseline_rows, "rejected_conditions": reasons,
             "settings": settings}
 
@@ -236,6 +245,33 @@ A_STACK_MOVES = [
 ]
 A_STACK_RESTORED = {("PPS-DEV-16", "v13")}
 
+# Cells moved by feat/a-offdev-stack (`apply_clause_rules`, 2026-09-26), toggled against each pinned list:
+# the catalogue-miss gate lowers v10 (126·146) and v11 (23); the company-size guard lowers v11 (039·12·155);
+# v2 rises from a performance clause under 2.3억 (053·078); v21 from a share below the floor (056, and 049
+# where the archive had it at 0); v22 from a briefing-attendance bar (135). Nothing outside those columns.
+OFFDEV_STACK_MOVES = [
+    ("PPS-DEV-039", "v11"), ("PPS-DEV-053", "e2"), ("PPS-DEV-053", "v2"), ("PPS-DEV-056", "e21"),
+    ("PPS-DEV-056", "v21"), ("PPS-DEV-078", "e2"), ("PPS-DEV-078", "v2"), ("PPS-DEV-12", "v11"),
+    ("PPS-DEV-126", "v10"), ("PPS-DEV-135", "e22"), ("PPS-DEV-135", "v22"), ("PPS-DEV-146", "v10"),
+    ("PPS-DEV-155", "v11"), ("PPS-DEV-23", "v11"),
+]
+# Cells moved by feat/a-final-stack (2026-09-26) against colab-1789902969401579900: C7 raises v18 (044). C9 moves
+# no cell here — 128's spec names 비료살포기, a catalogue product (S7-15, PR #156 round 1). The v19 heading walk
+# moves no dev cell, and the H2 run moves nothing.
+FINAL_STACK_MOVES = [("PPS-DEV-044", "v18")]
+# Cells moved by feat/a-skip-nobid-calls (2026-09-27): v17 is zeroed on 수의계약, so 21 loses its gold
+# positive and 090 its false alarm. Toggled like the lists above.
+NO_BID_V17_MOVES = [("PPS-DEV-090", "e17"), ("PPS-DEV-090", "v17"), ("PPS-DEV-21", "e17"), ("PPS-DEV-21", "v17")]
+# The H2 run's company-size call also raised v17 on 수의계약 105 and 163, both gold 0.
+NO_BID_V17_MOVES_H2 = NO_BID_V17_MOVES + [("PPS-DEV-105", "e17"), ("PPS-DEV-105", "v17"),
+                                          ("PPS-DEV-163", "e17"), ("PPS-DEV-163", "v17")]
+# Against the H2 run's own CSV: its responses do not trip the catalogue gate, 12 or 23; 049's v21 moves.
+OFFDEV_STACK_MOVES_H2 = [
+    ("PPS-DEV-039", "v11"), ("PPS-DEV-049", "e21"), ("PPS-DEV-049", "v21"), ("PPS-DEV-053", "e2"),
+    ("PPS-DEV-053", "v2"), ("PPS-DEV-056", "e21"), ("PPS-DEV-056", "v21"), ("PPS-DEV-078", "e2"),
+    ("PPS-DEV-078", "v2"), ("PPS-DEV-135", "e22"), ("PPS-DEV-135", "v22"), ("PPS-DEV-155", "v11"),
+]
+
 # 목록은 **대조 대상마다 다르다.** 회차가 다르면 모델이 낸 근거 없는 양성도 다르므로,
 # 같은 소비자로 재생해도 갈리는 셀이 달라진다. 그래서 이름에 대조 대상을 박는다.
 # `reports/team-c/a5-label-definition/head-replay/submission.csv` 와 대조할 때
@@ -275,7 +311,7 @@ DELIBERATE_MOVES = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-199", "v24"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED)
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
 # 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
@@ -326,7 +362,7 @@ DELIBERATE_MOVES_H2 = sorted(set([cell for cell in V9_V24_DEV_FIT_MOVES
     ("PPS-DEV-25", "e3"), ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"),
     ("PPS-DEV-28", "e23"), ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"),
     ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED)
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES_H2) ^ set(NO_BID_V17_MOVES_H2))
 
 # `reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv` 와 대조할 때.
 # 그 보관본은 이미 A7 대조 축이 적용된 산출물이므로, 지금 `script.py` 와의 차이는
@@ -361,7 +397,7 @@ DELIBERATE_MOVES_A7 = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-198", "v13"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED)
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
 
 
 def csv_cell_diff(left: bytes, right: bytes):

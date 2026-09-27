@@ -1,0 +1,13 @@
+{
+  "purpose": "external_label_comparison",
+  "model": "sonnet5",
+  "command": "claude -p --model claude-sonnet-5 --effort medium --tools \"\" --strict-mcp-config --system-prompt-file prompt.md --disable-slash-commands --no-session-persistence --output-format json",
+  "bundle_prompt_sha256": "254d8fa7d8eff9709bf1e63e65a262b3011c43b4a9c6ae27c47b5830dc4e68bd",
+  "requested": 7,
+  "labelled": 7,
+  "skipped_already_done": 13,
+  "failures": [],
+  "elapsed_seconds": 364.9808415999869,
+  "created_at": "2026-09-25T14:43:04.615039+00:00",
+  "note": "외부 LLM은 라벨 생성 단계 전용이다(R6). 제출 추론에서 호출하지 않는다."
+}

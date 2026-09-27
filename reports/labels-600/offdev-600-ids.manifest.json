@@ -1,0 +1,16 @@
+{
+    "purpose":  "GPU source responses with item_p1 for fixed off-dev threshold measurement",
+    "code_commit":  null,
+    "input_sha256":  "f46449fb84f980a5ddf868d66f5daff2bcf0991135d9b81da5656dd607275698",
+    "diagnostic_ids_file":  "reports/labels-600/diag-ids.txt",
+    "diagnostic_ids_sha256":  "afd85a35b539bf8c67239923d29a84f120d76e8481301d283ae8129f6066ae7a",
+    "diagnostic_count":  200,
+    "sealed_ids_file":  "reports/labels-600/sealed-ids.txt",
+    "sealed_ids_sha256":  "6332935f842bea708340a2c3fad6c24984c85499c93e72032b2a46df0cc4b054",
+    "sealed_count":  400,
+    "combined_ids_sha256":  "2dfa9aabe1ca229d073b60f319fcd3a3d9e66e91426a78825fdc22db5772eba9",
+    "ids_sha256":  "2dfa9aabe1ca229d073b60f319fcd3a3d9e66e91426a78825fdc22db5772eba9",
+    "total_count":  600,
+    "order":  "diagnostic IDs in committed order, then sealed IDs in committed order",
+    "labels_read":  false
+}

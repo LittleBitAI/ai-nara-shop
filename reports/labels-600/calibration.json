@@ -1,0 +1,225 @@
+{
+  "notices": 120,
+  "rule": {
+    "trust": 0.8,
+    "conditional": 0.6
+  },
+  "items": [
+    {
+      "item": "v1",
+      "positives": 5,
+      "tp": 3,
+      "fp": 10,
+      "fn": 2,
+      "f1": 0.333,
+      "verdict": "exclude"
+    },
+    {
+      "item": "v2",
+      "positives": 5,
+      "tp": 5,
+      "fp": 0,
+      "fn": 0,
+      "f1": 1.0,
+      "verdict": "trust"
+    },
+    {
+      "item": "v3",
+      "positives": 3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "f1": 1.0,
+      "verdict": "trust"
+    },
+    {
+      "item": "v4",
+      "positives": 2,
+      "tp": 2,
+      "fp": 2,
+      "fn": 0,
+      "f1": 0.667,
+      "verdict": "conditional"
+    },
+    {
+      "item": "v5",
+      "positives": 4,
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "f1": 1.0,
+      "verdict": "trust"
+    },
+    {
+      "item": "v6",
+      "positives": 5,
+      "tp": 5,
+      "fp": 1,
+      "fn": 0,
+      "f1": 0.909,
+      "verdict": "trust"
+    },
+    {
+      "item": "v7",
+      "positives": 3,
+      "tp": 3,
+      "fp": 1,
+      "fn": 0,
+      "f1": 0.857,
+      "verdict": "trust"
+    },
+    {
+      "item": "v8",
+      "positives": 3,
+      "tp": 3,
+      "fp": 1,
+      "fn": 0,
+      "f1": 0.857,
+      "verdict": "trust"
+    },
+    {
+      "item": "v9",
+      "positives": 3,
+      "tp": 3,
+      "fp": 8,
+      "fn": 0,
+      "f1": 0.429,
+      "verdict": "exclude"
+    },
+    {
+      "item": "v10",
+      "positives": 3,
+      "tp": 1,
+      "fp": 3,
+      "fn": 2,
+      "f1": 0.286,
+      "verdict": "exclude"
+    },
+    {
+      "item": "v11",
+      "positives": 2,
+      "tp": 0,
+      "fp": 2,
+      "fn": 2,
+      "f1": 0.0,
+      "verdict": "exclude"
+    },
+    {
+      "item": "v12",
+      "positives": 3,
+      "tp": 2,
+      "fp": 0,
+      "fn": 1,
+      "f1": 0.8,
+      "verdict": "trust"
+    },
+    {
+      "item": "v13",
+      "positives": 5,
+      "tp": 5,
+      "fp": 2,
+      "fn": 0,
+      "f1": 0.833,
+      "verdict": "trust"
+    },
+    {
+      "item": "v14",
+      "positives": 4,
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "f1": 1.0,
+      "verdict": "trust"
+    },
+    {
+      "item": "v15",
+      "positives": 3,
+      "tp": 3,
+      "fp": 1,
+      "fn": 0,
+      "f1": 0.857,
+      "verdict": "trust"
+    },
+    {
+      "item": "v16",
+      "positives": 4,
+      "tp": 3,
+      "fp": 3,
+      "fn": 1,
+      "f1": 0.6,
+      "verdict": "conditional"
+    },
+    {
+      "item": "v17",
+      "positives": 4,
+      "tp": 4,
+      "fp": 3,
+      "fn": 0,
+      "f1": 0.727,
+      "verdict": "conditional"
+    },
+    {
+      "item": "v18",
+      "positives": 5,
+      "tp": 3,
+      "fp": 4,
+      "fn": 2,
+      "f1": 0.5,
+      "verdict": "exclude"
+    },
+    {
+      "item": "v19",
+      "positives": 4,
+      "tp": 1,
+      "fp": 1,
+      "fn": 3,
+      "f1": 0.333,
+      "verdict": "exclude"
+    },
+    {
+      "item": "v20",
+      "positives": 4,
+      "tp": 2,
+      "fp": 1,
+      "fn": 2,
+      "f1": 0.571,
+      "verdict": "exclude"
+    },
+    {
+      "item": "v21",
+      "positives": 3,
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "f1": 1.0,
+      "verdict": "trust"
+    },
+    {
+      "item": "v22",
+      "positives": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "f1": 1.0,
+      "verdict": "trust"
+    },
+    {
+      "item": "v23",
+      "positives": 5,
+      "tp": 5,
+      "fp": 1,
+      "fn": 0,
+      "f1": 0.909,
+      "verdict": "trust"
+    },
+    {
+      "item": "v24",
+      "positives": 5,
+      "tp": 4,
+      "fp": 21,
+      "fn": 1,
+      "f1": 0.267,
+      "verdict": "exclude"
+    }
+  ]
+}

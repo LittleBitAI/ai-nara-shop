@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "fix: 회차 등록 결정 문서 front matter + A8 v20 별표 주입 착수서"
+title: "fix: Round registration decision document front matter + A8 v20 appendix injection initiation document"
 pr: 83
 merged: 2026-09-21
 branch: "fix/a5-v18-run-decision-frontmatter"
 ---
 
-# fix: 회차 등록 결정 문서 front matter + A8 v20 별표 주입 착수서
+# fix: Round registration decision document front matter + A8 v20 appendix injection initiation document
 
-무엇. A5 v18 회차 결정 문서 두 건에 front matter를 추가하고, A8 v20 조문 주입 착수서를 작업 큐와 활성 계획에 연결합니다. 회차 기록 본문과 운영 코드는 유지합니다. A8은 기존 company_size 호출에 제공 지침 제2조와 별표 1 원문만 추가하는 실험입니다. 스키마·소비자·관측 게이트를 유지하고, 같은 ZIP의 control/후보를 순서를 바꿔 두 회차 비교합니다.
+What. Add front matter to two A5 v18 round decision documents and connect the A8 v20 article injection initiation document to the work queue and active plan. Maintain the round record body and operation code. A8 is an experiment that only adds the provision guidelines Article 2 and the original text of Appendix 1 to the existing company_size call. Maintain the schema, consumer, and observation gate, and compare the two rounds by swapping the order of the control/candidate in the same ZIP.
 
-왜. 1단계 법령 조회는 PR #81로 완료됐지만 주입 효과는 미측정입니다. 계획 검토에서 다음 전제를 정정했습니다. 934자는 직접 조회 확인값이고 약 623토큰은 글자 수 환산 추정입니다. baseline 초과 0/200 계산은 company 입력의 안전성 증거가 아니므로 실제 토크나이저로 추가 절단과 visible 본문 동일성을 검사합니다. 별표는 20억·40억·80억 하한을 담지만 v20 규칙 전체는 아닙니다. 현재 소비자는 SW 사업 여부·참여제한 안내 인용·완전관측을 확인하며 금액을 직접 비교하지 않습니다. 고정 H4 혼합 비교에서 미탐 세 건은 실제 문서 누락으로 막혀 TP 상한이 2입니다. TP≥3을 강제하지 않고 두 회차의 TP/FP 개선·대상 밖 회귀를 확인합니다. …
+Why. Phase 1 statute lookup was completed with PR #81, but the injection effect is unmeasured. In the plan review, the following premise was corrected. 934 characters is the direct lookup confirmation value, and approximately 623 tokens is an estimate converted from character count. Since the baseline excess 0/200 calculation is not evidence of the safety of the company input, perform additional truncation with the actual tokenizer and check for visible body identity. The appendix contains the lower limits of 2 billion, 4 billion, and 8 billion, but it is not the entire v20 rule. The current consumer checks for SW business status, participation restriction guidance citation, and full observation, and does not directly compare amounts. In the fixed H4 mixed comparison, three false negatives are blocked by actual document omission, so the TP upper limit is 2. Without enforcing TP≥3, check the TP/FP improvement and out-of-scope regression of the two rounds. …
 
-출처. PR #83 · `fix/a5-v18-run-decision-frontmatter`
+Source. PR #83 · `fix/a5-v18-run-decision-frontmatter`

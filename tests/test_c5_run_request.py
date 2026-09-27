@@ -30,6 +30,16 @@ CELLS = {1: ("SOURCE_MODE", "REPO_REF"), 18: ("RUN_DIAGNOSTIC", "DIAGNOSTIC_ARGS
 COMMAND = 'run_case("dev-debug", WORK / "open/dev.jsonl", args=DIAGNOSTIC_ARGS)'
 
 
+def plain(text: str) -> str:
+    """강조를 걷어낸다.
+
+    위키 lint 가 표 칸의 `**` 를 지운다(`6c263c9`). 이 검사가 고정하는 것은 요청서에
+    **어떤 문구가 적혀 있는가**이지 그 문구가 굵은가가 아니다. 강조를 문자로 박아 두면
+    문서 서식 정리 한 번에 회차 요청서 검사가 통째로 빨개진다 — 실제로 그렇게 됐다.
+    """
+    return text.replace("**", "")
+
+
 def cells():
     data = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     return ["".join(cell["source"]) for cell in data["cells"]]
@@ -97,13 +107,13 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         기준이 전부 절대값이면 무효과 후보가 B·C·D 를 통과한다(기준 v11 이 2/3/4 라
         FP 3 ≤ 6). 움직였는가를 먼저 묻는 기준 Z 가 있어야 한다.
 
-        `**` 를 선택으로 둔다 — 이 저장소에는 강조 표기를 걷어내는 정리 작업이 있고
-        (PR #144 가 이 문서에 실제로 왔다), `**` 를 요구하면 그 정리만으로 검사가
-        "기준 Z 가 없다" 며 헛되이 죽는다. 같은 파일의 `test_the_pin_matches_the_report`
-        가 먼저 그렇게 해 뒀다.
+        강조는 `plain` 이 걷고 본다 — 이 저장소에는 강조 표기를 걷어내는 정리 작업이
+        있고(PR #144 가 이 문서에 실제로 왔다), `**` 를 문자로 요구하면 그 정리만으로
+        검사가 "기준 Z 가 없다" 며 헛되이 죽는다. 줄머리는 그대로 고정한다 — 표의
+        행이어야지 문장 안에 섞인 `| Z |` 여서는 안 된다.
         """
-        self.assertRegex(self.request, r"(?m)^\| (?:\*\*)?Z(?:\*\*)? \|", "기준 Z 가 없다")
-        self.assertRegex(self.request, r"FN (?:\*\*)?감소 ≥ 1(?:\*\*)?")
+        self.assertRegex(plain(self.request), r"(?m)^\| Z \|", "기준 Z 가 없다")
+        self.assertIn("FN 감소 ≥ 1", plain(self.request))
         self.assertIn("가설 기각", self.request,
                       "Z 실패 시 기각한다는 말이 없다")
 
@@ -114,13 +124,14 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         한다. churn 범위(17~45셀)는 회차1↔회차2 에만 쓴다. 한 칸에 섞으면 대상 밖
         45셀까지 승인된다.
 
-        키의 `**` 는 선택이다 — 강조 표기를 걷어내는 정리(PR #144)가 이 문서에 왔고,
-        그것만으로 이 검사가 죽으면 안 된다. 보는 것은 강조가 아니라 규칙이다.
+        키의 강조는 `plain` 이 걷고 본다 — 강조 표기를 걷어내는 정리(PR #144)가 이
+        문서에 왔고, 그것만으로 이 검사가 죽으면 안 된다. 보는 것은 강조가 아니라 규칙이다.
         """
         def rows(key):
-            """`| D1 |` 과 `| **D1** |` 을 같은 줄로 본다."""
-            head = re.compile(rf"^\| (?:\*\*)?{key}(?:\*\*)? \|")
-            return [line for line in self.request.splitlines() if head.match(line)]
+            """`| D1 |` 로 시작하는 줄만 고른다 — 강조는 `plain` 이 이미 걷었다."""
+            head = f"| {key} |"
+            return [line for line in plain(self.request).splitlines()
+                    if line.startswith(head)]
 
         d1, d2 = rows("D1"), rows("D2")
         self.assertTrue(d1, "D1 줄이 없다")

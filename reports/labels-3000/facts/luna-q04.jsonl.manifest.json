@@ -1,0 +1,18 @@
+{
+  "purpose": "external_label_comparison",
+  "model": "luna-high-facts",
+  "command": "api:gpt-6-luna effort=high cache=explicit-30m (tools/luna_api.py)",
+  "bundle_prompt_sha256": "43380d80611ff44b5b12523139ee724bb60b836d1dac433cdf82c570f4d87918",
+  "requested": 83,
+  "labelled": 82,
+  "skipped_already_done": 0,
+  "failures": [
+    {
+      "id": "PPS-D-003930",
+      "error": "명령이 1로 끝났다: HTTP 429: {\n  \"error\": {\n    \"message\": \"You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.\",\n    \"type\": \"insufficient"
+    }
+  ],
+  "elapsed_seconds": 2106.11580020003,
+  "created_at": "2026-09-27T01:51:43.196648+00:00",
+  "note": "외부 LLM은 라벨 생성 단계 전용이다(R6). 제출 추론에서 호출하지 않는다."
+}

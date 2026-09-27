@@ -181,10 +181,11 @@ LOGPROBS_K = 5
 # own quote. On the five saved sets no value rose; v6 stays at 0.6 because moving it only swapped
 # two e6 quotes that way (review pr146 round 1).
 ITEM_THRESHOLDS: Dict[str, float] = {
-    "v1": 0.97, "v4": 0.995, "v6": 0.6, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
+    "v1": 0.97, "v3": 0.95, "v4": 0.995, "v6": 0.6, "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01,
 }
-# v3's 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive
-# (re-tuned on the bundle: 0.715215 without it vs 0.715217 with it).
+# v3's former 0.8 cut was dropped when the bundle's v3 deletion rule took the same false positive.
+# The fixed off-dev-600 gate later selected 0.95: Macro 0.499681 -> 0.508940, both split halves
+# improve, trusted net guard passes, and the matching saved-response dev replay drops 0.002778 (< 0.01).
 PROMPT_BUDGET = MAX_MODEL_LEN - MAX_TOKENS - 64
 EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
@@ -732,6 +733,12 @@ def verify_company_size(facts, rec, max_chars):
     # 12셀 · 대상 밖 0셀 · v17 F1 0.320→0.500(FP 15→9) · v14·v15·v17 TP 각 +1.
     # 무라벨 카나리는 조건 비율 dev 98.0% vs 무라벨 98.7%(1.007배)다.
     visible = build_context(rec, max_chars)
+    # C7 (#152): a role saying the sentence is no bidder limit (checklist · legal_reference · none) outranks a
+    # limiting value; the table below already accepts only `unrestricted` for those roles. dev: 2 notices,
+    # dev-label only — first to revert if the dev-fit policy is withdrawn.
+    if (facts.get("qualification_role") in ("checklist", "legal_reference", "none")
+            and facts.get("qualification") not in ("unrestricted", "unknown")):
+        facts = dict(facts, qualification="unrestricted")
     raw_facts = facts
     facts = dict(facts)
     if "qualification_role" in facts:
@@ -1509,8 +1516,14 @@ def clean_evidence(ev: Optional[str], src: str) -> str:
 V19_POST_AWARD = re.compile(r"계약\s*시|계약체결|낙찰자\s*결정")   # 낙찰 후·계약 시 의무
 V19_BID_STAGE = re.compile(r"입찰|투찰")                        # 입찰 단계 표현이 있으면 유지
 V19_PLEDGE = re.compile(r"확약서")
+# The bid stage is also written "입찰 시 제출서류", "입찰참가 등록 시" and "전자입찰서 제출기간 내" (off-dev audit,
+# reports/offdev-0926: four v19 positives lowered for want of these). v19 is a demand at the bid or tender stage.
 V19_BID_DEADLINE = re.compile(r"입찰서?\s*제출\s*마감|입찰\s*전|입찰전|투찰\s*마감"
-                              r"|개찰\s*전|입찰\s*참가\s*시")
+                              r"|개찰\s*전|입찰\s*참가\s*시"
+                              r"|입찰\s*참가\s*(?:자격\s*)?등록\s*시|입찰서?\s*제출\s*기간")
+# A bare "입찰 시" names a stage only as a list heading ("다. 입찰 시 제출서류"); on the pledge's own line it can
+# belong to another requirement ("계약 시 제출서류: 확약서 1부. 입찰 시 평가표는 별첨").
+V19_BID_HEADING = re.compile(V19_BID_DEADLINE.pattern + r"|(?<![가-힣])(?:입찰|투찰)\s*시(?![가-힣])")
 V19_WINDOW = 200                                               # 확약서 언급 앞뒤로 볼 글자 수
 V24_AMOUNT = re.compile(r"(\d{1,3}(?:,\d{3})+|\d{5,})\s*원")
 V24_REGION = re.compile(r"지역제한\s*\(([^)]*)\)")
@@ -1620,12 +1633,15 @@ def v19_demanded_at_bid_stage(rec: Dict[str, Any]) -> bool:
             end = min(end if end >= 0 else len(text), found.end() + V19_WINDOW)
             if V19_BID_DEADLINE.search(text[start:end]):
                 return True
+            # A bare "입찰 시" is read only in list headings (below). On the pledge's own line it was tried and
+            # withdrawn (PR #154 rounds 2-14): binding it to the pledge's demand took clause parsing that each review
+            # round broke again, and it moved no dev, diagnostic or unlabeled cell.
         lines = text.split("\n")
         for index, line in enumerate(lines):
             if V19_PLEDGE.search(line):
-                heading = list_heading(lines, index)
-                if heading and V19_BID_DEADLINE.search(heading):
-                    return True
+                for heading in (list_heading(lines, index), enumerated_heading(lines, index)):
+                    if heading and V19_BID_HEADING.search(heading):
+                        return True
     return False
 
 
@@ -1647,6 +1663,54 @@ def list_heading(lines, index):
         other = LIST_MARKER.match(lines[up])
         if (other.lastgroup if other else None) != kind:
             return lines[up]
+    return None
+
+
+ENUMERATING = ("circled", "hangul", "paren_num", "num")
+STAGE_AFTER_BID = re.compile(r"계약|낙찰|착수|납품|준공|이행|우선협상|협상|선정|개찰\s*후|평가[^:：]{0,6}후")
+# A stage named as a time ("계약 체결 후", "낙찰 시", "선정 단계") or a later recipient — not a bare word inside a
+# document name ("선정기준표", "계약서 사본"). PR #156 rounds 3-4.
+STAGE_PHRASE = re.compile(r"(?:계약|낙찰|착수|납품|준공|이행|협상|선정|개찰|평가)\s*(?:체결|완료|결정)?\s*"
+                          r"(?:시|후|이후|전|단계)(?![가-힣])|우선협상대상자|낙찰자|계약상대자|선정\s*(?:된\s*)?업체")
+TIMING_LABEL = re.compile(r"단계|시기|시점|기한|일정|대상|제출처|수신")
+
+
+def enumerated_heading(lines, index):
+    """For a numbered entry, the nearest line above with a different numbering kind, skipping only notes (※) and
+    sub-bullets (-) inside the list — `list_heading` stops at those, so a list like "다. 입찰 시 제출서류 / ③ … /
+    - 증빙자료 … / ⑦ 확약서" lost its heading (off-dev audit, 4 v19 misses). Any unmarked line — a heading of its own
+    ("낙찰 후 이행사항") or an introductory sentence ("낙찰자는 계약 체결 후 다음 서류를 제출하여야 합니다.") — ends the
+    walk and is returned, as `list_heading` does (PR #154 rounds 15-16)."""
+    found = LIST_MARKER.match(lines[index])
+    if not found or found.lastgroup not in ENUMERATING:
+        return None
+    for up in range(index - 1, max(-1, index - 1 - HEADING_REACH), -1):
+        if not lines[up].strip():
+            continue
+        other = LIST_MARKER.match(lines[up])
+        if not other:
+            return lines[up]
+        if other.lastgroup in ENUMERATING and other.lastgroup != found.lastgroup:
+            return lines[up]
+        # A note or sub-bullet is skipped only when it is plainly a detail of the entry above — a "label : value"
+        # line ("- 증빙자료 : 카탈로그 …") or a long explanatory "※" note — and names no later stage. Any other marked
+        # line may head a section of its own ("※ 우선협상대상자 제출서류", "- 개찰 후 제출자료") and ends the walk
+        # (PR #154 rounds 17-18: no keyword list of later stages is complete). A label that names a submission
+        # ("- 우선협상대상자 제출서류: 선정 이후 제출") heads a section too, colon or not (PR #156 round 2).
+        if other.lastgroup == "bullet":
+            stripped = lines[up].strip()
+            label = re.split(r"[:：]", stripped, maxsplit=1)[0]
+            if label != stripped:
+                # A "label : value" line. A stage word counts in the label; in the value only a stage phrase or a
+                # recipient under a timing, phase or recipient label ("단계: 계약 체결 후 제출서류"). Any other value is
+                # content, document titles included ("선정기준표", "계약 후 유지관리 계획서"). PR #156 rounds 3-5.
+                value = stripped[len(label) + 1:]
+                detail = ("제출" not in label and not STAGE_AFTER_BID.search(label)
+                          and not (TIMING_LABEL.search(label) and STAGE_PHRASE.search(value)))
+            else:
+                detail = stripped.startswith("※") and len(stripped) > 40 and not STAGE_AFTER_BID.search(stripped)
+            if not detail:
+                return lines[up]
     return None
 
 
@@ -2639,6 +2703,15 @@ def apply_product_rules(judgment, rec):
     return out
 
 
+def local_small_quote(rec) -> bool:
+    """A 지방 small-value quote contract (집행기준 제5장 제3절 1.), which may combine limits. Its general ceiling is
+    1억 — the same band S7-3 names for the 지방 소액수의 견적 exception."""
+    meta = rec.get("meta") or {}
+    price = estimated_price(rec)
+    return ("지방" in str(meta.get("적용계약법") or "") and str(meta.get("계약방법") or "").startswith("수의")
+            and price is not None and price < 100_000_000)
+
+
 def apply_qualification_rules(judgment, rec):
     """모델 판정에 v8·v7·v4를 올리고 v3만 내린다. 다른 20항목은 그대로 돌려준다.
 
@@ -2653,6 +2726,10 @@ def apply_qualification_rules(judgment, rec):
         # `[수요기관(기초자치단체)|지역=r1]` 처럼 익명화된 기관 토큰에서 검출기가 None 을
         # 내므로 정답 양성까지 함께 지운다. 되돌렸다 — 여기서는 0 을 1 로만 올린다.
         if cell.get("위반여부") == 1:
+            continue
+        # v8 비고 "지방 + 소액수의 가능": a local 2-quote negotiated contract may combine region and 실적
+        # (집행기준 제5장 제3절 1. 6)·7)). The off-dev audit found all four rule-raised v8 FPs there.
+        if item == "v8" and local_small_quote(rec):
             continue
         hit = RULES[item](rec)
         if hit:
@@ -3360,21 +3437,202 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                 break
         out["v23"] = ({"위반여부": 1, "근거문구": evidence} if evidence
                       else {"위반여부": 0, "근거문구": ""})
-    # Facts dev-fit (2026-09-25): on a no-bid contract (수의계약) these items are never positive in dev
-    # but fired 2·5·3·4 times. S7-4 names small negotiated quotes as v13's exception; the rest is
-    # fitted to dev on purpose (v9 loses one TP for four FPs). Dev +0.0155.
-    if (rec.get("meta") or {}).get("계약방법") == "수의계약":
-        for item in NO_BID_ZERO_ITEMS:
-            out[item] = {"위반여부": 0, "근거문구": ""}
     # v9 is goods only. 정부 입찰·계약 집행기준 제5조 names "물품의 제조ㆍ구매입찰"; dev has
     # v9=1 in 6 of 78 goods notices and 0 of 122 services. The article does not settle mixed
     # services that deliver goods, so this is also fitted to dev (2026-09-25).
     if not str((rec.get("meta") or {}).get("업무구분") or "물품").startswith("물품"):
         out["v9"] = {"위반여부": 0, "근거문구": ""}
+    out = apply_clause_rules(out, rec)
+    # No-bid contracts (수의계약) last, so no raise above can undo it. Dev gold puts 6 of its 153
+    # positive cells on its 35 수의계약 notices (18% of notices, ~27 cells expected at an even spread);
+    # the items that have one keep their cells, except v9 (given up on 2026-09-25). Fitted to dev on purpose and submitted as a server
+    # experiment (user decision 2026-09-27): the unlabeled pool is 45% 수의계약 and a quarter of the
+    # current positive cells sit there. First version (2026-09-25) zeroed only v9, v10, v13, v18.
+    if (rec.get("meta") or {}).get("계약방법") == "수의계약":
+        for item in NO_BID_ZERO_ITEMS:
+            out[item] = {"위반여부": 0, "근거문구": ""}
     return out
 
 
-NO_BID_ZERO_ITEMS = ("v9", "v10", "v13", "v18")
+def needs_extra_call(rec) -> bool:
+    """Whether the SME and company-size calls run on this notice. `run()` and `tools/replay_run.py` share it.
+
+    On a 수의계약 notice postprocess zeroes every item those calls feed, so skipping them changes no
+    cell and frees server time for a new call (2026-09-27).
+    """
+    return (rec.get("meta") or {}).get("계약방법") != "수의계약"
+
+
+# Items with a dev gold positive on a 수의계약 notice keep their cells there; v9's one is given up (2026-09-25).
+# v17's one (PPS-DEV-21) is given up too (2026-09-27): v17 comes from the company-size call, which no longer
+# runs there (`needs_extra_call`), and the main call's v17 on the 5,500 raised 64 cells, 27 of 29 labelled 0.
+NO_BID_KEEP_ITEMS = ("v3", "v4", "v21", "v24")
+NO_BID_ZERO_ITEMS = tuple(v for v in ITEMS if v not in NO_BID_KEEP_ITEMS)
+
+
+# ===== Rules replayed on dev 200 and outside dev (2026-09-26) =====
+# Each was measured as a replay candidate first: experiments/a_catalogue_miss_candidate.py,
+# a_offdev_candidate.py and a_v21_v22_raise_candidate.py (reports/recheck-0926, reports/offdev-0926).
+
+def catalogue_miss(rec: Dict[str, Any]) -> bool:
+    """판로지원법 제7조: a 경쟁제품 is a designated item. Registered codes none of which is in the provided
+    catalogue, and no catalogue name in the notice (S7-15: designation is by 세부품명 name), give no ground
+    for a 경쟁제품. Notices without codes — most services — are untouched."""
+    codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
+    if not codes or not _PRODUCTS:
+        return False
+    if codes & {p["세부품명번호"] for p in _PRODUCTS}:
+        return False
+    # S7-15 names meta `조항호내용` beside the notice as a source for identifying the object.
+    context = build_context(rec) + "\n" + str((rec.get("meta") or {}).get("조항호내용") or "")
+    return not sme_product_lookup(rec, context, _PRODUCTS)["일치후보"]
+
+
+def outside_catalogue(rec: Dict[str, Any]) -> bool:
+    """C9 (#152): registered codes that `competitive_product` rules out — catalogue and the 특이사항 amount
+    limit, which `catalogue_miss` does not read — give no 경쟁제품 item. Notices without codes are untouched.
+    S7-15: a catalogue product named in the notice counts beside the registered codes, from the same sources
+    `catalogue_miss` reads, so a named product within its limit keeps the item (PR #156 round 1)."""
+    codes = set(CODE10.findall(str((rec.get("meta") or {}).get("세부품명번호목록") or "")))
+    if not codes:
+        return False
+    context = build_context(rec) + "\n" + str((rec.get("meta") or {}).get("조항호내용") or "")
+    found = sme_product_lookup(rec, context, _PRODUCTS)
+    if found["조회생략행수"]:
+        return False                        # the match list was cut — do not decide on part of it
+    named = {p["세부품명번호"] for p in found["일치후보"]}
+    return competitive_product(rec, codes | named) is False
+
+
+# v11 is a 경쟁제품 bid NOT limited to 중소기업자 (판로지원법 제7조①). `SME_ALLOWED` wants "중소기업" within
+# 60 characters on one line and misses "소기업 또는 소상공인으로서 … 확인서를 소지한 업체" and wrapped limits;
+# outside dev the product and company-size stages raised 31 v11 false positives that way.
+SIZE_CLASS = r"(?:중\s*[·ㆍ・‧]?\s*소\s*기업자?|소\s*기업자?|소\s*상\s*공\s*인)"
+# The close must make the size class a condition on the bidder — not a bare 확인서 mention, a document list
+# line or "확인 가능하여야" about a website. It must sit in the same clause: a limit may wrap over lines, but
+# the span stops at a sentence end ("다.") or the next list item ("나.", "2)", "②", "-") — at a line start or
+# inline, as flattened text writes "… 선택사항, 나. 입찰은 …" or "…선택사항,나.입찰은…". A list marker is one
+# syllable 가–하 or a 1–2 digit number after whitespace or punctuation; after a syllable ("업체나.") it is prose.
+CLAUSE_CHAR = (r"(?:(?!\n\s*(?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)]|[①-⑳]|[-•※○□◦❍▶]))"
+               r"(?![\s,;·](?:[가-하]\s*[.)]|\(?\d{1,2}\s*[.)](?!\d))|\s*[①-⑳])(?!다\s*[.。])[^。])")
+SIZE_LIMIT = re.compile(SIZE_CLASS + CLAUSE_CHAR + r"{0,120}?(?:으로\s*[서써]|로\s*[서써]|에\s*한(?:정|하여|함|해|합니다)|한정"
+                        r"|으로\s*제한|로\s*제한|에\s*해당하는\s*(?:업체|자)"
+                        r"|확인서[’'\"」』]?\s*를?\s*(?:소지|보유|발급받은)[^。\n]{0,10}?(?:업체|자))"
+                        r"|제한\s*경쟁\s*(?:입찰)?\s*\(\s*" + SIZE_CLASS, re.S)
+SIZE_TITLES = re.compile(r"[「｢『《][^」｣』》]{0,60}[」｣』》]|중소기업\s*기본법|중소기업\s*범위\s*및\s*확인에\s*관한\s*규정"
+                         r"|중소기업제품[^,.\n]{0,30}?(?:법률|시행령)|중소벤처기업부|중소기업자\s*간\s*경쟁\s*제품"
+                         r"|중소기업\s*공공\s*구매\s*(?:종합)?\s*정보망")
+
+
+def size_limited(rec: Dict[str, Any]) -> bool:
+    for doc in rec.get("docs") or ():
+        text = SIZE_TITLES.sub(" ", doc.get("text") or "")
+        for found in SIZE_LIMIT.finditer(text):
+            if _is_qualification_context(text, found.start()):
+                return True
+    return False
+
+
+# v2: a past-performance eligibility clause under 2.3억 is the item itself (restored from 202d197, dropped on
+# 9/25 over dev trade-offs; outside dev the model misses 19 of 22 labeled v2 positives). Only the 공고문 is
+# searched: restrictions are stated in the bid notice (국가 시행령 제21조② · 지방 시행령 제20조②).
+V2_ELIGIBILITY = re.compile(r"(?<!신용과 )실적(?:이|을)\s*(?:있는|보유한|갖춘)\s*(?:업체|자)"
+                            r"(?=[ \t]*(?:$|이어야|여야|만(?![가-힣])|로서|[(.,]))", re.M)
+
+
+def v2_performance_clause(rec: Dict[str, Any]) -> Optional[str]:
+    """The line demanding past performance, when the price is under 2.3억 and no local small-quote
+    exception applies (S7-3). None otherwise."""
+    meta = rec.get("meta") or {}
+    price = estimated_price(rec)
+    if price is None or price >= NOTICE_AMOUNT_WON:
+        return None
+    if ("지방" in str(meta.get("적용계약법") or "") and meta.get("계약방법") == "수의계약"
+            and price < 100_000_000):
+        return None
+    for doc in rec.get("docs") or ():
+        if doc.get("type") != "공고문":
+            continue
+        text = doc.get("text") or ""
+        for found in V2_ELIGIBILITY.finditer(text):
+            if _is_qualification_context(text, found.start()):
+                start = text.rfind("\n", 0, found.start()) + 1
+                return text[start:found.end()].strip()[-QUOTE_MAX:]
+    return None
+
+
+# v21 (공동계약운용요령 제9조⑤, 지방 집행기준 제6장 제2절 1.나.): a stated member minimum share below the floor;
+# 지방 공사 may adjust to 4%. v22 (국가 제43조⑥·지방 제43조⑦ 삭제): barring bidders absent from the briefing,
+# 협상에 의한 계약 only.
+V21_SHARE = re.compile(r"(?:최소\s*지분율|계약\s*참여\s*최소\s*지분율|최소\s*출자\s*비율)[^.\n%]{0,20}?(\d+(?:\.\d+)?)\s*%")
+V22_BARRED = re.compile(r"(?:현장|사업|과업|제안요청서?|제안)\s*설명회?[^.\n]{0,40}?(?:참석|참가)하?지\s*(?:아니한|않은)"
+                        r"[^.\n]{0,40}?(?:입찰|제안)[^.\n]{0,30}?(?:허용되지|불가|제한|할\s*수\s*없|참가\s*자격이\s*없)")
+
+
+def _window(text: str, found, before: int, after: int) -> str:
+    return text[max(0, found.start() - before): found.end() + after].strip()
+
+
+def v21_share_clause(rec: Dict[str, Any]) -> Optional[str]:
+    floor = v21_minimum_share(rec)
+    if floor is None:
+        return None
+    meta = rec.get("meta") or {}
+    if "지방" in str(meta.get("적용계약법") or "") and "공사" in str(meta.get("업무구분") or ""):
+        floor = 4.0
+    for doc in rec.get("docs") or ():
+        text = doc.get("text") or ""
+        for found in V21_SHARE.finditer(text):
+            if float(found.group(1)) < floor:
+                return _window(text, found, 40, 80)
+    return None
+
+
+def v22_briefing_clause(rec: Dict[str, Any]) -> Optional[str]:
+    # The item is 협상에 의한 계약 only; the registered award method says which (all dev notices carry it).
+    # A body mention of 협상 is not the contract method.
+    meta = rec.get("meta") or {}
+    if "협상" not in str(meta.get("낙찰방법") or "") + str(meta.get("계약방법") or ""):
+        return None
+    for doc in rec.get("docs") or ():
+        text = doc.get("text") or ""
+        found = V22_BARRED.search(text)
+        if found:
+            return _window(text, found, 20, 20)
+    return None
+
+
+def apply_clause_rules(out: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    # A lowered cell's quote is "", never None: write_csv writes None as the text "None", and the CSV check
+    # then fails on an absence item or a 0 with a quote.
+    if catalogue_miss(rec):
+        for item in ("v10", "v11"):
+            if (out.get(item) or {}).get("위반여부") == 1:
+                out[item] = {"위반여부": 0, "근거문구": ""}
+    # v12 stays: the same notices hold 2 dev v12 positives.
+    if outside_catalogue(rec):
+        for item in ("v10", "v11", "v13"):
+            if (out.get(item) or {}).get("위반여부") == 1:
+                out[item] = {"위반여부": 0, "근거문구": ""}
+    if (out.get("v11") or {}).get("위반여부") == 1 and size_limited(rec):
+        out["v11"] = {"위반여부": 0, "근거문구": ""}
+    if (out.get("v2") or {}).get("위반여부") == 0:
+        quote = v2_performance_clause(rec)
+        for doc in rec["docs"] if quote else ():
+            cleaned = clean_evidence(quote, doc["text"])
+            if cleaned:
+                out["v2"] = {"위반여부": 1, "근거문구": cleaned}
+                break
+    # Every raised quote passes the evidence contract (formula prefix, length, verbatim) before it is written.
+    for item, find in (("v21", v21_share_clause), ("v22", v22_briefing_clause)):
+        if (out.get(item) or {}).get("위반여부") != 1:
+            quote = find(rec)
+            for doc in rec["docs"] if quote else ():
+                cleaned = clean_evidence(quote, doc.get("text") or "")
+                if cleaned:
+                    out[item] = {"위반여부": 1, "근거문구": cleaned}
+                    break
+    return out
 
 
 def to_row(rec_id: str, judgment: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
@@ -3555,7 +3813,8 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
 
     # First finish every baseline batch. Reuse the same engine, but no previous predictions in prompts.
     baseline_seconds = inf_seconds
-    selected = [i for i, text in enumerate(texts) if parse_judgment(text)[0]["v13"]["위반여부"] == 1]
+    selected = [i for i, text in enumerate(texts)
+                if parse_judgment(text)[0]["v13"]["위반여부"] == 1 and needs_extra_call(recs[i])]
     sme_texts, sme_ntok, sme_chars = [None] * len(recs), [], [max_chars] * len(recs)
     emit("phase_started", phase="sme", items=SME_ITEMS,
          selected_count=len(selected), skipped_count=len(recs) - len(selected),
@@ -3605,7 +3864,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
 
     # A1: 금액에 무관하게 공고당 한 번 기업등급을 추출한다. A2도 이 사실을 재사용한다.
     band_texts, band_chars, band_ntok = [None] * len(recs), [max_chars] * len(recs), []
-    band_selected = list(range(len(recs))) if BAND_ITEMS else []
+    band_selected = [i for i, rec in enumerate(recs) if needs_extra_call(rec)] if BAND_ITEMS else []
     t_band = time.time()
     if BAND_ITEMS:
         emit("phase_started", phase="company_size", items=extra_call_items()["company_size"],

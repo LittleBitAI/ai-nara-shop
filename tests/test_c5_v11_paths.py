@@ -161,9 +161,9 @@ class DocumentedRerunReproducesTheBaseline(unittest.TestCase):
     def test_the_pinned_replay_gives_the_documented_v11(self):
         """`**` 를 선택으로 둔다.
 
-        강조 표기를 걷어내는 정리(PR #144)가 이 보고서에 왔고, `**` 를 요구하던 이
-        정규식이 "기준 v11 을 못 찾았다" 며 죽었다. 검사가 보는 것은 강조가 아니라
-        표에 적힌 수다.
+        위키 lint 가 표 칸의 `**` 를 지운다(`6c263c9`). 그 정리(PR #144)가 이 보고서에
+        왔고, `**` 를 요구하던 이 정규식이 "기준 v11 을 못 찾았다" 며 죽었다. 고정할
+        것은 세 수가 실측과 같은가이지 그 수가 굵은가가 아니다.
         """
         found = re.search(r"기준 v11 \| (?:\*\*)?(\d+) / (\d+) / (\d+)", self.report)
         self.assertIsNotNone(found, "README §1 에서 기준 v11 을 못 찾았다")

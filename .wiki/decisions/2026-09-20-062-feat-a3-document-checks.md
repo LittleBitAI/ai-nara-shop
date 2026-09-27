@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "A3 H2: 본문 요건 추출과 세 항목 TP 검증"
+title: "A3 H2: Extraction of body requirements and verification of three-item TP"
 pr: 62
 merged: 2026-09-20
 branch: "feat/a3-document-checks"
 ---
 
-# A3 H2: 본문 요건 추출과 세 항목 TP 검증
+# A3 H2: Extraction of body requirements and verification of three-item TP
 
-무엇. A3 H1은 동일 ZIP 두 회차 모두 v10·v18·v20 TP가 0이었다. 다음 실험은 기존 company_size 호출에서 등록된 조항호내용을 제외하고, 본문의 직접생산 요건과 SW 사업·참여제한을 각각 추출한다. v10·v20은 검증된 새 사실을 CSV에 연결하고 v18은 기존 결정표를 사용한다. 새 전건 호출은 없다. 전용 노트북은 추론 후보 cc7c9719b60b84f1fe6a713969ca886044066d75를 고정한다. …
+What. A3 H1 had 0 TP for v10, v18, and v20 in both rounds of the same ZIP. The next experiment excludes the clause content registered in the existing company_size call and extracts the direct production requirements and SW business/participation restrictions from the body, respectively. v10 and v20 connect the verified new facts to the CSV, and v18 uses the existing decision table. There are no new full-case calls. The dedicated notebook fixes the inference candidate cc7c9719b60b84f1fe6a713969ca886044066d75. …
 
-왜. 회차 2에서도 본문에 없는 자격 인용이 메타에서 복사됐고 1차 호출은 세 항목 모두 0건이었다. 문서를 관측하지 못한 경우와 관측한 본문에 요건이 없는 경우를 분리하는 실험이다. SW는 제공 지침 제3조②의 명시 장소인 공고문/RFP 전체 관측을 요구한다. 규격서 말미 절단만 있는 경우와 공고문/RFP 누락을 구분한다.
+Why. In round 2 as well, qualification citations not in the body were copied from the meta, and the first call had 0 cases for all three items. This is an experiment to separate cases where the document was not observed from cases where the requirements are not in the observed body. SW requires observation of the entire announcement/RFP, which is the specified location in Article 3② of the provision guidelines. It distinguishes between cases where only the end of the specification is cut off and cases where the announcement/RFP is missing.
 
-출처. PR #62 · `feat/a3-document-checks`
+Source. PR #62 · `feat/a3-document-checks`

@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "A5: v18 범위 재검토 구현과 두 회차 결과 — 미채택"
+title: "A5: Implementation of v18 scope review and results of two rounds — Not adopted"
 pr: 80
 merged: 2026-09-21
 branch: "feat/a5-v18-scope-review"
 ---
 
-# A5: v18 범위 재검토 구현과 두 회차 결과 — 미채택
+# A5: Implementation of v18 scope review and results of two rounds — Not adopted
 
-무엇. 한 company_size 호출에서 별도로 추출한 scope_review를 v18에만 소비하는 후보를 구현하고, 실제 GPU 두 회차 결과를 등록했습니다. 후보는 미채택입니다. 2026-09-21 사용자 승인으로 실험 코드·결과 기록·장부 수정을 보관하기 위해 병합합니다. 운영 `script.py`는 변경하지 않습니다. …
+What. We implemented a candidate that consumes the scope_review extracted separately in one company_size call only for v18, and registered the results of two actual GPU rounds. The candidate is not adopted. As of 2026-09-21, it is merged to preserve the experimental code, result records, and ledger modifications with user approval. The production `script.py` remains unchanged. …
 
-왜. H3 저장 scope의 전역 교체는 v18 TP를 회복하면서 v10 FP도 늘렸습니다. 이번에는 동일 호출의 별도 범위를 v18에만 소비해 이를 분리하는 가설을 시험했습니다. 실제로는 199건에서 scope/review가 같고 1건은 competitive→unknown으로 보류돼 새로운 TP가 생기지 않았습니다. Macro 차이는 재검토 소비가 아닌 기존 필드 변화와 추론 변동을 포함합니다.
+Why. The global replacement of the H3 storage scope increased v10 FP while recovering v18 TP. This time, we tested the hypothesis of separating this by consuming a separate scope of the same call only for v18. In reality, scope/review were the same in 199 cases, and 1 case was held as competitive→unknown, so no new TP was generated. The macro difference includes existing field changes and inference fluctuations, not review consumption.
 
-출처. PR #80 · `feat/a5-v18-scope-review`
+Source. PR #80 · `feat/a5-v18-scope-review`

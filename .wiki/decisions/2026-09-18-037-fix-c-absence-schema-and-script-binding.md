@@ -3,16 +3,16 @@ scope: project
 severity: preference
 triggers: []
 domain: ''
-title: "fix: PR #35 리뷰의 MEDIUM 2건 — 부재 근거문구 상한과 후보의 script 결합"
+title: "fix: 2 MEDIUM issues from PR #35 review — Combining the evidence text limit for absence and the candidate's script"
 pr: 37
 merged: 2026-09-18
 branch: "fix/c-absence-schema-and-script-binding"
 ---
 
-# fix: PR #35 리뷰의 MEDIUM 2건 — 부재 근거문구 상한과 후보의 script 결합
+# fix: 2 MEDIUM issues from PR #35 review — Combining the evidence text limit for absence and the candidate's script
 
-무엇. #35 가 리뷰 코멘트 39초 뒤에 머지돼서, 지적한 6건이 그대로 main 에 올라갔다. 그중 실제 실행에 영향을 주는 MEDIUM 2건만 여기서 고친다. LOW 4건은 손대지 않았다.
+What. #35 was merged 39 seconds after the review comment, so the 6 pointed-out issues were uploaded to main as is. Among them, only the 2 MEDIUM issues that affect actual execution are fixed here. The 4 LOW issues were not touched.
 
-왜. `reports/team-c/c3-amount-gate/round1-unlock-absence-evidence.diff` 회차 ① diff 가 24항목 전부의 근거문구를 `maxLength: EVIDENCE_MAX`(500)로 열어 주는데, 같은 diff 의 프롬프트 규칙 3 은 부재 항목을 위반여부=1 로 판정하면 인용하라고 적극적으로 지시한다. 부재는 5항목이다. - `MAX_TOKENS` = 2048 - 보관 회차의 실측 최대 출력 = 1055 토큰 (p95 869) → 여유 약 1000 토큰 - diagnose 회차는 200건 중 139건을 v16 양성으로 표시했다 부재 3~5개를 상한 근처로 인용하는 공고 하나면 2048 을 넘긴다. …
+Why. `reports/team-c/c3-amount-gate/round1-unlock-absence-evidence.diff` round ① diff opens the evidence text for all 24 items to `maxLength: EVIDENCE_MAX`(500), but prompt rule 3 of the same diff actively instructs to cite if an absence item is judged as violation=1. There are 5 absence items. - `MAX_TOKENS` = 2048 - Measured maximum output of the storage round = 1055 tokens (p95 869) → Margin of about 1000 tokens - The diagnose round marked 139 out of 200 cases as v16 positive. A single announcement citing 3~5 absences near the upper limit exceeds 2048. …
 
-출처. PR #37 · `fix/c-absence-schema-and-script-binding`
+Source. PR #37 · `fix/c-absence-schema-and-script-binding`

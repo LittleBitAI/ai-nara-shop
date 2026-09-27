@@ -53,19 +53,21 @@ def main(argv=None):
     parser.add_argument("--input", required=True, help="open/train_unlabeled.jsonl")
     parser.add_argument("--seen", required=True, help="이미 라벨을 본 공고의 JSONL (id 키)")
     parser.add_argument("--out", required=True, help="추첨 순서 ID 를 한 줄에 하나씩 쓴다")
+    parser.add_argument("--seed", type=int, default=SEED)
+    parser.add_argument("--keep", type=int, default=KEEP, help="순서 앞에서 남길 ID 수")
     args = parser.parse_args(argv)
     seen = {json.loads(line)["id"] for line in Path(args.seen).read_text(encoding="utf-8").splitlines()
             if line.strip()}
     raw = Path(args.input).read_bytes()
     # splitlines() 는 본문 안의 U+2028 같은 구분자에서도 끊는다. JSONL 의 행 경계는 줄바꿈뿐이다.
     records = (json.loads(line) for line in raw.decode("utf-8").split("\n") if line.strip())
-    order, info = draw(records, seen)
+    order, info = draw(records, seen, seed=args.seed, keep=args.keep)
     out = Path(args.out)
     if out.exists():
         print(f"error: {out} 가 이미 있다", file=sys.stderr)
         return 1
     out.write_text("\n".join(order) + "\n", encoding="utf-8", newline="\n")
-    manifest = {"seed": SEED, "kept": len(order), "population": info["population"],
+    manifest = {"seed": args.seed, "kept": len(order), "population": info["population"],
                 "excluded": info["excluded"], "seen_source": Path(args.seen).as_posix(),
                 "input_sha256": hashlib.sha256(raw).hexdigest(),
                 "ids_sha256": hashlib.sha256(out.read_bytes()).hexdigest()}

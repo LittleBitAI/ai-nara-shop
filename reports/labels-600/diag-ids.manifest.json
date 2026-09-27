@@ -1,0 +1,33 @@
+{
+  "seed": 20260926,
+  "weak_items": [
+    "v2",
+    "v9",
+    "v10",
+    "v11",
+    "v13",
+    "v16",
+    "v18",
+    "v24"
+  ],
+  "fired_pool": 748,
+  "rest_pool": 4406,
+  "picked_fired": 150,
+  "picked_rest": 50,
+  "excluded_labeled": 604,
+  "script_sha256": "16ab9a22bf79eb49f06fdcdcfd9103420209bb89ef362a39b9e68db214482830",
+  "replay_csv_sha256": {
+    "replay-u00": "72eb787929d154b70e9a63b3ffaba2f180e65ebab5c40222a77595ff10d4c876",
+    "replay-u01": "598555c6c31aa9b55fb3e336dbd1d59089e42608855dd691bd5f09d6062a2da0",
+    "replay-u02": "6e67c9e9e0c0f7ef63f0fed1090a30d2a0117cff77f63d6d033c35e0525d90f6",
+    "replay-u03": "fe7f8d23ab3e99e68dc92b4d5d5384c8048714c69504a1f57a05ab436b98d375",
+    "replay-u04": "c1e3b90a0326237b8bbc26449cc807e190013ac80cb767a4707573da4d6f76f2",
+    "replay-u05": "d565668db5bb4b9728d621d20870f3a7f07ea6a983a62375a950f0c4e2138dc3",
+    "replay-u06": "40c29e2a8bba07ef90a9477b0017900f4515324de405a65371698136695c6347",
+    "replay-u07": "601613927006b70d45a00cdfc46e69ebf8fb3979053e4954252efcfe7c68805b",
+    "replay-u08": "bb9f9bbe1f11e44e6d9bca418775b565990d5ce94748f4b1fe0c430cd94c9aa2",
+    "replay-u09": "0b641eb67833f34ae21074a07f3d340902659423ab01840a9ead238b43baca74",
+    "replay-u10": "e27feff8b15cd8dae8dd9f14bc7736b2a29d6b304e2f905c4e7789f7fa04e7c4"
+  },
+  "ids_sha256": "afd85a35b539bf8c67239923d29a84f120d76e8481301d283ae8129f6066ae7a"
+}
