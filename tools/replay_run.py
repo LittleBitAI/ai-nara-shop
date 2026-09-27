@@ -85,7 +85,7 @@ def saved_probabilities(case_dir):
 
 
 def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_sme=None,
-           verify_company_size=None):
+           verify_company_size=None, expected_ids=None):
     """저장된 응답으로 행을 다시 만든다. 바꿀 단계만 인자로 갈아 끼운다."""
     case_dir = Path(case_dir)
     report = json.loads((case_dir / "run_report.json").read_text(encoding="utf-8"))
@@ -120,7 +120,9 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
         raise ValueError("기업규모 원응답 건수가 실행 기록과 다르다")
     _, products = script.load_sme_reference(str(data_dir))
     rows, baseline_rows, reasons = [], [], {}
+    seen_ids = []
     for rec in script.iter_records(str(input_path)):
+        seen_ids.append(rec["id"])
         text = texts["baseline"].get(rec["id"])
         if text is None:
             raise ValueError(f"{rec['id']}: 저장된 기본 응답이 없다")
@@ -159,8 +161,13 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
             parsed.update(verified)
             reasons.setdefault(rec["id"], {})["company_size"] = reason
         rows.append(script.to_row(rec["id"], postprocess(parsed, rec)))
-    if len(rows) != report["건수"]:
-        raise ValueError(f"입력 건수가 회차와 다르다: {len(rows)} != {report['건수']}")
+    expected_ids = list(expected_ids) if expected_ids is not None else None
+    expected_count = report["건수"] if expected_ids is None else len(expected_ids)
+    if len(rows) != expected_count:
+        raise ValueError(f"입력 건수가 회차와 다르다: {len(rows)} != {expected_count}")
+    if expected_ids is not None and (len(set(expected_ids)) != len(expected_ids)
+                                    or seen_ids != expected_ids):
+        raise ValueError("부분 재생 ID 순서/집합이 호출자가 고정한 목록과 다르다")
     return {"rows": rows, "baseline_rows": baseline_rows, "rejected_conditions": reasons,
             "settings": settings}
 

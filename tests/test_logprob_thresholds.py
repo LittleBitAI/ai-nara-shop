@@ -67,8 +67,8 @@ class ApplyThresholdsTest(unittest.TestCase):
         self.assertEqual(out["v2"]["위반여부"], 1)
 
     def test_operating_cuts_are_the_tuned_set(self):
-        """Tuned on colab-1790250265636150570, re-centred on four passes of it and colab-1790318892216968298."""
-        self.assertEqual(script.ITEM_THRESHOLDS, {"v1": 0.97, "v4": 0.995, "v6": 0.6,
+        """Includes the reviewed off-dev-600 v3=0.95 adoption after its dev replay gate passed."""
+        self.assertEqual(script.ITEM_THRESHOLDS, {"v1": 0.97, "v3": 0.95, "v4": 0.995, "v6": 0.6,
                                                   "v9": 0.9998, "v22": 0.97, "v23": 0.6, "v24": 0.01})
 
 
