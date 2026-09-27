@@ -65,6 +65,23 @@ markers, frozen), notebook `notebooks/colab-d-facts-600.ipynb`.
 4. An item that alone breaks rule 3 is dropped and the rest re-checked once. Nothing else is tuned.
 5. The 400 above are reported next to it but do not decide.
 
+## Off-dev 600 run — result: rejected
+
+ZIP `offdev-600-results-1790507223022930981`, code `c23ed84`, shards u00 500 + u01 100, all complete, self-check PASS.
+Both shards replay byte-identically. 352 of the 600 are scored (248 are 수의계약 and left out; the facts call
+ran on the same 352).
+
+| Items on | Macro | Half A | Half B | Net (TP − FP) |
+| --- | ---: | ---: | ---: | --- |
+| none | 0.535832 | 0.464728 | 0.482855 | v2 7, v6 −2, v7 15 |
+| v2, v6, v7 | 0.545714 | 0.473145 | 0.489221 | v2 7 → −1 (7/0/20 → 18/19/9) |
+| v6, v7 (step 4) | 0.538863 | 0.464728 | 0.482855 | v6 −2 → −1, v7 unchanged |
+
+v2 breaks rule 3 (a trusted item loses 8 net cells). With v2 dropped, neither half rises, so rule 2 fails.
+The facts call is rejected. `NOT_ENTRY_QUOTE` held its checklist and evaluation cases, but the model still
+calls many plain performance clauses eligibility where the labels say otherwise: 11 true positives for 19
+false alarms. The facts call cost 1.0 s per selected notice here (349 s over 352).
+
 ## Server time
 
 Dev phase seconds (200 notices, 165 non-수의계약): main 368, SME 90, company size 206, facts 151.
