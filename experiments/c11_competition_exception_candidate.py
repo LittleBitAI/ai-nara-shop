@@ -110,15 +110,23 @@ EXCEPTION = re.compile(r"(중소기업제품\s*구매촉진|판로지원)[^\n]{0
 # `예외 적용 여부: 미해당` 처럼 뒤에 말이 이어지면 서술이 아니라 항목 이름이다.
 # 어미는 **거기서 끝나야** 한다. 한글이 더 붙으면 더 긴 어미의 앞부분이다 — `한다면`(조건) ·
 # `한다고`(인용) · `하여야`(의무) · `진행할 수`(가능) 는 이 공고가 적용한다는 서술이 아니다.
-# 한계: 연결어미 뒤 절의 양태는 못 가른다 — "적용하여 입찰하는 경우 …" 는 발화한다. 같은 꼴의
-# "해당하므로 대기업도 참여할 수 있습니다" 는 진짜 적용 서술이라 `수 있`·`경우` 로 막을 수 없다.
-# dev+무라벨 20,200건에서 발화한 절 16개 중 양태 표현이 든 것은 `PPS-D-005201`("검토한 결과
-# … 외의 방법으로 추진함") 하나이고 그것은 서술이다(2026-09-27).
+#
+# 연결어미는 둘이 다르다. 원인 `-므로` 는 앞 절을 사실로 단정한다 — "해당하므로 대기업도
+# 참여할 수 있습니다" 는 뒤가 가능이어도 예외 해당은 서술이다. 방식·순서 `-하여` 는 뒤 절의
+# 서법을 물려받는다 — "적용하여 진행할 수 있다"(가능) · "적용하여 입찰하는 경우 …"(조건) 는
+# 적용한다는 서술이 아니다. 그래서 `하여` 뒤는 문장 끝까지 조건·가능·목적·의문·의무 구문이
+# 없고 평서 종결어미로 끝나야 한다(`MAIN_ASSERTED`).
 _END = r"(?![가-힣])"
 APPLIED = re.compile(
-    rf"(예외\S{{0,2}}|[을를])\s*(적용|해당)((합니다|한다|함|하여|하므로|됩니다|됨){_END}"
+    rf"(예외\S{{0,2}}|[을를])\s*(적용|해당)((?P<e1>합니다|한다|함|하여|하므로|됩니다|됨){_END}"
     r"|(?=\s*($|[<(\[0-9])))"
-    rf"|경쟁입찰\s*외의\s*방법으로\s*(추진|구매|진행|입찰|계약)(함|합니다|한다|하여)?{_END}")
+    rf"|경쟁입찰\s*외의\s*방법으로\s*(추진|구매|진행|입찰|계약)(?P<e2>함|합니다|한다|하여)?{_END}")
+MANNER = "하여"
+DECLARATIVE_END = re.compile(r"(합니다|한다|함|됩니다|됨|입니다|임)\s*$")
+# 뒤 절의 서법을 바꾸는 구문 — 조건(경우·때·-면·-려면) · 가능(수 있/없) · 목적(-도록·-려고) ·
+# 의문·내포(-는지·지 여부·?) · 의무(-야 한다).
+MODAL = re.compile(r"경우|때에?는?|(?<=[가-힣])면(?![가-힣])|려면|려고|도록|수\s*(있|없)"
+                   r"|는지|지\s*여부|야\s*(한|합|함|된|됩)|[?？]")
 # 긍정 서술어가 있어도 문장이 그것을 부정하면 적용이 아니다. 한국어 부정의 세 자리 —
 # 서술어 뒤(장형 `-지 않/못`), 서술어 앞(단형 `안`·`못` + 동사, 접두 `미`), 명사 뒤(불가·불허·
 # 배제·없음·아님). `안`·`미` 는 동사 바로 앞일 때만 본다 — 홀로 쓰면 안내·안전·미만과 겹친다.
@@ -148,9 +156,19 @@ def competition_exception(rec: dict[str, Any]) -> bool:
         text = re.sub(r"\s+", " ", doc.get("text") or "")
         for match in EXCEPTION.finditer(text):
             clause = re.split(r"[.※]", text[match.end():match.end() + SENTENCE], maxsplit=1)[0]
-            if APPLIED.search(clause) and not NEGATED.search(clause):
+            if NEGATED.search(clause):
+                continue
+            if any(asserted(clause, found) for found in APPLIED.finditer(clause)):
                 return True
     return False
+
+
+def asserted(clause: str, found: re.Match) -> bool:
+    """`하여` 로 이어지면 뒤 절이 평서로 끝나고 서법 구문이 없어야 적용 서술이다."""
+    if MANNER not in (found.group("e1"), found.group("e2")):
+        return True
+    rest = clause[found.end():]
+    return DECLARATIVE_END.search(rest) is not None and MODAL.search(rest) is None
 
 
 def postprocess(parsed: dict[str, Any], rec: dict[str, Any]):
