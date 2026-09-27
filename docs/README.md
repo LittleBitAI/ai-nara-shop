@@ -104,7 +104,8 @@
 | 그날 누가 무엇을 하나 | [plan-0926-0929](tasks/plan-0926-0929.md) §9/27 assignments | 날짜가 바뀌면 절이 바뀐다 |
 | 항목의 공식 이름·부재탐지 | [items](items.md) | 번호의 뜻을 추측하지 않는다 |
 | 운영진 인정 라벨 노이즈 | [qna](qna.md) | 그 셀에 규칙을 맞추지 않는다 |
-| dev 활용 허용 범위 | [rules](rules.md) A1·R5 | dev 를 프롬프트 예시로 쓰는 것은 허용, 채택 근거로는 불가 |
+| dev 활용 **허용 범위** | [rules](rules.md) **A1·R5** — 대회 규칙 | 프롬프트 예시·검색 사례·후처리 튜닝에 **자유롭게 쓸 수 있다.** 대회 쪽 단서는 하나 — 그 dev 로 개발한 점수를 **독립 검증으로 보고하지 않는다**(A1) |
+| dev 라벨을 **채택 근거로 쓰나** | [workflow **W5**](workflow.md#w5-실험검증) — **팀 규칙** | **못 쓴다.** 이것은 대회가 금지한 것이 아니라 **팀이 스스로 세운 선**이다. 근거는 조문·운영진 답변·항목 정의여야 하고 dev 라벨은 출처로만 적는다 |
 | 회차 간 변동폭 | [reproducibility](../reports/runs/reproducibility.md) · [c-variance VERDICT](../reports/team-c/c-variance/VERDICT.md) | 같은 코드 6회 관측 범위 0.007287. 재생 비교에는 안 쓴다 |
 
 > **신뢰 항목은 문서에 목록이 없다.** 9/27 채택 게이트의 3번이 "No trusted item loses
