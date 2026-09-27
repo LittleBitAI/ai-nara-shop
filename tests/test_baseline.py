@@ -62,8 +62,8 @@ class BaselineTests(unittest.TestCase):
                 expected = [(None, 4)] + [(["v13"], 2)] * bool(positives)
                 if baseline.SPLIT_ITEMS:
                     expected.append((baseline.SPLIT_ITEMS, 4))
-                if baseline.BAND_ITEMS:
-                    expected.append((baseline.COMPANY_SIZE_KEYS, 4))
+                if baseline.BAND_ITEMS:   # one of the four is 수의계약, which skips it (needs_extra_call)
+                    expected.append((baseline.COMPANY_SIZE_KEYS, 3))
                 if baseline.PRODUCT_ITEMS:
                     expected.append((baseline.PRODUCT_ITEMS, 4))
                 self.assertEqual(calls, expected)

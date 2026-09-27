@@ -3453,8 +3453,19 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
     return out
 
 
+def needs_extra_call(rec) -> bool:
+    """Whether the SME and company-size calls run on this notice. `run()` and `tools/replay_run.py` share it.
+
+    On a 수의계약 notice postprocess zeroes every item those calls feed, so skipping them changes no
+    cell and frees server time for a new call (2026-09-27).
+    """
+    return (rec.get("meta") or {}).get("계약방법") != "수의계약"
+
+
 # Items with a dev gold positive on a 수의계약 notice keep their cells there; v9's one is given up (2026-09-25).
-NO_BID_KEEP_ITEMS = ("v3", "v4", "v17", "v21", "v24")
+# v17's one (PPS-DEV-21) is given up too (2026-09-27): v17 comes from the company-size call, which no longer
+# runs there (`needs_extra_call`), and the main call's v17 on the 5,500 raised 64 cells, 27 of 29 labelled 0.
+NO_BID_KEEP_ITEMS = ("v3", "v4", "v21", "v24")
 NO_BID_ZERO_ITEMS = tuple(v for v in ITEMS if v not in NO_BID_KEEP_ITEMS)
 
 
@@ -3801,7 +3812,8 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
 
     # First finish every baseline batch. Reuse the same engine, but no previous predictions in prompts.
     baseline_seconds = inf_seconds
-    selected = [i for i, text in enumerate(texts) if parse_judgment(text)[0]["v13"]["위반여부"] == 1]
+    selected = [i for i, text in enumerate(texts)
+                if parse_judgment(text)[0]["v13"]["위반여부"] == 1 and needs_extra_call(recs[i])]
     sme_texts, sme_ntok, sme_chars = [None] * len(recs), [], [max_chars] * len(recs)
     emit("phase_started", phase="sme", items=SME_ITEMS,
          selected_count=len(selected), skipped_count=len(recs) - len(selected),
@@ -3851,7 +3863,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
 
     # A1: 금액에 무관하게 공고당 한 번 기업등급을 추출한다. A2도 이 사실을 재사용한다.
     band_texts, band_chars, band_ntok = [None] * len(recs), [max_chars] * len(recs), []
-    band_selected = list(range(len(recs))) if BAND_ITEMS else []
+    band_selected = [i for i, rec in enumerate(recs) if needs_extra_call(rec)] if BAND_ITEMS else []
     t_band = time.time()
     if BAND_ITEMS:
         emit("phase_started", phase="company_size", items=extra_call_items()["company_size"],

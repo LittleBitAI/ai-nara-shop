@@ -133,13 +133,15 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
         for phase in getattr(script, "VERDICT_PHASES", ()):
             script.merge_extra_call(parsed, rec, phase, script.extra_call_items().get(phase) or (),
                                     texts.get(phase, {}).get(rec["id"]))
-        sme_text = texts["sme"].get(rec["id"])
+        # Runs after the skip read no extra call on these notices; older runs saved one, so drop it here.
+        extra = getattr(script, "needs_extra_call", lambda rec: True)(rec)
+        sme_text = texts["sme"].get(rec["id"]) if extra else None
         if sme_text is not None:
             focused, _ = script.parse_judgment(sme_text, expected_items=script.SME_ITEMS, sme=True)
             verified, rejected = verify_sme(focused, rec, products, max_chars)
             reasons[rec["id"]] = rejected
             parsed.update(verified)
-        company_text = texts.get("company_size", {}).get(rec["id"])
+        company_text = texts.get("company_size", {}).get(rec["id"]) if extra else None
         if company_text is not None:
             if rec["id"] not in company_chars:
                 raise ValueError("기업규모 입력의 문서 예산 기록이 없다")
@@ -250,6 +252,12 @@ OFFDEV_STACK_MOVES = [
 # no cell here — 128's spec names 비료살포기, a catalogue product (S7-15, PR #156 round 1). The v19 heading walk
 # moves no dev cell, and the H2 run moves nothing.
 FINAL_STACK_MOVES = [("PPS-DEV-044", "v18")]
+# Cells moved by feat/a-skip-nobid-calls (2026-09-27): v17 is zeroed on 수의계약, so 21 loses its gold
+# positive and 090 its false alarm. Toggled like the lists above.
+NO_BID_V17_MOVES = [("PPS-DEV-090", "e17"), ("PPS-DEV-090", "v17"), ("PPS-DEV-21", "e17"), ("PPS-DEV-21", "v17")]
+# The H2 run's company-size call also raised v17 on 수의계약 105 and 163, both gold 0.
+NO_BID_V17_MOVES_H2 = NO_BID_V17_MOVES + [("PPS-DEV-105", "e17"), ("PPS-DEV-105", "v17"),
+                                          ("PPS-DEV-163", "e17"), ("PPS-DEV-163", "v17")]
 # Against the H2 run's own CSV: its responses do not trip the catalogue gate, 12 or 23; 049's v21 moves.
 OFFDEV_STACK_MOVES_H2 = [
     ("PPS-DEV-039", "v11"), ("PPS-DEV-049", "e21"), ("PPS-DEV-049", "v21"), ("PPS-DEV-053", "e2"),
@@ -296,7 +304,7 @@ DELIBERATE_MOVES = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-199", "v24"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
 # 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
@@ -347,7 +355,7 @@ DELIBERATE_MOVES_H2 = sorted(set([cell for cell in V9_V24_DEV_FIT_MOVES
     ("PPS-DEV-25", "e3"), ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"),
     ("PPS-DEV-28", "e23"), ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"),
     ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES_H2))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES_H2) ^ set(NO_BID_V17_MOVES_H2))
 
 # `reports/team-c/a7-v24-meta-diff/candidate-replay/submission.csv` 와 대조할 때.
 # 그 보관본은 이미 A7 대조 축이 적용된 산출물이므로, 지금 `script.py` 와의 차이는
@@ -382,7 +390,7 @@ DELIBERATE_MOVES_A7 = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-198", "v13"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
 
 
 def csv_cell_diff(left: bytes, right: bytes):

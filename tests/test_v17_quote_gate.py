@@ -83,7 +83,8 @@ class DevReplay(unittest.TestCase):
         tp = sum(1 for r in self.rows if r["v17"] == 1 and self.truth[r["id"]])
         fp = sum(1 for r in self.rows if r["v17"] == 1 and not self.truth[r["id"]])
         fn = sum(1 for r in self.rows if r["v17"] == 0 and self.truth[r["id"]])
-        self.assertEqual((tp, fp, fn), (5, 2, 1))   # was 5/6/1; 038, 102, 120, 172 refuted
+        # was 5/6/1; 038, 102, 120, 172 refuted. 4/1/2 since v17 is zeroed on 수의계약 (21 lost, 090 gone).
+        self.assertEqual((tp, fp, fn), (4, 1, 2))
 
 
 if __name__ == "__main__":
