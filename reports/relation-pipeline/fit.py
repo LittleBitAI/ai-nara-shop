@@ -55,17 +55,12 @@ CANDIDATES = {
     # The item is 인접 확대: only the adjacency label, not any listed provinces.
     "v7": rows([("region_allowed",)], [("entry_location_adjacent",)]),
     "v8": rows([(), ("region_allowed",)], [("entry_performance", "entry_location")]),
-    "v10": rows([("scope_competitive", "relations_complete")], [("!entry_direct_production",)]),
-    "v11": rows([("scope_competitive", "relations_complete")], [("!entry_size",)], SIZE_EXCEPTIONS),
     "v12": rows(GENERAL, [("entry_direct_production",)]),
     "v13": rows([("scope_competitive",)], [("entry_small",)]),
     "v14": rows(banded("over_notice", GENERAL), [("entry_size",)]),
     "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)]),
-    "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size", "relations_complete")], SIZE_EXCEPTIONS),
     "v17": rows(banded("small", GENERAL), [("entry_sme",)], SIZE_EXCEPTIONS[:1] + SIZE_EXCEPTIONS[2:3]),
-    "v18/relation": rows(banded("small", GENERAL[:1]), [("!entry_size", "relations_complete")], SIZE_EXCEPTIONS),
     "v19": rows([()], [("pledge_at_bid",)]),
-    "v20": rows([("software", "relations_complete")], [("!sw_limit_stated",)]),
     "v22": rows([("negotiation",)], [("briefing_entry",)]),
 }
 
@@ -76,16 +71,20 @@ GENERAL_SCOPE = {"scope_general", "!catalogue_product"}
 SCOPE = {
     "v2": [{"under_notice"}], "v4": [{"over_notice"}],
     "v6": [{"region_allowed"}], "v7": [{"region_allowed"}], "v5": [{"over_region_limit"}],
-    "v10": [{"scope_competitive"}], "v11": [{"scope_competitive"}], "v13": [{"scope_competitive"}],
+    "v13": [{"scope_competitive"}],
     "v12": [GENERAL_SCOPE], "v14": [{"over_notice"}, GENERAL_SCOPE],
     "v15": [{"mid"}, GENERAL_SCOPE], "v16": [{"mid"}, GENERAL_SCOPE],
     "v17": [{"small"}, GENERAL_SCOPE], "v18": [{"small"}, GENERAL_SCOPE],
-    "v20": [{"software"}], "v22": [{"negotiation"}],
+    "v22": [{"negotiation"}],
 }
 for _key, _candidates in CANDIDATES.items():
     for _row in _candidates:
         for _group in SCOPE.get(_key.split("/")[0], ()):
             assert _group & set(_row[0]), (_key, _row, "applies outside the item's scope")
+        # The selector picks clauses by trigger words, so a missing label never proves absence: no candidate
+        # reads one. Absence items (v10, v11, v16, v18, v20) stay on their own paths.
+        _negated = {n for n in (*_row[0], *_row[1]) if n.startswith("!")}
+        assert _negated <= {"!catalogue_product"}, (_key, _row, "reads a missing label as absence")
 
 
 def capture(script, cases, inputs, data_dir):
@@ -97,8 +96,10 @@ def capture(script, cases, inputs, data_dir):
         out = original(out, judgment, rec)
         quotable = {name: bool(script._slot_evidence(((), (name,), (), None), judgment, rec))
                     for name in script.RELATION_SLOTS}
+        # The cited evidence decides whether a missing label may lower a positive, so the fit keeps it.
         seen[rec["id"]] = {"slots": script.relation_slots(judgment, rec), "quotable": quotable,
-                           "labelled": script.RELATION_KEY in judgment}
+                           "labelled": script.RELATION_KEY in judgment,
+                           "evidence": {v: out[v].get("근거문구") or "" for v in ITEMS}}
         return out
 
     script.decide_slots = hooked
@@ -119,7 +120,7 @@ def predict(script, key, row, notices, ids):
     out = []
     for i in ids:
         n = notices[i]
-        cell = {"위반여부": n["final"][item], "근거문구": ""}
+        cell = {"위반여부": n["final"][item], "근거문구": n["evidence"][item]}
         quote = (lambda n=n: "q" if any(n["quotable"].get(name) for name in row[1]) else "")
         # 수의계약 notices have no labels, so the row leaves them as the replay left them.
         out.append(script.slot_row_cell(item, row, cell, n["slots"], n["labelled"], quote)["위반여부"])

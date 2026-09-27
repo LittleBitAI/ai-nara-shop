@@ -24,9 +24,10 @@ v2 net fell 7 → −1.
    A short `가.` line is kept as the clause's sub-heading (`4. 입찰자격 조건 › 나. 계약 시 제출서류`), so the
    stage a list heading states reaches the clauses under it (PPS-D-002037, PPS-D-008654).
    A clause's evidence is its exact document span. A clause over 800 characters is cut.
-   The flag `complete` says every candidate clause, at any rank, reached the model whole: a dropped or
-   cut candidate may hold the kind an absence row looks for. The slot `relations_complete` also needs
-   `완전관측`, no dropped document, and fewer than 30 records.
+   The flag `complete` says every candidate clause, at any rank, reached the model whole. It is reported
+   per notice and decides nothing: the selector picks clauses by trigger words, so no flag can prove a
+   clause of some kind was never in the notice (a `직생증명서` clause with no trigger word is never a
+   candidate).
    Dev gold evidence: every in-scope quote is covered. Median 6,117 characters, the largest 14,000
    (about 9,900 prompt tokens by the mock's characters/2 estimate, against 14,336 of room);
    `complete` holds on 144 of 200 notices.
@@ -40,31 +41,42 @@ v2 net fell 7 → −1.
    - Code, not the model, compares a won amount with the notice price, with the v3 deletion rule's own
      comparison (`_below_budget`: under one multiple only when under both the estimated price and the budget).
    - Region separates `adjacent` (the ordering area plus neighbours) from `multi_province` (listed provinces).
-   - Deadline: a probe batch of 8 notices runs first, only if 600 s are left before the 300 s reserve.
-     Its seconds per notice (timed from building the messages), then the slowest batch so far, sizes
-     every later batch: at most `left / (1.5 × seconds per notice)` notices. A serial retry of a failed
-     response starts only while one full decode (`RELATION_DECODE_S`, 300 s, unmeasured) still ends before
-     the reserve; otherwise that notice keeps the path without labels. Postprocessing costs about 4 ms a
-     notice.
+   - Deadline: no relation model call starts unless it can end before the 300 s reserve.
+     - A probe batch of 8 notices runs first, only if 600 s are left.
+     - Its seconds per notice (timed from building the messages), then the slowest batch so far, sizes
+       every later batch: at most `(left − RELATION_DECODE_S) / (1.5 × seconds per notice)` notices.
+       `RELATION_DECODE_S` (300 s, unmeasured) is one notice's full decode, kept spare for a retry.
+     - After the messages are built, the batch starts only if its projected time plus that spare still fits.
+     - `run_chunk(deadline=)` starts no call, first or retry, after `7200 − 300 − 300` s. Such a notice keeps
+       the path without labels.
+     - Postprocessing costs about 4 ms a notice.
 3. Stage 3, the slot table. `relation_slots()` turns the labels into shared questions such as
    `entry_performance`, `entry_location_basic`, `entry_size`, `pledge_at_bid` and `sw_limit_stated`.
    A row in `SLOT_RULES` can name them next to the price and scope slots. A row that names a relation slot
-   owns its item on every fully observed labelled notice: the cell is 1 only when the shared labels derive
-   it, so a positive from the item's own path (a clause rule, the main call) is lowered when the labels do
-   not derive it. Unknown never decides: on a notice that is not fully observed, the row neither lowers a
-   positive nor raises an absence; it can only raise what the labels positively derive. A scope slot that
-   does not read the labels (price band, product scope, `negotiation`) still decides when it is known to
-   fail. When it is unknown (no price, `scope: unknown`), it is listed in `slots["unknown"]` and decides
-   nothing. `region_allowed` is true also when unknown, so v5 reads the known `over_region_limit`, never
-   its negation. `negotiation` is the same `negotiated()` test v22's clause rule uses
-   (낙찰방법 or 계약방법).
+   is evaluated with three values, yes, no and unknown. Unknown never decides and a known value always does:
+   - A relation slot is yes when a label derives it. A missing label is a known no only for a positive
+     cell whose cited evidence lies inside a clause the relation call read, with the 30-record cap not hit.
+     Everywhere else it is unknown.
+   - A scope or exception slot that does not read the labels (price band, product scope, `negotiation`,
+     `priority_exception`) is known unless `slots["unknown"]` lists it. It is listed for no price, a scope
+     or priority fact the model gave as unknown, no product code, and no registered estimated price or
+     region limit (`region_allowed`, `over_region_limit`).
+   - Applies and requirement combine by "and", exceptions by "or". Yes raises (with the clause as evidence);
+     no sets the cell to 0; unknown leaves it.
+
+   So a row raises only from a label, and lowers a positive only when the call read the clause that positive
+   cites and labelled it otherwise. It never reads a missing label as absence. `negotiation` is the same
+   `negotiated()` test v22's clause rule uses (낙찰방법 or 계약방법).
    On a notice without labels such a row does nothing. `slot_row_cell()` is the one per-cell rule; the fit
    calls the same function. A key `vN/<tag>` adds a second row for an item that already has one.
 4. **No relation row is on yet.** The GPU round only saves the labels, so its CSV equals the base code's.
    After it, [reports/relation-pipeline/fit.py](../../reports/relation-pipeline/fit.py) picks rows per item
    from definition-grounded candidates. `SCOPE` in fit.py lists the scope each item's official name sets,
    and every candidate's applies must name it; fit.py asserts this on import, so no candidate can fire
-   outside its item (v4 over the threshold, v12/v14/v17 general products, v13 competitive, v7 adjacency). It uses the same nested cross-fit as the slot-table rows: pick on
+   outside its item (v4 over the threshold, v12/v14/v17 general products, v13 competitive, v7 adjacency).
+   It also asserts that no candidate negates a relation slot. The absence items (v10, v11, v16, v18, v20)
+   have no relation candidate and stay on their own paths. The fit hands `slot_row_cell` each cell's
+   evidence as the run had it. It uses the same nested cross-fit as the slot-table rows: pick on
    off-dev half A with dev half A as a no-loss constraint, score on the other halves, then swap. The held-out
    halves only admit an item; the row itself is then picked on both halves as training data. It writes
    `candidate.py`, and `tools/slot_gate.py` then decides PASS or FAIL on the same saved responses. That gate
@@ -76,6 +88,10 @@ v2 net fell 7 → −1.
 | --- | --- | --- |
 | `notebooks/colab-relation-600.ipynb` | off-dev 600 (diag 200 + sealed 400 labels) | labels to fit and gate on |
 | `notebooks/colab-relation-dev.ipynb` | dev 200, server flow + `dev-debug` | the dev no-loss constraint, and server-like time |
+
+The round runs on `ab9eb9e`. Later commits change only post-processing and the deadline guard: the relation
+prompt, schema and messages are identical to `ab9eb9e` over 700 notices (dev and off-dev shard u00), so
+fit.py reads that round's labels with the current rule.
 
 Pass condition for the round itself: every notice has a valid relation response, and the dev CSV equals
 the base CSV (no row is on). The report's `relation_inference_seconds` gives the added time.

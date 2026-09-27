@@ -1205,7 +1205,7 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
               deadline: Optional[float] = None) -> List[Optional[str]]:
     """실패 공고만 재시도한다. 실제 러너는 출력 항목을 분할하며 결손은 허용하지 않는다.
 
-    `deadline` (epoch seconds): no serial retry starts after it; that notice keeps its validated baseline."""
+    `deadline` (epoch seconds): no model call, first or retry, starts after it; the notice keeps its baseline."""
     if indices is not None and len(indices) != len(batch):
         raise ValueError("선택 공고 인덱스 건수 불일치")
     if deadline is not None and baseline_texts is None:
@@ -1244,6 +1244,9 @@ def run_chunk(runner, batch: List[List[Dict[str, str]]], *, start=0, ids=None,
         if probabilities is not None and info.get("item_p1") and fields["id"] is not None:
             probabilities[fields["id"]] = info["item_p1"]
 
+    if deadline is not None and time.time() > deadline:
+        record("batch_skipped", count=len(batch), reason="deadline")
+        return [None] * len(batch)
     stage = "call"
     batch_failed = False
     try:
@@ -3600,7 +3603,7 @@ def attach_relations(parsed: Dict[str, Any], rec: Dict[str, Any], text: Optional
         records = parse_judgment(text, expected_items=RELATION_KEYS)[0]["relations"]
     except ValueError:
         return
-    clauses, complete = clause_candidates(rec)
+    clauses, _ = clause_candidates(rec)
     by_id = {c["id"]: c for c in clauses}
     meta = rec.get("meta") or {}
     # The v3 deletion rule's comparison (`_below_budget`): a requirement is under one multiple only when it is
@@ -3615,8 +3618,10 @@ def attach_relations(parsed: Dict[str, Any], rec: Dict[str, Any], text: Optional
             required = required_performance(clause) if r["amount"] == "won_amount" else None
             # Code compares a won amount with the price; the model never sees the price.
             relations.append(dict(r, clause=clause, ratio=required / basis if required and basis else None))
-    # At the record cap the model may have stopped before labelling every clause it saw.
-    parsed[RELATION_KEY] = {"complete": complete and len(records) < RELATION_MAX, "relations": relations}
+    # What the call read, so a missing label can be a known "no" for a positive citing one of these clauses.
+    # At the record cap the model may have stopped before labelling every clause it read, so then nothing is.
+    read = [] if len(records) >= RELATION_MAX else [re.sub(r"\s+", "", c["full"]) for c in clauses]
+    parsed[RELATION_KEY] = {"read": read, "relations": relations}
 
 
 # ===== Slot table: every item it names is decided from the same relations, in one place =====
@@ -3639,8 +3644,12 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     limit = region_price_limit(rec)
     # Slots whose "no" is only "not known" on this notice. A relation row lets a known "no" decide and
     # never an unknown one (`slot_row_cell`).
-    unknown = ({"small", "mid", "under_notice", "over_notice", "over_region_limit"} if price is None else set())
-    unknown |= {"over_region_limit"} if limit is None else set()
+    # The regional gate reads the registered estimated price only (no budget fallback), as
+    # `region_restriction_allowed` does; without it or a limit both region slots are unknown.
+    region_price = (rec.get("meta") or {}).get("입찰추정가격") or None
+    unknown = {"small", "mid", "under_notice", "over_notice"} if price is None else set()
+    unknown |= {"region_allowed", "over_region_limit"} if limit is None or region_price is None else set()
+    unknown |= {"priority_exception"} if facts.get("priority_exception") not in ("yes", "no") else set()
     unknown |= {"scope_general", "scope_competitive"} if facts.get("scope") not in ("general", "competitive", "other") else set()
     unknown |= {"software"} if facts.get("software_business") not in ("yes", "no") else set()
     unknown |= {"catalogue_product"} if catalogue is None else set()
@@ -3658,14 +3667,11 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
         "under_notice": price is not None and price < NOTICE_AMOUNT_WON,
         "over_notice": price is not None and price >= NOTICE_AMOUNT_WON,
         "region_allowed": region_restriction_allowed(rec),     # True also when unknown: never read it negated
-        "over_region_limit": price is not None and limit is not None and price >= limit,
+        "over_region_limit": region_price is not None and limit is not None and region_price >= limit,
         "negotiation": negotiated(rec),
         "scope_competitive": facts.get("scope") == "competitive",
         "software": facts.get("software_business") == "yes",
-        # Absence needs the whole notice: every clause fit the call, and no document was missing or dropped.
-        "relations_complete": bool((judgment.get(RELATION_KEY) or {}).get("complete")
-                                   and (rec.get("input_completeness") or {}).get("완전관측") is True
-                                   and not any((rec.get("dropped_doc_counts") or {}).values())),
+        "read_clauses": tuple((judgment.get(RELATION_KEY) or {}).get("read") or ()),
         **{name: bool(relation_matches(name, judgment)) for name in RELATION_SLOTS},
     }
 
@@ -3714,7 +3720,13 @@ SLOT_RULES = {
 
 def _uses_relations(row) -> bool:
     names = [n.lstrip("!") for part in row if part for n in part]
-    return any(n in RELATION_SLOTS or n == "relations_complete" for n in names)
+    return any(n in RELATION_SLOTS for n in names)
+
+
+def _cites_a_read_clause(cell: Dict[str, Any], slots: Dict[str, Any]) -> bool:
+    """The cell's evidence lies inside one clause the relation call read."""
+    evidence = re.sub(r"\s+", "", cell.get("근거문구") or "")
+    return bool(evidence) and any(evidence in clause for clause in slots["read_clauses"])
 
 
 def _slot_evidence(row, judgment: Dict[str, Any], rec: Dict[str, Any]) -> Optional[str]:
@@ -3748,17 +3760,33 @@ def slot_row_cell(item: str, row, cell: Dict[str, Any], slots: Dict[str, bool], 
 
     derived = holds(applies) and holds(requirement) and not any(slots[n] for n in exceptions)
     if _uses_relations(row):
-        # A missing label means "absent" only on a notice seen whole (`relations_complete`); otherwise it is
-        # unknown. Unknown never decides: it neither raises an absence nor clears a positive. A scope that
-        # does not read the labels (price band, product scope) is known either way, so its failure still decides.
-        observed = slots["relations_complete"]
-        reads_absence = (any(n.startswith("!") and n[1:] in RELATION_SLOTS for n in (*applies, *requirement))
-                         or any(n in RELATION_SLOTS for n in exceptions))
-        scope_fails = not holds([n for n in applies if n.lstrip("!") not in RELATION_SLOTS
-                                 and n != "relations_complete" and n.lstrip("!") not in slots["unknown"]])
-        if not observed and not scope_fails and (reads_absence or not derived):
+        # Three values: yes, no, unknown. Unknown never decides and a known value always does.
+        # A label is yes. A missing label is a known no only for a positive whose cited clause the relation
+        # call read (and the record cap was not hit); the selector picks clauses by trigger words, so
+        # nothing else proves a clause was never there. A scope slot is unknown when listed in slots["unknown"].
+        anchored = cell["위반여부"] == 1 and _cites_a_read_clause(cell, slots)
+
+        def value(name):
+            base = name.lstrip("!")
+            if base in RELATION_SLOTS:
+                known = True if slots[base] else (False if anchored else None)
+            else:
+                known = None if base in slots["unknown"] else slots[base]
+            return known if known is None or not name.startswith("!") else not known
+
+        def every(values):
+            values = list(values)
+            return False if False in values else None if None in values else True
+
+        def some(values):
+            values = list(values)
+            return True if True in values else None if None in values else False
+
+        exempt = some(value(n) for n in exceptions)
+        derived = every([*map(value, applies), *map(value, requirement), None if exempt is None else not exempt])
+        if derived is None:
             return cell
-        if not derived:
+        if derived is False:
             # A relation row owns its item: a positive from the item's own path survives only if the shared
             # labels derive it too, so a later fix to that path cannot move the cell behind the table's back.
             return {"위반여부": 0, "근거문구": ""}
@@ -4324,10 +4352,11 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
     per_notice, s = None, 0
     while s < len(relation_selected):
         left = SERVER_LIMIT_S - RELATION_RESERVE_S - (time.time() - PROCESS_START)
+        # Every batch keeps one full decode (RELATION_DECODE_S) spare for a retry.
         if per_notice is None:
             size = RELATION_PROBE if left >= RELATION_PROBE_S else 0
         else:
-            size = min(chunk, int(left / (RELATION_SAFETY * per_notice)))
+            size = min(chunk, max(0, int((left - RELATION_DECODE_S) / (RELATION_SAFETY * per_notice))))
         if size < 1:
             relation_stopped = len(relation_selected) - s
             emit("phase_stopped", phase="relation", reason="deadline", processed=s, remaining=relation_stopped)
@@ -4343,8 +4372,16 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             relation_ntok.append(runner.count_tokens(messages))
             emit("relation_input", id=recs[i]["id"], clauses=len(clauses), complete=complete,
                  prompt_tokens=relation_ntok[-1])
+        # Preparing the messages took time: the batch starts only if its projected time still fits.
+        projected = RELATION_SAFETY * (per_notice or 0.0) * len(indices) + RELATION_DECODE_S
+        if time.time() - PROCESS_START + projected > SERVER_LIMIT_S - RELATION_RESERVE_S:
+            relation_stopped = len(relation_selected) - s + len(indices)
+            emit("phase_stopped", phase="relation", reason="deadline", processed=s - len(indices),
+                 remaining=relation_stopped)
+            log(f"  relation: deadline, {relation_stopped} notices keep the relation-free path")
+            break
         emit("chunk_started", phase="relation", chunk_start=indices[0], count=len(batch), indices=indices)
-        # A serial retry starts only while one full decode still ends before the reserve.
+        # No call, first or retry, starts once one full decode would no longer end before the reserve.
         responses = run_chunk(runner, batch, start=indices[0], ids=[recs[i]["id"] for i in indices],
                               emit=emit, debug_responses=debug_responses, items=RELATION_KEYS,
                               phase="relation", baseline_texts=[texts[i] for i in indices], indices=indices,
