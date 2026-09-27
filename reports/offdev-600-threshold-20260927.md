@@ -122,6 +122,20 @@ otherwise unchanged.  Its final candidate improves both fixed halves
 chosen cross-half candidates also improve both held-out sides.  Thus
 `split_half_pass=true` and `trusted_guard_pass=true` for current code.
 
-This is still **not an operational threshold adoption**: the fixed adoption
-rule also requires a matching dev replay with Macro drop no greater than
-0.01.  That dev gate has not yet been run, so `script.py` remains unchanged.
+### Developer gate and decision
+
+The same current-code candidate (`v3=0.95` only) was replayed against the
+saved real-GPU dev responses from `colab-1790432295199698396/dev-debug`, using
+`open/dev.jsonl` and `open/dev_labels.csv`.  No model call occurred; this is a
+post-processing-only threshold change.
+
+| measurement | Macro F1 | v3 TP / FP / FN |
+| --- | ---: | --- |
+| current script | 0.832860 | 8 / 0 / 0 |
+| candidate (`v3=0.95`) | 0.830082 | 7 / 0 / 1 |
+| delta | -0.002778 | — |
+
+The dev drop is within the fixed limit of 0.01.  Combined with the current-code
+off-dev gain (0.499681 -> 0.508940), both fixed split-half gains, and the
+trusted net guard, all four adoption gates pass.  **Decision: adopt v3=0.95 in
+`script.py`.**  It changes no model call or prompt and adds no server time.
