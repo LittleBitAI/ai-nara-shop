@@ -421,6 +421,43 @@ def load_sme_reference(data_dir):
     return "\n\n".join(excerpts), products
 
 
+# C few-shot (회차 전용): v18 의 오탐·누락이 나는 경계 하나를 예시 한 쌍으로 보인다.
+#
+# 왜 v18 이고 왜 `baseline` 인가. 진단 200 을 `main` 으로 재생해 FN 을 갈랐더니 v10 은
+# 11건 중 10건이 문서 절단이라 예시가 닿지 않고, v18 은 10건 중 7건이 닿으며 양성이
+# 38건으로 가장 두껍다. 그리고 v10·v11·v18 의 FN 은 **전부 `baseline` 에서 모델이 0**
+# 이라 한 것이고 게이트가 정탐을 내린 경우가 0건이다 — v18 FN 들의 `company_size`
+# 사실은 이미 `unrestricted`·`complete=yes` 로 맞다. 사실이 아니라 판정이 틀린다.
+# 측정은 `reports/team-c/c-fewshot/TARGET.md` 가 소유한다.
+#
+# 예시는 **dev 에서** 뽑았다(`docs/rules.md` A1 이 dev 사례의 프롬프트 사용을 허용한다).
+# 채택 게이트가 off-dev 라 평가 집합에 예시 공고가 한 건도 안 들어간다 — 계획이 적은
+# "자기 자신 제외"(`plan-0926-0929.md:275`)가 구조적으로 지켜진다.
+#
+# 경계의 근거는 운영진 답변이다 — `docs/qna.md` S7-7·15 "제재 안내 문구·제출서류 목록은
+# 참가자격으로서의 소지 요구가 아니다".
+#
+# 크기: 692자. 보수적으로 403토큰(회차 실측 1.716 자/토큰), 한글·영문을 나눠 세면 약 229.
+# `baseline` 200호출 × 403토큰 ≈ 서버 +114초로, 여유 372초 안이다
+# (`reports/team-c/c-fewshot/BUDGET.md`).
+V18_EXAMPLES = """
+[Worked examples for v18 — the 소기업 boundary]
+A 소기업 or 소상공인 mention restricts bidding only when the sentence states who may bid.
+A line of a 제출서류 list naming a 확인서 asks for a document, not for a bidder class.
+
+Example A — the clause states who may bid, so the restriction exists and v18 is 0.
+notice: "3. 입찰 참가자격 가. 소기업, 소상공인"
+answer: {"v18": {"위반여부": 0, "근거문구": null}}
+
+Example B — the same words sit in a 제출서류 list, so no restriction exists and v18 is 1.
+notice: "12) 중·소기업, 소상공인확인서 중 1부(제출마감일 전일까지 발급된 것으로 유효 기간 내에 있어야 함)"
+answer: {"v18": {"위반여부": 1, "근거문구": null}}
+
+Both notices carry the same words. Decide by whether the sentence states who may bid,
+not by the presence of 소기업 or 소상공인.
+"""
+
+
 def build_system_prompt(tbl: Dict[str, Dict[str, Any]], sme_laws="", items=None) -> str:
     lines = []
     for v in ITEMS if items is None else items:
@@ -466,7 +503,10 @@ The catalogue is a set of candidates, not a list of violations. Do not use model
                     'then "위반여부" (integer 0 or 1) and "근거문구" (always null). '
                     'Put the qualification quotation only in facts.qualification_quote; '
                     'the program copies verified evidence to the final CSV. No additional explanation.')
-    return head + "\n" + "\n".join(lines) + reference + "\n" + tail
+    # 예시는 24항목 호출(`baseline`)에만 붙인다. `sme` · split · product 호출은 항목을
+    # 좁혀 부르므로 `items` 가 있고, 거기에는 안 넣는다 — 그 단계의 판정은 v18 이 아니다.
+    examples = V18_EXAMPLES if items is None else ""
+    return head + "\n" + "\n".join(lines) + reference + examples + "\n" + tail
 
 
 def estimated_price(rec: Dict[str, Any]) -> Optional[int]:
