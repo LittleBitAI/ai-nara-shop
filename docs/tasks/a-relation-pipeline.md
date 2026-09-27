@@ -60,9 +60,13 @@ v2 net fell 7 → −1.
      of a window quote. On dev, all six v4 clause-rule window quotes pass this check. Everywhere else a
      missing label is unknown.
    - A scope or exception slot that does not read the labels (price band, product scope, `negotiation`,
-     `priority_exception`) is known unless `slots["unknown"]` lists it. The provided catalogue outranks
-     the model's scope, as `_company_size_bands` does: a listed product makes `scope_general` false and
-     `scope_competitive` true. It is listed for no price, a scope
+     `priority_exception`) is known unless `slots["unknown"]` lists it.
+   - Relation rows read the purchased subject only as verified: `purchase_general` / `purchase_competitive`.
+     They are known only when the scope passed the company-size quotation gate; `attach_company_facts`
+     records that as `scope_verified`, and `run()` and replay share it. The provided catalogue vetoes
+     "general" for a listed product (`competitive_by_catalogue`), but a listed component never makes the
+     purchase competitive. The older `scope_general` / `scope_competitive` are unchanged for the existing
+     rows: replaying the real off-dev 600 case with `ab9eb9e` and with this code gives the same CSV. It is listed for no price, a scope
      or priority fact the model gave as unknown, no product code, and no registered estimated price or
      region limit (`region_allowed`, `over_region_limit`).
    - Applies and requirement combine by "and", exceptions by "or". Yes raises (with the clause as evidence);

@@ -3638,15 +3638,24 @@ def attach_relations(parsed: Dict[str, Any], rec: Dict[str, Any], text: Optional
 COMPANY_FACTS_KEY = "_company_facts"  # the company-size call's facts, as the model gave them
 
 
+def attach_company_facts(parsed: Dict[str, Any], facts: Dict[str, Any], reason: str) -> None:
+    """The company-size facts for the slot table, with whether their scope passed the quotation gate.
+    `run()` and replay share it."""
+    parsed[COMPANY_FACTS_KEY] = dict(facts, scope_verified=reason != "unverified_scope")
+
+
 def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, bool]:
     """The shared relations, each a plain yes/no. Unknown reads as no: an unseen fact never raises."""
     price = estimated_price(rec)
     facts = judgment.get(COMPANY_FACTS_KEY) or {}
     demand, codes = direct_production_demand(rec)
     catalogue = competitive_product(rec, codes)
-    # The provided catalogue outranks the model's scope, as in `_company_size_bands`
-    # (`competitive_by_catalogue`): a listed product is competitive whatever the model said.
+    # Relation rows read the purchased subject only as verified: the scope passed the company-size quotation
+    # gate (`scope_verified`), and the provided catalogue vetoes "general" for a listed product, as
+    # `_company_size_bands` does (`competitive_by_catalogue`). A listed component never makes the purchase
+    # competitive. The older `scope_general`/`scope_competitive` stay as the existing rows read them.
     listed = demand is not None and catalogue is True
+    verified = facts.get("scope_verified") is True and facts.get("scope") in ("general", "competitive", "other")
     limit = region_price_limit(rec)
     # Slots whose "no" is only "not known" on this notice. A relation row lets a known "no" decide and
     # never an unknown one (`slot_row_cell`).
@@ -3656,8 +3665,8 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     unknown = {"small", "mid", "under_notice", "over_notice"} if price is None else set()
     unknown |= {"region_allowed", "over_region_limit"} if limit is None or region_price is None else set()
     unknown |= {"priority_exception"} if facts.get("priority_exception") not in ("yes", "no") else set()
-    unknown |= ({"scope_general", "scope_competitive"}
-                if facts.get("scope") not in ("general", "competitive", "other") and not listed else set())
+    unknown |= {"scope_general", "scope_competitive"} if facts.get("scope") not in ("general", "competitive", "other") else set()
+    unknown |= {"purchase_general", "purchase_competitive"} if not verified else set()
     unknown |= {"software"} if facts.get("software_business") not in ("yes", "no") else set()
     unknown |= {"catalogue_product"} if catalogue is None else set()
     return {
@@ -3665,7 +3674,8 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
         # 판로지원법 시행령 제2조의2: 1억 미만 소기업·소상공인, 1억 이상 고시금액 미만 중소기업
         "small": price is not None and price < SME_BAND_FLOOR_WON,
         "mid": price is not None and SME_BAND_FLOOR_WON <= price < NOTICE_AMOUNT_WON,
-        "scope_general": facts.get("scope") == "general" and not listed,
+        "scope_general": facts.get("scope") == "general",
+        "purchase_general": verified and facts.get("scope") == "general" and not listed,
         "catalogue_product": catalogue is True,
         "only_small": facts.get("qualification") == "small_only",
         "no_size_limit": facts.get("qualification") == "unrestricted",
@@ -3676,7 +3686,8 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
         "region_allowed": region_restriction_allowed(rec),     # True also when unknown: never read it negated
         "over_region_limit": region_price is not None and limit is not None and region_price >= limit,
         "negotiation": negotiated(rec),
-        "scope_competitive": facts.get("scope") == "competitive" or listed,
+        "scope_competitive": facts.get("scope") == "competitive",
+        "purchase_competitive": verified and facts.get("scope") == "competitive",
         "software": facts.get("software_business") == "yes",
         "read_clauses": tuple((judgment.get(RELATION_KEY) or {}).get("read") or ()),
         "read_context": tuple((judgment.get(RELATION_KEY) or {}).get("context") or ()),
@@ -4465,7 +4476,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
             focused, _ = parse_judgment(band_texts[index], expected_items=COMPANY_SIZE_KEYS)
             verified, reason = verify_company_size(focused["company_size"], rec, band_chars[index])
             parsed.update(verified)
-            parsed[COMPANY_FACTS_KEY] = focused["company_size"]
+            attach_company_facts(parsed, focused["company_size"], reason)
             company_size_reasons[reason] += 1
             emit("company_size_verified", id=rec["id"], reason=reason,
                  flags={v: c["위반여부"] for v, c in verified.items()})

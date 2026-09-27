@@ -32,7 +32,8 @@ from slot_gate import ITEMS, f1, read_labels  # noqa: E402
 
 MARGIN = 0.02     # the least held-in F1 gain a row must show, as in the slot-table fit
 
-GENERAL = [("scope_general",), ("!catalogue_product",)]
+# Relation rows read the verified purchase scope (`purchase_*`), never the raw model fact.
+GENERAL = [("purchase_general",), ("!catalogue_product",)]
 SIZE_EXCEPTIONS = [(), ("priority_exception",), ("stated_exception",), ("priority_exception", "stated_exception")]
 
 
@@ -57,13 +58,13 @@ CANDIDATES = {
     "v8": rows([(), ("region_allowed",)], [("entry_performance", "entry_location")]),
     # Absence items: a negated relation slot is unknown without a label (never a raise) and no when the
     # label is there, so these rows can only lower an absence positive that a shared label contradicts.
-    "v10": rows([("scope_competitive",)], [("!entry_direct_production",)]),
-    "v11": rows([("scope_competitive",)], [("!entry_size",)], SIZE_EXCEPTIONS),
+    "v10": rows([("purchase_competitive",)], [("!entry_direct_production",)]),
+    "v11": rows([("purchase_competitive",)], [("!entry_size",)], SIZE_EXCEPTIONS),
     "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size",)], SIZE_EXCEPTIONS),
     "v18/relation": rows(banded("small", GENERAL[:1]), [("!entry_size",)], SIZE_EXCEPTIONS),
     "v20": rows([("software",)], [("!sw_limit_stated",)]),
     "v12": rows(GENERAL, [("entry_direct_production",)]),
-    "v13": rows([("scope_competitive",)], [("entry_small",)]),
+    "v13": rows([("purchase_competitive",)], [("entry_small",)]),
     "v14": rows(banded("over_notice", GENERAL), [("entry_size",)]),
     "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)]),
     "v17": rows(banded("small", GENERAL), [("entry_sme",)], SIZE_EXCEPTIONS[:1] + SIZE_EXCEPTIONS[2:3]),
@@ -74,11 +75,11 @@ CANDIDATES = {
 
 # The scope each item's official name sets (docs/items.md). Every candidate's applies must name one slot of
 # every group, so no candidate can fire outside its item whatever the score says. Checked on import.
-GENERAL_SCOPE = {"scope_general", "!catalogue_product"}
+GENERAL_SCOPE = {"purchase_general", "!catalogue_product"}
 SCOPE = {
     "v2": [{"under_notice"}], "v4": [{"over_notice"}],
     "v6": [{"region_allowed"}], "v7": [{"region_allowed"}], "v5": [{"over_region_limit"}],
-    "v10": [{"scope_competitive"}], "v11": [{"scope_competitive"}], "v13": [{"scope_competitive"}],
+    "v10": [{"purchase_competitive"}], "v11": [{"purchase_competitive"}], "v13": [{"purchase_competitive"}],
     "v12": [GENERAL_SCOPE], "v14": [{"over_notice"}, GENERAL_SCOPE],
     "v15": [{"mid"}, GENERAL_SCOPE], "v16": [{"mid"}, GENERAL_SCOPE],
     "v17": [{"small"}, GENERAL_SCOPE], "v18": [{"small"}, GENERAL_SCOPE],

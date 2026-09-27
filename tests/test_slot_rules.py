@@ -23,6 +23,13 @@ def judgment(**facts):
     return {script.COMPANY_FACTS_KEY: {**base, **facts}}
 
 
+def verified(**facts):
+    """Company facts whose scope passed the company-size quotation gate, as `attach_company_facts` records."""
+    parsed = {}
+    script.attach_company_facts(parsed, judgment(**facts)[script.COMPANY_FACTS_KEY], "ok")
+    return parsed
+
+
 def cells(**values):
     return {f"v{i}": {"위반여부": values.get(f"v{i}", 0), "근거문구": ""} for i in range(1, 25)}
 
@@ -130,8 +137,8 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(len([c for c in clauses if c["text"].startswith(("2)", "※", "3)"))]), 3)
 
     def test_a_missing_label_never_raises_an_absence_and_a_label_lowers_it(self):
-        absence = {"v10": (("scope_competitive",), ("!entry_direct_production",), (), None)}
-        facts = judgment(scope="competitive")
+        absence = {"v10": (("purchase_competitive",), ("!entry_direct_production",), (), None)}
+        facts = verified(scope="competitive")
         self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=facts)["위반여부"], 0)
         self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=facts, v10=1)["위반여부"], 1)
         demand = labels({"id": self.clause_id, "kind": "direct_production", "stage": "entry"})
@@ -144,12 +151,23 @@ class RelationTests(unittest.TestCase):
         extra = PERFORMANCE + "\n낙찰자는 실적증명서를 제출"
         self.assertEqual(self.decide(evaluation, evidence=extra, v2=1)["위반여부"], 1)
 
-    def test_the_catalogue_outranks_the_model_scope(self):
+    def test_the_catalogue_vetoes_general_but_never_makes_the_purchase_competitive(self):
         with mock.patch.object(script, "direct_production_demand", return_value=("직접생산", {"4321"})), \
                 mock.patch.object(script, "competitive_product", return_value=True):
-            slots = script.relation_slots(judgment(scope="general"), self.rec)
-        self.assertEqual((slots["scope_general"], slots["scope_competitive"]), (False, True))
-        self.assertNotIn("scope_general", slots["unknown"])
+            general = script.relation_slots(verified(scope="general"), self.rec)
+            other = script.relation_slots(verified(scope="other"), self.rec)   # e.g. construction
+        self.assertEqual((general["purchase_general"], general["purchase_competitive"]), (False, False))
+        self.assertEqual((other["purchase_general"], other["purchase_competitive"]), (False, False))
+        self.assertTrue(general["scope_general"])        # the existing rows' slot is as before
+
+    def test_a_scope_the_quotation_gate_rejected_decides_nothing(self):
+        absence = {"v10": (("purchase_competitive",), ("!entry_direct_production",), (), None)}
+        parsed = {}
+        script.attach_company_facts(parsed, judgment(scope="other")[script.COMPANY_FACTS_KEY], "unverified_scope")
+        self.assertIn("purchase_competitive", script.relation_slots(parsed, self.rec)["unknown"])
+        self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=parsed, v10=1)["위반여부"], 1)
+        rejected = verified(scope="other")
+        self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=rejected, v10=1)["위반여부"], 0)
 
     def test_an_unknown_scope_or_region_never_raises(self):
         location = labels({"id": self.clause_id, "kind": "bidder_location", "stage": "entry", "region": "basic"})
@@ -163,8 +181,9 @@ class RelationTests(unittest.TestCase):
         production = labels({"id": self.clause_id, "kind": "direct_production", "stage": "entry"})
         row = {"v12": (("!catalogue_product",), ("entry_direct_production",), (), None)}
         self.assertEqual(self.decide(production, row=row, item="v12")["위반여부"], 0)   # no product code
-        row = {"v12": (("scope_general",), ("entry_direct_production",), (), None)}
-        self.assertEqual(self.decide(production, row=row, item="v12", facts=judgment())["위반여부"], 1)
+        row = {"v12": (("purchase_general",), ("entry_direct_production",), (), None)}
+        self.assertEqual(self.decide(production, row=row, item="v12", facts=verified())["위반여부"], 1)
+        self.assertEqual(self.decide(production, row=row, item="v12", facts=judgment())["위반여부"], 0)
 
     def test_a_known_exception_decides_on_its_own(self):
         row = {"v17": (("small",), ("entry_sme",), ("priority_exception",), None)}
