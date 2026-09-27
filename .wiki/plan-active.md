@@ -13,14 +13,16 @@ reads: [docs/tasks/team-handoff.md, docs/tasks.md, docs/runs.md, docs/workflow.m
 ## 지금 숫자
 
 서버 최고는 0.6203720648(`61c495c`, 9/26 제출)이다. 장부는 [submissions.json](../reports/submissions.json)이 소유한다.
-9/26 항목은 아직 장부에 없다 — 열린 PR #157 이 머지되면 들어간다.
+The 9/26 entry is in the ledger (#157). The 9/27 upload is `main` `9356dc6` (#164 + #166 + #163), ZIP SHA-256 `4608b8c9…d986`; its server score and time are not recorded yet.
+On the same saved responses it scores the same as 9/26 off-dev outside 수의계약 (0.500628) and 0.0017–0.0045 lower on dev: its server difference is the 수의계약 convention bet (#164).
 Target from 2026-09-27: the cutoff rose to 0.76. The 9/27 slot aims at 0.70 (+0.0796); 0.76 needs +0.1396 over the three remaining slots.
 The 9/27 decisions — sealed 400 opened for development, off-dev adoption gate, Private is the best score — and the assignments are in
 [plan-0926-0929 9/27 decisions](../docs/tasks/plan-0926-0929.md#927-decisions-target-076-sealed-400-opened-off-dev-gate); A's own sheet is [a-offdev-0927](../docs/tasks/a-offdev-0927.md).
 0.72 까지 남은 거리와 9/27~9/29 계획은 [plan-0926-0929 의 9/26 결과](../docs/tasks/plan-0926-0929.md#926-결과와-072-까지의-대략-계획-2026-09-27-갱신)에 있다.
 그 전 진단과 0.72 실행 제안은 [9/25 서버 전이 감사](../reports/server-gap-20260925/result.md)에 있다.
 끝난 것: 라벨 600(#151)과 진단 200 의 dev 밖 감사, N3 회차(기각), 같은 코드 GPU 여섯 통과의 변동폭(#152).
-아직인 것: 문단 선택 감사, N1, 봉인 400 GPU(9/27 D), labels-3000(9/27 A).
+Done 9/27: labels-3000 (2,000 labelled, #161), label audit and the 수의계약 convention (#164), extra calls skipped on 수의계약 (#166), off-dev 600 GPU and the v3 cut (#163), convention mining (rejected), D facts call (#168, rejected on the off-dev 600). Details: [a-offdev-0927 results](../docs/tasks/a-offdev-0927.md#results).
+Still open: paragraph-selection audit, N1 (now within the time budget after #166), v6 L1 (parked on `feat/d-v6-l1`).
 
 | 제출일 | 코드 | 바뀐 것 | 서버 | 직전 대비 |
 | --- | --- | --- | ---: | ---: |
@@ -112,6 +114,14 @@ FP 가 몰린 곳은 v10(6) · v11(5) · v13(4) 이다.
 
 위 넷은 9/26 서버 제출 `61c495c` 0.6203720648 에 실렸다.
 
+| PR | What | Evidence · Server |
+| --- | --- | --- |
+| #164 | No positives on 수의계약 except v3 · v4 · v21 · v24 (dev convention: 6 of 153 dev positive cells) | dev-neutral; removes 430 of 2,154 positive cells on the 5,500. A bet only the server can score |
+| #166 | SME and company-size calls skipped on 수의계약; v17 zeroed there too | dev −0.0017; about 1,500 s freed (estimate) |
+| #163 | v3 logprob cut 0.95, tuned on the off-dev 600 | off-dev 600 0.499681 → 0.508940, both halves up; dev −0.002778 |
+
+These three are in the 9/27 upload `9356dc6`.
+
 ## 기각·보류된 가설 — 다시 열지 않는다
 
 | 가설 | 결과 | 기록 |
@@ -133,14 +143,17 @@ FP 가 몰린 곳은 v10(6) · v11(5) · v13(4) 이다.
 | 무라벨 10,000건 확장 회차 | 한 규칙만 판정하고 정답을 늘리지 않아 취소 | #132 |
 | v24 FP `044`·`10` 제거 | 둘 다 항목 정의상 실제 불일치(예산 61,560,000 vs 61,000,000 · 지역 목록 차이)라 지우면 정의를 거스른다 | #142 본문 |
 | 항목별 임계 재조정(9/25 `main`) | 여덟 약한 항목 중 새 임계로 오르는 것 0. v9 0.999 · v24 0.01 이 그대로 최적 | #142 본문 |
+| Convention mining beyond 수의계약 (dev metadata strata) | Best stratum outside 수의계약 p = 0.015 over about 60 tests — no signal | [a-offdev-0927 results](../docs/tasks/a-offdev-0927.md#results) |
+| D facts call for v1–v8 (a new extra call) | v1 · v4 · v8 false alarms explode; on the off-dev 600 v2 net 7 → −1 and a label audit found no label errors; without v2 no half rises | #168, `reports/d-facts/result.md` |
 
 ## 열린 PR
 
 | PR | 무엇 | 상태 |
 | --- | --- | --- |
 | #143 | C 세 규칙을 `c68eb00` 위에서 다시 재고 `c6-integrated.diff` 를 다시 심는다(보고서·검사만) | 열림. `c68eb00` 은 #142 전이라 그 수는 세 규칙이 이미 `script.py` 에 든 지금 `main` 을 반영하지 않는다 |
-| #152 | C 회차 변동폭(같은 코드 여섯 통과 0.007287) · N3 기각 · C11 재생 후보 | 열림 |
-| #157 | 9/26 서버 결과 장부(`61c495c` 0.6203720648, 전이율 0.708) | 열림 |
+| #165 | Decision records for #152 and #157–#160 (C) | Open |
+| #167 | C's few-shot budget measured before a run (800 tokens into company_size) | Open |
+| #168 | D facts call | Open as the record of a rejected candidate; not to be merged |
 
 머지되지 않은 기록 브랜치: `feat/b-thinking-cache` · `feat/b-facts-labeler-cd` · `LittleBitAI/analysis-v9-v19-v24`(로컬만) ·
 `feat/adopt-a4-scope-gate`(9/21 제출 코드 `3a30167`). PR 로 올릴지 지울지는 정하지 않았다.
