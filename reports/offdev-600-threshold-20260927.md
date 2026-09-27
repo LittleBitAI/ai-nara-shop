@@ -107,9 +107,17 @@ The prior section is explicitly an **archived-code measurement**: it passes
 responses' post-processing semantics.  It cannot decide the current main
 post-processing gate on its own.
 
-The same 600 saved responses were therefore replayed with the current PR
-`script.py` (no `--script` override), using the same reviewed 22-item grid,
-fixed salted A/B split, and `item_p1` completeness guard.
+The same 600 saved responses were therefore replayed with the pre-adoption
+current PR code fixed at `62c76bc:script.py`, using the same reviewed 22-item
+grid, fixed salted A/B split, and `item_p1` completeness guard.  Reproduce it
+by exporting that blob to a local file and passing it explicitly:
+
+```
+git show 62c76bc:script.py > artifacts/offdev-600-1790471557297701344/script-62c76bc.py
+python -X utf8 tools/tune_offdev_thresholds.py --case <combined 600 case dir> \
+  --input <600 records in manifest order> --truth <diag + sealed labels> \
+  --script artifacts/offdev-600-1790471557297701344/script-62c76bc.py --out <new dir>
+```
 
 | measurement | Macro F1 |
 | --- | ---: |
