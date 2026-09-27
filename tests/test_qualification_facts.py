@@ -79,5 +79,22 @@ class Merge(unittest.TestCase):
         self.assertEqual(parsed["v2"]["위반여부"], 1)
 
 
+class Deadline(unittest.TestCase):
+
+    def test_past_deadline_the_facts_call_is_skipped_and_the_run_completes(self):
+        import tempfile
+        saved = script.QUALIFICATION_DEADLINE_S
+        script.QUALIFICATION_DEADLINE_S = -1
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                report = script.run(str(ROOT / "open/data/test.jsonl.gz"), str(Path(tmp) / "submission.csv"),
+                                    script.MockRunner, limit=4, chunk=128, max_chars=16000,
+                                    data_dir=str(ROOT / "open/data"))
+        finally:
+            script.QUALIFICATION_DEADLINE_S = saved
+        self.assertGreater(report["qualification_selected_count"], 0)
+        self.assertEqual(report["qualification_response_count"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()

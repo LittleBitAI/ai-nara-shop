@@ -101,7 +101,16 @@ COMPANY_SIZE_KEYS = ["company_size"]  # 별도 사실 스키마. 제출 CSV의 �
 # these items are model-stage: v2 misses 63, v1 58, v8 21; v3 false alarms 35, v4 21, v6 17.
 # An item decides only while listed here, so after one GPU run each item is kept or dropped by replay.
 # Empty turns the phase off.
-QUALIFICATION_FACTS_ITEMS: List[str] = ["v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8"]
+# GPU run 2026-09-27 (code 278ca53, 400 labelled off-dev + dev 200, replayed per item): v1, v4 and v8
+# lost (v1 FP 6 -> 160 off-dev, 0 -> 74 dev; v4 FP 3 -> 23; v8 FP 0 -> 12), v5 moved nothing.
+# Kept: v2 (with NOT_ENTRY_QUOTE), v3, v6, v7 — off-dev and both halves up, dev drop within 0.01.
+QUALIFICATION_FACTS_ITEMS: List[str] = ["v2", "v3", "v6", "v7"]
+# The facts call is the last extra call and the only optional one. It stops starting chunks once the
+# process has run this long, leaving the rest of the 7,200 s limit for the chunk in flight and the CSV.
+# Unreached notices keep the main call's verdicts (the same fallback as a failed extra call).
+# Dev measured 0.92 s per selected notice; the server's 수의계약 share, which decides the total, is unknown.
+QUALIFICATION_DEADLINE_S = 6600
+PROCESS_START = time.time()
 QUALIFICATION_FACTS_KEYS = ["qualification_facts"]  # fact schema, not CSV items
 
 # ----- N3: 경쟁제품 카탈로그를 v10·v11·v12에도 준다 -----
@@ -573,6 +582,14 @@ def empty_qualification_facts():
             for key, spec in qualification_facts_schema()["properties"].items()}
 
 
+# A performance quote that is a submission checklist line or a scored/evaluated record is no entry
+# condition, whatever the model labelled it. The GPU run's 28 new v2 false alarms were these
+# ("실적증명서 1부", "평가 점수에 반영", "이행실적 심사분야"). The words follow the item definition but
+# were written after reading those quotes on the whole 400, so its split-half gain is not independent
+# evidence: v2 off-dev 16/28/8 -> 15/12/9, dev 7/4/0 -> 7/1/0.
+NOT_ENTRY_QUOTE = re.compile(r"\d+\s*부\b|증명서|사본|평가|심사|배점|점수|가점|감점|작성하여|양식|제출\s*서류|확인\b")
+
+
 def decide_qualification(facts, rec) -> Dict[str, Dict[str, Any]]:
     """v1–v8 from the facts call. An item left out keeps the main call's verdict.
 
@@ -606,7 +623,8 @@ def decide_qualification(facts, rec) -> Dict[str, Dict[str, Any]]:
 
     if price is not None and price >= NOTICE_AMOUNT_WON:
         out["v2"] = no
-    elif perf == "eligibility" and perf_q and price is not None and not small:
+    elif (perf == "eligibility" and perf_q and price is not None and not small
+            and not NOT_ENTRY_QUOTE.search(perf_q)):
         out["v2"] = yes(perf_q)
     elif seen and perf in ("none", "evaluation_only"):
         out["v2"] = no
@@ -4107,6 +4125,11 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
                                                      sort_keys=True).encode()).hexdigest())
     t_qualification = time.time()
     for s in range(0, len(qualification_selected), chunk):
+        if time.time() - PROCESS_START > QUALIFICATION_DEADLINE_S:
+            emit("phase_stopped", phase="qualification", reason="deadline", processed=s,
+                 skipped=len(qualification_selected) - s)
+            log(f"  qualification: deadline, {len(qualification_selected) - s} notices keep the main verdicts")
+            break
         indices = qualification_selected[s:s + chunk]
         batch = [fit_to_budget(recs[i], QUALIFICATION_FACTS_PROMPT, runner, max_chars, budget=budget)[0]
                  for i in indices]
