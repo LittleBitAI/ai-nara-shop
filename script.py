@@ -3622,7 +3622,9 @@ def attach_relations(parsed: Dict[str, Any], rec: Dict[str, Any], text: Optional
     # At the record cap the model may have stopped before labelling every clause it read, so then nothing is.
     # The shown text, not `full`: a clause over CLAUSE_TEXT_MAX is cut and its tail was never read.
     read = [] if len(records) >= RELATION_MAX else [re.sub(r"\s+", "", c["text"]) for c in clauses]
-    parsed[RELATION_KEY] = {"read": read, "relations": relations}
+    # Section and list headings shown above the clauses: a cited quote may carry them as context.
+    context = sorted({re.sub(r"\s+", "", part) for c in clauses for part in c["section"].split(" › ") if part})
+    parsed[RELATION_KEY] = {"read": read, "context": context, "relations": relations}
 
 
 # ===== Slot table: every item it names is decided from the same relations, in one place =====
@@ -3640,8 +3642,11 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     """The shared relations, each a plain yes/no. Unknown reads as no: an unseen fact never raises."""
     price = estimated_price(rec)
     facts = judgment.get(COMPANY_FACTS_KEY) or {}
-    _, codes = direct_production_demand(rec)
+    demand, codes = direct_production_demand(rec)
     catalogue = competitive_product(rec, codes)
+    # The provided catalogue outranks the model's scope, as in `_company_size_bands`
+    # (`competitive_by_catalogue`): a listed product is competitive whatever the model said.
+    listed = demand is not None and catalogue is True
     limit = region_price_limit(rec)
     # Slots whose "no" is only "not known" on this notice. A relation row lets a known "no" decide and
     # never an unknown one (`slot_row_cell`).
@@ -3651,7 +3656,8 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     unknown = {"small", "mid", "under_notice", "over_notice"} if price is None else set()
     unknown |= {"region_allowed", "over_region_limit"} if limit is None or region_price is None else set()
     unknown |= {"priority_exception"} if facts.get("priority_exception") not in ("yes", "no") else set()
-    unknown |= {"scope_general", "scope_competitive"} if facts.get("scope") not in ("general", "competitive", "other") else set()
+    unknown |= ({"scope_general", "scope_competitive"}
+                if facts.get("scope") not in ("general", "competitive", "other") and not listed else set())
     unknown |= {"software"} if facts.get("software_business") not in ("yes", "no") else set()
     unknown |= {"catalogue_product"} if catalogue is None else set()
     return {
@@ -3659,7 +3665,7 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
         # 판로지원법 시행령 제2조의2: 1억 미만 소기업·소상공인, 1억 이상 고시금액 미만 중소기업
         "small": price is not None and price < SME_BAND_FLOOR_WON,
         "mid": price is not None and SME_BAND_FLOOR_WON <= price < NOTICE_AMOUNT_WON,
-        "scope_general": facts.get("scope") == "general",
+        "scope_general": facts.get("scope") == "general" and not listed,
         "catalogue_product": catalogue is True,
         "only_small": facts.get("qualification") == "small_only",
         "no_size_limit": facts.get("qualification") == "unrestricted",
@@ -3670,9 +3676,10 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
         "region_allowed": region_restriction_allowed(rec),     # True also when unknown: never read it negated
         "over_region_limit": region_price is not None and limit is not None and region_price >= limit,
         "negotiation": negotiated(rec),
-        "scope_competitive": facts.get("scope") == "competitive",
+        "scope_competitive": facts.get("scope") == "competitive" or listed,
         "software": facts.get("software_business") == "yes",
         "read_clauses": tuple((judgment.get(RELATION_KEY) or {}).get("read") or ()),
+        "read_context": tuple((judgment.get(RELATION_KEY) or {}).get("context") or ()),
         **{name: bool(relation_matches(name, judgment)) for name in RELATION_SLOTS},
     }
 
@@ -3725,9 +3732,20 @@ def _uses_relations(row) -> bool:
 
 
 def _cites_a_read_clause(cell: Dict[str, Any], slots: Dict[str, Any]) -> bool:
-    """The cell's evidence lies inside one clause the relation call read."""
+    """Every character of the cell's evidence was shown to the relation call: whole shown clauses and
+    headings, and at the edges of a window quote, pieces of shown clauses. Any other text may hold what the
+    positive rests on, so the missing label stays unknown."""
     evidence = re.sub(r"\s+", "", cell.get("근거문구") or "")
-    return bool(evidence) and any(evidence in clause for clause in slots["read_clauses"])
+    read = slots["read_clauses"]
+    if not evidence or not read:
+        return False
+    rest = evidence
+    for part in sorted((*read, *slots["read_context"]), key=len, reverse=True):
+        rest = rest.replace(part, "\0") if part else rest
+    # The quote is one contiguous document span, so a piece may run from one shown clause into the next;
+    # the shown clauses joined in document order hold it only when nothing unshown sat between them.
+    shown = "".join(read)
+    return all(piece in shown for piece in rest.split("\0") if re.search(r"\w", piece))
 
 
 def _slot_evidence(row, judgment: Dict[str, Any], rec: Dict[str, Any]) -> Optional[str]:

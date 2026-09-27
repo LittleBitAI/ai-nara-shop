@@ -55,10 +55,14 @@ v2 net fell 7 → −1.
    A row in `SLOT_RULES` can name them next to the price and scope slots. A row that names a relation slot
    is evaluated with three values, yes, no and unknown. Unknown never decides and a known value always does:
    - A relation slot is yes when a label derives it. A missing label is a known no only for a positive
-     cell whose cited evidence lies inside a clause the relation call read, with the 30-record cap not hit.
-     Everywhere else it is unknown.
+     cell whose every cited character was shown to the relation call, with the 30-record cap not hit.
+     "Shown" means whole shown clauses and headings, plus pieces of consecutive shown clauses at the edges
+     of a window quote. On dev, all six v4 clause-rule window quotes pass this check. Everywhere else a
+     missing label is unknown.
    - A scope or exception slot that does not read the labels (price band, product scope, `negotiation`,
-     `priority_exception`) is known unless `slots["unknown"]` lists it. It is listed for no price, a scope
+     `priority_exception`) is known unless `slots["unknown"]` lists it. The provided catalogue outranks
+     the model's scope, as `_company_size_bands` does: a listed product makes `scope_general` false and
+     `scope_competitive` true. It is listed for no price, a scope
      or priority fact the model gave as unknown, no product code, and no registered estimated price or
      region limit (`region_allowed`, `over_region_limit`).
    - Applies and requirement combine by "and", exceptions by "or". Yes raises (with the clause as evidence);
@@ -74,8 +78,9 @@ v2 net fell 7 → −1.
    from definition-grounded candidates. `SCOPE` in fit.py lists the scope each item's official name sets,
    and every candidate's applies must name it; fit.py asserts this on import, so no candidate can fire
    outside its item (v4 over the threshold, v12/v14/v17 general products, v13 competitive, v7 adjacency).
-   It also asserts that no candidate negates a relation slot. The absence items (v10, v11, v16, v18, v20)
-   have no relation candidate and stay on their own paths. The fit hands `slot_row_cell` each cell's
+   It also asserts that only the absence items (v10, v11, v16, v18, v20) negate a relation slot. For them
+   the negation is unknown without a label and no with one, so those rows can only lower an absence
+   positive that a shared label contradicts, such as v10 against a labelled entry direct-production demand. The fit hands `slot_row_cell` each cell's
    evidence as the run had it. It uses the same nested cross-fit as the slot-table rows: pick on
    off-dev half A with dev half A as a no-loss constraint, score on the other halves, then swap. The held-out
    halves only admit an item; the row itself is then picked on both halves as training data. It writes

@@ -129,10 +129,27 @@ class RelationTests(unittest.TestCase):
         self.assertEqual(script.clean_evidence(pledge["full"], rec["docs"][0]["text"]), pledge["full"])
         self.assertEqual(len([c for c in clauses if c["text"].startswith(("2)", "※", "3)"))]), 3)
 
-    def test_a_missing_label_never_raises_an_absence(self):
-        absence = {"v10": ((), ("!entry_direct_production",), (), None)}
-        self.assertEqual(self.decide(labels(), row=absence, item="v10")["위반여부"], 0)
-        self.assertEqual(self.decide(labels(), row=absence, item="v10", v10=1)["위반여부"], 1)
+    def test_a_missing_label_never_raises_an_absence_and_a_label_lowers_it(self):
+        absence = {"v10": (("scope_competitive",), ("!entry_direct_production",), (), None)}
+        facts = judgment(scope="competitive")
+        self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=facts)["위반여부"], 0)
+        self.assertEqual(self.decide(labels(), row=absence, item="v10", facts=facts, v10=1)["위반여부"], 1)
+        demand = labels({"id": self.clause_id, "kind": "direct_production", "stage": "entry"})
+        self.assertEqual(self.decide(demand, row=absence, item="v10", facts=facts, v10=1)["위반여부"], 0)
+
+    def test_a_cited_quote_may_carry_its_heading_but_not_unshown_text(self):
+        evaluation = labels({"id": self.clause_id, "kind": "performance_record", "stage": "evaluation"})
+        headed = "3. 입찰참가자격\n" + PERFORMANCE
+        self.assertEqual(self.decide(evaluation, evidence=headed, v2=1)["위반여부"], 0)
+        extra = PERFORMANCE + "\n낙찰자는 실적증명서를 제출"
+        self.assertEqual(self.decide(evaluation, evidence=extra, v2=1)["위반여부"], 1)
+
+    def test_the_catalogue_outranks_the_model_scope(self):
+        with mock.patch.object(script, "direct_production_demand", return_value=("직접생산", {"4321"})), \
+                mock.patch.object(script, "competitive_product", return_value=True):
+            slots = script.relation_slots(judgment(scope="general"), self.rec)
+        self.assertEqual((slots["scope_general"], slots["scope_competitive"]), (False, True))
+        self.assertNotIn("scope_general", slots["unknown"])
 
     def test_an_unknown_scope_or_region_never_raises(self):
         location = labels({"id": self.clause_id, "kind": "bidder_location", "stage": "entry", "region": "basic"})

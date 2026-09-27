@@ -55,6 +55,13 @@ CANDIDATES = {
     # The item is 인접 확대: only the adjacency label, not any listed provinces.
     "v7": rows([("region_allowed",)], [("entry_location_adjacent",)]),
     "v8": rows([(), ("region_allowed",)], [("entry_performance", "entry_location")]),
+    # Absence items: a negated relation slot is unknown without a label (never a raise) and no when the
+    # label is there, so these rows can only lower an absence positive that a shared label contradicts.
+    "v10": rows([("scope_competitive",)], [("!entry_direct_production",)]),
+    "v11": rows([("scope_competitive",)], [("!entry_size",)], SIZE_EXCEPTIONS),
+    "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size",)], SIZE_EXCEPTIONS),
+    "v18/relation": rows(banded("small", GENERAL[:1]), [("!entry_size",)], SIZE_EXCEPTIONS),
+    "v20": rows([("software",)], [("!sw_limit_stated",)]),
     "v12": rows(GENERAL, [("entry_direct_production",)]),
     "v13": rows([("scope_competitive",)], [("entry_small",)]),
     "v14": rows(banded("over_notice", GENERAL), [("entry_size",)]),
@@ -71,20 +78,23 @@ GENERAL_SCOPE = {"scope_general", "!catalogue_product"}
 SCOPE = {
     "v2": [{"under_notice"}], "v4": [{"over_notice"}],
     "v6": [{"region_allowed"}], "v7": [{"region_allowed"}], "v5": [{"over_region_limit"}],
-    "v13": [{"scope_competitive"}],
+    "v10": [{"scope_competitive"}], "v11": [{"scope_competitive"}], "v13": [{"scope_competitive"}],
     "v12": [GENERAL_SCOPE], "v14": [{"over_notice"}, GENERAL_SCOPE],
     "v15": [{"mid"}, GENERAL_SCOPE], "v16": [{"mid"}, GENERAL_SCOPE],
     "v17": [{"small"}, GENERAL_SCOPE], "v18": [{"small"}, GENERAL_SCOPE],
-    "v22": [{"negotiation"}],
+    "v20": [{"software"}], "v22": [{"negotiation"}],
 }
+ABSENCE = {"v10", "v11", "v16", "v18", "v20"}
 for _key, _candidates in CANDIDATES.items():
     for _row in _candidates:
         for _group in SCOPE.get(_key.split("/")[0], ()):
             assert _group & set(_row[0]), (_key, _row, "applies outside the item's scope")
-        # The selector picks clauses by trigger words, so a missing label never proves absence: no candidate
-        # reads one. Absence items (v10, v11, v16, v18, v20) stay on their own paths.
-        _negated = {n for n in (*_row[0], *_row[1]) if n.startswith("!")}
-        assert _negated <= {"!catalogue_product"}, (_key, _row, "reads a missing label as absence")
+        # The selector picks clauses by trigger words, so a missing label never proves absence. A negated
+        # relation slot is allowed only where it can do nothing but lower: the absence items' requirement.
+        _negated = {n for n in _row[0] if n.startswith("!")}
+        assert _negated <= {"!catalogue_product"}, (_key, _row, "negated scope")
+        if _key.split("/")[0] not in ABSENCE:
+            assert not any(n.startswith("!") for n in _row[1]), (_key, _row, "reads a missing label as absence")
 
 
 def capture(script, cases, inputs, data_dir):
