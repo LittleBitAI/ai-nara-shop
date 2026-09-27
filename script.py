@@ -597,6 +597,19 @@ def empty_qualification_facts():
 NOT_ENTRY_QUOTE = re.compile(r"\d+\s*부\b|제출\s*서류|평가|심사|배점|점수|가점|감점|작성하여|양식")
 
 
+def in_qualification_section(quote, rec) -> bool:
+    """The quote stands in a bidder-qualification section (`_is_qualification_context`), not in an
+    evaluation, proposal or document-list section. The off-dev 600 audit found the facts call's v2 false
+    alarms there (2026-09-27); read after that audit, so not independent evidence: v2 on the 600
+    18/19/9 -> 17/11/10, on the 400 16/14/8 -> 16/8/8, dev unchanged."""
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        at = text.find(quote)
+        if at >= 0 and _is_qualification_context(text, at):
+            return True
+    return False
+
+
 def decide_qualification(facts, rec) -> Dict[str, Dict[str, Any]]:
     """v1–v8 from the facts call. An item left out keeps the main call's verdict.
 
@@ -631,7 +644,7 @@ def decide_qualification(facts, rec) -> Dict[str, Dict[str, Any]]:
     if price is not None and price >= NOTICE_AMOUNT_WON:
         out["v2"] = no
     elif (perf == "eligibility" and perf_q and price is not None and not small
-            and not NOT_ENTRY_QUOTE.search(perf_q)):
+            and not NOT_ENTRY_QUOTE.search(perf_q) and in_qualification_section(perf_q, rec)):
         out["v2"] = yes(perf_q)
     elif seen and perf in ("none", "evaluation_only"):
         out["v2"] = no
