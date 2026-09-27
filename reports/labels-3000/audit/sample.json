@@ -1,0 +1,459 @@
+{
+ "seed": 20260928,
+ "per_item": {
+  "label_1": 15,
+  "label_0": 15
+ },
+ "cells": [
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-018793"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-009498"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-000578"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-007077"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-001839"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-014674"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-012088"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-020882"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-006891"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-011490"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-016580"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-015169"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-000558"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-008941"
+  },
+  {
+   "item": "v18",
+   "label": 1,
+   "id": "PPS-D-021841"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-017048"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-009986"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-016103"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-014024"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-016868"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-019831"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-012901"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-020317"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-021932"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-002373"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-001406"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-004664"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-006857"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-013534"
+  },
+  {
+   "item": "v18",
+   "label": 0,
+   "id": "PPS-D-000670"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-008043"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-016226"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-019981"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-019253"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-009674"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-010946"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-006315"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-019955"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-006712"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-007242"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-002779"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-006233"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-021932"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-011477"
+  },
+  {
+   "item": "v10",
+   "label": 1,
+   "id": "PPS-D-008349"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-010046"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-000042"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-018336"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-019444"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-000239"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-020797"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-018520"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-021905"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-019586"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-015594"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-015694"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-008253"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-011986"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-013750"
+  },
+  {
+   "item": "v10",
+   "label": 0,
+   "id": "PPS-D-015927"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-020942"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-020751"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-001914"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-006668"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-015083"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-020322"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-006712"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-000670"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-016893"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-013333"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-020868"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-011788"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-018908"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-001221"
+  },
+  {
+   "item": "v11",
+   "label": 1,
+   "id": "PPS-D-017573"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-001941"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-008415"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-007598"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-003835"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-014239"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-002830"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-018931"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-020043"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-001343"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-015010"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-021228"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-011934"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-019098"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-012872"
+  },
+  {
+   "item": "v11",
+   "label": 0,
+   "id": "PPS-D-008321"
+  }
+ ]
+}
