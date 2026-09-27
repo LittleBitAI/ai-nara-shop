@@ -96,6 +96,19 @@ keep their label. This is a model reading (Claude), not a human one.
 Pass line: v2's corrected net (TP − FP) on the 600 ≥ 6, i.e. at most one cell below the facts-off 7.
 Pass → review round 2 on the facts call with `QUALIFICATION_FACTS_ITEMS = ["v2"]`. Fail → rejected stands.
 
+### Audit result: fails — rejected stands
+
+- 19 new false alarms: 14 label-0 correct (evaluation, proposal or 적격심사 sections: 005824, 014535, 007800,
+  001080, 001938, 012494, 015176, 005294, 014771, 016313, 017650; licence or registration: 000225, 003606;
+  personnel career: 006277; no record at all: 000491), 4 unclear (bid-registration document lists with a
+  record certificate but no stated entry condition: 002003, 016375, 001714, 018514), 0 label errors.
+- 11 new true positives: 10 correct (operative 입찰참가자격 clauses), 1 unclear (017667).
+- Corrected v2 net stays −1 (pass line ≥ 6).
+
+The call finds sentences that mention a performance record; it does not tell an entry condition from
+an evaluation or proposal section. A before-the-audit glance at the quotes alone suggested about half
+were label errors; read in their sections, none were.
+
 ## Server time
 
 Dev phase seconds (200 notices, 165 non-수의계약): main 368, SME 90, company size 206, facts 151.
