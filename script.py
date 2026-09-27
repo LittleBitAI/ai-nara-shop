@@ -3176,6 +3176,31 @@ def v6_basic_region_limits(rec: Dict[str, Any]):
     return found
 
 
+def v6_no_basic_region_limit(rec: Dict[str, Any]) -> bool:
+    """L1 of D9: no qualification line limiting the participant's location carries a 시·군·구 signal.
+
+    v6 is the 시·군·구 limit; a notice limited only to a 광역 name ("강원도", "대구광역시") is outside
+    it. Ported from `experiments/qualification_candidate.py` (`v6_decision` L1, 2026-09-23), which dev
+    could not score (0 cells). On the non-수의계약 off-dev labels it lowered 16 labelled cells, 15 of them
+    label 0 (v6 3/17/2 -> 2/2/3, 2026-09-27). Reads lines broadly, as the lowering side should: any
+    basic signal, name-based included, keeps the cell. A notice with dropped documents is never lowered.
+    """
+    if any((rec.get("dropped_doc_counts") or {}).values()):
+        return False
+    for doc in rec.get("docs", []):
+        text = doc.get("text") or ""
+        position = 0
+        for line in text.split("\n"):
+            start, position = position, position + len(line) + 1
+            if not line.strip() or not V6_LIMIT_ANCHOR.search(line):
+                continue
+            if V6_NOT_A_LIMIT.search(line) or not _is_qualification_context(text, start):
+                continue
+            if _v6_confirmed_basic(line) or "[수요기관(기초자치단체)" in line or _has_basic_unit(line):
+                return False
+    return True
+
+
 def v6_should_raise(rec: Dict[str, Any]) -> Optional[str]:
     """v6 을 0 에서 1 로 올릴 근거문구. 없으면 None.
 
@@ -3590,7 +3615,7 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                     break
             if (not ev and v not in EVIDENCE_EXEMPT) or evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
-        if hit and v == "v6" and v6_not_a_basic_region_limit(ev, rec):
+        if hit and v == "v6" and (v6_not_a_basic_region_limit(ev, rec) or v6_no_basic_region_limit(rec)):
             hit, ev = 0, ""
         if v == "v5" and hit == 0 and cell.get("위반여부") != 1:
             # 고시금액 이상인데 모델이 놓친 참가업체 소재지 제한만 올린다. 모델 양성을
