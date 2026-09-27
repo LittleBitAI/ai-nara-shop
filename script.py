@@ -602,11 +602,15 @@ def in_qualification_section(quote, rec) -> bool:
     evaluation, proposal or document-list section. The off-dev 600 audit found the facts call's v2 false
     alarms there (2026-09-27); read after that audit, so not independent evidence: v2 on the 600
     18/19/9 -> 17/11/10, on the 400 16/14/8 -> 16/8/8, dev unchanged."""
+    # Every occurrence in every document: the same wording often stands in an evaluation table first and
+    # under 입찰참가자격 later (review #172 round 1 P1).
     for doc in rec.get("docs", []):
         text = doc.get("text") or ""
         at = text.find(quote)
-        if at >= 0 and _is_qualification_context(text, at):
-            return True
+        while at >= 0:
+            if _is_qualification_context(text, at):
+                return True
+            at = text.find(quote, at + 1)
     return False
 
 
@@ -3630,7 +3634,10 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                     break
             if (not ev and v not in EVIDENCE_EXEMPT) or evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
-        if hit and v == "v6" and (v6_not_a_basic_region_limit(ev, rec) or v6_no_basic_region_limit(rec)):
+        # L1 is line-based; a verified quote that itself names a 시·군·구 keeps the cell even when the clause
+        # wraps its anchor and its place name onto separate lines (review #172 round 1 P1).
+        if hit and v == "v6" and (v6_not_a_basic_region_limit(ev, rec)
+                                  or (v6_no_basic_region_limit(rec) and not _has_basic_unit(ev))):
             hit, ev = 0, ""
         if v == "v5" and hit == 0 and cell.get("위반여부") != 1:
             # 고시금액 이상인데 모델이 놓친 참가업체 소재지 제한만 올린다. 모델 양성을
@@ -3690,15 +3697,13 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
             out[item] = {"위반여부": 0, "근거문구": ""}
     # Label sweep (2026-09-27, experimental slot): zeroing rules picked on one off-dev half and kept only
     # when the other half also gained and no dev gold positive was lost. v22 is the item definition
-    # ("계약방법 협상만 적용"); v1 on 지명경쟁 and v4 under 2천만원 are empirical (no labelled positive there).
+    # ("계약방법 협상만 적용"); v1 on 지명경쟁 is empirical (no labelled positive there).
     meta = rec.get("meta") or {}
-    price = estimated_price(rec)
     if meta.get("낙찰방법") != "협상에의한계약":
         out["v22"] = {"위반여부": 0, "근거문구": ""}
     if meta.get("계약방법") == "지명경쟁":
         out["v1"] = {"위반여부": 0, "근거문구": ""}
-    if price is not None and price < 20_000_000:
-        out["v4"] = {"위반여부": 0, "근거문구": ""}
+    # No price rule for v4: its restriction holds at any price (item guide; review #172 round 1 P1).
     return out
 
 

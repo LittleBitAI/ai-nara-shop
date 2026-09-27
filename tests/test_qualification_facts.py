@@ -55,6 +55,11 @@ class Decide(unittest.TestCase):
                                               rec(90_000_000, f"입찰참가자격\n{quote}\n"))
             self.assertNotIn("v2", out, quote)
 
+    def test_the_same_clause_counts_when_any_occurrence_is_an_entry_condition(self):
+        clause = "최근 3년 이내 단일 건으로 5천만원 이상의 유지보수 실적이 있는 업체"
+        text = f"정량평가 배점표\n가. {clause}\n\n입찰참가자격\n나. {clause}\n"
+        self.assertTrue(script.in_qualification_section(clause, rec(90_000_000, text)))
+
     def test_record_at_budget_is_v3(self):
         out = script.decide_qualification(
             facts(performance="eligibility", performance_quote=PERF, performance_amount="at_or_above_budget"),
