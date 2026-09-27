@@ -95,4 +95,8 @@ The one exception: if nothing passes by 19:00, the slot carries an experimental 
 
 ## Results
 
-Empty. One line per step as it finishes.
+- Sample fixed before labelling (`9d0bb4e`): [reports/labels-3000/pick.py](../../reports/labels-3000/pick.py). 3,000 of 4,954 eligible notices in u00~u10, seed `20260927`; `half(id)` is the salted-hash split-half partition for the whole off-dev pool.
+- The four passes reproduce labels-600 exactly: prompt hashes `34bd9cf7` (24-item, `--law-excerpt` + `--facts`), `43380d80` (facts), `740bf1c4` (focus), `25f869e7` (v1, three runs); notice hashes match the recorded ones.
+- Pilot (first 100): 600 calls, 0 failures, 1,129 s wall on 24 workers. $1.428 in all — $0.0143 per notice (24-item 0.0042 · facts 0.0031 · focus 0.0019 · v1 3 × 0.0017). About 109 s of serial calls per notice.
+- The full 3,000 would cost about $42.8, over the $30 stop line. User decision (09:00): label 2,000 — the first 2,000 of the fixed order, so still a prefix of one random draw. The last 1,000 stay unlabelled.
+- Missed-cell stage audit on the diagnostic 200 with the current `script.py` ([stage_trace.py](../../reports/offdev-0927/stage_trace.py)): misses are almost all model-stage — v2 14 · v10 11 · v1 8 · v18 8 (+2 postprocess) · v8 6 · v11 5. False alarms: model v6 7 · v3 5; SME / company-size calls v18 6 · v10 5 · v11 3; postprocess v11 6.
