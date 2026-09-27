@@ -15,8 +15,16 @@ sys.path.insert(0, str(HERE.parent / "labels-600"))
 import merge_labels  # noqa: E402
 
 
+LABELLED = 2000  # user decision 2026-09-27: the first 2,000 of the fixed order
+
+
 def main():
     ids = (HERE / "ids.txt").read_text(encoding="utf-8").split()
+    # strict=True checks the other passes against the 24-item pass; this checks that pass against the sample.
+    wide = set(merge_labels.rows_of(HERE / "wide", "labels"))
+    if wide != set(ids[:LABELLED]):
+        raise ValueError(f"24-item pass: {len(set(ids[:LABELLED]) - wide)} sampled notices missing, "
+                         f"{len(wide - set(ids[:LABELLED]))} outside the first {LABELLED}")
     merge_labels.merge(HERE / "merged.csv", merge_labels.load_records(ids), merge_labels.sources(),
                        HERE / "wide", HERE / "facts", HERE / "focus",
                        [HERE / "v1" / f"run{n}" for n in (1, 2, 3)], strict=True)
