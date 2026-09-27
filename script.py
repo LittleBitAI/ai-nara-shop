@@ -227,6 +227,12 @@ EVIDENCE_MAX = 500                      # 근거 문구 셀 글자 수 상한
 # scratchpad, one after it is a justification). Off-dev, 218 of 236 missed positives had their evidence
 # inside the model's visible text (2026-09-27).
 EVIDENCE_FIRST = True
+# The role of the quoted sentence, written between quote and verdict. The off-dev 600 audit found the
+# restriction items' false alarms in evaluation, checklist and cited-law sentences (2026-09-27).
+CLAUSE_ROLE_KEY = "조항역할"
+CLAUSE_ROLES = ["entry_condition", "evaluation", "checklist", "law_citation", "other", "none"]
+# Restriction items a positive of which must quote an entry condition (neuro-symbolic gate in postprocess).
+CLAUSE_ROLE_GATE_ITEMS = ("v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8")
 QUANT = "int8_per_channel_weight_only"  # 평가 서버 양자화 설정
 SME_ITEMS = ["v13"]
 SME_FILES = (
@@ -402,8 +408,12 @@ def decode_schema(data_dir: str = DATA_DIR) -> Dict[str, Any]:
             if EVIDENCE_FIRST:
                 # Guided decoding writes properties in schema order: the quote becomes the scratchpad the
                 # verdict is conditioned on, instead of a justification written after it (2026-09-27).
-                cell["properties"] = {"근거문구": evidence, "위반여부": cell["properties"]["위반여부"]}
-                cell["required"] = ["근거문구", "위반여부"]
+                # Between them the model names the quote's role (decomposed criteria: evidence, then its
+                # role, then the verdict); `postprocess` uses it through CLAUSE_ROLE_GATE_ITEMS.
+                cell["properties"] = {"근거문구": evidence,
+                                      CLAUSE_ROLE_KEY: {"type": "string", "enum": CLAUSE_ROLES},
+                                      "위반여부": cell["properties"]["위반여부"]}
+                cell["required"] = ["근거문구", CLAUSE_ROLE_KEY, "위반여부"]
         return s
     props = {}
     for v in ITEMS:
@@ -438,8 +448,19 @@ Items to evaluate:"""
 
 SYSTEM_TAIL = """
 Return only one JSON object with keys v1~v24. Each value first gives "근거문구" (the exact Korean
-quotation that decides the item, or null) and then "위반여부" (integer 0 or 1) based on that quotation.
-No preamble, markdown or additional explanation."""
+quotation that decides the item, or null), then "조항역할" (the role of that quotation), then
+"위반여부" (integer 0 or 1) based on the quotation and its role. No preamble, markdown or explanation.
+조항역할: entry_condition = an operative 입찰참가자격 condition a bidder must meet to bid;
+evaluation = a scored or 적격심사 criterion (평가, 배점, 가점, 신인도, 정량/정성 평가);
+checklist = a line in a list of documents to submit (제출서류, 실적증명서 1부) with no condition of its own;
+law_citation = a cited law or its title only; other = any other sentence; none = no quotation.
+A restriction item (v1~v8) can be 1 only when its quotation is an entry_condition.
+Examples of the difference (v2, estimated price under 2.3억):
+- entry_condition, 위반여부 1: "나. 공고일 기준 5년 이내 공공디자인 용역 실적이 3천만원 이상인 업체"
+- evaluation, 위반여부 0: "정량평가: 유사용역 수행실적 건수에 따라 최대 10점 부여"
+- checklist, 위반여부 0: "제출서류: 사업자등록증 사본 1부, 실적증명서 1부\"
+Example (v3): entry_condition, 위반여부 1: "단일 건으로 455,000,000원 이상(기초금액의 130% 이상)의 … 수행실적"
+Example (v1): entry_condition, 위반여부 1: "본 용역은 「고등교육법」 제2조에 따른 대학 … 산학협력단만 참여 가능함"."""
 
 
 def load_sme_reference(data_dir):
@@ -1221,6 +1242,7 @@ def restrict_schema(schema: Dict[str, Any], items, *, sme: bool = True) -> Dict[
             cell = schema["properties"][key]
             cell["properties"] = {"facts": sme_facts_schema(), **cell["properties"]}
             cell["properties"]["근거문구"] = {"type": "null"}
+            cell["properties"].pop(CLAUSE_ROLE_KEY, None)   # the SME call keeps its own fields
             cell["required"] = ["facts", "위반여부", "근거문구"]
     return schema
 
@@ -1626,6 +1648,8 @@ def parse_judgment(text: str, expected_items=None, *, sme=False, company_size_le
         if ev is not None and not isinstance(ev, str):
             raise ValueError(f"{v}: 근거문구는 문자열 또는 null이어야 한다")
         out[v] = {"위반여부": hit, "근거문구": ev}
+        if raw.get(CLAUSE_ROLE_KEY) in CLAUSE_ROLES:
+            out[v][CLAUSE_ROLE_KEY] = raw[CLAUSE_ROLE_KEY]
         if sme:
             facts = raw["facts"]
             properties = sme_facts_schema()["properties"]
@@ -3641,6 +3665,9 @@ def postprocess(judgment: Dict[str, Dict[str, Any]], rec: Dict[str, Any]) -> Dic
                     break
             if (not ev and v not in EVIDENCE_EXEMPT) or evidence_refutes(v, ev, rec):
                 hit, ev = 0, ""
+        if (hit and v in CLAUSE_ROLE_GATE_ITEMS
+                and cell.get(CLAUSE_ROLE_KEY) in ("evaluation", "checklist", "law_citation")):
+            hit, ev = 0, ""                 # the model's own role says this quote restricts no bidder
         if hit and v == "v6" and (v6_not_a_basic_region_limit(ev, rec) or v6_no_basic_region_limit(rec)):
             hit, ev = 0, ""
         if v == "v5" and hit == 0 and cell.get("위반여부") != 1:
