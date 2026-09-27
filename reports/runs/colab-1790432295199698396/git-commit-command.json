@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "git",
+    "-C",
+    "/content/t1-colab-2keq0_5o/repo",
+    "rev-parse",
+    "HEAD"
+  ],
+  "cwd": "/content/t1-colab-2keq0_5o",
+  "started": 1790429438.513575,
+  "returncode": 0,
+  "elapsed_seconds": 0.004308223724365234
+}
