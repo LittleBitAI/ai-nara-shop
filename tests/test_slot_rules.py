@@ -67,15 +67,16 @@ class RelationTests(unittest.TestCase):
     ROW = {"v2": (("under_notice",), ("entry_performance",), (), None)}   # no keep-if: the row owns the cell
 
     def setUp(self):
-        self.rec = notice(50_000_000, "3. 입찰참가자격\n" + PERFORMANCE)
+        self.rec = dict(notice(50_000_000, "3. 입찰참가자격\n" + PERFORMANCE),
+                        input_completeness={"완전관측": True}, dropped_doc_counts={})
         clauses, _ = script.clause_candidates(self.rec)
         self.clause_id = next(c["id"] for c in clauses if c["full"] == PERFORMANCE)
 
-    def decide(self, text, **values):
-        judgment = {}
-        script.attach_relations(judgment, self.rec, text)
-        with mock.patch.dict(script.SLOT_RULES, self.ROW):
-            return script.decide_slots(cells(**values), judgment, self.rec)["v2"]
+    def decide(self, text, rec=None, row=None, item="v2", **values):
+        rec, judgment = rec or self.rec, {}
+        script.attach_relations(judgment, rec, text)
+        with mock.patch.dict(script.SLOT_RULES, row or self.ROW):
+            return script.decide_slots(cells(**values), judgment, rec)[item]
 
     def test_an_entry_performance_label_raises_with_its_own_clause_as_evidence(self):
         text = labels({"id": self.clause_id, "kind": "performance_record", "stage": "entry"})
@@ -104,8 +105,9 @@ class RelationTests(unittest.TestCase):
     def test_absence_needs_the_whole_input_not_only_the_clause_budget(self):
         judgment = {}
         script.attach_relations(judgment, self.rec, labels())
-        self.assertFalse(script.relation_slots(judgment, self.rec)["relations_complete"])   # no completeness record
-        seen = dict(self.rec, input_completeness={"완전관측": True}, dropped_doc_counts={})
+        bare = {k: v for k, v in self.rec.items() if k not in ("input_completeness", "dropped_doc_counts")}
+        self.assertFalse(script.relation_slots(judgment, bare)["relations_complete"])   # no completeness record
+        seen = self.rec
         self.assertTrue(script.relation_slots(judgment, seen)["relations_complete"])
         dropped = dict(seen, dropped_doc_counts={"제안요청서": 1})
         self.assertFalse(script.relation_slots(judgment, dropped)["relations_complete"])
@@ -122,6 +124,33 @@ class RelationTests(unittest.TestCase):
         self.assertIn("\n", pledge["full"])
         self.assertEqual(script.clean_evidence(pledge["full"], rec["docs"][0]["text"]), pledge["full"])
         self.assertEqual(len([c for c in clauses if c["text"].startswith(("2)", "※", "3)"))]), 3)
+
+    def test_an_unobserved_notice_neither_lowers_a_positive_nor_raises_an_absence(self):
+        evaluation = labels({"id": self.clause_id, "kind": "performance_record", "stage": "evaluation"})
+        partial = dict(self.rec, input_completeness={"완전관측": False})
+        self.assertEqual(self.decide(evaluation, rec=partial, v2=1)["위반여부"], 1)
+        absence = {"v10": (("relations_complete",), ("!entry_direct_production",), (), None)}
+        self.assertEqual(self.decide(labels(), row=absence, item="v10")["위반여부"], 1)
+        self.assertEqual(self.decide(labels(), rec=partial, row=absence, item="v10")["위반여부"], 0)
+        self.assertEqual(self.decide(labels(), rec=partial, row=absence, item="v10", v10=1)["위반여부"], 1)
+
+    def test_a_cut_clause_or_a_full_record_list_is_not_complete(self):
+        long = "가. 입찰참가자격 " + "가" * 400 + " 직접생산확인증명서를 제출해야 함"
+        clauses, complete = script.clause_candidates(notice(50_000_000, "3. 입찰참가자격\n" + long))
+        self.assertFalse(complete)
+        self.assertNotIn("직접생산", clauses[0]["text"])
+        judgment = {}
+        full = [{"id": self.clause_id, "kind": "performance_record", "stage": "entry"}] * script.RELATION_MAX
+        script.attach_relations(judgment, self.rec, labels(*full))
+        self.assertFalse(script.relation_slots(judgment, self.rec)["relations_complete"])
+
+    def test_a_list_heading_reaches_the_clauses_under_it(self):
+        text = ("4. 입찰자격 조건\n가. 자격 조건\n1) 제조사로부터 물품공급 확약서를 제출할 수 있는 업체\n"
+                "나. 계약 시 제출서류\n1) 물품 제조사와 체결한 물품공급 확약서 원본 1부")
+        messages, clauses, _ = script.relation_messages(notice(50_000_000, text))
+        self.assertEqual([c["section"] for c in clauses if "확약서" in c["text"]],
+                         ["4. 입찰자격 조건 › 가. 자격 조건", "4. 입찰자격 조건 › 나. 계약 시 제출서류"])
+        self.assertIn("나. 계약 시 제출서류", messages[1]["content"])
 
     def test_labels_must_use_the_schema_values_and_known_clause_ids(self):
         with self.assertRaises(ValueError):

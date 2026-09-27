@@ -3404,7 +3404,11 @@ CLAUSE_START = re.compile(r"^\s*(?:[※\-•·○◦□■◆◇▣▶❍*]|[①
                           r"|[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]+|제\s*\d+\s*(?:조|장|절))")
 SENTENCE_END = re.compile(r"(?:[.。:：]|다|함|음|임|요|것)\s*$")
 CLAUSE_JOIN_MAX = 400     # characters of one joined clause; longer text starts a new one
-CLAUSE_TEXT_MAX = 320     # characters of one clause shown to the model
+CLAUSE_TEXT_MAX = 400     # characters of one clause shown to the model; a longer one is cut and not observed
+# A short "가." line inside a section is a list heading; it often carries the stage ("나. 계약 시 제출서류",
+# PPS-D-002037) that the items under it do not repeat, so it is shown with them.
+SUBSECTION_LINE = re.compile(r"^\s*[가-하]\s*[.)]\s*\S")
+SUBSECTION_MAX = 40
 CLAUSE_BUDGET = 7000      # characters of all clauses; about 3,500 prompt tokens
 CLAUSE_COUNT_MAX = 80
 
@@ -3440,26 +3444,31 @@ def clause_candidates(rec: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], bool]:
     found = []
     for doc_index, doc in enumerate(rec.get("docs") or ()):
         source = doc.get("text") or ""
-        section = ""
+        section, subsection = "", ""
         for clause_index, (begin, end, heading) in enumerate(_clause_spans(source)):
             full = source[begin:end].strip()
-            if heading:
-                section = full
             text = re.sub(r"\s*\n\s*", " ", full)
+            if heading:
+                section, subsection = full, ""
+            elif SUBSECTION_LINE.match(text) and len(text) <= SUBSECTION_MAX:
+                subsection = text
             in_qualification = bool(QUALIFICATION_HEADING.search(section))
             strong = bool(CLAUSE_STRONG.search(text))
             if not (in_qualification or strong or CLAUSE_WEAK.search(text)):
                 continue
             notice = doc.get("type") == "공고문"
             rank = 0 if in_qualification else (1 if notice else 2) if strong else (3 if notice else 4)
+            place = section[:60] + (f" › {subsection}" if subsection and subsection != text else "")
             found.append((rank, doc_index, clause_index, {
-                "doc": doc.get("type") or "기타", "section": section[:60],
-                "text": text[:CLAUSE_TEXT_MAX], "full": full}))
+                "doc": doc.get("type") or "기타", "section": place,
+                "text": text[:CLAUSE_TEXT_MAX], "full": full, "cut": len(text) > CLAUSE_TEXT_MAX}))
     kept, used, complete = [], 0, True
     for rank, doc_index, clause_index, clause in sorted(found, key=lambda c: c[:3]):
+        cut = clause.pop("cut")
         if len(kept) >= CLAUSE_COUNT_MAX or used + len(clause["text"]) > CLAUSE_BUDGET:
             complete = complete and rank > 2
             continue
+        complete = complete and not (cut and rank <= 2)   # the model never sees a cut tail
         kept.append((doc_index, clause_index, clause))
         used += len(clause["text"])
     kept.sort(key=lambda c: c[:2])
@@ -3479,6 +3488,8 @@ RELATION_MAX = 30                  # labelled clauses per notice; keeps the outp
 SERVER_LIMIT_S = 7200              # the server stops the whole run here
 RELATION_RESERVE_S = 300           # after the relation phase: postprocess (~4 ms a notice), CSV, report
 RELATION_SAFETY = 1.5              # a batch is admitted only if 1.5x its projected time still fits
+RELATION_PROBE = 8                 # the first batch: small, so the relation rate is measured, not borrowed
+RELATION_PROBE_S = 600             # the probe runs only with this much time left (one 2,048-token decode)
 PROCESS_START = time.time()
 RELATION_KINDS = ["performance_record", "bidder_location", "institution_type", "company_size",
                   "direct_production", "license_registration", "staff_or_facility", "supply_pledge",
@@ -3593,7 +3604,8 @@ def attach_relations(parsed: Dict[str, Any], rec: Dict[str, Any], text: Optional
             required = required_performance(clause) if r["amount"] == "won_amount" else None
             # Code compares a won amount with the price; the model never sees the price.
             relations.append(dict(r, clause=clause, ratio=required / basis if required and basis else None))
-    parsed[RELATION_KEY] = {"complete": complete, "relations": relations}
+    # At the record cap the model may have stopped before labelling every clause it saw.
+    parsed[RELATION_KEY] = {"complete": complete and len(records) < RELATION_MAX, "relations": relations}
 
 
 # ===== Slot table: every item it names is decided from the same relations, in one place =====
@@ -3653,7 +3665,6 @@ RELATION_SLOTS = {
     "entry_location": _entry("bidder_location"),
     "entry_location_basic": _entry("bidder_location", region="basic"),
     "entry_location_adjacent": _entry("bidder_location", region="adjacent"),
-    "entry_location_multi": _entry("bidder_location", region=("adjacent", "multi_province")),
     "entry_institution": _entry("institution_type"),
     "entry_small": _entry("company_size", size="small_or_micro"),
     "entry_sme": _entry("company_size", size=("sme", "sme_or_middle")),
@@ -3714,10 +3725,18 @@ def slot_row_cell(item: str, row, cell: Dict[str, Any], slots: Dict[str, bool], 
         return all(not slots[n[1:]] if n.startswith("!") else slots[n] for n in names)
 
     derived = holds(applies) and holds(requirement) and not any(slots[n] for n in exceptions)
-    if labelled and _uses_relations(row) and not derived:
-        # A relation row owns its item: a positive from the item's own path survives only if the shared
-        # labels derive it too, so a later fix to that path cannot move the cell behind the table's back.
-        return {"위반여부": 0, "근거문구": ""}
+    if _uses_relations(row):
+        # A missing label means "absent" only on a notice seen whole (`relations_complete`); otherwise it is
+        # unknown. Unknown never decides: it neither raises an absence nor clears a positive.
+        observed = slots["relations_complete"]
+        reads_absence = (any(n.startswith("!") and n[1:] in RELATION_SLOTS for n in (*applies, *requirement))
+                         or any(n in RELATION_SLOTS for n in exceptions))
+        if not observed and (reads_absence or not derived):
+            return cell
+        if not derived:
+            # A relation row owns its item: a positive from the item's own path survives only if the shared
+            # labels derive it too, so a later fix to that path cannot move the cell behind the table's back.
+            return {"위반여부": 0, "근거문구": ""}
     if keep_if is not None and not holds(keep_if):
         cell = {"위반여부": 0, "근거문구": ""}
     if cell["위반여부"] == 1 or not derived:
@@ -4271,18 +4290,22 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
              system_prompt_sha256=hashlib.sha256(RELATION_PROMPT.encode("utf-8")).hexdigest(),
              schema_sha256=hashlib.sha256(json.dumps(relation_schema(), sort_keys=True).encode()).hexdigest())
     t_relation = time.time()
-    # Seconds per notice: the company-size call (longer prompt) until a relation batch has been timed,
-    # then the slowest relation batch so far.
-    per_notice = band_seconds / len(band_selected) if band_selected else baseline_seconds / len(recs)
-    for s in range(0, len(relation_selected), chunk):
-        batch_size = len(relation_selected[s:s + chunk])
-        if (time.time() - PROCESS_START + RELATION_SAFETY * per_notice * batch_size
-                > SERVER_LIMIT_S - RELATION_RESERVE_S):
+    # A small probe batch first, so seconds per notice is this call's own rate (the slowest batch so far).
+    # Every later batch is sized so 1.5x its projected time still leaves the reserve before the server limit.
+    per_notice, s = None, 0
+    while s < len(relation_selected):
+        left = SERVER_LIMIT_S - RELATION_RESERVE_S - (time.time() - PROCESS_START)
+        if per_notice is None:
+            size = RELATION_PROBE if left >= RELATION_PROBE_S else 0
+        else:
+            size = min(chunk, int(left / (RELATION_SAFETY * per_notice)))
+        if size < 1:
             relation_stopped = len(relation_selected) - s
             emit("phase_stopped", phase="relation", reason="deadline", processed=s, remaining=relation_stopped)
             log(f"  relation: deadline, {relation_stopped} notices keep the relation-free path")
             break
-        indices = relation_selected[s:s + chunk]
+        indices = relation_selected[s:s + size]
+        s += len(indices)
         batch = []
         for i in indices:
             messages, clauses, complete = relation_messages(recs[i])
@@ -4297,7 +4320,7 @@ def _run(input_path, out_path, runner_cls, limit, chunk, max_chars, data_dir,
                               phase="relation", baseline_texts=[texts[i] for i in indices], indices=indices)
         for i, response in zip(indices, responses):
             relation_texts[i] = response
-        per_notice = max(per_notice, (time.time() - t_batch) / len(indices))
+        per_notice = max(per_notice or 0.0, (time.time() - t_batch) / len(indices))
     relation_seconds = time.time() - t_relation
     inf_seconds += relation_seconds
 

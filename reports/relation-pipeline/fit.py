@@ -49,17 +49,16 @@ CANDIDATES = {
     "v1": rows([()], [("entry_institution",)]),
     "v2": rows([("under_notice",)], [("entry_performance",)]),
     "v3": rows([()], [("entry_performance_budget",)]),
-    "v4": rows([("over_notice",), ()], [("entry_performance_institution",)]),
+    "v4": rows([("over_notice",)], [("entry_performance_institution",)]),
     "v5": rows([("!region_allowed",)], [("entry_location",)]),
     "v6": rows([("region_allowed",)], [("entry_location_basic",)]),
-    # Adjacency is the item's wording; two listed provinces is what the existing v7 rule
-    # (`detect_region_expansion`, dev 7/0/0) already counts, so both readings are offered.
-    "v7": rows([("region_allowed",)], [("entry_location_adjacent",), ("entry_location_multi",)]),
+    # The item is 인접 확대: only the adjacency label, not any listed provinces.
+    "v7": rows([("region_allowed",)], [("entry_location_adjacent",)]),
     "v8": rows([(), ("region_allowed",)], [("entry_performance", "entry_location")]),
     "v10": rows([("scope_competitive", "relations_complete")], [("!entry_direct_production",)]),
     "v11": rows([("scope_competitive", "relations_complete")], [("!entry_size",)], SIZE_EXCEPTIONS),
     "v12": rows(GENERAL, [("entry_direct_production",)]),
-    "v13": rows([("scope_competitive",), ()], [("entry_small",)]),
+    "v13": rows([("scope_competitive",)], [("entry_small",)]),
     "v14": rows(banded("over_notice", GENERAL), [("entry_size",)]),
     "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)]),
     "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size", "relations_complete")], SIZE_EXCEPTIONS),
