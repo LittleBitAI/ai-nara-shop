@@ -66,20 +66,32 @@ D 의 아카이브는 한 회차가 아니라 **두 샤드**다. 노트북(`note
 같아야 돌므로 샤드마다 따로 재생한다. 합칠 필요는 없다 — `score_offdev.py --pred` 가 CSV
 여러 개를 받아 합치고, 중복 ID 와 예측이 빠진 라벨 공고를 거부한다.
 
+D 의 ZIP(`offdev-600-results-<시각>.zip`)은 `register_run.py` 로 등록하지 않는다 — 그 도구는
+`colab-results-<숫자>.zip` 과 `submit.zip`(또는 기록된 제출 해시)만 받는다. #163 처럼 풀어서 쓴다.
+노트북은 샤드를 Drive 의 `<샤드>/output` 에 복사하고 ZIP 에는 `drive/<샤드>/output/...` 로 넣는다.
+
 ```bash
+# <D>: D 의 ZIP 을 푼 폴더. 샤드 회차 폴더는 <D>/drive/u00/output, <D>/drive/u01/output 이다
+mkdir -p artifacts/offdev-600-<시각> && unzip -q <D 의 ZIP> -d artifacts/offdev-600-<시각>
+sha256sum <D 의 ZIP>                                    # 기록에 남긴다
+grep -h '"commit"' artifacts/offdev-600-<시각>/drive/u0*/DONE.json   # 두 샤드 다 deb6831… 이어야 한다
+D=artifacts/offdev-600-<시각>
+
 git show 9356dc6:script.py > <tmp>/base-9356dc6.py
 for s in u00 u01; do
   # 그 샤드가 실제로 돈 공고를 그 샤드 CSV 의 순서대로 뽑아 입력을 만든다
   py -X utf8 -c "import csv,json,sys; ids=[r['id'] for r in csv.DictReader(open(sys.argv[1],encoding='utf-8'))]; want=set(ids); rows={}; [rows.__setitem__(json.loads(l)['id'], l) for l in open('open/train_unlabeled.jsonl',encoding='utf-8') if json.loads(l)['id'] in want]; open(sys.argv[2],'w',encoding='utf-8',newline='\n').write(''.join(rows[i] for i in ids))" \
-    <아카이브>/$s/submission.csv <tmp>/$s.jsonl
-  py -X utf8 tools/replay_run.py --case <아카이브>/$s --input <tmp>/$s.jsonl \
+    $D/drive/$s/output/submission.csv <tmp>/$s.jsonl
+  py -X utf8 tools/replay_run.py --case $D/drive/$s/output --input <tmp>/$s.jsonl \
     --script <tmp>/base-9356dc6.py --output-dir <tmp>/offdev-base-$s
 done
 ```
 
-`<아카이브>/$s` 는 그 샤드의 `run_report.json`·`diagnostics.jsonl`·`submission.csv` 가 있는
-폴더다. 이 절차는 저장된 무라벨 샤드(`reports/label-compare/unlabeled-d/run-1790141381430477242/u00`)
-로 시험했다 — 입력 500건, 재생 500건, 건수 검사 통과.
+`$D/drive/$s/output` 이 그 샤드의 `run_report.json`·`diagnostics.jsonl`·`submission.csv` 가 있는
+회차 폴더다. 루프는 저장된 무라벨 샤드(`reports/label-compare/unlabeled-d/run-1790141381430477242/u00/output`,
+같은 `<샤드>/output` 모양)로 시험했다 — 입력 500건, 재생 500건, 건수 검사 통과. 샤드 CSV 의 ID 로
+입력을 뽑으므로 노트북의 실패 집합(`failed.json`)이 빠진 샤드도 그대로 돈다. 빠진 공고는
+`score_offdev.py` 가 예측 없음으로 거부해 드러난다.
 
 **아직 안 돌렸다.** D 의 복원 아카이브가 이 워크트리에 없다. D 의 보고서
 (`reports/offdev-600-threshold-20260927.md`)가 적은 현재 코드 Macro 0.499681 → 0.508940 은
@@ -100,7 +112,7 @@ done
 | **2** | **split-half**: 한쪽 절반에서 쓰고 다른 쪽에서 채점, 서로 바꿔도 양쪽에서 이긴다 | 같은 도구 |
 | **3** | 신뢰 항목이 순 `(TP − FP)` **1셀 넘게 안 잃는다** | 항목별 표 |
 | **4** | dev 가 Macro **0.01 넘게 안 내린다** | **후보로 돌린 dev 회차** — 재생 아님(§2-1) |
-| **5** | 서버 총시간 **≤ 6,800초** | 회차의 `추론_s` × 1853 ÷ 600 환산 |
+| **5** | 서버 총시간 **≤ 6,800초** | 두 샤드 `run_report.json` 의 `추론_s` **합** × 1853 ÷ 600 환산 |
 
 **이 후보만 따로 본다.** 예시는 v18 을 겨냥했지만 24항목 호출을 바꾸므로 **다른 항목이
 움직일 수 있다** — 기준 3 이 그것을 잡는다.
@@ -189,10 +201,15 @@ Colab 회차가 필요하다".
 ## 4. 감사 — 받은 뒤에 할 일
 
 ```bash
-py -X utf8 tools/register_run.py --inbox artifacts/inbox --code-commit <RUN_COMMIT>
+# 0 — 후보 ZIP 도 같은 노트북의 offdev-600-results-<시각>.zip 이다. register_run.py 는 안 받는다(§1)
+mkdir -p artifacts/c-fewshot-<시각> && unzip -q <후보 ZIP> -d artifacts/c-fewshot-<시각>
+sha256sum <후보 ZIP>
+grep -h '"commit"' artifacts/c-fewshot-<시각>/drive/u0*/DONE.json   # 두 샤드 다 1f7a65c… 이어야 한다
+C=artifacts/c-fewshot-<시각>
 
-# 1·3 — off-dev 라벨로 채점. 후보도 같은 노트북이라 u00·u01 두 샤드다. 두 CSV 를 함께 넘긴다
-py -X utf8 reports/offdev-0927/score_offdev.py --pred <run>/u00/submission.csv <run>/u01/submission.csv \
+# 1·3 — off-dev 라벨로 채점. 후보도 u00·u01 두 샤드다. 두 CSV 를 함께 넘긴다
+py -X utf8 reports/offdev-0927/score_offdev.py \
+  --pred $C/drive/u00/output/submission.csv $C/drive/u01/output/submission.csv \
   --labels reports/labels-600/merged/diag.csv reports/labels-600/merged/sealed.csv
 py -X utf8 reports/offdev-0927/score_offdev.py \
   --pred <tmp>/offdev-base-u00/submission.csv <tmp>/offdev-base-u01/submission.csv \
