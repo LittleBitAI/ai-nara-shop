@@ -20,6 +20,11 @@
 
     py -X utf8 reports/team-c/c-fewshot/trace.py
     py -X utf8 reports/team-c/c-fewshot/trace.py --items v10 v18
+    py -X utf8 reports/team-c/c-fewshot/trace.py --flip   # FN 마다 baseline 을 1 로 바꿔 끝까지 돌린다
+
+`--flip` 은 `TARGET.md` §2 의 반사실 시험이다. 누락 셀마다 **그 항목의 baseline 답만 1 로**
+바꾸고 나머지 단계를 그대로 돌려, 새 프롬프트가 1 을 끌어내면 최종까지 사는지를 본다.
+문서 절단 표지만 보고 "못 닿는다" 고 가르지 않는다.
 """
 
 from __future__ import annotations
@@ -74,8 +79,11 @@ def verdict(cells, item):
     return None if cell is None else cell.get("위반여부")
 
 
-def trace_shard(script, shard, wanted, items, settings):
-    """`tools/replay_run.py::replay()` 의 차례를 그대로 밟으며 지점마다 값을 적는다."""
+def trace_shard(script, shard, wanted, items, settings, flip=None):
+    """`tools/replay_run.py::replay()` 의 차례를 그대로 밟으며 지점마다 값을 적는다.
+
+    `flip` 이 항목이면 baseline 원응답의 그 셀만 1 로 바꿔 놓고 돈다(반사실).
+    """
     texts, chars, probabilities = shard_texts(shard)
     ids = set(json.loads((shard / "ids.json").read_text(encoding="utf-8")))
     _, products = script.load_sme_reference(str(DATA))
@@ -91,6 +99,8 @@ def trace_shard(script, shard, wanted, items, settings):
             if text is None:
                 continue
             parsed, _ = script.parse_judgment(text)
+            if flip is not None:
+                parsed[flip] = {**parsed[flip], "위반여부": 1}
             steps = {"raw": {i: verdict(parsed, i) for i in items}}
             # 재생기가 `parse_judgment` 바로 뒤에 임계를 적용한다. 빠뜨리면 모델이 1 이라
             # 했는데 임계가 내린 셀을 "모델이 0" 으로 잘못 읽는다.
@@ -139,18 +149,22 @@ def trace_shard(script, shard, wanted, items, settings):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--ref", default="origin/main")
+    # 보고서 수가 `a0d6aea` 에서 났다. 움직이는 `origin/main` 을 기본으로 두면 main 이 바뀔 때
+    # 같은 명령이 다른 수를 낸다.
+    parser.add_argument("--ref", default="a0d6aea")
+    parser.add_argument("--flip", action="store_true", help="누락마다 baseline 을 1 로 바꿔 끝까지 돌린다")
     parser.add_argument("--items", nargs="+", default=["v10", "v11", "v13", "v18"])
     args = parser.parse_args(argv)
 
     script = pinned(args.ref)
     diag = {row["id"]: row for row in csv.DictReader(DIAG.open(encoding="utf-8", newline=""))}
-    traces = {}
+    traces, shards = {}, []
     for shard in sorted(SHARDS.glob("run-*/u*")):
         if not (shard / "output/diagnostics.jsonl").is_file():
             continue
         report = json.loads((shard / "output/run_report.json").read_text(encoding="utf-8"))
         settings = report.get("reproduction", {}).get("settings", {})
+        shards.append((shard, settings))
         traces.update(trace_shard(script, shard, set(diag), args.items, settings))
     print(f"진단 200 중 추적한 공고 {len(traces)}건 · 기준 {args.ref}\n")
 
@@ -184,6 +198,25 @@ def main(argv=None):
             for key, shape, where in risen:
                 print(f"     {key}  {shape}   내린 단계: {where}")
         print()
+
+    if args.flip:
+        recs = {}
+        with UNLABELED.open(encoding="utf-8") as stream:
+            for line in stream:
+                rec = json.loads(line)
+                if rec["id"] in traces:
+                    recs[rec["id"]] = rec
+        print("=== 반사실 — 누락마다 baseline 만 1 로 바꾸면 최종까지 사는가 ===")
+        print(f"  {'항목':6}{'FN':>4}{'산다':>6}{'0 으로 남음':>12}  남는 공고(수의계약 여부)")
+        for item in args.items:
+            missed = {k for k, s in traces.items() if diag[k][item] == "1" and s["final"][item] != 1}
+            flipped = {}
+            for shard, settings in shards:
+                flipped.update(trace_shard(script, shard, missed, [item], settings, flip=item))
+            stuck = sorted(k for k in missed if flipped[k]["final"][item] != 1)
+            notes = " ".join(f"{k}({'수의' if not script.needs_extra_call(recs[k]) else '경쟁'})"
+                             for k in stuck)
+            print(f"  {item:6}{len(missed):>4}{len(missed) - len(stuck):>6}{len(stuck):>12}  {notes}")
     return 0
 
 

@@ -3,7 +3,7 @@
 `TARGET.md` 의 §1~§4 를 낸다. 넷을 답한다.
 
   1. `main` 을 진단 200 에 재생한 C 항목 성적 — 9/27 배정의 "replay the diagnostic 200"
-  2. FN 중 절단·누락이 몇인가 — 그 자리는 예시가 못 닿는다
+  2. FN 중 절단·누락이 몇인가 — 건수만이다. 예시가 닿는지는 `trace.py --flip` 이 잰다
   3. FN 을 어디서 잃나 — 모델이 0 인가, 게이트가 정탐을 내렸는가
   4. 고른 예시 쌍이 지금 맞는 판정인가 — 틀리는 공고를 예시로 쓰면 안 된다
 
@@ -104,7 +104,8 @@ def raw_baseline(ids):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--ref", default="origin/main")
+    # 보고서 수가 `a0d6aea` 에서 났다. 움직이는 `origin/main` 을 기본으로 두지 않는다.
+    parser.add_argument("--ref", default="a0d6aea")
     parser.add_argument("--keep", help="재생 결과를 남길 경로")
     args = parser.parse_args(argv)
 
@@ -155,7 +156,7 @@ def main(argv=None):
             if rec["id"] in wanted:
                 recs[rec["id"]] = rec
 
-    print("\n=== 2. FN 중 절단·누락 — 그 자리는 예시가 못 닿는다 ===")
+    print("\n=== 2. FN 중 절단·누락 — 건수만. 닿는지는 trace.py --flip ===")
     print(f"  {'항목':6}{'FN':>4}{'절단·누락':>10}{'그 밖':>8}")
     for item in ITEMS:
         false_neg = errors[item][1]

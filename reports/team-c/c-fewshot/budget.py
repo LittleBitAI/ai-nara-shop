@@ -6,8 +6,8 @@
 내는 것 다섯.
 
   1. 지금의 초/건과 단계별 프롬프트·출력 토큰
-  2. 예시 N 토큰의 서버 시간 대가 (프롬프트만 본 **상한**)
-  3. 단계별 토큰 여유 — 예시가 공고 본문을 미는 자리가 어디부터인가
+  2. 예시 N 토큰의 서버 시간 대가 (계획용 **추정** — 상한이 아니다, 회차가 잰다)
+  3. 단계별 토큰 여유 — 예시가 공고 본문을 미는 자리가 어디부터인가 (#166 뒤 남는 호출만)
   4. 절단률 — 토큰 예산이 아니라 `max_chars` 상한이 만드는 별개의 벽
   5. dev 와 진단 200 의 C 항목 양성 수
 
@@ -40,7 +40,7 @@ SERVER_MEASURED = 6428
 C_ITEMS = ("v10", "v11", "v13", "v18")
 
 
-def load_pinned(ref="origin/main"):
+def load_pinned(ref):
     """기준 `script.py` 를 임시 폴더에 풀어 집는다. 작업 트리 판을 쓰지 않는다."""
     source = subprocess.run(["git", "-C", str(ROOT), "show", f"{ref}:script.py"],
                             capture_output=True, check=True).stdout
@@ -53,12 +53,13 @@ def load_pinned(ref="origin/main"):
 
 
 def responses(run):
-    by_phase = collections.defaultdict(list)
+    by_phase, ids = collections.defaultdict(list), collections.defaultdict(list)
     for line in (run / "diagnostics.jsonl").read_text(encoding="utf-8").splitlines():
         event = json.loads(line)
         if event.get("event") == "response":
             by_phase[event.get("phase")].append((event["prompt_tokens"], event["output_tokens"]))
-    return by_phase
+            ids[event.get("phase")].append(event.get("id"))
+    return by_phase, ids
 
 
 def records(path, keep=None):
@@ -72,14 +73,16 @@ def records(path, keep=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--run", default=str(RUN))
-    parser.add_argument("--ref", default="origin/main", help="기준 script.py 의 ref")
+    # 보고서 수(#166 뒤 호출 165·88)가 `a0d6aea` 에서 났다. 움직이는 `origin/main` 을 기본으로
+    # 두면 main 이 바뀔 때 같은 명령이 다른 수를 낸다. 회차 자체의 코드는 `772ca12` 다.
+    parser.add_argument("--ref", default="a0d6aea", help="기준 script.py 의 ref")
     parser.add_argument("--skip-truncation", action="store_true",
                         help="절단률·양성 수를 뺀다 (무라벨 20,000건 훑기가 빠진다)")
     args = parser.parse_args(argv)
 
     run = Path(args.run)
     report = json.loads((run / "run_report.json").read_text(encoding="utf-8"))
-    by_phase = responses(run)
+    by_phase, phase_ids = responses(run)
     seconds = report["추론_s"]
     count = report["건수"]
     calls = sum(len(v) for v in by_phase.values())
@@ -115,7 +118,7 @@ def main(argv=None):
         live["sme"] = sum(1 for i in sme_ids if i not in quotes)
 
     per_1k = seconds / prompt_total * 1000
-    print("\n=== 2. 예시 N 토큰의 서버 시간 대가 (프롬프트만 본 상한) ===")
+    print("\n=== 2. 예시 N 토큰의 서버 시간 대가 (계획용 추정 — 상한 아님) ===")
     print(f"  프롬프트 1,000토큰당 {per_1k:.4f}s")
     print(f"  여유 {SERVER_CEILING - SERVER_MEASURED}초"
           f" (목표 상한 {SERVER_CEILING:,} − 61c495c 실측 {SERVER_MEASURED:,})")
@@ -131,12 +134,13 @@ def main(argv=None):
     print("  → 호출 수는 #166 뒤 값이고 1,000토큰당 시간은 그 이전 회차의 실측이다."
           " 둘을 섞은 추정이므로 회차가 실측한다")
     budget = script.PROMPT_BUDGET
-    print(f"\n=== 3. 토큰 여유 (예산 {budget:,} − 그 호출) ===")
-    print(f"  {'단계':14}{'여유 중앙':>10}" + "".join(f"{f'≥{s}':>8}" for s in sizes))
+    print(f"\n=== 3. 토큰 여유 (예산 {budget:,} − 그 호출, #166 뒤 남는 호출만) ===")
+    print(f"  {'단계':14}{'호출':>6}{'여유 중앙':>10}" + "".join(f"{f'≥{s}':>8}" for s in sizes))
     for phase, values in by_phase.items():
-        head = [budget - p for p, _ in values]
+        head = [budget - p for (p, _), i in zip(values, phase_ids[phase])
+                if phase not in skipped or i not in quotes]
         share = "".join(f"{sum(h >= s for h in head) / len(head):>7.0%} " for s in sizes)
-        print(f"  {phase:14}{statistics.median(head):>10.0f}  {share}")
+        print(f"  {phase:14}{len(head):>6}{statistics.median(head):>10.0f}  {share}")
     print("  → 여유보다 큰 예시를 넣으면 fit_messages 가 max_chars 를 줄여 본문이 잘린다")
 
     if args.skip_truncation:
@@ -160,7 +164,7 @@ def main(argv=None):
         print(f"  {label:10} {total}건 중 절단 {cut}건({cut / total:.1%})"
               f" · 문서 누락 {missing}건 · 16,000자 초과 {over}건")
     print("  → 절단은 토큰 예산이 아니라 max_chars 16,000 탓이다."
-          " 절단은 부재탐지의 complete 게이트를 닫는다")
+          " 절단은 부재탐지 규칙의 complete 게이트만 닫는다 — 모델의 1 은 안 막는다(trace.py --flip)")
 
     print("\n=== 5. C 항목 양성 수 — off-dev 기판이 두껍다 ===")
     truth = {r["id"]: r for r in csv.DictReader((ROOT / "open/dev_labels.csv").open(
