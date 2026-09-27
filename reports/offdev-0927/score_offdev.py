@@ -57,8 +57,13 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--pred", nargs="+", required=True)
     parser.add_argument("--labels", nargs="+", required=True)
+    parser.add_argument("--exclude", help="file of notice IDs to leave out, e.g. reports/labels-3000/private-ids.txt "
+                                          "(the labeler marks 수의계약 positives that dev gold does not; 2026-09-27)")
     args = parser.parse_args(argv)
     pred, labels = load(args.pred), load(args.labels)
+    if args.exclude:
+        drop = set(open(args.exclude, encoding="utf-8").read().split())
+        labels = {i: r for i, r in labels.items() if i not in drop}
     print(json.dumps({"scored": len(labels), "all": score(pred, labels),
                       "A": score(pred, labels, lambda i: half(i) == "A")["macro"],
                       "B": score(pred, labels, lambda i: half(i) == "B")["macro"]}, ensure_ascii=False))
