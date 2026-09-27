@@ -1,0 +1,12 @@
+{
+ "what": "off-dev 600 = 진단 200 + 봉인 400. 순서는 diag.csv 그다음 sealed.csv 의 행 순서다.",
+ "count": 600,
+ "diag": 200,
+ "sealed": 400,
+ "sources": {
+  "diag": "reports/labels-600/merged/diag.csv",
+  "sealed": "reports/labels-600/merged/sealed.csv"
+ },
+ "ids_sha256": "3edc1f4087a75a5ec2bf7e43b5ea20094be3759eb10660fcdb9ab6cb70434894",
+ "all_present_in_train_unlabeled": true
+}
