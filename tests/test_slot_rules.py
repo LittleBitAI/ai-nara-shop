@@ -258,6 +258,15 @@ class RelationTests(unittest.TestCase):
         self.assertTrue(script.relation_slots({}, rec)["negotiation"])
         self.assertEqual(script.negotiated(rec), script.relation_slots({}, rec)["negotiation"])
 
+    def test_the_relation_call_runs_after_every_scored_model_phase(self):
+        # Its deadline sits past QUALIFICATION_DEADLINE_S: run earlier, it would starve the qualification call.
+        import inspect
+        source = inspect.getsource(script._run)
+        relation = source.index('emit("phase_started", phase="relation"')
+        for phase in ("company_size", "product", "qualification"):
+            self.assertLess(source.index(f'emit("phase_started", phase="{phase}"'), relation, phase)
+        self.assertGreater(script.SERVER_LIMIT_S - script.RELATION_RESERVE_S, script.QUALIFICATION_DEADLINE_S)
+
     def test_no_relation_call_starts_after_the_deadline(self):
         runner = mock.Mock()
         runner.chat.return_value = ["not json"]

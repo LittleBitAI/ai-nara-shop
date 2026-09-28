@@ -105,9 +105,14 @@ class RequestMatchesTheCandidate(unittest.TestCase):
         """리뷰 [P2] — 후보가 아무것도 안 해도 통과하던 자리.
 
         기준이 전부 절대값이면 무효과 후보가 B·C·D 를 통과한다(기준 v11 이 2/3/4 라
-        FP 3 ≤ 6). **움직였는가를 먼저 묻는 기준 Z** 가 있어야 한다.
+        FP 3 ≤ 6). 움직였는가를 먼저 묻는 기준 Z 가 있어야 한다.
+
+        강조는 `plain` 이 걷고 본다 — 이 저장소에는 강조 표기를 걷어내는 정리 작업이
+        있고(PR #144 가 이 문서에 실제로 왔다), `**` 를 문자로 요구하면 그 정리만으로
+        검사가 "기준 Z 가 없다" 며 헛되이 죽는다. 줄머리는 그대로 고정한다 — 표의
+        행이어야지 문장 안에 섞인 `| Z |` 여서는 안 된다.
         """
-        self.assertIn("| Z |", plain(self.request), "기준 Z 가 없다")
+        self.assertRegex(plain(self.request), r"(?m)^\| Z \|", "기준 Z 가 없다")
         self.assertIn("FN 감소 ≥ 1", plain(self.request))
         self.assertIn("가설 기각", self.request,
                       "Z 실패 시 기각한다는 말이 없다")
@@ -115,26 +120,32 @@ class RequestMatchesTheCandidate(unittest.TestCase):
     def test_the_off_target_rule_is_exactly_zero_not_the_churn_range(self):
         """리뷰 [P2] — 대상 밖 승인 규칙이 틀렸던 자리.
 
-        같은 원응답 위 `기준↔후보` 는 코드만 다르므로 **결정적**이고 대상 밖은 0 이어야
-        한다. churn 범위(17~45셀)는 **회차1↔회차2** 에만 쓴다. 한 칸에 섞으면 대상 밖
+        같은 원응답 위 `기준↔후보` 는 코드만 다르므로 결정적이고 대상 밖은 0 이어야
+        한다. churn 범위(17~45셀)는 회차1↔회차2 에만 쓴다. 한 칸에 섞으면 대상 밖
         45셀까지 승인된다.
+
+        키의 강조는 `plain` 이 걷고 본다 — 강조 표기를 걷어내는 정리(PR #144)가 이
+        문서에 왔고, 그것만으로 이 검사가 죽으면 안 된다. 보는 것은 강조가 아니라 규칙이다.
         """
-        self.assertIn("| D1 |", plain(self.request))
-        self.assertIn("| D2 |", plain(self.request))
-        # D1 은 여러 표에 나온다 — 기준 정의 · 감사 지시 · 결과값.
-        # **규칙을 적는 줄**만 "정확히 0" 을 요구한다. 결과값 줄(`| **D1** | 0 | 0 | 0 |`)은
-        # 수를 적는 자리이므로 문구를 요구하지 않는다.
-        # **어느 줄에도** churn 범위가 섞여서는 안 된다 — 그것이 이 [P2] 의 핵심이다.
-        d1 = [line for line in plain(self.request).splitlines() if line.startswith("| D1 |")]
+        def rows(key):
+            """`| D1 |` 로 시작하는 줄만 고른다 — 강조는 `plain` 이 이미 걷었다."""
+            head = f"| {key} |"
+            return [line for line in plain(self.request).splitlines()
+                    if line.startswith(head)]
+
+        d1, d2 = rows("D1"), rows("D2")
         self.assertTrue(d1, "D1 줄이 없다")
+        self.assertTrue(d2, "D2 줄이 없다")
+        # D1 은 여러 표에 나온다 — 기준 정의 · 감사 지시 · 결과값.
+        # 규칙을 적는 줄만 "정확히 0" 을 요구한다. 결과값 줄(`| D1 | 0 | 0 | 0 |`)은
+        # 수를 적는 자리이므로 문구를 요구하지 않는다.
+        # 어느 줄에도 churn 범위가 섞여서는 안 된다 — 그것이 이 [P2] 의 핵심이다.
         for line in d1:
             self.assertNotIn("17~45", line, "D1 에 churn 범위가 섞였다")
         rules = [line for line in d1 if "대상 밖" in line or "changed_cells_off_focus" in line]
         self.assertTrue(rules, "D1 의 규칙을 적는 줄이 없다")
         for line in rules:
             self.assertIn("정확히 0", line)
-        d2 = [line for line in plain(self.request).splitlines() if line.startswith("| D2 |")]
-        self.assertTrue(d2, "D2 줄이 없다")
         self.assertTrue(any("17~45" in line for line in d2))
 
     def test_the_pair_comparison_focuses_on_v11_alone(self):
