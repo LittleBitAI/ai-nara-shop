@@ -97,6 +97,9 @@ v2 net fell 7 → −1.
    On a notice without labels such a row does nothing. `slot_row_cell()` is the one per-cell rule; the fit
    calls the same function. A key `vN/<tag>` adds a second row for an item that already has one.
 4. **No relation row is on yet.** The GPU round only saves the labels, so its CSV equals the base code's.
+   Merged to main with `RELATION_CALL = False` (2026-09-28, the user's choice): with no active row the call
+   changes no cell, so the server does not spend time on it. Turn it on in the same commit that adds a row
+   passing `tools/slot_gate.py`. When on, it runs after every scored model phase, on the time they leave.
    After it, [reports/relation-pipeline/fit.py](../../reports/relation-pipeline/fit.py) picks rows per item
    from definition-grounded candidates. `SCOPE` in fit.py lists the scope each item's official name sets,
    and every candidate's applies must name it; fit.py asserts this on import, so no candidate can fire

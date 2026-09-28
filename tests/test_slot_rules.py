@@ -267,6 +267,7 @@ class RelationTests(unittest.TestCase):
             self.assertLess(source.index(f'emit("phase_started", phase="{phase}"'), relation, phase)
         self.assertGreater(script.SERVER_LIMIT_S - script.RELATION_RESERVE_S, script.QUALIFICATION_DEADLINE_S)
 
+    @mock.patch.object(script, "RELATION_CALL", True)     # the mechanism, whether or not the call is on
     def test_no_relation_call_starts_after_the_deadline(self):
         runner = mock.Mock()
         runner.chat.return_value = ["not json"]

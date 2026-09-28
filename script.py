@@ -3721,7 +3721,9 @@ def clause_candidates(rec: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], bool]:
 # Quotes come from the clause lines themselves, so no quotation is generated or can be invented.
 RELATION_KEYS = ["relations"]      # fact schema; not a CSV column
 RELATION_KEY = "_relations"        # parsed relations + the clauses they point at, carried into postprocess
-RELATION_CALL = True
+# Off until a relation row passes `tools/slot_gate.py`: with no active row the call changes no cell, so
+# the server should not spend time on it. The GPU label rounds run pinned commits that have it on.
+RELATION_CALL = False
 RELATION_MAX = 30                  # labelled clauses per notice; keeps the output near 1,000 tokens
 SERVER_LIMIT_S = 7200              # the server stops the whole run here
 RELATION_RESERVE_S = 300           # after the relation phase: postprocess (~4 ms a notice), CSV, report
