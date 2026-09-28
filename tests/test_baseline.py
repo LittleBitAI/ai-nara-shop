@@ -13,6 +13,7 @@ import sys
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("baseline", ROOT / "script.py")
@@ -31,6 +32,8 @@ def valid():
 
 
 class BaselineTests(unittest.TestCase):
+    # The runner pins the SME call sequence; the relation call has its own tests (test_slot_rules).
+    @mock.patch.object(baseline, "RELATION_CALL", False)
     def test_selective_v13_preserves_sparse_rows_and_skips_empty_selection(self):
         for positives in (set(), {1, 3}):
             calls = []
@@ -178,6 +181,8 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(baseline.parse_judgment(json.dumps(output), baseline.SME_ITEMS, sme=True)[0], output)
         self.assertNotIn("facts", runner.sp.structured_outputs.json["properties"]["v13"]["properties"])
 
+    # The runner pins the SME call sequence; the relation call has its own tests (test_slot_rules).
+    @mock.patch.object(baseline, "RELATION_CALL", False)
     def test_isolated_sme_preserves_other_items_and_publishes_paired_results(self):
         calls, instances = [], []
         expected_system = baseline.build_system_prompt(baseline.item_table(str(ROOT / "open/data")))
@@ -627,7 +632,8 @@ class BaselineTests(unittest.TestCase):
         self.assertTrue(restored and restored in visible)        # 복원기는 찾아낸다
 
         import inspect
-        for owner in (baseline._company_size_bands, baseline.verify_document_requirements):
+        for owner in (baseline._company_size_bands, baseline.verify_document_requirements,
+                      baseline.quote_verified):
             self.assertIn("restore_spacing", inspect.getsource(owner),
                           f"{owner.__name__} 의 인용 검사가 복원기를 부르지 않는다")
 

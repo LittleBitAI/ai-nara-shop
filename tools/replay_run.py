@@ -105,7 +105,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
     thresholded = getattr(script, "apply_thresholds", None)   # older submission code has none
     # 이 제출 코드가 모르는 단계의 원응답이 있으면 조용히 건너뛰지 않는다. 건너뛰면
     # 그 단계가 바꾼 판정이 빠진 CSV를 근거로 쓰게 된다 — 실제로 한 번 그렇게 어긋났다.
-    known = {"baseline", "sme", *getattr(script, "VERDICT_PHASES", ()), "company_size"}
+    known = {"baseline", "sme", *getattr(script, "VERDICT_PHASES", ()), "company_size",
+             *(("relation",) if hasattr(script, "attach_relations") else ())}
     unknown = sorted(name for name, by_id in texts.items() if by_id and name not in known)
     if unknown:
         raise ValueError(f"이 회차에는 {unknown} 단계 원응답이 있는데 "
@@ -159,7 +160,13 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
                                                **legacy)
             verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
             parsed.update(verified)
+            if hasattr(script, "attach_company_facts"):
+                script.attach_company_facts(parsed, focused["company_size"], reason, rec, company_chars[rec["id"]])
+            elif hasattr(script, "COMPANY_FACTS_KEY"):   # older submission code has no slot table
+                parsed[script.COMPANY_FACTS_KEY] = focused["company_size"]
             reasons.setdefault(rec["id"], {})["company_size"] = reason
+        if hasattr(script, "attach_relations"):
+            script.attach_relations(parsed, rec, texts.get("relation", {}).get(rec["id"]) if extra else None)
         rows.append(script.to_row(rec["id"], postprocess(parsed, rec)))
     expected_ids = list(expected_ids) if expected_ids is not None else None
     expected_count = report["건수"] if expected_ids is None else len(expected_ids)
@@ -262,6 +269,9 @@ FINAL_STACK_MOVES = [("PPS-DEV-044", "v18")]
 # Cells moved by feat/a-skip-nobid-calls (2026-09-27): v17 is zeroed on 수의계약, so 21 loses its gold
 # positive and 090 its false alarm. Toggled like the lists above.
 NO_BID_V17_MOVES = [("PPS-DEV-090", "e17"), ("PPS-DEV-090", "v17"), ("PPS-DEV-21", "e17"), ("PPS-DEV-21", "v17")]
+# Cells moved by feat/a-slot-decisions (2026-09-28): the slot table raises v15 (036, quoted size clause) and v16
+# (066), and leaves 149's v16 at the archived value. Toggled like the lists above.
+SLOT_MOVES = [("PPS-DEV-036", "e15"), ("PPS-DEV-036", "v15"), ("PPS-DEV-066", "v16"), ("PPS-DEV-149", "v16")]
 # The H2 run's company-size call also raised v17 on 수의계약 105 and 163, both gold 0.
 NO_BID_V17_MOVES_H2 = NO_BID_V17_MOVES + [("PPS-DEV-105", "e17"), ("PPS-DEV-105", "v17"),
                                           ("PPS-DEV-163", "e17"), ("PPS-DEV-163", "v17")]
@@ -311,7 +321,8 @@ DELIBERATE_MOVES = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-199", "v24"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-28", "v24"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES)
+    ^ set(SLOT_MOVES))
 
 # `reports/runs/colab-1789894949866134428/dev-debug/submission.csv` 와 대조할 때.
 # 그 회차가 만든 CSV 라 다시 쓰지 않는다. 위 목록과 겹치지만 같지 않다 — 그 회차에만 있는
@@ -397,7 +408,8 @@ DELIBERATE_MOVES_A7 = sorted(set(V9_V24_DEV_FIT_MOVES + A_STACK_MOVES + [
     ("PPS-DEV-198", "v13"), ("PPS-DEV-22", "v18"), ("PPS-DEV-24", "v20"), ("PPS-DEV-25", "e3"),
     ("PPS-DEV-25", "v3"), ("PPS-DEV-27", "e23"), ("PPS-DEV-27", "v23"), ("PPS-DEV-28", "e23"),
     ("PPS-DEV-28", "v23"), ("PPS-DEV-29", "e24"), ("PPS-DEV-29", "v24"),
-]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES))
+]) - A_STACK_RESTORED ^ set(OFFDEV_STACK_MOVES) ^ set(FINAL_STACK_MOVES) ^ set(NO_BID_V17_MOVES)
+    ^ set(SLOT_MOVES))
 
 
 def csv_cell_diff(left: bytes, right: bytes):
