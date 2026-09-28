@@ -1,7 +1,7 @@
 """C6 통합 후보의 계약 — **셋을 합쳐도 TP 를 안 지우고, 순서에 안 흔들리고, diff 와 같다.**
 
 보고서(`reports/team-c/c6-dev-macro/README.md`)가 낸 수를 여기에 고정한다.
-재생은 기준 커밋 `9038380` 의 `script.py` 로만 한다 — 작업 트리 판을 쓰면 `main` 이 움직일 때
+재생은 기준 커밋 `c68eb00` 의 `script.py` 로만 한다 — 작업 트리 판을 쓰면 `main` 이 움직일 때
 같은 보관 응답에서 다른 수가 나오고 보고서만 낡는다(#124 의 [P2] 가 그 자리였다).
 
 이 검사가 고정하는 것 여섯.
@@ -34,7 +34,7 @@ CASE = ROOT / "reports/runs/colab-1790235508743452453/dev-debug"
 FOLDER = ROOT / "reports/team-c/c6-dev-macro"
 REPORT = FOLDER / "README.md"
 DIFF = FOLDER / "c6-integrated.diff"
-BASE_REV = "9038380"
+BASE_REV = "c68eb00"
 
 ITEMS = [f"v{i}" for i in range(1, 25)]
 C_ITEMS = ("v10", "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v20")
@@ -47,16 +47,16 @@ CANDIDATES = {
     "v11": "experiments/c5_v11_absence_signal_candidate.py",
     "integrated": "experiments/c6_integrated_candidate.py",
 }
-BASE_MACRO = "0.685506108460"
-BASE_C_TOTALS = (39, 31, 24)          # TP · FP · FN
+BASE_MACRO = "0.735764126941"
+BASE_C_TOTALS = (42, 25, 21)          # TP · FP · FN
 EXPECTED_MACRO = {
-    "narrow": "0.696403544358",
-    "wide": "0.683762590540",          # 기각 — 기준선보다 낮다
-    "v16": "0.690168113122",
-    "v11": "0.693349245715",
-    "integrated": "0.708908686274",
+    "narrow": "0.744738485915",
+    "wide": "0.732341732342",          # 기각 — 기준선보다 낮다
+    "v16": "0.739732380909",
+    "v11": "0.736464407053",
+    "integrated": "0.749407019995",
 }
-EXPECTED_CHANGED = {"narrow": 3, "wide": 13, "v16": 2, "v11": 7, "integrated": 12}
+EXPECTED_CHANGED = {"narrow": 3, "wide": 13, "v16": 2, "v11": 3, "integrated": 8}
 # 통합이 실제로 벌어야 하는 것. 세 후보의 단독 이득을 더한 값이다.
 ADDENDS = ("narrow", "v16", "v11")
 
@@ -240,7 +240,7 @@ class IntegratedReplay(unittest.TestCase):
         self.assertEqual(lost, [], f"TP 를 잃은 항목이 있다: {lost}")
         gained = {i: done[i]["tp"] - head[i]["tp"]
                   for i in ITEMS if done[i]["tp"] != head[i]["tp"]}
-        self.assertEqual(gained, {"v11": 3, "v18": 2},
+        self.assertEqual(gained, {"v11": 1, "v18": 2},
                          "항목별 TP 변화가 보고서와 다르다")
 
     def test_no_candidate_touches_another_part(self):
@@ -359,7 +359,7 @@ class RunRequest(unittest.TestCase):
 
     def test_the_pass_marks_match_the_measured_numbers(self):
         """합격 기준의 수치가 보고서의 실측과 같은가."""
-        for number in ("0.708908686274", "5/6/1", "4/1/2", "3/3/4", "9038380"):
+        for number in ("0.749407019995", "5/6/1", "4/2/2", "4/2/3", "c68eb00"):
             with self.subTest(number):
                 self.assertIn(number, self.request)
                 self.assertIn(number, self.report)
@@ -373,7 +373,7 @@ class RunRequest(unittest.TestCase):
         읽어야 한다.
         """
         base = self.request_section("### 1-2.", "## 2.")
-        self.assertIn("git show feat/c-dev-macro:"
+        self.assertIn("git show feat/c-dev-macro-rebase:"
                       "reports/team-c/c6-dev-macro/c6-integrated.diff | patch", base)
         self.assertNotRegex(
             base, r"patch\s+-p1\s+--binary\s+-i\s+reports/",
@@ -392,25 +392,46 @@ class RunRequest(unittest.TestCase):
         self.assertTrue(commands, "브랜치 명령이 없다")
         self.assertNotIn("git switch -", [c.split("#")[0].strip() for c in commands],
                          "`git switch -` 는 분리된 HEAD 에서 돌아오지 못한다")
-        self.assertTrue(any(c.startswith("git switch feat/c-dev-macro") for c in commands),
+        self.assertTrue(any(c.startswith("git switch feat/c-dev-macro-rebase") for c in commands),
                         "돌아갈 브랜치를 이름으로 안 적었다")
         self.assertIn("a branch is expected", block,
                       "왜 `-` 를 못 쓰는지 실제 메시지가 없다")
 
-    def test_the_diff_really_is_absent_from_the_base_commit(self):
-        """위 검사의 전제가 아직 참인가 — 기준 커밋에 그 파일이 없는가.
+    def test_the_base_commit_holds_a_stale_diff_that_must_not_be_used(self):
+        """위 검사의 전제 — **기준 커밋의 작업 트리 판을 쓰면 안 된다.**
 
-        언젠가 diff 가 `main` 에 들어가면 전제가 바뀐다. 그때는 이 검사가 먼저 울어서
-        §1-2 의 설명을 다시 보게 한다.
+        전제가 한 번 뒤집혔다. 처음에는 기준 커밋(`9038380`)에 diff 가 **없어서**
+        작업 트리 경로로 못 썼다. PR #139 가 머지되면서 기준이 `c68eb00` 이 됐고
+        이제 그 커밋에 diff 가 **있다** — 그런데 있는 것은 `9038380` 기준의 **옛
+        판이라 그 커밋의 `script.py` 에 안 붙는다**(B 가 같은 함수에
+        `v11_absence_observed()` 를 넣었다).
+
+        없을 때도 낡았을 때도 답은 같다 — `git show <작업 브랜치>:<경로>` 로 읽는다.
+        여기서는 **있으면서 안 붙는다**는 것을 확인한다. 언젠가 새 diff 가 `main` 에
+        들어가 붙게 되면 이 검사가 울고, §1-2 의 설명을 다시 보게 된다.
         """
-        if shutil.which("git") is None:
-            raise unittest.SkipTest("git 이 없다")
-        found = subprocess.run(
-            ["git", "-C", str(ROOT), "cat-file", "-e",
-             f"{BASE_REV}:reports/team-c/c6-dev-macro/c6-integrated.diff"],
-            capture_output=True)
-        self.assertNotEqual(found.returncode, 0,
-                            "기준 커밋에 diff 가 생겼다 — §1-2 의 설명을 다시 보라")
+        if shutil.which("git") is None or shutil.which("patch") is None:
+            raise unittest.SkipTest("git 또는 patch 가 없다")
+        work = Path(tempfile.mkdtemp(prefix="stale-diff-"))
+        try:
+            for name, path in (("script.py", "script.py"),
+                               ("old.diff",
+                                "reports/team-c/c6-dev-macro/c6-integrated.diff")):
+                found = subprocess.run(
+                    ["git", "-C", str(ROOT), "show", f"{BASE_REV}:{path}"],
+                    capture_output=True)
+                if found.returncode != 0:
+                    raise unittest.SkipTest(f"{BASE_REV} 에 {path} 가 없다")
+                (work / name).write_bytes(found.stdout)
+            applied = subprocess.run(
+                ["patch", "-p1", "--binary", "-i", str(work / "old.diff")],
+                capture_output=True, text=True, encoding="utf-8",
+                errors="replace", cwd=work)
+            self.assertNotEqual(
+                applied.returncode, 0,
+                "기준 커밋의 diff 가 이제 붙는다 — §1-2 의 설명을 다시 보라")
+        finally:
+            shutil.rmtree(work, ignore_errors=True)
 
     def test_every_pass_mark_is_a_difference_not_a_fixed_number(self):
         """리뷰 [P1] — 새 회차의 TP 손실을 고정 숫자로 재던 자리.
@@ -502,19 +523,50 @@ class RunRequest(unittest.TestCase):
         self.assertTrue((FOLDER / "applicability.py").is_file())
         self.assertIn("applicability.py", self.request)
 
-    def test_the_off_target_rule_is_exactly_zero_not_the_churn_range(self):
-        """D1 은 **정확히 0**, churn 범위는 D2 에만. 섞으면 대상 밖 45셀이 승인된다."""
-        lines = self.request.splitlines()
-        d1 = [line for line in lines if line.startswith("| D1 |")]
+    def test_the_off_target_rule_is_exactly_zero(self):
+        """D1 은 정확히 0 이다. churn 범위를 섞으면 대상 밖 45셀이 승인된다."""
+        d1 = [line for line in self.request.splitlines() if line.startswith("| D1 |")]
         self.assertTrue(d1, "D1 줄이 없다")
         rules = [line for line in d1 if "off_focus" in line or "대상 밖" in line]
         self.assertTrue(rules, "D1 의 규칙을 적는 줄이 없다")
         for line in rules:
             self.assertIn("정확히 0", line)
             self.assertNotIn("17~45", line, "D1 에 churn 범위가 섞였다")
-        d2 = [line for line in lines if line.startswith("| D2 |")]
-        self.assertTrue(any("17~45" in line for line in d2), "D2 에 churn 범위가 없다")
-        self.assertIn("reproducibility.md", self.request, "churn 범위의 출처가 없다")
+
+    def test_churn_is_not_a_pass_condition_for_a_replay_candidate(self):
+        """리뷰 [P2] — 재생 후보에 회차 간 churn 을 통과 조건으로 걸던 자리.
+
+        이 후보는 후처리만 바꾼다. `docs/workflow.md` W5 가 그런 후보에 두 번째 회차를
+        요구하지 않고("재생 후보는 … churn이 없으므로 두 번째 회차가 없습니다"),
+        `reports/runs/reproducibility.md` 의 「재생 비교에는 이 값을 쓰지 않습니다」 가
+        같은 원응답 재생에는 그 범위를 대지 말라고 못박는다.
+
+        그래서 **기준표에 D2 행이 없어야** 하고, 회차 설계도 한 번이어야 한다.
+        """
+        lines = self.request.splitlines()
+        self.assertEqual([x for x in lines if x.startswith("| D2 |")], [],
+                         "재생 후보인데 기준표에 churn 통과 조건이 있다")
+        self.assertNotIn("| 회차 2 |", self.request,
+                         "재생 후보인데 두 번째 회차를 요구한다")
+        # 왜 안 재는지가 적혀 있어야 한다 — 근거 문서를 둘 다 가리킨다.
+        self.assertIn("재생 후보", self.request)
+        self.assertIn("reproducibility.md", self.request,
+                      "churn 범위를 안 쓰는 근거가 없다")
+
+    def test_the_verified_report_does_not_claim_churn_was_answered(self):
+        """리뷰 [P2] — 한 회차의 두 패스를 (c)·D2 의 답으로 적던 자리.
+
+        그 12셀은 같은 회차 안의 두 통과이고, 17~45셀 범위는 서로 다른 회차를 견준
+        값이다. 참고 관측으로 적는 것은 좋지만 수행 완료로 표시하면 안 된다.
+        """
+        report = (FOLDER / "VERIFIED.md").read_text(encoding="utf-8")
+        rows = [x for x in report.splitlines() if x.startswith("| (c)")]
+        self.assertEqual(rows, [], "(c) 를 답한 것처럼 표에 남겼다")
+        self.assertEqual([x for x in report.splitlines() if x.startswith("| D2 |")], [],
+                         "판정표에 D2 가 남았다")
+        self.assertIn("참고 관측", report, "두 패스를 참고 관측으로 안 적었다")
+        self.assertIn("해당하지 않는다", report, "왜 (c) 를 안 묻는지가 없다")
+        self.assertIn("12셀", report, "관측값 자체는 남겨야 한다")
 
     def test_the_pair_comparison_covers_exactly_the_three_keys(self):
         """`--items` 는 후보가 쓰는 셋이어야 나머지 21항목을 D1 이 본다."""
@@ -548,7 +600,7 @@ class RunRequest(unittest.TestCase):
         counted = {m[1]: (int(m[2]), int(m[3]), int(m[4])) for m in
                    re.finditer(r"^(v\d+)\s+(\d+)\s+(\d+)\s+(\d+)", done.stdout, re.MULTILINE)}
         self.assertEqual(counted,
-                         {"v18": (38, 3, 3), "v16": (2, 2, 2), "v11": (7, 7, 7)},
+                         {"v18": (38, 3, 3), "v16": (2, 2, 2), "v11": (3, 3, 3)},
                          f"집계기가 문서와 다른 수를 낸다\n{done.stdout}")
         for item, layers in counted.items():
             with self.subTest(item):
