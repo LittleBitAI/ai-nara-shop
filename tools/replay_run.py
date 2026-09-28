@@ -105,7 +105,8 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
     thresholded = getattr(script, "apply_thresholds", None)   # older submission code has none
     # 이 제출 코드가 모르는 단계의 원응답이 있으면 조용히 건너뛰지 않는다. 건너뛰면
     # 그 단계가 바꾼 판정이 빠진 CSV를 근거로 쓰게 된다 — 실제로 한 번 그렇게 어긋났다.
-    known = {"baseline", "sme", *getattr(script, "VERDICT_PHASES", ()), "company_size"}
+    known = {"baseline", "sme", *getattr(script, "VERDICT_PHASES", ()), "company_size",
+             *(("relation",) if hasattr(script, "attach_relations") else ())}
     unknown = sorted(name for name, by_id in texts.items() if by_id and name not in known)
     if unknown:
         raise ValueError(f"이 회차에는 {unknown} 단계 원응답이 있는데 "
@@ -159,9 +160,13 @@ def replay(script, case_dir, *, input_path, data_dir, postprocess=None, verify_s
                                                **legacy)
             verified, reason = verify_company_size(focused["company_size"], rec, company_chars[rec["id"]])
             parsed.update(verified)
-            if hasattr(script, "COMPANY_FACTS_KEY"):   # older submission code has no slot table
+            if hasattr(script, "attach_company_facts"):
+                script.attach_company_facts(parsed, focused["company_size"], reason, rec, company_chars[rec["id"]])
+            elif hasattr(script, "COMPANY_FACTS_KEY"):   # older submission code has no slot table
                 parsed[script.COMPANY_FACTS_KEY] = focused["company_size"]
             reasons.setdefault(rec["id"], {})["company_size"] = reason
+        if hasattr(script, "attach_relations"):
+            script.attach_relations(parsed, rec, texts.get("relation", {}).get(rec["id"]) if extra else None)
         rows.append(script.to_row(rec["id"], postprocess(parsed, rec)))
     expected_ids = list(expected_ids) if expected_ids is not None else None
     expected_count = report["건수"] if expected_ids is None else len(expected_ids)

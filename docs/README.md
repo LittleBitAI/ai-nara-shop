@@ -90,6 +90,48 @@
 | 도구 설치 | [setup](setup.md) | `tools/setup_agents.py` → 공용 `tool/setup_agents.py` → `tool/apply.py`; checkout의 `.wiki/adapter.toml` |
 | 종료 전 위키 검진·공개 연결 | [유지보수 기록](tasks/wiki-maintenance.md) | `ai-coding-agent-wiki-public` 고정 SHA, 프로젝트 결정 기록·lint 결과 |
 
+## 이 말의 정의는 어디 있나 — 찾기 어려운 것만
+
+위 표는 **작업**으로 찾는다. 이 표는 **낱말**로 찾는다. 규칙 문장에는 나오는데 정의가
+딴 데 있어 헤매게 되는 것들만 모았다(2026-09-27 추가).
+
+| 낱말 | 정의가 있는 곳 | 주의 |
+| --- | --- | --- |
+| **신뢰 항목** (trusted item) | **`tools/tune_offdev_thresholds.py:13` 의 `TRUSTED`** | **문서에 목록이 없다.** 채택 게이트가 이 말을 쓰는데 정의는 코드 상수 하나뿐이다 — 아래 상자 |
+| 채택 게이트 (9/27) | [plan-0926-0929 §Adoption rule from 9/27](tasks/plan-0926-0929.md) | 그 절이 아래 옛 채택 규칙보다 **우선**한다고 스스로 적는다 |
+| off-dev 풀 | 같은 문서 §Decisions | 진단 200 + 봉인 400(+ 나중에 labels-3000). ID 정본은 `reports/labels-600/offdev-600-ids.txt` |
+| 파트별 담당 항목·수정 범위 | [team-handoff](tasks/team-handoff.md) **:124**(담당 항목) · **:245**(파일 범위) | 그날의 배정은 여기가 아니라 `plan-0926-0929.md` §assignments 다 |
+| 그날 누가 무엇을 하나 | [plan-0926-0929](tasks/plan-0926-0929.md) §9/27 assignments | 날짜가 바뀌면 절이 바뀐다 |
+| 항목의 공식 이름·부재탐지 | [items](items.md) | 번호의 뜻을 추측하지 않는다 |
+| 운영진 인정 라벨 노이즈 | [qna](qna.md) | 그 셀에 규칙을 맞추지 않는다 |
+| dev 활용 **허용 범위** | [rules](rules.md) **A1·R5** — 대회 규칙 | 프롬프트 예시·검색 사례·후처리 튜닝에 **자유롭게 쓸 수 있다.** 대회 쪽 단서는 하나 — 그 dev 로 개발한 점수를 **독립 검증으로 보고하지 않는다**(A1) |
+| dev 라벨을 **채택 근거로 쓰나** | [workflow **W5**](workflow.md#w5-실험검증) — **팀 규칙** | **못 쓴다.** 이것은 대회가 금지한 것이 아니라 **팀이 스스로 세운 선**이다. 근거는 조문·운영진 답변·항목 정의여야 하고 dev 라벨은 출처로만 적는다 |
+| 회차 간 변동폭 | [reproducibility](../reports/runs/reproducibility.md) · [c-variance VERDICT](../reports/team-c/c-variance/VERDICT.md) | 같은 코드 6회 관측 범위 0.007287. 재생 비교에는 안 쓴다 |
+
+> **신뢰 항목은 문서에 목록이 없다.** 9/27 채택 게이트의 3번이 "No trusted item loses
+> more than one net `(TP − FP)` cell" 이라 적지만, 그 15개가 무엇인지는
+> `tools/tune_offdev_thresholds.py` 의 `TRUSTED` 상수에만 있다.
+>
+> `v1 v2 v3 v5 v6 v7 v8 v12 v13 v14 v15 v19 v21 v22 v23`
+>
+> **빠진 것이 아홉이다** — `v4 v9 v10 v11 v16 v17 v18 v20 v24`. 부재탐지 다섯
+> (v10·v11·v16·v18·v20)이 통째로 빠져 있으므로 **그 항목을 건드리는 후보는 게이트 3 의
+> 보호도 제약도 안 받는다.** 후보를 낼 때 이것을 모르면 게이트를 잘못 읽는다.
+
+### 항목 집합 상수는 열한 곳에 있다
+
+같은 종류의 목록이 한곳에 모여 있지 않다. 고칠 때 하나만 고치면 다른 곳과 갈린다.
+
+| 상수 | 위치 |
+| --- | --- |
+| `ABSENCE` (부재탐지 5) · `EVIDENCE_EXEMPT` · `QUOTE_RESTORE_ITEMS` | `script.py:55` · `:63` · `:66` |
+| `BAND_ITEMS` · `SCOPE_ITEMS` · `DOCUMENT_CHECK_ITEMS` · `SME_ITEMS` | `script.py:88` · `:91` · `:92` · `:192` |
+| `QUALIFICATION_ITEMS` · `NO_BID_KEEP_ITEMS` · `NO_BID_ZERO_ITEMS` | `script.py:2159` · `:3469` · `:3470` |
+| `FIXED` · **`TRUSTED`** | `tools/tune_offdev_thresholds.py:12` · `:13` |
+
+`NO_BID_ZERO_ITEMS` 는 `NO_BID_KEEP_ITEMS` 의 여집합이라 **수의계약 공고에서 20항목이
+0 으로 내려간다.** 라벨이 1 이어도 그렇다 — 후보가 안 먹히는 이유를 여기서 먼저 찾는다.
+
 ## 작업본과 보관본
 
 - `docs/`: 주제별 작업본. 규칙·설계 변경은 해당 소유 문서 한 곳에서 관리합니다.

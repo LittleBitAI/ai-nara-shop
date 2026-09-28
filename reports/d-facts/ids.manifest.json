@@ -1,0 +1,8 @@
+{
+  "seed": 20260929,
+  "kept": 400,
+  "population": 1030,
+  "source": "reports/labels-3000/merged.csv minus reports/labels-3000/private-ids.txt (수의계약)",
+  "ids_sha256": "044cda7244d9767b78292d9431c3c67ab8ea0c4699ed56a77d515e6937138f48",
+  "input_sha256": "f46449fb84f980a5ddf868d66f5daff2bcf0991135d9b81da5656dd607275698"
+}
