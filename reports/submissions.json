@@ -237,6 +237,20 @@
       "error": null,
       "source": "User report (competition screen, 2026-09-27 night, after 23:30). Score as reported to three decimals; no submission ID or time yet. ZIP: artifacts/outbox/submit-efplus-8a274ec.zip.",
       "note": "Below the best (0.6203720648, -0.036). Experimental and unmeasured on GPU at upload: branch exp/0927-best = main 9356dc6 (#164 no positives on 수의계약 except v3 v4 v21 v24, #166 extra calls skipped on 수의계약 and v17 zeroed, #163 v3 cut 0.95) + facts call on v2 with section gate + v6 L1 + refit cuts (v1 v4 v8 v19 v22) + label-sweep zeroing (v22 non-협상, v1 지명경쟁, v4 under 2천만원) + evidence-first main schema with a clause-role field, role gate and contrastive examples. The last three changed the model's output and had no GPU run before upload. Attribution needs the combined runs (colab-efplus-600/-dev) scored against be87c9f."
+    },
+    {
+      "submitted_on": "2026-09-28",
+      "code_commit": "0202fc3b21b4fe2de2b9f84375f2b9751efc794e",
+      "script_sha256": "35bc8bec6169d4fde2e8c8cff73849514c5f898d851369907bb91287ddecc655",
+      "submit_zip_sha256": "5efcd04d7d06215bb1189c0ac6bdb0ff2f2a72cad349fc812e67568ad585727b",
+      "run_id": null,
+      "outcome": "scored",
+      "leaderboard_macro_f1": 0.6501625582,
+      "elapsed_seconds": 6672,
+      "elapsed_reported": "111분 12초",
+      "error": null,
+      "source": "User report (competition screen, 2026-09-28 evening). No submission ID or exact time. ZIP: artifacts/outbox/submit-0202fc3.zip.",
+      "note": "New server best (+0.0297904934 over 61c495c). script.py is byte-identical to 5cc61c7: since 61c495c, #164 no positives on 수의계약 except v3 v4 v17 v21 v24, #166 SME/company-size calls skipped on 수의계약, #163 v3 cut 0.95, #168/#172 facts call on v2 (qualification phase, stops at 6,600 s) with v6 L1, refit cuts and label-sweep zeroing, #169 slot rows v15 v16 v18, #171 relation pipeline with the relation call off. Replay on the 9/28 off-dev responses put it +0.0436 over 61c495c (24-item average; +0.048 over the 22 labelled items). Server time 6,428 -> 6,672 s (+244 s, 92.7% of the limit, 528 s headroom). The ledger's dev-rate formula projected about 7,230 s with the qualification call run in full; finishing at 6,672 s fits that call stopping at its 6,600 s deadline and the chunk in flight completing, so part of the v2 gain likely did not reach the server. Per-phase server times are not available to confirm it."
     }
   ],
   "time_budget": {
