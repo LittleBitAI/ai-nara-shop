@@ -228,6 +228,25 @@ class RelationTests(unittest.TestCase):
         facts = verified(rec=self.rec, priority_exception="unknown")
         self.assertEqual(self.decide(labels(), row=row, item="v17", facts=facts, v17=1)["위반여부"], 1)
 
+    def test_v17_is_lifted_only_by_its_own_exception_not_by_any_labelled_one(self):
+        sme = "가. 중소기업기본법에 따른 중소기업으로서 중소기업확인서를 소지한 업체"
+        nonprofit = "* 판로지원법 시행령 제2조의3 제1항 제2호에 따라 비영리법인은 소기업·소상공인확인서가 없어도 입찰 참가 가능"
+        rec = dict(notice(50_000_000, "3. 입찰참가자격\n" + sme + "\n" + nonprofit),
+                   input_completeness={"완전관측": True}, dropped_doc_counts={})
+        ids = {c["full"]: c["id"] for c in script.clause_candidates(rec)[0]}
+        text = labels({"id": ids[sme], "kind": "company_size", "stage": "entry", "size": "sme"},
+                      {"id": ids[nonprofit], "kind": "size_exception", "stage": "entry"})   # PPS-DEV-073's shape
+        row = {"v17": (("small", "purchase_general"), ("entry_sme",), ("sme_broadened",), None)}
+
+        def v17(cell, **facts):
+            facts = verified(rec=rec, qualification="sme_allowed", **facts)
+            return self.decide(text, rec=rec, row=row, item="v17", facts=facts, v17=cell)["위반여부"]
+        self.assertEqual(v17(1, size_exception="none"), 1)       # the nonprofit carve-out lifts nothing
+        self.assertEqual(v17(0, size_exception="none"), 1)       # a verified "none" is known: a miss is raised
+        self.assertEqual(v17(1, size_exception="broaden_sme", size_exception_quote=sme), 0)
+        self.assertEqual(v17(0, size_exception="broaden_sme", size_exception_quote="유찰되어 확대"), 0)  # unverified
+        self.assertEqual(v17(1, size_exception="broaden_sme", size_exception_quote="유찰되어 확대"), 1)
+
     def test_a_known_scope_failure_decides_even_when_the_labels_say_nothing(self):
         row = {"v4": (("over_notice",), ("entry_performance_institution",), (), None)}
         self.assertEqual(self.decide(labels(), row=row, item="v4", v4=1)["위반여부"], 0)    # 5천만원: under

@@ -3684,7 +3684,11 @@ def attach_company_facts(parsed: Dict[str, Any], facts: Dict[str, Any], reason: 
                            and quote_verified(facts.get("software_business_quote"), rec, visible)),
         # The v16/v18 gate: "no" stands, "yes" needs its quote.
         priority_verified=(priority == "no" or (priority == "yes" and quote_verified(
-            facts.get("priority_exception_quote"), rec, visible))))
+            facts.get("priority_exception_quote"), rec, visible))),
+        # The v15/v17 gate (`_company_size_bands`): "none" stands, a named exception needs its quote.
+        size_exception_verified=(facts.get("size_exception") == "none" or (
+            facts.get("size_exception") in ("broaden_sme", "joint_small")
+            and quote_verified(facts.get("size_exception_quote"), rec, visible))))
 
 
 def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, bool]:
@@ -3714,6 +3718,7 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
     unknown |= {"purchase_general"} if purchase not in ("general", "competitive", "other", "not_general") else set()
     unknown |= {"purchase_competitive"} if purchase not in ("general", "competitive", "other") else set()
     unknown |= {"software"} if facts.get("software_verified") is not True else set()
+    unknown |= {"sme_broadened", "joint_exception"} if facts.get("size_exception_verified") is not True else set()
     unknown |= {"catalogue_product"} if catalogue is None else set()
     return {
         "unknown": frozenset(unknown),
@@ -3735,6 +3740,11 @@ def relation_slots(judgment: Dict[str, Any], rec: Dict[str, Any]) -> Dict[str, b
         "scope_competitive": facts.get("scope") == "competitive",
         "purchase_competitive": purchase_competitive,
         "software": facts.get("software_business") == "yes",
+        # Each restriction item's own legal exception, as the verifier applies it: broadening to SMEs after a
+        # failed small-only competition lifts v17, a joint-project product lifts v15. Another exception (a
+        # nonprofit carve-out, say) admits an extra bidder and lifts neither.
+        "sme_broadened": facts.get("size_exception") == "broaden_sme",
+        "joint_exception": facts.get("size_exception") == "joint_small",
         "read_clauses": tuple((judgment.get(RELATION_KEY) or {}).get("read") or ()),
         "read_context": tuple((judgment.get(RELATION_KEY) or {}).get("context") or ()),
         **{name: bool(relation_matches(name, judgment)) for name in RELATION_SLOTS},
@@ -3766,7 +3776,6 @@ RELATION_SLOTS = {
     "briefing_entry": _entry("site_briefing"),
     "entry_size": _entry("company_size", size=("small_or_micro", "sme", "sme_or_middle")),
     "sw_limit_stated": lambda r: r["kind"] == "software_size_limit" and r["stage"] != "citation",
-    "stated_exception": lambda r: r["kind"] == "size_exception" and r["stage"] != "citation",
 }
 
 

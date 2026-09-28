@@ -81,6 +81,11 @@ v2 net fell 7 → −1.
      - `software` and `priority_exception` are known only when their gates verify them (`software_verified`:
        the deliverable quote; `priority_verified`: "no", or "yes" with a verified quote), through
        `quote_verified`, the gates' own quotation check.
+     - `sme_broadened` / `joint_exception` are the verified company-size `size_exception` (`none`, or a
+       named exception with a verified quote). Each lifts only its own item, as `_company_size_bands`
+       applies it: broadening to SMEs lifts v17, a joint-project product lifts v15. A relation label of
+       some exception (PPS-DEV-073's nonprofit carve-out) admits an extra bidder and lifts neither, so no
+       row reads the generic `size_exception` label.
      - The older `scope_general` / `scope_competitive` / `catalogue_product` are unchanged for the existing
        rows. Replaying the real off-dev 600 case with `ab9eb9e` and with this code gives byte-identical CSVs.
    - Applies and requirement combine by "and", exceptions by "or". Yes raises (with the clause as evidence);
@@ -96,7 +101,8 @@ v2 net fell 7 → −1.
    from definition-grounded candidates. `SCOPE` in fit.py lists the scope each item's official name sets,
    and every candidate's applies must name it; fit.py asserts this on import, so no candidate can fire
    outside its item (v4 over the threshold, v12/v14/v17 general products, v13 competitive, v7 adjacency).
-   It also asserts that every v15 and v17 row reads the stated exception their definitions allow, and
+   It also asserts that each row's exceptions are exactly its item's own verified exception (`EXCEPTION`:
+   v15 joint project, v17 SME broadening, v16/v18 priority procurement; none elsewhere), and
    that only the absence items (v10, v11, v16, v18, v20) negate a relation slot. For them
    the negation is unknown without a label and no with one, so those rows can only lower an absence
    positive that a shared label contradicts, such as v10 against a labelled entry direct-production demand. The fit hands `slot_row_cell` each cell's

@@ -35,7 +35,10 @@ MARGIN = 0.02     # the least held-in F1 gain a row must show, as in the slot-ta
 # Relation rows read the verified purchase scope (`purchase_*`), never the raw model fact.
 # A product outside the catalogue does not make the purchase a general good (construction stays other).
 GENERAL = [("purchase_general",)]
-SIZE_EXCEPTIONS = [(), ("priority_exception",), ("stated_exception",), ("priority_exception", "stated_exception")]
+# Each item's exception is the verified one whose legal effect lifts that item, as `_company_size_bands`
+# applies it. A relation label of "some exception" cannot say which bidder it admits, so no row reads it.
+EXCEPTION = {"v15": ("joint_exception",), "v16": ("priority_exception",),
+             "v17": ("sme_broadened",), "v18": ("priority_exception",)}
 
 
 def rows(applies, requirements, exceptions=((),)):
@@ -60,16 +63,15 @@ CANDIDATES = {
     # Absence items: a negated relation slot is unknown without a label (never a raise) and no when the
     # label is there, so these rows can only lower an absence positive that a shared label contradicts.
     "v10": rows([("purchase_competitive",)], [("!entry_direct_production",)]),
-    "v11": rows([("purchase_competitive",)], [("!entry_size",)], SIZE_EXCEPTIONS),
-    "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size",)], SIZE_EXCEPTIONS),
-    "v18/relation": rows(banded("small", GENERAL[:1]), [("!entry_size",)], SIZE_EXCEPTIONS),
+    "v11": rows([("purchase_competitive",)], [("!entry_size",)]),
+    "v16/relation": rows(banded("mid", GENERAL[:1]), [("!entry_size",)], [EXCEPTION["v16"]]),
+    "v18/relation": rows(banded("small", GENERAL[:1]), [("!entry_size",)], [EXCEPTION["v18"]]),
     "v20": rows([("software",)], [("!sw_limit_stated",)]),
     "v12": rows(GENERAL, [("entry_direct_production",)]),
     "v13": rows([("purchase_competitive",)], [("entry_small",)]),
     "v14": rows(banded("over_notice", GENERAL), [("entry_size",)]),
-    # v15 and v17 name a legal exception (판로지원 예외): every row reads the stated one.
-    "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)], SIZE_EXCEPTIONS[2:]),
-    "v17": rows(banded("small", GENERAL), [("entry_sme",)], SIZE_EXCEPTIONS[2:]),
+    "v15/relation": rows(banded("mid", GENERAL), [("entry_small",)], [EXCEPTION["v15"]]),
+    "v17": rows(banded("small", GENERAL), [("entry_sme",)], [EXCEPTION["v17"]]),
     "v19": rows([()], [("pledge_at_bid",)]),
     "v22": rows([("negotiation",)], [("briefing_entry",)]),
 }
@@ -88,15 +90,14 @@ SCOPE = {
     "v20": [{"software"}], "v22": [{"negotiation"}],
 }
 ABSENCE = {"v10", "v11", "v16", "v18", "v20"}
-EXCEPTION_REQUIRED = {"v15", "v17"}      # restriction items whose definition allows a stated exception
 for _key, _candidates in CANDIDATES.items():
     for _row in _candidates:
         for _group in SCOPE.get(_key.split("/")[0], ()):
             assert _group & set(_row[0]), (_key, _row, "applies outside the item's scope")
         # The selector picks clauses by trigger words, so a missing label never proves absence. A negated
         # relation slot is allowed only where it can do nothing but lower: the absence items' requirement.
-        if _key.split("/")[0] in EXCEPTION_REQUIRED:
-            assert "stated_exception" in _row[2], (_key, _row, "ignores the item's legal exception")
+        # Exactly the item's own exception: none dropped, none that lifts a different item.
+        assert _row[2] == EXCEPTION.get(_key.split("/")[0], ()), (_key, _row, "not the item's legal exception")
         _negated = {n for n in _row[0] if n.startswith("!")}
         assert not _negated, (_key, _row, "negated scope")
         if _key.split("/")[0] not in ABSENCE:
